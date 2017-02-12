@@ -13,7 +13,7 @@ Game::Game( Board* board )
     }
     mHandle.game = this;
 
-    setProperty("IntentList", QVariant::fromValue(mIntents));
+    setProperty("MoveList", QVariant::fromValue(mMoves));
 }
 
 GameHandle Game::getHandle()
@@ -33,11 +33,11 @@ bool Game::canMoveFrom( int angle, int *x, int *y ) {
 bool Game::addMove(int angle)
 {
     int x, y;
-    if ( mIntents.empty() ) {
+    if ( mMoves.empty() ) {
         x = mTankX;
         y = mTankY;
     } else {
-        Intent last = mIntents.back();
+        Piece last = mMoves.back();
         x = last.getX();
         y = last.getY();
     }
@@ -50,30 +50,30 @@ bool Game::addMove(int angle)
 
 void Game::addMoveInternal( int angle, int x, int y )
 {
-    mIntents.push_back( Intent(MOVE,x,y,angle) );
-    setProperty("IntentList", QVariant::fromValue(mIntents));
-    emit intentAdded(mIntents.back());
+    mMoves.push_back( Piece(MOVE,x,y,angle) );
+    setProperty("MoveList", QVariant::fromValue(mMoves));
+    emit pieceAdded(mMoves.back());
 }
 
 void Game::onTankMoved( int x, int y )
 {
     mTankX = x;
     mTankY = y;
-    if ( mIntents.front().encodedPos() == Intent::encodePos(x,y) ) {
-        mIntents.pop_front();
-        setProperty("IntentList", QVariant::fromValue(mIntents));
+    if ( mMoves.front().encodedPos() == Piece::encodePos(x,y) ) {
+        mMoves.pop_front();
+        setProperty("MoveList", QVariant::fromValue(mMoves));
     }
 }
 
-void Game::clearIntents()
+void Game::clearPieces()
 {
-    std::list<Intent>::iterator it;
+    std::list<Piece>::iterator it;
 
-    for( it=mIntents.begin(); it != mIntents.end(); ++it ) {
-        emit intentRemoved( *it );
+    for( it=mMoves.begin(); it != mMoves.end(); ++it ) {
+        emit pieceRemoved( *it );
     }
-    mIntents.clear();
-    setProperty("IntentList", QVariant::fromValue(mIntents));
+    mMoves.clear();
+    setProperty("MoveList", QVariant::fromValue(mMoves));
 }
 
 int Game::getTankX()

@@ -10,14 +10,14 @@ QMAKE_CXXFLAGS += -std=gnu++11
 # Input
 HEADERS += controller/Game.h \
            model/board.h \
-           model/intent.h \
+           model/piece.h \
            view/BoardWindow.h \
            view/tank.h
 SOURCES += controller/Game.cpp \
            view/BoardWindow.cpp \
            view/tank.cpp \
            model/board.cpp \
-           model/intent.cpp
+           model/piece.cpp
 RESOURCES += qml.qrc
 
 test{

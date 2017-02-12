@@ -1,11 +1,9 @@
-#ifndef GAMECONTROLLER_H
-#define GAMECONTROLLER_H
+#ifndef GAME_H
+#define GAME_H
 
 #include <QObject>
-#include <list>
 
 #include "model/board.h"
-#include "model/intent.h"
 
 struct GameHandle
 {
@@ -13,8 +11,6 @@ struct GameHandle
 };
 Q_DECLARE_METATYPE(GameHandle)
 
-typedef std::list<Intent> IntentList;
-Q_DECLARE_METATYPE(IntentList)
 
 class Game : public QObject
 {
@@ -32,12 +28,12 @@ public:
     bool canPlaceAt( int x, int y );
 
 signals:
-    void intentAdded( const Intent& );
-    void intentRemoved( const Intent& );
+    void pieceAdded( const Piece& );
+    void pieceRemoved( const Piece& );
     void tankInitialized( int x, int y );
 
 public slots:
-    void clearIntents();
+    void clearPieces();
     void onTankMoved( int x, int y );
 
 private:
@@ -46,7 +42,7 @@ private:
     Board* mBoard;
     int mTankX;
     int mTankY;
-    std::list<Intent> mIntents;
+    PieceList mMoves;
 };
 
-#endif // GAMECONTROLLER_H
+#endif // GAME_H

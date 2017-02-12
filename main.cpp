@@ -8,7 +8,8 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     qRegisterMetaType<GameHandle>("GameHandle");
-    qRegisterMetaType<IntentList>("IntentList");
+    qRegisterMetaType<PieceList>("MoveList");
+    qRegisterMetaType<PieceList>("tiles");
 
     BoardWindow window;
     Board board(":/maps/default.txt");

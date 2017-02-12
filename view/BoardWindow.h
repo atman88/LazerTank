@@ -28,8 +28,8 @@ public slots:
     void renderNow();
     void onTankChanged( QRect rect );
     void onTankStopped();
-    void renderIntentLater( const Intent& intent );
-    void eraseIntent( const Intent& );
+    void renderPieceLater( const Piece& piece );
+    void erasePiece( const Piece& );
 
 protected:
     bool event(QEvent *event) override;
@@ -41,7 +41,8 @@ protected:
 
 private:
     void renderMove( int x, int y, int angle = 0 );
-    void renderIntent(const Intent& , QPainter *painter);
+    void renderPiece(const Piece& , QPainter *painter);
+    void renderListAt(QPainter* painter, PieceList::iterator *iterator, PieceList::iterator end, int encodedPos );
 
     Tank* mTank;
 
@@ -51,6 +52,7 @@ private:
     Game* mGame;
     QPixmap mStonePixmap;
     QPixmap mDirtPixmap;
+    QPixmap mTilePixmap;
     QPixmap mMoveIndicatorPixmap;
     int mActiveMoveDirection;
 };

@@ -8,6 +8,7 @@ BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
     mDirtyRegion = new QRegion();
     mStonePixmap.load(":/images/wall-stone.png");
     mDirtPixmap.load(":/images/dirt.png");
+    mTilePixmap.load(":/images/tile-metal.png");
     mMoveIndicatorPixmap.load(":/images/move-indicator.png");
 
     mTank = new Tank(this);
@@ -60,8 +61,8 @@ void BoardWindow::setGame(const GameHandle handle )
 
     mGame = handle.game;
     if ( mGame ) {
-        QObject::connect( mGame, &Game::intentAdded, this, &BoardWindow::renderIntentLater );
-        QObject::connect( mGame, &Game::intentRemoved, this, &BoardWindow::eraseIntent );
+        QObject::connect( mGame, &Game::pieceAdded, this, &BoardWindow::renderPieceLater );
+        QObject::connect( mGame, &Game::pieceRemoved, this, &BoardWindow::erasePiece );
         QObject::connect( mGame, &Game::tankInitialized, mTank, &Tank::onUpdate );
 
         Board* board = mGame->getBoard();
@@ -97,34 +98,55 @@ void BoardWindow::renderNow()
     mDirtyRegion->setRects(NULL, 0);
 }
 
-void BoardWindow::renderIntentLater( const Intent& intent )
+void BoardWindow::renderPieceLater( const Piece& piece )
 {
-    QRect dirty(intent.getX()*24, intent.getY()*24, 24, 24);
+    QRect dirty(piece.getX()*24, piece.getY()*24, 24, 24);
     renderLater( &dirty );
 }
 
-void BoardWindow::renderIntent( const Intent& intent, QPainter *painter )
+void BoardWindow::renderPiece( const Piece& piece, QPainter *painter )
 {
     QPixmap* pixmap;
-    switch( intent.getType() ) {
-    case MOVE:
-        pixmap = &mMoveIndicatorPixmap; break;
+    switch( piece.getType() ) {
+    case MOVE: pixmap = &mMoveIndicatorPixmap; break;
+    case TILE: pixmap = &mTilePixmap;          break;
+
     default:
         return;
     }
 
-    int x = intent.getX()*24;
-    int y = intent.getY()*24;
+    int x = piece.getX()*24;
+    int y = piece.getY()*24;
 
-    if ( intent.getAngle() ) {
+    if ( piece.getAngle() ) {
         int centerX = x + 24/2;
         int centerY = y + 24/2;
         painter->translate(centerX, centerY);
-        painter->rotate(intent.getAngle());
+        painter->rotate(piece.getAngle());
         painter->translate(-centerX, -centerY);
     }
     painter->drawPixmap( x, y, *pixmap);
     painter->resetTransform();
+}
+
+void BoardWindow::renderListAt( QPainter* painter, PieceList::iterator* iterator, PieceList::iterator end, int encodedPos )
+{
+    while( *iterator != end ) {
+        int delta = (*iterator)->encodedPos() - encodedPos;
+        if ( delta > 0 ) {
+            break;
+        }
+        if ( delta == 0 ) {
+            // advance to the possible last duplicate
+            Piece piece(  **iterator );
+            while( *iterator != end && (++*iterator)->encodedPos() == encodedPos ) {
+                piece = **iterator;
+            }
+            renderPiece( piece, painter );
+            break;
+        }
+        ++*iterator;
+    }
 }
 
 void BoardWindow::render(QRegion* region)
@@ -138,10 +160,13 @@ void BoardWindow::render(QRegion* region)
         QPaintDevice *device = mBackingStore->paintDevice();
         QPainter painter(device);
 
-        QVariant v = mGame->property( "IntentList" );
-        IntentList intents = v.value<IntentList>();
-        intents.sort();
-        IntentList::iterator intentIterator = intents.begin();
+        QVariant v = mGame->property( "MoveList" );
+        PieceList moveList = v.value<PieceList>();
+        moveList.sort();
+        PieceList::iterator pieceIterator = moveList.begin();
+        v = board->property( "tiles" );
+        PieceList tiles = v.value<PieceList>();
+        PieceList::iterator tileIterator = tiles.begin();
 
         QRect rect( region->boundingRect() );
         int minX = rect.left()/24;
@@ -161,21 +186,9 @@ void BoardWindow::render(QRegion* region)
                     painter.fillRect(x*24, y*24, 24, 24, Qt::blue);
                     break;
                 }
-                while( intentIterator != intents.end() ) {
-                    int delta = intentIterator->encodedPos() - Intent::encodePos( x, y );
-                    if ( delta > 0 ) {
-                        break;
-                    }
-                    if ( delta == 0 ) {
-                        // only paint the last one at this position
-                        Intent intent = *intentIterator;
-                        while( (++intentIterator)->encodedPos() == intent.encodedPos() )
-                            ;
-                        renderIntent( intent, &painter );
-                        break;
-                    }
-                    ++intentIterator;
-                }
+                int encodedPos = Piece::encodePos(x, y);
+                renderListAt( &painter, &pieceIterator, moveList.end(), encodedPos );
+                renderListAt( &painter, &tileIterator,  tiles.end(),    encodedPos );
             }
         }
 
@@ -226,9 +239,9 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
     }
 }
 
-void BoardWindow::eraseIntent( const Intent& intent )
+void BoardWindow::erasePiece( const Piece& piece )
 {
-    QRect rect( intent.getX()*24, intent.getY()*24, 24, 24 );
+    QRect rect( piece.getX()*24, piece.getY()*24, 24, 24 );
     renderLater(&rect);
 }
 

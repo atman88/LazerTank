@@ -1,8 +1,10 @@
+#include <QVariant>
 #include <QFile>
 #include "board.h"
 
 
-Board::Board( const string& fileName ) {
+Board::Board( const string& fileName, QObject* parent )  : QObject(parent)
+{
     mWidth = 16;
     mHeight = 16;
     load( fileName );
@@ -13,6 +15,7 @@ void Board::load( const string& fileName ) {
     int y = 0;
     mWidth = 0;
     mInitialTankX = mInitialTankY = 0;
+    mPieces.clear();
 
     QString qname(fileName.c_str());
     QFile file( qname );
@@ -26,6 +29,10 @@ void Board::load( const string& fileName ) {
                 switch( line[x] ) {
                 case 'S': mTiles[y*BOARD_MAX_HEIGHT+x] = STONE; break;
                 case 'w': mTiles[y*BOARD_MAX_HEIGHT+x] = WATER; break;
+                case 'M':
+                    mTiles[y*BOARD_MAX_HEIGHT+x] = DIRT;
+                    mPieces.push_back( Piece( TILE, x, y ) );
+                    break;
                 case 'T':
                     mInitialTankX = x;
                     mInitialTankY = y;
@@ -46,6 +53,8 @@ void Board::load( const string& fileName ) {
         file.close();
     }
     mHeight = y;
+
+    setProperty( "tiles", QVariant::fromValue(mPieces) );
 }
 
 int Board::getWidth()

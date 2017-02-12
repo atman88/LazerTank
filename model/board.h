@@ -1,11 +1,15 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#include <QObject>
 #include <string>
-using namespace std;
 
-#define BOARD_MAX_WIDTH 100
-#define BOARD_MAX_HEIGHT 100
+#include "model/piece.h"
+
+#define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
+#define BOARD_MAX_HEIGHT PIECE_MAX_ROWCOUNT
+
+using namespace std;
 
 typedef enum {
     DIRT,
@@ -13,9 +17,12 @@ typedef enum {
     WATER
 } BoardTileId;
 
-class Board {
+class Board : public QObject
+{
+    Q_OBJECT
+
 public:
-    Board( const string& sourceFileName );
+    Board( const string& sourceFileName, QObject* parent = 0 );
 
 public:
     int getWidth();
@@ -32,6 +39,8 @@ private:
     int mWidth;
 
     BoardTileId mTiles[BOARD_MAX_WIDTH*BOARD_MAX_HEIGHT];
+
+    PieceList mPieces;
 };
 
 #endif // BOARD_H
