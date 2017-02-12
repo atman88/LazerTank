@@ -31,7 +31,7 @@ void Board::load( const string& fileName ) {
                 case 'w': mTiles[y*BOARD_MAX_HEIGHT+x] = WATER; break;
                 case 'M':
                     mTiles[y*BOARD_MAX_HEIGHT+x] = DIRT;
-                    mPieces.push_back( Piece( TILE, x, y ) );
+                    mPieces.insert( Piece( TILE, x, y ) );
                     break;
                 case 'T':
                     mInitialTankX = x;

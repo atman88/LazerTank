@@ -16,7 +16,7 @@ void TestGame::testMove()
     cout << "board " << board.getWidth() << "x" << board.getHeight() << std::endl;
 
     QVariant v = board.property("tiles");
-    PieceList tiles = v.value<PieceList>();
+    PieceSet tiles = v.value<PieceSet>();
     QCOMPARE( tiles.size(), 1UL );
     QCOMPARE( tiles.begin()->encodedPos(), Piece::encodePos(1,2));
 

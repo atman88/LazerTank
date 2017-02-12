@@ -3,6 +3,7 @@
 
 #include <qmetatype.h>
 #include <list>
+#include <set>
 
 #define PIECE_MAX_ROWCOUNT 256
 
@@ -29,6 +30,7 @@ public:
     {
         return l.encodedPos() < r.encodedPos();
     }
+
     PieceType getType() const;
     int getX() const;
     int getY() const;
@@ -52,6 +54,8 @@ private:
 };
 
 typedef std::list<Piece> PieceList;
+typedef std::set<Piece> PieceSet;
 Q_DECLARE_METATYPE(PieceList)
+Q_DECLARE_METATYPE(PieceSet)
 
 #endif // PIECE_H

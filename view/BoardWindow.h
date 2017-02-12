@@ -42,7 +42,7 @@ protected:
 private:
     void renderMove( int x, int y, int angle = 0 );
     void renderPiece(const Piece& , QPainter *painter);
-    void renderListAt(QPainter* painter, PieceList::iterator *iterator, PieceList::iterator end, int encodedPos );
+    void renderListAt(QPainter* painter, PieceSet::iterator *iterator, PieceSet::iterator end, Piece &pos );
 
     Tank* mTank;
 

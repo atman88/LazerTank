@@ -40,7 +40,7 @@ private:
 
     BoardTileId mTiles[BOARD_MAX_WIDTH*BOARD_MAX_HEIGHT];
 
-    PieceList mPieces;
+    PieceSet mPieces;
 };
 
 #endif // BOARD_H

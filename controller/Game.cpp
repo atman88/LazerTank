@@ -65,7 +65,7 @@ void Game::onTankMoved( int x, int y )
     }
 }
 
-void Game::clearPieces()
+void Game::clearMoves()
 {
     std::list<Piece>::iterator it;
 

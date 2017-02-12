@@ -129,17 +129,17 @@ void BoardWindow::renderPiece( const Piece& piece, QPainter *painter )
     painter->resetTransform();
 }
 
-void BoardWindow::renderListAt( QPainter* painter, PieceList::iterator* iterator, PieceList::iterator end, int encodedPos )
+void BoardWindow::renderListAt( QPainter* painter, PieceSet::iterator* iterator, PieceSet::iterator end, Piece& pos )
 {
     while( *iterator != end ) {
-        int delta = (*iterator)->encodedPos() - encodedPos;
+        int delta = (*iterator)->encodedPos() - pos.encodedPos();
         if ( delta > 0 ) {
             break;
         }
         if ( delta == 0 ) {
             // advance to the possible last duplicate
             Piece piece(  **iterator );
-            while( *iterator != end && (++*iterator)->encodedPos() == encodedPos ) {
+            while( *iterator != end && (++*iterator)->encodedPos() == pos.encodedPos() ) {
                 piece = **iterator;
             }
             renderPiece( piece, painter );
@@ -160,19 +160,25 @@ void BoardWindow::render(QRegion* region)
         QPaintDevice *device = mBackingStore->paintDevice();
         QPainter painter(device);
 
-        QVariant v = mGame->property( "MoveList" );
-        PieceList moveList = v.value<PieceList>();
-        moveList.sort();
-        PieceList::iterator pieceIterator = moveList.begin();
-        v = board->property( "tiles" );
-        PieceList tiles = v.value<PieceList>();
-        PieceList::iterator tileIterator = tiles.begin();
-
         QRect rect( region->boundingRect() );
         int minX = rect.left()/24;
         int minY = rect.top()/24;
         int maxX = rect.right()/24;
         int maxY = rect.bottom()/24;
+
+        Piece pos(MOVE, minX, minY);
+        QVariant v = mGame->property( "MoveList" );
+        PieceList moveList = v.value<PieceList>();
+        PieceSet moves;
+        for( auto pieceListIterator = moveList.begin(); pieceListIterator != moveList.end(); ++pieceListIterator  ) {
+            moves.insert( *pieceListIterator );
+        }
+        PieceSet::iterator moveIterator = moves.lower_bound( pos );
+
+        v = board->property( "tiles" );
+        PieceSet tiles = v.value<PieceSet>();
+        PieceSet::iterator tileIterator = tiles.lower_bound( pos );
+
         for( int y = minY; y <= maxY; ++y ) {
             for( int x = minX; x <= maxX; ++x ) {
                 switch( board->tileAt(x, y) ) {
@@ -186,9 +192,9 @@ void BoardWindow::render(QRegion* region)
                     painter.fillRect(x*24, y*24, 24, 24, Qt::blue);
                     break;
                 }
-                int encodedPos = Piece::encodePos(x, y);
-                renderListAt( &painter, &pieceIterator, moveList.end(), encodedPos );
-                renderListAt( &painter, &tileIterator,  tiles.end(),    encodedPos );
+                pos = Piece(MOVE, x, y);
+                renderListAt( &painter, &moveIterator, moves.end(), pos );
+                renderListAt( &painter, &tileIterator,  tiles.end(), pos );
             }
         }
 

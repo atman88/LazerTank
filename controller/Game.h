@@ -33,7 +33,7 @@ signals:
     void tankInitialized( int x, int y );
 
 public slots:
-    void clearPieces();
+    void clearMoves();
     void onTankMoved( int x, int y );
 
 private:
