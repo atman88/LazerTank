@@ -57,6 +57,32 @@ void Board::load( const string& fileName ) {
     setProperty( "tiles", QVariant::fromValue(mPieces) );
 }
 
+PieceType Board::pieceAt( int x, int y )
+{
+    Piece pos( NONE, x, y );
+    PieceSet::iterator it = mPieces.find( pos );
+    if ( it != mPieces.end() ) {
+        return it->getType();
+    }
+    return NONE;
+}
+
+void Board::erasePieceAt( int x, int y )
+{
+    Piece pos( NONE, x, y );
+    PieceSet::iterator it = mPieces.find( pos );
+    if ( it != mPieces.end() ) {
+        mPieces.erase( it );
+        setProperty( "tiles", QVariant::fromValue(mPieces) );
+    }
+}
+
+void Board::addPiece( PieceType type, int x, int y )
+{
+    mPieces.insert( Piece( type, x, y ) );
+    setProperty( "tiles", QVariant::fromValue(mPieces) );
+}
+
 int Board::getWidth()
 {
     return mWidth;

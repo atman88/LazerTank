@@ -10,10 +10,15 @@ BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
     mDirtPixmap.load(":/images/dirt.png");
     mTilePixmap.load(":/images/tile-metal.png");
     mMoveIndicatorPixmap.load(":/images/move-indicator.png");
+    mShotStraightPixmap.load( ":/images/shot-straight.png");
 
     mTank = new Tank(this);
     QObject::connect( mTank, &Tank::changed, this, &BoardWindow::onTankChanged );
     QObject::connect( mTank, &Tank::stopped, this, &BoardWindow::onTankStopped );
+
+    mShot = new Shot(this);
+    QObject::connect( mShot, &Shot::pathAdded,   this, &BoardWindow::renderPieceLater );
+    QObject::connect( mShot, &Shot::pathRemoved, this, &BoardWindow::renderPieceLater );
 
     mActiveMoveDirection = -1;
 }
@@ -38,6 +43,11 @@ void BoardWindow::onTankChanged( QRect rect )
     renderLater( &rect );
 }
 
+void BoardWindow::renderRectLater( QRect rect )
+{
+    renderLater( &rect );
+}
+
 void BoardWindow::onTankStopped()
 {
     int direction = mTank->getRotation().toInt();
@@ -46,6 +56,11 @@ void BoardWindow::onTankStopped()
     } else {
         mActiveMoveDirection = -1; // don't allow this to stick
     }
+}
+
+void BoardWindow::onPieceStopped()
+{
+    mShot->stop();
 }
 
 GameHandle BoardWindow::getGame() const
@@ -61,8 +76,10 @@ void BoardWindow::setGame(const GameHandle handle )
 
     mGame = handle.game;
     if ( mGame ) {
-        QObject::connect( mGame, &Game::pieceAdded, this, &BoardWindow::renderPieceLater );
-        QObject::connect( mGame, &Game::pieceRemoved, this, &BoardWindow::erasePiece );
+        QObject::connect( mGame, &Game::pieceAdded,   this, &BoardWindow::renderPieceLater );
+        QObject::connect( mGame, &Game::pieceRemoved, this, &BoardWindow::renderPieceLater );
+        QObject::connect( mGame, &Game::pieceStopped, this, &BoardWindow::onPieceStopped   );
+        QObject::connect( mGame, &Game::pieceMoved,   this, &BoardWindow::renderRectLater  );
         QObject::connect( mGame, &Game::tankInitialized, mTank, &Tank::onUpdate );
 
         Board* board = mGame->getBoard();
@@ -104,25 +121,23 @@ void BoardWindow::renderPieceLater( const Piece& piece )
     renderLater( &dirty );
 }
 
-void BoardWindow::renderPiece( const Piece& piece, QPainter *painter )
+void BoardWindow::renderPiece( PieceType type, int x, int y, int angle, QPainter *painter )
 {
     QPixmap* pixmap;
-    switch( piece.getType() ) {
-    case MOVE: pixmap = &mMoveIndicatorPixmap; break;
-    case TILE: pixmap = &mTilePixmap;          break;
+    switch( type ) {
+    case MOVE:          pixmap = &mMoveIndicatorPixmap; break;
+    case TILE:          pixmap = &mTilePixmap;          break;
+    case SHOT_STRAIGHT: pixmap = &mShotStraightPixmap;  break;
 
     default:
         return;
     }
 
-    int x = piece.getX()*24;
-    int y = piece.getY()*24;
-
-    if ( piece.getAngle() ) {
+    if ( angle ) {
         int centerX = x + 24/2;
         int centerY = y + 24/2;
         painter->translate(centerX, centerY);
-        painter->rotate(piece.getAngle());
+        painter->rotate(angle);
         painter->translate(-centerX, -centerY);
     }
     painter->drawPixmap( x, y, *pixmap);
@@ -142,10 +157,17 @@ void BoardWindow::renderListAt( QPainter* painter, PieceSet::iterator* iterator,
             while( *iterator != end && (++*iterator)->encodedPos() == pos.encodedPos() ) {
                 piece = **iterator;
             }
-            renderPiece( piece, painter );
+            renderPiece( piece.getType(), piece.getX()*24, piece.getY()*24, piece.getAngle(), painter );
             break;
         }
         ++*iterator;
+    }
+}
+
+void loadDrawSet( PieceList& list, PieceSet& set )
+{
+    for( auto iterator = list.begin(); iterator != list.end(); ++iterator  ) {
+        set.insert( *iterator );
     }
 }
 
@@ -170,14 +192,18 @@ void BoardWindow::render(QRegion* region)
         QVariant v = mGame->property( "MoveList" );
         PieceList moveList = v.value<PieceList>();
         PieceSet moves;
-        for( auto pieceListIterator = moveList.begin(); pieceListIterator != moveList.end(); ++pieceListIterator  ) {
-            moves.insert( *pieceListIterator );
-        }
+        loadDrawSet( moveList, moves );
         PieceSet::iterator moveIterator = moves.lower_bound( pos );
 
         v = board->property( "tiles" );
         PieceSet tiles = v.value<PieceSet>();
         PieceSet::iterator tileIterator = tiles.lower_bound( pos );
+
+        v = mShot->property( "path" );
+        PieceList shotList = v.value<PieceList>();
+        PieceSet shots;
+        loadDrawSet( shotList, shots );
+        PieceSet::iterator shotIterator = shots.lower_bound( pos );
 
         for( int y = minY; y <= maxY; ++y ) {
             for( int x = minX; x <= maxX; ++x ) {
@@ -194,10 +220,15 @@ void BoardWindow::render(QRegion* region)
                 }
                 pos = Piece(MOVE, x, y);
                 renderListAt( &painter, &moveIterator, moves.end(), pos );
-                renderListAt( &painter, &tileIterator,  tiles.end(), pos );
+                renderListAt( &painter, &tileIterator, tiles.end(), pos );
+                renderListAt( &painter, &shotIterator, shots.end(), pos );
             }
         }
 
+        PieceType movingPieceType = mGame->getMovingPieceType();
+        if ( movingPieceType != NONE ) {
+            renderPiece( movingPieceType, mGame->getPieceX().toInt(), mGame->getPieceY().toInt(), 0, &painter );
+        }
         if ( region->intersects( *mTank->getRect() ) ) {
             mTank->paint( &painter );
         }
@@ -237,23 +268,34 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
 {
     if ( !ev->isAutoRepeat()
       && mGame ) {
-        int rotation = keyToAngle(ev->key());
-        if ( rotation >= 0 ) {
-            mTank->move( rotation );
-            mActiveMoveDirection = rotation;
+        switch( ev->key() ) {
+        case Qt::Key_Space:
+            if ( !mTank->isMoving() ) {
+                mShot->fire( mTank->getRotation().toInt(), mGame->getTankX(), mGame->getTankY() );
+            }
+            break;
+        default:
+            int rotation = keyToAngle(ev->key());
+            if ( rotation >= 0 ) {
+                mTank->move( rotation );
+                mActiveMoveDirection = rotation;
+            }
         }
     }
 }
 
-void BoardWindow::erasePiece( const Piece& piece )
-{
-    QRect rect( piece.getX()*24, piece.getY()*24, 24, 24 );
-    renderLater(&rect);
-}
-
 void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
 {
-    if ( !ev->isAutoRepeat() && keyToAngle(ev->key()) >= 0 ) {
-        mActiveMoveDirection = -1;
+    if ( !ev->isAutoRepeat() ) {
+        switch( ev->key() ) {
+        case Qt::Key_Space:
+            mShot->stop();
+            break;
+
+        default:
+            if ( keyToAngle(ev->key()) >= 0 ) {
+                mActiveMoveDirection = -1;
+            }
+        }
     }
 }

@@ -22,6 +22,7 @@ public:
 
     void paint( QPainter* painter );
     void move(int direction );
+    bool isMoving();
     QVariant getRotation();
     QVariant getX();
     QVariant getY();

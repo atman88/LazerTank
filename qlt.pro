@@ -12,12 +12,14 @@ HEADERS += controller/Game.h \
            model/board.h \
            model/piece.h \
            view/BoardWindow.h \
-           view/tank.h
+           view/tank.h \
+    view/shot.h
 SOURCES += controller/Game.cpp \
            view/BoardWindow.cpp \
            view/tank.cpp \
            model/board.cpp \
-           model/piece.cpp
+           model/piece.cpp \
+    view/shot.cpp
 RESOURCES += qml.qrc
 
 test{

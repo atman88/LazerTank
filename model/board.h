@@ -28,6 +28,9 @@ public:
     int getWidth();
     int getHeight();
     BoardTileId tileAt( int x, int y );
+    PieceType pieceAt( int x, int y );
+    void erasePieceAt( int x , int y );
+    void addPiece( PieceType type, int x, int y );
 
     void load( const string& fileName );
 

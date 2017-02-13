@@ -8,14 +8,17 @@
 #define PIECE_MAX_ROWCOUNT 256
 
 typedef enum {
+    NONE,
+    TANK,
     MOVE,
-    TILE
+    TILE,
+    SHOT_STRAIGHT
 } PieceType;
 
 class Piece
 {
 public:
-    Piece( PieceType type, int x, int y, int angle = 0 ) : mType(type), mX(x), mY(y), mAngle(angle)
+    Piece( PieceType type = NONE, int x = 0, int y = 0, int angle = 0 ) : mType(type), mX(x), mY(y), mAngle(angle)
     {
     }
     Piece( const Piece& from )

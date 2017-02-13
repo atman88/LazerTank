@@ -10,8 +10,8 @@ Tank::Tank( QObject *parent ) : QObject(parent)
     mRotateAnimation = new QPropertyAnimation(this,"rotation");
     mHorizontalAnimation = new QPropertyAnimation(this,"x");
     mVerticalAnimation   = new QPropertyAnimation(this,"y");
-    QObject::connect(mRotateAnimation,&QVariantAnimation::finished,this,&Tank::rotationAnimationFinished);
-    QObject::connect(mVerticalAnimation,&QVariantAnimation::finished,this,&Tank::moveAnimationFinished);
+    QObject::connect(mRotateAnimation,    &QVariantAnimation::finished,this,&Tank::rotationAnimationFinished);
+    QObject::connect(mVerticalAnimation,  &QVariantAnimation::finished,this,&Tank::moveAnimationFinished);
     QObject::connect(mHorizontalAnimation,&QVariantAnimation::finished,this,&Tank::moveAnimationFinished);
     mBoundingRect.setRect(0,0,24,24);
 }
@@ -32,7 +32,7 @@ void Tank::paint( QPainter* painter )
 
 void Tank::onUpdate( int boardX, int boardY )
 {
-    QPoint p( boardX * 24, boardY * 24 );
+    QPoint p( boardX*24, boardY*24 );
     mHorizontalAnimation->stop();
     mVerticalAnimation->stop();
     mBoundingRect.moveTopLeft( p );
@@ -92,11 +92,17 @@ void Tank::setRotation( const QVariant& angle )
     }
 }
 
+bool Tank::isMoving()
+{
+    return mHorizontalAnimation->state() == QPropertyAnimation::Running
+        || mVerticalAnimation->state()   == QPropertyAnimation::Running
+        || mRotateAnimation->state()     == QPropertyAnimation::Running;
+}
+
 void Tank::rotationAnimationFinished()
 {
     setRotation( QVariant( mRotation.toInt() % 360 ) );
-    if ( mHorizontalAnimation->state() == QPropertyAnimation::Stopped
-      && mVerticalAnimation->state()   == QPropertyAnimation::Stopped ) {
+    if ( !isMoving() ) {
         emit stopped();
     }
 }
@@ -165,7 +171,7 @@ void Tank::move( int direction )
 
 void Tank::moveAnimationFinished()
 {
-    if ( mRotateAnimation->state() == QPropertyAnimation::Stopped ) {
+    if ( !isMoving() ) {
         emit stopped();
     }
 }

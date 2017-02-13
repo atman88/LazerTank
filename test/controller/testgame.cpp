@@ -23,10 +23,10 @@ void TestGame::testMove()
     Game game( &board );
     QCOMPARE( game.getTankX(), 0 );
     QCOMPARE( game.getTankY(), 0 );
-    QCOMPARE( game.canPlaceAt(-1,0), false );
-    QCOMPARE( game.canPlaceAt(0,-1), false );
+    QCOMPARE( game.canPlaceAt(TANK,-1,0), false );
+    QCOMPARE( game.canPlaceAt(TANK,0,-1), false );
     cout << "tank " << game.getTankX() << "," << game.getTankY() << std::endl;
-    QCOMPARE( game.canPlaceAt(game.getTankX(),game.getTankY()), true );
+    QCOMPARE( game.canPlaceAt(TANK,game.getTankX(),game.getTankY()), true );
 
     QCOMPARE( game.addMove( 90 ), true );
     v = game.property( "MoveList" );

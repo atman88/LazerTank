@@ -3,6 +3,7 @@
 
 #include <QtGui>
 #include "tank.h"
+#include "shot.h"
 #include "controller/Game.h"
 
 class BoardWindow : public QWindow
@@ -20,16 +21,18 @@ public:
     GameHandle getGame() const;
     virtual void render(QRegion *region);
 
+    void renderLater(QRect* region);
+
 signals:
 
 public slots:
     void setGame( const GameHandle game );
-    void renderLater(QRect* region);
+    void renderRectLater( QRect rect );
     void renderNow();
     void onTankChanged( QRect rect );
     void onTankStopped();
     void renderPieceLater( const Piece& piece );
-    void erasePiece( const Piece& );
+    void onPieceStopped();
 
 protected:
     bool event(QEvent *event) override;
@@ -41,10 +44,11 @@ protected:
 
 private:
     void renderMove( int x, int y, int angle = 0 );
-    void renderPiece(const Piece& , QPainter *painter);
+    void renderPiece( PieceType type, int x, int y, int angle, QPainter *painter );
     void renderListAt(QPainter* painter, PieceSet::iterator *iterator, PieceSet::iterator end, Piece &pos );
 
     Tank* mTank;
+    Shot* mShot;
 
     QBackingStore *mBackingStore;
     QRegion *mDirtyRegion;
@@ -54,6 +58,8 @@ private:
     QPixmap mDirtPixmap;
     QPixmap mTilePixmap;
     QPixmap mMoveIndicatorPixmap;
+    QPixmap mShotStraightPixmap;
+
     int mActiveMoveDirection;
 };
 
