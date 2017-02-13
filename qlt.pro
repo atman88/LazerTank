@@ -32,5 +32,7 @@ test{
 else{
     TARGET = qlt
 
+    QT += widgets
+
     SOURCES += main.cpp
 }

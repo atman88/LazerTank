@@ -56,6 +56,7 @@ private:
     Game* mGame;
     QPixmap mStonePixmap;
     QPixmap mDirtPixmap;
+    QPixmap mFlagPixmap;
     QPixmap mTilePixmap;
     QPixmap mMoveIndicatorPixmap;
     QPixmap mShotStraightPixmap;

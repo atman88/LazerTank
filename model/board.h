@@ -14,7 +14,8 @@ using namespace std;
 typedef enum {
     DIRT,
     STONE,
-    WATER
+    WATER,
+    FLAG
 } BoardTileId;
 
 class Board : public QObject

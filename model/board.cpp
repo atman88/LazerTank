@@ -29,6 +29,7 @@ void Board::load( const string& fileName ) {
                 switch( line[x] ) {
                 case 'S': mTiles[y*BOARD_MAX_HEIGHT+x] = STONE; break;
                 case 'w': mTiles[y*BOARD_MAX_HEIGHT+x] = WATER; break;
+                case 'F': mTiles[y*BOARD_MAX_HEIGHT+x] = FLAG;  break;
                 case 'M':
                     mTiles[y*BOARD_MAX_HEIGHT+x] = DIRT;
                     mPieces.insert( Piece( TILE, x, y ) );

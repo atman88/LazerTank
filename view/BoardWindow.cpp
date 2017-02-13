@@ -8,6 +8,7 @@ BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
     mDirtyRegion = new QRegion();
     mStonePixmap.load(":/images/wall-stone.png");
     mDirtPixmap.load(":/images/dirt.png");
+    mFlagPixmap.load(":/images/flag.png");
     mTilePixmap.load(":/images/tile-metal.png");
     mMoveIndicatorPixmap.load(":/images/move-indicator.png");
     mShotStraightPixmap.load( ":/images/shot-straight.png");
@@ -214,13 +215,16 @@ void BoardWindow::render(QRegion* region)
                 case DIRT:
                     painter.drawPixmap( x*24, y*24, mDirtPixmap);
                     break;
+                case FLAG:
+                    painter.drawPixmap( x*24, y*24, mFlagPixmap);
+                    break;
                 default:
                     painter.fillRect(x*24, y*24, 24, 24, Qt::blue);
                     break;
                 }
                 pos = Piece(MOVE, x, y);
-                renderListAt( &painter, &moveIterator, moves.end(), pos );
                 renderListAt( &painter, &tileIterator, tiles.end(), pos );
+                renderListAt( &painter, &moveIterator, moves.end(), pos );
                 renderListAt( &painter, &shotIterator, shots.end(), pos );
             }
         }

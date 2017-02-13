@@ -1,6 +1,7 @@
 #include <iostream>
 #include <QVariant>
 #include <QRegion>
+#include <QMessageBox>
 
 #include "controller/Game.h"
 
@@ -127,6 +128,12 @@ void Game::onTankMoved( int x, int y )
     if ( mMoves.front().encodedPos() == Piece::encodePos(x,y) ) {
         mMoves.pop_front();
         setProperty("MoveList", QVariant::fromValue(mMoves));
+
+        if ( mBoard && mBoard->tileAt(x,y) == FLAG ) {
+            QMessageBox msgBox;
+            msgBox.setText("Level completed!");
+            msgBox.exec();
+        }
     }
 }
 
@@ -169,6 +176,8 @@ bool Game::canPlaceAt( PieceType what, int x, int y )
     switch( mBoard->tileAt(x,y) ) {
     case DIRT:
         return true;
+    case FLAG:
+        return what == TANK;
     case WATER:
         if ( what == TANK ) {
             return mBoard->pieceAt(x,y) == TILE;

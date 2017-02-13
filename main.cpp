@@ -1,11 +1,11 @@
 #include <iostream>
-#include <QGuiApplication>
+#include <QApplication>
 #include "view/BoardWindow.h"
 #include "controller/Game.h"
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
 
     qRegisterMetaType<GameHandle>("GameHandle");
     qRegisterMetaType<PieceList>("MoveList");
