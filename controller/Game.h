@@ -41,12 +41,15 @@ signals:
     void pieceAdded( const Piece& );
     void pieceRemoved( const Piece& );
     void pieceMoved( const QRect& );
+    void rectDirty( const QRect );
     void pieceStopped();
     void tankInitialized( int x, int y );
+    void boardTileChanged( QRect rect );
 
 public slots:
     void clearMoves();
     void onTankMoved( int x, int y );
+    void onBoardTileChanged( int x, int y );
     void setPieceX( const QVariant& x );
     void setPieceY( const QVariant& y );
     void onPieceStopped();

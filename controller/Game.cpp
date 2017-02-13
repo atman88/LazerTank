@@ -9,11 +9,10 @@ Game::Game( Board* board )
 {
     mBoard = board;
     if ( board ) {
+        QObject::connect( board, &Board::tileChanged, this, &Game::onBoardTileChanged);
         mTankX = board->mInitialTankX;
         mTankY = board->mInitialTankY;
-        if ( mTankX >= 0 && mTankY >= 0 ) {
-            emit tankInitialized( mTankX, mTankY );
-        }
+        emit tankInitialized( mTankX, mTankY );
     }
     mHandle.game = this;
 
@@ -81,7 +80,13 @@ void Game::onPieceStopped()
 {
     if ( mMovingPieceType != NONE ) {
         if ( mBoard ) {
-            mBoard->addPiece( mMovingPieceType, getPieceX().toInt()/24, getPieceY().toInt()/24 );
+            int x = getPieceX().toInt()/24;
+            int y = getPieceY().toInt()/24;
+            if ( mMovingPieceType == TILE && mBoard->tileAt(x,y) == WATER ) {
+                mBoard->setTileAt( TILE_SUNK, x, y );
+            } else {
+                mBoard->addPiece( mMovingPieceType, x, y );
+            }
         }
         mMovingPieceType = NONE;
         emit pieceStopped();
@@ -133,6 +138,10 @@ void Game::onTankMoved( int x, int y )
             QMessageBox msgBox;
             msgBox.setText("Level completed!");
             msgBox.exec();
+            mBoard->load(":/maps/level2.txt");
+            mTankX = mBoard->mInitialTankX;
+            mTankY = mBoard->mInitialTankY;
+            emit tankInitialized( mTankX, mTankY );
         }
     }
 }
@@ -171,18 +180,21 @@ bool Game::getAdjacentPosition( int angle, int *x, int *y )
     return false;
 }
 
+void Game::onBoardTileChanged( int x, int y )
+{
+    emit rectDirty( QRect( x*24, y*24, 24, 24 ) );
+}
+
 bool Game::canPlaceAt( PieceType what, int x, int y )
 {
     switch( mBoard->tileAt(x,y) ) {
     case DIRT:
+    case TILE_SUNK:
         return true;
     case FLAG:
         return what == TANK;
     case WATER:
-        if ( what == TANK ) {
-            return mBoard->pieceAt(x,y) == TILE;
-        }
-        return true;
+        return what != TANK;
     default:
         ;
     }
@@ -193,6 +205,7 @@ bool Game::canShootThru( int angle, int x, int y )
 {
     switch( mBoard->tileAt(x,y) ) {
     case DIRT:
+    case TILE_SUNK:
     {   PieceType type = mBoard->pieceAt(x,y);
         if ( type != NONE ) {
             int toX = x, toY = y;

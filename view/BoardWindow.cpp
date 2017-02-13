@@ -8,6 +8,7 @@ BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
     mDirtyRegion = new QRegion();
     mStonePixmap.load(":/images/wall-stone.png");
     mDirtPixmap.load(":/images/dirt.png");
+    mTileSunkPixmap.load(":/images/tile-sunk.png");
     mFlagPixmap.load(":/images/flag.png");
     mTilePixmap.load(":/images/tile-metal.png");
     mMoveIndicatorPixmap.load(":/images/move-indicator.png");
@@ -77,20 +78,32 @@ void BoardWindow::setGame(const GameHandle handle )
 
     mGame = handle.game;
     if ( mGame ) {
-        QObject::connect( mGame, &Game::pieceAdded,   this, &BoardWindow::renderPieceLater );
-        QObject::connect( mGame, &Game::pieceRemoved, this, &BoardWindow::renderPieceLater );
-        QObject::connect( mGame, &Game::pieceStopped, this, &BoardWindow::onPieceStopped   );
-        QObject::connect( mGame, &Game::pieceMoved,   this, &BoardWindow::renderRectLater  );
+        QObject::connect( mGame, &Game::pieceAdded,       this, &BoardWindow::renderPieceLater );
+        QObject::connect( mGame, &Game::pieceRemoved,     this, &BoardWindow::renderPieceLater );
+        QObject::connect( mGame, &Game::pieceStopped,     this, &BoardWindow::onPieceStopped   );
+        QObject::connect( mGame, &Game::pieceMoved,       this, &BoardWindow::renderRectLater  );
+        QObject::connect( mGame, &Game::boardTileChanged, this, &BoardWindow::renderRectLater );
         QObject::connect( mGame, &Game::tankInitialized, mTank, &Tank::onUpdate );
 
         Board* board = mGame->getBoard();
 
         if ( board ) {
-            QRect size( 0, 0, board->getWidth()*24, board->getHeight()*24 );
-            setGeometry(size);
-            *mDirtyRegion += size;
-            mTank->onUpdate( mGame->getTankX(), mGame->getTankY() );
+            onBoardLoaded();
+            QObject::connect( board, &Board::boardLoaded, this, &BoardWindow::onBoardLoaded );
         }
+    }
+}
+
+void BoardWindow::onBoardLoaded()
+{
+    Board* board = mGame->getBoard();
+    if ( board ) {
+        QRect size( 0, 0, board->getWidth()*24, board->getHeight()*24 );
+        setGeometry(size);
+        *mDirtyRegion += size;
+        mTank->onUpdate( mGame->getTankX(), mGame->getTankY() );
+
+        requestUpdate();
     }
 }
 
@@ -214,6 +227,9 @@ void BoardWindow::render(QRegion* region)
                     break;
                 case DIRT:
                     painter.drawPixmap( x*24, y*24, mDirtPixmap);
+                    break;
+                case TILE_SUNK:
+                    painter.drawPixmap( x*24, y*24, mTileSunkPixmap);
                     break;
                 case FLAG:
                     painter.drawPixmap( x*24, y*24, mFlagPixmap);

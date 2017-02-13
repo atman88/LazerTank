@@ -27,9 +27,10 @@ void Board::load( const string& fileName ) {
             int x;
             for( x = 0; x < nRead; ++x ) {
                 switch( line[x] ) {
-                case 'S': mTiles[y*BOARD_MAX_HEIGHT+x] = STONE; break;
-                case 'w': mTiles[y*BOARD_MAX_HEIGHT+x] = WATER; break;
-                case 'F': mTiles[y*BOARD_MAX_HEIGHT+x] = FLAG;  break;
+                case 'S': mTiles[y*BOARD_MAX_HEIGHT+x] = STONE;     break;
+                case 'w': mTiles[y*BOARD_MAX_HEIGHT+x] = WATER;     break;
+                case 'F': mTiles[y*BOARD_MAX_HEIGHT+x] = FLAG;      break;
+                case 'm': mTiles[y*BOARD_MAX_HEIGHT+x] = TILE_SUNK; break;
                 case 'M':
                     mTiles[y*BOARD_MAX_HEIGHT+x] = DIRT;
                     mPieces.insert( Piece( TILE, x, y ) );
@@ -56,6 +57,7 @@ void Board::load( const string& fileName ) {
     mHeight = y;
 
     setProperty( "tiles", QVariant::fromValue(mPieces) );
+    emit boardLoaded();
 }
 
 PieceType Board::pieceAt( int x, int y )
@@ -98,3 +100,10 @@ BoardTileId Board::tileAt( int x, int y ) {
     return (x >= 0 && y >= 0 && x < mWidth && y < mHeight) ? mTiles[y*BOARD_MAX_WIDTH+x] : STONE;
 }
 
+void Board::setTileAt( BoardTileId id, int x, int y )
+{
+    if ( x >= 0 && y >= 0 && x < mWidth && y < mHeight ) {
+        mTiles[y*BOARD_MAX_WIDTH+x] = id;
+        emit tileChanged( x, y );
+    }
+}

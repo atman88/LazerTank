@@ -13,6 +13,7 @@ using namespace std;
 
 typedef enum {
     DIRT,
+    TILE_SUNK,
     STONE,
     WATER,
     FLAG
@@ -23,12 +24,12 @@ class Board : public QObject
     Q_OBJECT
 
 public:
-    Board( const string& sourceFileName, QObject* parent = 0 );
+    Board( const string& fileName, QObject* parent = 0 );
 
-public:
     int getWidth();
     int getHeight();
     BoardTileId tileAt( int x, int y );
+    void setTileAt( BoardTileId, int x, int y );
     PieceType pieceAt( int x, int y );
     void erasePieceAt( int x , int y );
     void addPiece( PieceType type, int x, int y );
@@ -37,6 +38,10 @@ public:
 
     int mInitialTankX;
     int mInitialTankY;
+
+signals:
+    void boardLoaded();
+    void tileChanged(int x, int y);
 
 private:
     int mHeight;

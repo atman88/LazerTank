@@ -33,6 +33,7 @@ public slots:
     void onTankStopped();
     void renderPieceLater( const Piece& piece );
     void onPieceStopped();
+    void onBoardLoaded();
 
 protected:
     bool event(QEvent *event) override;
@@ -56,6 +57,7 @@ private:
     Game* mGame;
     QPixmap mStonePixmap;
     QPixmap mDirtPixmap;
+    QPixmap mTileSunkPixmap;
     QPixmap mFlagPixmap;
     QPixmap mTilePixmap;
     QPixmap mMoveIndicatorPixmap;
