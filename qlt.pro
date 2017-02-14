@@ -4,6 +4,7 @@
 
 TEMPLATE = app
 INCLUDEPATH += . view controller model test/controller
+QT += widgets
 
 QMAKE_CXXFLAGS += -std=gnu++11
 
@@ -31,8 +32,6 @@ test{
 }
 else{
     TARGET = qlt
-
-    QT += widgets
 
     SOURCES += main.cpp
 }

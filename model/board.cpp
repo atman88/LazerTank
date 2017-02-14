@@ -3,61 +3,75 @@
 #include "board.h"
 
 
-Board::Board( const string& fileName, QObject* parent )  : QObject(parent)
+Board::Board( QObject* parent )  : QObject(parent)
 {
+    mLevel = 0;
     mWidth = 16;
     mHeight = 16;
-    load( fileName );
 }
 
-void Board::load( const string& fileName ) {
+bool Board::load( int level ) {
+    QString namePattern( ":/maps/level%1.txt" );
+    QString name = namePattern.arg(level);
+    bool rc = load( name );\
+    if ( rc ) {
+        mLevel = level;
+        emit boardLoaded();
+    }
+    return rc;
+}
+
+bool Board::load( QString& fileName )
+{
+    QFile file( fileName );
+    if ( !file.open(QIODevice::ReadOnly|QIODevice::Text) ) {
+        return false;
+    }
+
     char line[BOARD_MAX_WIDTH];
     int y = 0;
     mWidth = 0;
     mInitialTankX = mInitialTankY = 0;
     mPieces.clear();
 
-    QString qname(fileName.c_str());
-    QFile file( qname );
-    if ( file.open(QIODevice::ReadOnly|QIODevice::Text) ) {
-        bool done = false;
-        do {
-            int nRead = file.readLine(line, sizeof line);
-            done = nRead < 0;
-            int x;
-            for( x = 0; x < nRead; ++x ) {
-                switch( line[x] ) {
-                case 'S': mTiles[y*BOARD_MAX_HEIGHT+x] = STONE;     break;
-                case 'w': mTiles[y*BOARD_MAX_HEIGHT+x] = WATER;     break;
-                case 'F': mTiles[y*BOARD_MAX_HEIGHT+x] = FLAG;      break;
-                case 'm': mTiles[y*BOARD_MAX_HEIGHT+x] = TILE_SUNK; break;
-                case 'M':
-                    mTiles[y*BOARD_MAX_HEIGHT+x] = DIRT;
-                    mPieces.insert( Piece( TILE, x, y ) );
-                    break;
-                case 'T':
-                    mInitialTankX = x;
-                    mInitialTankY = y;
-
-                    // fall through
-
-                default:  mTiles[y*BOARD_MAX_HEIGHT+x] = DIRT;  break;
-                }
-            }
-            if ( x > mWidth ) {
-                mWidth = x;
-            }
-
-            if ( ++y >= BOARD_MAX_HEIGHT ) {
+    bool done = false;
+    do {
+        int nRead = file.readLine(line, sizeof line);
+        done = nRead < 0;
+        int x;
+        for( x = 0; x < nRead; ++x ) {
+            switch( line[x] ) {
+            case 'S': mTiles[y*BOARD_MAX_HEIGHT+x] = STONE;     break;
+            case 'w': mTiles[y*BOARD_MAX_HEIGHT+x] = WATER;     break;
+            case 'F': mTiles[y*BOARD_MAX_HEIGHT+x] = FLAG;      break;
+            case 'm': mTiles[y*BOARD_MAX_HEIGHT+x] = TILE_SUNK; break;
+            case 'M':
+                mTiles[y*BOARD_MAX_HEIGHT+x] = DIRT;
+                mPieces.insert( Piece( TILE, x, y ) );
                 break;
-            }
-        } while( !done );
-        file.close();
-    }
-    mHeight = y;
+            case 'T':
+                mInitialTankX = x;
+                mInitialTankY = y;
 
+                // fall through
+
+            default:  mTiles[y*BOARD_MAX_HEIGHT+x] = DIRT;  break;
+            }
+        }
+        if ( x > mWidth ) {
+            mWidth = x;
+        }
+
+        if ( ++y >= BOARD_MAX_HEIGHT ) {
+            break;
+        }
+    } while( !done );
+    file.close();
+
+    mHeight = y;
     setProperty( "tiles", QVariant::fromValue(mPieces) );
-    emit boardLoaded();
+
+    return true;
 }
 
 PieceType Board::pieceAt( int x, int y )
@@ -94,6 +108,11 @@ int Board::getWidth()
 int Board::getHeight()
 {
     return mHeight;
+}
+
+int Board::getLevel()
+{
+    return mLevel;
 }
 
 BoardTileId Board::tileAt( int x, int y ) {

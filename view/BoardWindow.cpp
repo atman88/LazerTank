@@ -1,3 +1,6 @@
+#include <iostream>
+#include <QMenu>
+#include <QAction>
 #include "BoardWindow.h"
 
 BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
@@ -82,7 +85,7 @@ void BoardWindow::setGame(const GameHandle handle )
         QObject::connect( mGame, &Game::pieceRemoved,     this, &BoardWindow::renderPieceLater );
         QObject::connect( mGame, &Game::pieceStopped,     this, &BoardWindow::onPieceStopped   );
         QObject::connect( mGame, &Game::pieceMoved,       this, &BoardWindow::renderRectLater  );
-        QObject::connect( mGame, &Game::boardTileChanged, this, &BoardWindow::renderRectLater );
+        QObject::connect( mGame, &Game::rectDirty,        this, &BoardWindow::renderRectLater );
         QObject::connect( mGame, &Game::tankInitialized, mTank, &Tank::onUpdate );
 
         Board* board = mGame->getBoard();
@@ -104,6 +107,12 @@ void BoardWindow::onBoardLoaded()
         mTank->onUpdate( mGame->getTankX(), mGame->getTankY() );
 
         requestUpdate();
+
+        int level = board->getLevel();
+        if ( level > 0 ) {
+            QString title( QString("Level %1").arg(level) );
+            setTitle( title );
+        }
     }
 }
 
@@ -316,6 +325,24 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
             if ( keyToAngle(ev->key()) >= 0 ) {
                 mActiveMoveDirection = -1;
             }
+        }
+    }
+}
+
+void BoardWindow::mousePressEvent( QMouseEvent* event )
+{
+    if ( event->button() == Qt::RightButton ) {
+        QMenu menu;
+        QAction* action;
+        QString text( "level%1" );
+        for( int level = 1; level <= 3; ++level ) {
+            action = menu.addAction( text.arg(level) );
+            action->setData( QVariant(level) );
+        }
+        action = menu.exec( event->globalPos() );
+        if ( action ) {
+            cout << "menu " << action->property("text").toString().toStdString() << " selected" << std::endl;
+            mGame->getBoard()->load( action->data().toInt() );
         }
     }
 }

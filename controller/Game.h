@@ -49,6 +49,7 @@ signals:
 public slots:
     void clearMoves();
     void onTankMoved( int x, int y );
+    void onBoardLoaded();
     void onBoardTileChanged( int x, int y );
     void setPieceX( const QVariant& x );
     void setPieceY( const QVariant& y );

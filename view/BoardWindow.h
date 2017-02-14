@@ -2,6 +2,7 @@
 #define BOARDWINDOW_H
 
 #include <QtGui>
+#include <QMouseEvent>
 #include "tank.h"
 #include "shot.h"
 #include "controller/Game.h"
@@ -39,6 +40,7 @@ protected:
     bool event(QEvent *event) override;
     void keyPressEvent(QKeyEvent *ev) override;
     void keyReleaseEvent(QKeyEvent *ev) override;
+    void mousePressEvent( QMouseEvent* event ) override;
 
     void resizeEvent(QResizeEvent *event) override;
     void exposeEvent(QExposeEvent *event) override;

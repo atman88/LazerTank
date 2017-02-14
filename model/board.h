@@ -6,6 +6,8 @@
 
 #include "model/piece.h"
 
+#define BOARD_MAX_LEVEL 3
+
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
 #define BOARD_MAX_HEIGHT PIECE_MAX_ROWCOUNT
 
@@ -24,8 +26,9 @@ class Board : public QObject
     Q_OBJECT
 
 public:
-    Board( const string& fileName, QObject* parent = 0 );
+    Board( QObject* parent = 0 );
 
+    int getLevel();
     int getWidth();
     int getHeight();
     BoardTileId tileAt( int x, int y );
@@ -34,7 +37,8 @@ public:
     void erasePieceAt( int x , int y );
     void addPiece( PieceType type, int x, int y );
 
-    void load( const string& fileName );
+    bool load( int level );
+    bool load( QString& fileName );
 
     int mInitialTankX;
     int mInitialTankY;
@@ -44,6 +48,7 @@ signals:
     void tileChanged(int x, int y);
 
 private:
+    int mLevel;
     int mHeight;
     int mWidth;
 

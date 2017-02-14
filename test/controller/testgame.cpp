@@ -12,7 +12,9 @@ private slots:
 
 void TestGame::testMove()
 {
-    Board board(":/maps/testsimple.txt");
+    Board board;
+    QString fileName( ":/maps/testsimple.txt" );
+    board.load( fileName );
     cout << "board " << board.getWidth() << "x" << board.getHeight() << std::endl;
 
     QVariant v = board.property("tiles");

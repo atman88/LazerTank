@@ -10,8 +10,7 @@ Game::Game( Board* board )
     mBoard = board;
     if ( board ) {
         QObject::connect( board, &Board::tileChanged, this, &Game::onBoardTileChanged);
-        mTankX = board->mInitialTankX;
-        mTankY = board->mInitialTankY;
+        QObject::connect( board, &Board::boardLoaded, this, &Game::onBoardLoaded);
         emit tankInitialized( mTankX, mTankY );
     }
     mHandle.game = this;
@@ -138,10 +137,11 @@ void Game::onTankMoved( int x, int y )
             QMessageBox msgBox;
             msgBox.setText("Level completed!");
             msgBox.exec();
-            mBoard->load(":/maps/level2.txt");
-            mTankX = mBoard->mInitialTankX;
-            mTankY = mBoard->mInitialTankY;
-            emit tankInitialized( mTankX, mTankY );
+
+            int nextLevel = mBoard->getLevel() + 1;
+            if ( nextLevel <= BOARD_MAX_LEVEL ) {
+                mBoard->load( nextLevel );
+            }
         }
     }
 }
@@ -210,7 +210,6 @@ bool Game::canShootThru( int angle, int x, int y )
         if ( type != NONE ) {
             int toX = x, toY = y;
             if ( canMoveFrom( type, angle, &toX, &toY, false ) ) {
-                cout << "move tile to " << toX << "," << toY << std::endl;
                 mBoard->erasePieceAt( x, y );
                 QPoint p( x*24, y*24 );
                 mPieceBoundingRect.moveTopLeft( p );
@@ -235,4 +234,11 @@ bool Game::canShootThru( int angle, int x, int y )
         ;
     }
     return false;
+}
+
+void Game::onBoardLoaded()
+{
+    mTankX = mBoard->mInitialTankX;
+    mTankY = mBoard->mInitialTankY;
+    emit tankInitialized( mTankX, mTankY );
 }

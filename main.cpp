@@ -12,9 +12,10 @@ int main(int argc, char *argv[])
     qRegisterMetaType<PieceList>("tiles");
 
     BoardWindow window;
-    Board board(":/maps/default.txt");
+    Board board;
     Game game( &board );
     window.setGame( game.getHandle() );
+    board.load( 1 );
     window.show();
 
     return app.exec();
