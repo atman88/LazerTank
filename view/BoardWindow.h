@@ -22,16 +22,12 @@ public:
     GameHandle getGame() const;
     virtual void render(QRegion *region);
 
-    void renderLater(QRect* region);
-
 signals:
 
 public slots:
     void setGame( const GameHandle game );
-    void renderRectLater( QRect rect );
+    void renderLater(const QRect &rect);
     void renderNow();
-    void onTankChanged( QRect rect );
-    void onTankStopped();
     void renderPieceLater( const Piece& piece );
     void onPieceStopped();
     void onBoardLoaded();

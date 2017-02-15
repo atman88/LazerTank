@@ -1,5 +1,4 @@
 #include "shot.h"
-#include "Game.h"
 
 Shot::Shot(QObject *parent) : QObject(parent)
 {
@@ -21,15 +20,16 @@ void Shot::setSequence( const QVariant &sequence )
 {
     int seq = mSequence.toInt();
     if ( seq < sequence.toInt() ) {
-        QObject* p = parent();
-        QVariant v = p->property("GameHandle");
-        Game* game = v.value<GameHandle>().game;
+        Game* game = getGame();
+        if ( !game ) {
+            return;
+        }
 
         int direction, x, y;
         if ( !mPath.size() ) {
             direction = mDirection;
-            x = game->getTankX();
-            y = game->getTankY();
+            x = parent()->property( "x" ).toInt() / 24;
+            y = parent()->property( "y" ).toInt() / 24;
         } else {
             Piece& p = mPath.back();
             direction = p.getAngle();
@@ -70,14 +70,23 @@ void Shot::fire( int direction, int x, int y )
 {
     stop();
 
-    QObject* p = parent();
-    QVariant v = p->property("GameHandle");
-    Game* game = v.value<GameHandle>().game;
-    if ( game->canShootFrom( direction, &x, &y ) ) {
+    Game* game = getGame();
+    if ( game && game->canShootFrom( direction, &x, &y ) ) {
         mSequence = QVariant(-1);
         mDirection = direction;
         mAnimation->start();
 
         emit pathAdded(mPath.back());
     }
+}
+
+Game* Shot::getGame()
+{
+    // find the game from the object hierarchy:
+    QObject* p = parent();
+    QVariant v;
+    while( p && !(v = p->property("GameHandle")).isValid() ) {
+        p = p->parent();
+    }
+    return v.value<GameHandle>().game;
 }

@@ -10,9 +10,9 @@ Tank::Tank( QObject *parent ) : QObject(parent)
     mRotateAnimation = new QPropertyAnimation(this,"rotation");
     mHorizontalAnimation = new QPropertyAnimation(this,"x");
     mVerticalAnimation   = new QPropertyAnimation(this,"y");
-    QObject::connect(mRotateAnimation,    &QVariantAnimation::finished,this,&Tank::rotationAnimationFinished);
-    QObject::connect(mVerticalAnimation,  &QVariantAnimation::finished,this,&Tank::moveAnimationFinished);
-    QObject::connect(mHorizontalAnimation,&QVariantAnimation::finished,this,&Tank::moveAnimationFinished);
+    QObject::connect(mRotateAnimation,    &QVariantAnimation::finished,this,&Tank::animationFinished);
+    QObject::connect(mVerticalAnimation,  &QVariantAnimation::finished,this,&Tank::animationFinished);
+    QObject::connect(mHorizontalAnimation,&QVariantAnimation::finished,this,&Tank::animationFinished);
     mBoundingRect.setRect(0,0,24,24);
 }
 
@@ -30,16 +30,18 @@ void Tank::paint( QPainter* painter )
     painter->drawPixmap( x, y, mPixmap );
 }
 
-void Tank::onUpdate( int boardX, int boardY )
+void Tank::reset( int boardX, int boardY )
 {
-    QPoint p( boardX*24, boardY*24 );
+    mRotateAnimation->stop();
     mHorizontalAnimation->stop();
     mVerticalAnimation->stop();
+    QPoint p( boardX*24, boardY*24 );
     mBoundingRect.moveTopLeft( p );
     mHorizontalAnimation->setStartValue( p.x() );
+    mVerticalAnimation->setStartValue( p.x() );
     mHorizontalAnimation->setEndValue( p.x() );
-    mVerticalAnimation->setStartValue( p.y() );
-    mVerticalAnimation->setEndValue( p.y() );
+    mVerticalAnimation->setEndValue( p.x() );
+    mMoves.clear();
 }
 
 QVariant Tank::getX()
@@ -52,19 +54,23 @@ QVariant Tank::getY()
     return QVariant(mBoundingRect.top());
 }
 
-QRect* Tank::getRect()
+const QRect& Tank::getRect()
 {
-    return &mBoundingRect;
+    return mBoundingRect;
 }
 
 void Tank::setX( const QVariant& x )
 {
     int xv = x.toInt();
     if ( xv != mBoundingRect.left() ) {
-        QRegion dirty( mBoundingRect );
+        QRect dirty( mBoundingRect );
         mBoundingRect.moveLeft( xv );
-        dirty += mBoundingRect;
-        emit changed( dirty.boundingRect() );
+        dirty |= mBoundingRect;
+        emit changed( dirty );
+
+        if ( !(xv % 24) ) {
+            emit moved( xv/24, mBoundingRect.top()/24 );
+        }
     }
 }
 
@@ -72,10 +78,14 @@ void Tank::setY( const QVariant& y )
 {
     int yv = y.toInt();
     if ( yv != mBoundingRect.top() ) {
-        QRegion dirty( mBoundingRect );
+        QRect dirty( mBoundingRect );
         mBoundingRect.moveTop( yv );
-        dirty += mBoundingRect;
-        emit changed( dirty.boundingRect() );
+        dirty |= mBoundingRect;
+        emit changed( dirty );
+
+        if ( !(yv % 24) ) {
+            emit moved( mBoundingRect.left()/24, yv/24 );
+        }
     }
 }
 
@@ -99,17 +109,62 @@ bool Tank::isMoving()
         || mRotateAnimation->state()     == QPropertyAnimation::Running;
 }
 
-void Tank::rotationAnimationFinished()
+void Tank::move( int direction )
 {
-    setRotation( QVariant( mRotation.toInt() % 360 ) );
-    if ( !isMoving() ) {
-        emit stopped();
+    int fromRotation;
+    if ( !mMoves.size() ) {
+        fromRotation = mRotation.toInt();
+    } else {
+        fromRotation = mMoves.back().getAngle();
+    }
+    if ( direction != fromRotation ) {
+        if ( mMoves.empty() ) {
+            mMoves.push_back( Piece( MOVE, mBoundingRect.left()/24, mBoundingRect.top()/24, direction ) );
+        } else {
+            PieceList::iterator it = mMoves.end();
+            *--it = Piece( MOVE, it->getX(), it->getY(), direction );
+            if ( mMoves.size() > 1 ) {
+                emit pathAdded( mMoves.back() );
+            }
+        }
+        if ( mMoves.size() == 1 ) {
+            followPath();
+        }
+    } else {
+        int x, y;
+        if ( mMoves.empty() ) {
+            x = mBoundingRect.left()/24;
+            y = mBoundingRect.top()/24;
+        } else {
+            Piece& last = mMoves.back();
+            x = last.getX();
+            y = last.getY();
+        }
+
+        QObject* p = parent();
+        QVariant hv = p->property("GameHandle");
+        Game* game = hv.value<GameHandle>().game;
+
+        if ( game->canMoveFrom( TANK, direction, &x, &y ) ) {
+            mMoves.push_back( Piece( MOVE, x, y, direction ) );
+            emit pathAdded( mMoves.back() );
+            if ( mMoves.size() == 1 ) {
+                followPath();
+            }
+        }
     }
 }
 
-void Tank::move( int direction )
+bool Tank::followPath()
 {
+    if ( mMoves.empty() ) {
+        return false;
+    }
+
+    Piece move( mMoves.front() );
     int curRotation = mRotation.toInt();
+    int direction = move.getAngle();
+
     if ( direction != curRotation ) {
         mRotateAnimation->stop();
 
@@ -122,56 +177,52 @@ void Tank::move( int direction )
                 direction = 360;
             }
         }
-        mRotateAnimation->setEndValue( QVariant(direction) );
+        mRotateAnimation->setEndValue( direction );
         mRotateAnimation->setDuration( abs(direction-curRotation) * 1000 / 90);
         mRotateAnimation->start();
-    } else {
-        QObject* p = parent();
-        QVariant hv = p->property("GameHandle");
-        Game* game = hv.value<GameHandle>().game;
-        if ( game && game->addMove( direction ) ) {
-            QPropertyAnimation* animation;
-            int startValue;
-            int delta;
+    }
 
-            switch( direction ) {
-            case   0:
-                animation = mVerticalAnimation;
-                startValue = mBoundingRect.top();
-                delta = -24;
-                break;
-            case  90:
-                animation = mHorizontalAnimation;
-                startValue = mBoundingRect.left();
-                delta = 24;
-                break;
-            case 180:
-                animation = mVerticalAnimation;
-                startValue = mBoundingRect.top();
-                delta = 24;
-                break;
-            case 270:
-                animation = mHorizontalAnimation;
-                startValue = mBoundingRect.left();
-                delta = -24;
-                break;
-            default:
-                return;
-            }
+    animateMove( mBoundingRect.left(), move.getX()*24, mHorizontalAnimation );
+    animateMove( mBoundingRect.top(),  move.getY()*24, mVerticalAnimation   );
 
-            animation->stop();
-            int endValue = animation->endValue().toInt() + delta;
-            animation->setStartValue( startValue );
-            animation->setEndValue( endValue );
-            animation->setDuration(abs(endValue - startValue) * 1000 / 24);
-            animation->start();
-        }
+    return isMoving();
+}
+
+void Tank::animateMove( int from, int to, QPropertyAnimation *animation )
+{
+    int delta = to - from;
+    if ( delta ) {
+        animation->stop();
+        animation->setStartValue( from );
+        animation->setEndValue( to );
+        animation->setDuration(abs(delta) * 1000 / 24);
+        animation->start();
     }
 }
 
-void Tank::moveAnimationFinished()
+bool Tank::isStopped()
 {
-    if ( !isMoving() ) {
-        emit stopped();
+    return mRotateAnimation->state()     == QPropertyAnimation::Stopped
+        && mHorizontalAnimation->state() == QPropertyAnimation::Stopped
+        && mVerticalAnimation->state()   == QPropertyAnimation::Stopped;
+}
+
+void Tank::animationFinished()
+{
+    if ( isStopped() ) {
+        int rotation = mRotation.toInt() % 360;
+        setRotation( QVariant( rotation ) );
+        Piece& piece = mMoves.front();
+        if ( piece.getAngle() == rotation
+          && piece.getX() == mBoundingRect.left()/24
+          && piece.getY() == mBoundingRect.top()/24 ) {
+            mMoves.pop_front();
+        }
+        followPath();
     }
+}
+
+PieceList& Tank::getMoves()
+{
+    return mMoves;
 }

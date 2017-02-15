@@ -1,6 +1,5 @@
 #include <iostream>
 #include <QVariant>
-#include <QRegion>
 #include <QMessageBox>
 
 #include "controller/Game.h"
@@ -10,12 +9,8 @@ Game::Game( Board* board )
     mBoard = board;
     if ( board ) {
         QObject::connect( board, &Board::tileChanged, this, &Game::onBoardTileChanged);
-        QObject::connect( board, &Board::boardLoaded, this, &Game::onBoardLoaded);
-        emit tankInitialized( mTankX, mTankY );
     }
     mHandle.game = this;
-
-    setProperty("MoveList", QVariant::fromValue(mMoves));
 
     mHorizontalPieceAnimation = new QPropertyAnimation( this, "pieceX" );
     mVerticalPieceAnimation   = new QPropertyAnimation( this, "pieceY" );
@@ -100,82 +95,30 @@ bool Game::canShootFrom( int angle, int *x, int *y ) {
     return getAdjacentPosition(angle, x, y) && canShootThru( angle, *x, *y );
 }
 
-bool Game::addMove(int angle)
-{
-    int x, y;
-    if ( mMoves.empty() ) {
-        x = mTankX;
-        y = mTankY;
-    } else {
-        Piece last = mMoves.back();
-        x = last.getX();
-        y = last.getY();
-    }
-    if ( canMoveFrom( TANK, angle, &x, &y ) ) {
-        addMoveInternal( angle, x, y );
-        return true;
-    }
-    return false;
-}
-
-void Game::addMoveInternal( int angle, int x, int y )
-{
-    mMoves.push_back( Piece(MOVE,x,y,angle) );
-    setProperty("MoveList", QVariant::fromValue(mMoves));
-    emit pieceAdded(mMoves.back());
-}
-
 void Game::onTankMoved( int x, int y )
 {
-    mTankX = x;
-    mTankY = y;
-    if ( mMoves.front().encodedPos() == Piece::encodePos(x,y) ) {
-        mMoves.pop_front();
-        setProperty("MoveList", QVariant::fromValue(mMoves));
+    cout << "moved to " << x << "," << y << std::endl;
+    if ( mBoard && mBoard->tileAt(x,y) == FLAG ) {
+        QMessageBox msgBox;
+        msgBox.setText("Level completed!");
+        msgBox.exec();
 
-        if ( mBoard && mBoard->tileAt(x,y) == FLAG ) {
-            QMessageBox msgBox;
-            msgBox.setText("Level completed!");
-            msgBox.exec();
-
-            int nextLevel = mBoard->getLevel() + 1;
-            if ( nextLevel <= BOARD_MAX_LEVEL ) {
-                mBoard->load( nextLevel );
-            }
+        int nextLevel = mBoard->getLevel() + 1;
+        if ( nextLevel <= BOARD_MAX_LEVEL ) {
+            mBoard->load( nextLevel );
         }
     }
-}
-
-void Game::clearMoves()
-{
-    for( auto it = mMoves.begin(); it != mMoves.end(); ++it ) {
-        emit pieceRemoved( *it );
-    }
-    mMoves.clear();
-    setProperty("MoveList", QVariant::fromValue(mMoves));
-}
-
-int Game::getTankX()
-{
-    return mTankX;
-}
-
-int Game::getTankY()
-{
-    return mTankY;
 }
 
 bool Game::getAdjacentPosition( int angle, int *x, int *y )
 {
-    if ( mBoard ) {
-        switch( angle ) {
-        case   0: *y -= 1; return true;
-        case  90: *x += 1; return true;
-        case 180: *y += 1; return true;
-        case 270: *x -= 1; return true;
-        default:
-            ;
-        }
+    switch( angle ) {
+    case   0: *y -= 1; return true;
+    case  90: *x += 1; return true;
+    case 180: *y += 1; return true;
+    case 270: *x -= 1; return true;
+    default:
+        ;
     }
     return false;
 }
@@ -234,11 +177,4 @@ bool Game::canShootThru( int angle, int x, int y )
         ;
     }
     return false;
-}
-
-void Game::onBoardLoaded()
-{
-    mTankX = mBoard->mInitialTankX;
-    mTankY = mBoard->mInitialTankY;
-    emit tankInitialized( mTankX, mTankY );
 }

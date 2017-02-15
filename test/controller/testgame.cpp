@@ -32,14 +32,14 @@ void TestGame::testMove()
 
     QCOMPARE( game.addMove( 90 ), true );
     v = game.property( "MoveList" );
-    PieceList moves = v.value<PieceList>();
+    PieceList& moves = v.value<PieceList>();
     QCOMPARE( moves.size(), 1UL );
 
     QCOMPARE( game.addMove( 180 ), true );
     QCOMPARE( game.addMove( 270 ), true );
-    QCOMPARE( game.addMove( 0 ), true );
-    QCOMPARE( game.addMove( 90 ), true );
-    QCOMPARE( game.addMove( 90 ), true );
+    QCOMPARE( game.addMove(   0 ), true );
+    QCOMPARE( game.addMove(  90 ), true );
+    QCOMPARE( game.addMove(  90 ), true );
     v = game.property( "MoveList" );
     moves = v.value<PieceList>();
     QCOMPARE( moves.size(), 6UL );

@@ -18,10 +18,10 @@ BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
     mShotStraightPixmap.load( ":/images/shot-straight.png");
 
     mTank = new Tank(this);
-    QObject::connect( mTank, &Tank::changed, this, &BoardWindow::onTankChanged );
-    QObject::connect( mTank, &Tank::stopped, this, &BoardWindow::onTankStopped );
+    QObject::connect( mTank, &Tank::changed,   this, &BoardWindow::renderLater      );
+    QObject::connect( mTank, &Tank::pathAdded, this, &BoardWindow::renderPieceLater );
 
-    mShot = new Shot(this);
+    mShot = new Shot(mTank);
     QObject::connect( mShot, &Shot::pathAdded,   this, &BoardWindow::renderPieceLater );
     QObject::connect( mShot, &Shot::pathRemoved, this, &BoardWindow::renderPieceLater );
 
@@ -37,29 +37,6 @@ void BoardWindow::exposeEvent(QExposeEvent *)
             *mDirtyRegion += size;
             renderNow();
         }
-    }
-}
-
-void BoardWindow::onTankChanged( QRect rect )
-{
-    if ( mGame && !(rect.left() % 24) && !(rect.top() % 24) ) {
-        mGame->onTankMoved( rect.left()/24, rect.top()/24 );
-    }
-    renderLater( &rect );
-}
-
-void BoardWindow::renderRectLater( QRect rect )
-{
-    renderLater( &rect );
-}
-
-void BoardWindow::onTankStopped()
-{
-    int direction = mTank->getRotation().toInt();
-    if ( direction == mActiveMoveDirection ) {
-        mTank->move( direction );
-    } else {
-        mActiveMoveDirection = -1; // don't allow this to stick
     }
 }
 
@@ -81,15 +58,14 @@ void BoardWindow::setGame(const GameHandle handle )
 
     mGame = handle.game;
     if ( mGame ) {
-        QObject::connect( mGame, &Game::pieceAdded,       this, &BoardWindow::renderPieceLater );
-        QObject::connect( mGame, &Game::pieceRemoved,     this, &BoardWindow::renderPieceLater );
-        QObject::connect( mGame, &Game::pieceStopped,     this, &BoardWindow::onPieceStopped   );
-        QObject::connect( mGame, &Game::pieceMoved,       this, &BoardWindow::renderRectLater  );
-        QObject::connect( mGame, &Game::rectDirty,        this, &BoardWindow::renderRectLater );
-        QObject::connect( mGame, &Game::tankInitialized, mTank, &Tank::onUpdate );
+        QObject::connect( mGame, &Game::pieceAdded,   this,  &BoardWindow::renderPieceLater );
+        QObject::connect( mGame, &Game::pieceRemoved, this,  &BoardWindow::renderPieceLater );
+        QObject::connect( mGame, &Game::pieceStopped, this,  &BoardWindow::onPieceStopped   );
+        QObject::connect( mGame, &Game::pieceMoved,   this,  &BoardWindow::renderLater      );
+        QObject::connect( mGame, &Game::rectDirty,    this,  &BoardWindow::renderLater      );
+        QObject::connect( mTank, &Tank::moved,        mGame, &Game::onTankMoved             );
 
         Board* board = mGame->getBoard();
-
         if ( board ) {
             onBoardLoaded();
             QObject::connect( board, &Board::boardLoaded, this, &BoardWindow::onBoardLoaded );
@@ -104,9 +80,9 @@ void BoardWindow::onBoardLoaded()
         QRect size( 0, 0, board->getWidth()*24, board->getHeight()*24 );
         setGeometry(size);
         *mDirtyRegion += size;
-        mTank->onUpdate( mGame->getTankX(), mGame->getTankY() );
+        mTank->reset( board->mInitialTankX, board->mInitialTankY );
 
-        requestUpdate();
+        renderLater( size );
 
         int level = board->getLevel();
         if ( level > 0 ) {
@@ -141,7 +117,7 @@ void BoardWindow::renderNow()
 void BoardWindow::renderPieceLater( const Piece& piece )
 {
     QRect dirty(piece.getX()*24, piece.getY()*24, 24, 24);
-    renderLater( &dirty );
+    renderLater( dirty );
 }
 
 void BoardWindow::renderPiece( PieceType type, int x, int y, int angle, QPainter *painter )
@@ -212,13 +188,11 @@ void BoardWindow::render(QRegion* region)
         int maxY = rect.bottom()/24;
 
         Piece pos(MOVE, minX, minY);
-        QVariant v = mGame->property( "MoveList" );
-        PieceList moveList = v.value<PieceList>();
         PieceSet moves;
-        loadDrawSet( moveList, moves );
+        loadDrawSet( mTank->getMoves(), moves );
         PieceSet::iterator moveIterator = moves.lower_bound( pos );
 
-        v = board->property( "tiles" );
+        QVariant v = board->property( "tiles" );
         PieceSet tiles = v.value<PieceSet>();
         PieceSet::iterator tileIterator = tiles.lower_bound( pos );
 
@@ -258,7 +232,7 @@ void BoardWindow::render(QRegion* region)
         if ( movingPieceType != NONE ) {
             renderPiece( movingPieceType, mGame->getPieceX().toInt(), mGame->getPieceY().toInt(), 0, &painter );
         }
-        if ( region->intersects( *mTank->getRect() ) ) {
+        if ( region->intersects( mTank->getRect() ) ) {
             mTank->paint( &painter );
         }
 
@@ -267,9 +241,9 @@ void BoardWindow::render(QRegion* region)
     }
 }
 
-void BoardWindow::renderLater( QRect* rect )
+void BoardWindow::renderLater( const QRect& rect )
 {
-    *mDirtyRegion += *rect;
+    *mDirtyRegion += rect;
     requestUpdate();
 }
 
@@ -300,7 +274,7 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
         switch( ev->key() ) {
         case Qt::Key_Space:
             if ( !mTank->isMoving() ) {
-                mShot->fire( mTank->getRotation().toInt(), mGame->getTankX(), mGame->getTankY() );
+                mShot->fire( mTank->getRotation().toInt(), mTank->getX().toInt()/24, mTank->getY().toInt()/24 );
             }
             break;
         default:

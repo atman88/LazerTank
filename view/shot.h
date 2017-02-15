@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QRect>
 #include <QPropertyAnimation>
+#include "Game.h"
 #include "piece.h"
 
 class Shot : public QObject
@@ -28,6 +29,7 @@ public slots:
     void stop();
 
 private:
+    Game* getGame();
     QVariant mSequence;
     QPropertyAnimation* mAnimation;
 
