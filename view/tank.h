@@ -7,6 +7,8 @@
 
 #include "model/piece.h"
 
+class Game;
+
 class Tank : public QObject
 {
     Q_OBJECT
@@ -35,6 +37,7 @@ signals:
     void changed( const QRect& rect );
     void moved( int boardX, int boardY );
     void pathAdded( Piece& piece );
+    void movingInto( int x, int y, int curRotation );
 
 public slots:
     void reset( int x, int y );
@@ -47,6 +50,7 @@ private:
     bool followPath();
     bool isStopped();
     void animateMove( int from, int to, QPropertyAnimation *animation );
+    Game* getGame();
 
     QPixmap mPixmap;
     QRect mBoundingRect;

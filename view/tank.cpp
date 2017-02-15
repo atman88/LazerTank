@@ -141,11 +141,8 @@ void Tank::move( int direction )
             y = last.getY();
         }
 
-        QObject* p = parent();
-        QVariant hv = p->property("GameHandle");
-        Game* game = hv.value<GameHandle>().game;
-
-        if ( game->canMoveFrom( TANK, direction, &x, &y ) ) {
+        Game* game = getGame();
+        if ( game && game->canMoveFrom( TANK, direction, &x, &y ) ) {
             mMoves.push_back( Piece( MOVE, x, y, direction ) );
             emit pathAdded( mMoves.back() );
             if ( mMoves.size() == 1 ) {
@@ -182,8 +179,11 @@ bool Tank::followPath()
         mRotateAnimation->start();
     }
 
-    animateMove( mBoundingRect.left(), move.getX()*24, mHorizontalAnimation );
-    animateMove( mBoundingRect.top(),  move.getY()*24, mVerticalAnimation   );
+    int x = move.getX();
+    int y = move.getY();
+    animateMove( mBoundingRect.left(), x*24, mHorizontalAnimation );
+    animateMove( mBoundingRect.top(),  y*24, mVerticalAnimation   );
+    emit movingInto( x, y, curRotation );
 
     return isMoving();
 }
@@ -225,4 +225,11 @@ void Tank::animationFinished()
 PieceList& Tank::getMoves()
 {
     return mMoves;
+}
+
+Game* Tank::getGame()
+{
+    QObject* p = parent();
+    QVariant hv = p->property("GameHandle");
+    return hv.value<GameHandle>().game;
 }

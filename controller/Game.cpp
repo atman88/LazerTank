@@ -31,7 +31,7 @@ Push& Game::getMovingPiece()
 }
 
 bool Game::canMoveFrom( PieceType what, int angle, int *x, int *y, bool canPush ) {
-    return getAdjacentPosition(angle, x, y) && canPlaceAt( what, *x, *y );
+    return getAdjacentPosition(angle, x, y) && canPlaceAt( what, *x, *y, angle, canPush );
 }
 
 bool Game::canShootFrom( int angle, int *x, int *y ) {
@@ -71,11 +71,14 @@ void Game::onBoardTileChanged( int x, int y )
     emit rectDirty( QRect( x*24, y*24, 24, 24 ) );
 }
 
-bool Game::canPlaceAt( PieceType what, int x, int y )
+bool Game::canPlaceAt(PieceType what, int x, int y, int fromAngle, bool canPush )
 {
     switch( mBoard->tileAt(x,y) ) {
     case DIRT:
     case TILE_SUNK:
+        if ( canPush && mBoard->pieceAt( x, y ) == TILE ) {
+            return canMoveFrom( TILE, fromAngle, &x, &y, false );
+        }
         return true;
     case FLAG:
         return what == TANK;
@@ -109,4 +112,18 @@ bool Game::canShootThru( int angle, int x, int y )
         ;
     }
     return false;
+}
+
+void Game::onTankMovingInto( int x, int y, int fromAngle )
+{
+    if ( mBoard ) {
+        PieceType hit = mBoard->pieceAt( x, y );
+        if ( hit == TILE ) {
+            int toX = x, toY = y;
+            if ( getAdjacentPosition(fromAngle, &toX, &toY) ) {
+                mBoard->erasePieceAt( x, y );
+                mMovingPiece.start( TILE, x*24, y*24, toX*24, toY*24 );
+            }
+        }
+    }
 }

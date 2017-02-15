@@ -25,7 +25,7 @@ public:
     bool canMoveFrom(PieceType what, int angle, int *x, int *y , bool canPush = true);
     bool canShootFrom( int angle, int *x, int *y );
     bool getAdjacentPosition( int angle, int *x, int *y );
-    bool canPlaceAt(PieceType what, int x, int y );
+    bool canPlaceAt(PieceType what, int x, int y , int fromAngle, bool canPush);
     bool canShootThru(int angle, int x, int y );
 
 signals:
@@ -37,6 +37,7 @@ signals:
 public slots:
     void onTankMoved( int x, int y );
     void onBoardTileChanged( int x, int y );
+    void onTankMovingInto( int x, int y, int fromAngle );
 
 private:
     GameHandle mHandle;

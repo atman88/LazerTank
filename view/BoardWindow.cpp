@@ -57,6 +57,7 @@ void BoardWindow::setGame(const GameHandle handle )
         QObject::connect( mGame,                   &Game::pieceRemoved, this,  &BoardWindow::renderPieceLater );
         QObject::connect( &mGame->getMovingPiece(),&Push::pieceMoved,   this,  &BoardWindow::renderLater      );
         QObject::connect( mGame,                   &Game::rectDirty,    this,  &BoardWindow::renderLater      );
+        QObject::connect( mTank,                   &Tank::movingInto,   mGame, &Game::onTankMovingInto        );
         QObject::connect( mTank,                   &Tank::moved,        mGame, &Game::onTankMoved             );
 
         Board* board = mGame->getBoard();
