@@ -11,16 +11,8 @@ Game::Game( Board* board )
         QObject::connect( board, &Board::tileChanged, this, &Game::onBoardTileChanged);
     }
     mHandle.game = this;
-
-    mHorizontalPieceAnimation = new QPropertyAnimation( this, "pieceX" );
-    mVerticalPieceAnimation   = new QPropertyAnimation( this, "pieceY" );
-    QObject::connect(mHorizontalPieceAnimation, &QVariantAnimation::finished,this,&Game::onPieceStopped);
-    QObject::connect(mVerticalPieceAnimation,   &QVariantAnimation::finished,this,&Game::onPieceStopped);
-    mHorizontalPieceAnimation->setDuration( 1000 );
-    mVerticalPieceAnimation->setDuration( 1000 );
-
-    mMovingPieceType = NONE;
-    mPieceBoundingRect.setRect(0,0,24,24);
+    setProperty("GameHandle", QVariant::fromValue(mHandle));
+    mMovingPiece.setParent( this );
 }
 
 GameHandle Game::getHandle()
@@ -33,58 +25,9 @@ Board* Game::getBoard()
     return mBoard;
 }
 
-QVariant Game::getPieceX()
+Push& Game::getMovingPiece()
 {
-    return QVariant( mPieceBoundingRect.left() );
-}
-
-QVariant Game::getPieceY()
-{
-    return QVariant( mPieceBoundingRect.top() );
-}
-
-void Game::setPieceX( const QVariant& x )
-{
-    int xv = x.toInt();
-    if ( xv != mPieceBoundingRect.left() ) {
-        QRect dirty( mPieceBoundingRect );
-        mPieceBoundingRect.moveLeft( xv );
-        dirty |= mPieceBoundingRect;
-        emit pieceMoved( dirty );
-    }
-}
-
-void Game::setPieceY( const QVariant& y )
-{
-    int yv = y.toInt();
-    if ( yv != mPieceBoundingRect.top() ) {
-        QRect dirty( mPieceBoundingRect );
-        mPieceBoundingRect.moveTop( yv );
-        dirty |= mPieceBoundingRect;
-        emit pieceMoved( dirty );
-    }
-}
-
-PieceType Game::getMovingPieceType()
-{
-    return mMovingPieceType;
-}
-
-void Game::onPieceStopped()
-{
-    if ( mMovingPieceType != NONE ) {
-        if ( mBoard ) {
-            int x = getPieceX().toInt()/24;
-            int y = getPieceY().toInt()/24;
-            if ( mMovingPieceType == TILE && mBoard->tileAt(x,y) == WATER ) {
-                mBoard->setTileAt( TILE_SUNK, x, y );
-            } else {
-                mBoard->addPiece( mMovingPieceType, x, y );
-            }
-        }
-        mMovingPieceType = NONE;
-        emit pieceStopped();
-    }
+    return mMovingPiece;
 }
 
 bool Game::canMoveFrom( PieceType what, int angle, int *x, int *y, bool canPush ) {
@@ -154,18 +97,7 @@ bool Game::canShootThru( int angle, int x, int y )
             int toX = x, toY = y;
             if ( canMoveFrom( type, angle, &toX, &toY, false ) ) {
                 mBoard->erasePieceAt( x, y );
-                QPoint p( x*24, y*24 );
-                mPieceBoundingRect.moveTopLeft( p );
-                mMovingPieceType = type;
-                if ( toX != x ) {
-                    mHorizontalPieceAnimation->setStartValue( p.x() );
-                    mHorizontalPieceAnimation->setEndValue( toX*24 );
-                    mHorizontalPieceAnimation->start();
-                } else if ( toY != y ) {
-                    mVerticalPieceAnimation->setStartValue( p.y() );
-                    mVerticalPieceAnimation->setEndValue( toY*24 );
-                    mVerticalPieceAnimation->start();
-                }
+                mMovingPiece.start( type, x*24, y*24, toX*24, toY*24 );
             }
             break;
         }

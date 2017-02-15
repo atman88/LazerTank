@@ -40,11 +40,6 @@ void BoardWindow::exposeEvent(QExposeEvent *)
     }
 }
 
-void BoardWindow::onPieceStopped()
-{
-    mShot->stop();
-}
-
 GameHandle BoardWindow::getGame() const
 {
     return mGame->getHandle();
@@ -58,12 +53,11 @@ void BoardWindow::setGame(const GameHandle handle )
 
     mGame = handle.game;
     if ( mGame ) {
-        QObject::connect( mGame, &Game::pieceAdded,   this,  &BoardWindow::renderPieceLater );
-        QObject::connect( mGame, &Game::pieceRemoved, this,  &BoardWindow::renderPieceLater );
-        QObject::connect( mGame, &Game::pieceStopped, this,  &BoardWindow::onPieceStopped   );
-        QObject::connect( mGame, &Game::pieceMoved,   this,  &BoardWindow::renderLater      );
-        QObject::connect( mGame, &Game::rectDirty,    this,  &BoardWindow::renderLater      );
-        QObject::connect( mTank, &Tank::moved,        mGame, &Game::onTankMoved             );
+        QObject::connect( mGame,                   &Game::pieceAdded,   this,  &BoardWindow::renderPieceLater );
+        QObject::connect( mGame,                   &Game::pieceRemoved, this,  &BoardWindow::renderPieceLater );
+        QObject::connect( &mGame->getMovingPiece(),&Push::pieceMoved,   this,  &BoardWindow::renderLater      );
+        QObject::connect( mGame,                   &Game::rectDirty,    this,  &BoardWindow::renderLater      );
+        QObject::connect( mTank,                   &Tank::moved,        mGame, &Game::onTankMoved             );
 
         Board* board = mGame->getBoard();
         if ( board ) {
@@ -228,9 +222,9 @@ void BoardWindow::render(QRegion* region)
             }
         }
 
-        PieceType movingPieceType = mGame->getMovingPieceType();
-        if ( movingPieceType != NONE ) {
-            renderPiece( movingPieceType, mGame->getPieceX().toInt(), mGame->getPieceY().toInt(), 0, &painter );
+        Push& movingPiece = mGame->getMovingPiece();
+        if ( movingPiece.getType() != NONE ) {
+            renderPiece( movingPiece.getType(), movingPiece.getX().toInt(), movingPiece.getY().toInt(), 0, &painter );
         }
         if ( region->intersects( mTank->getRect() ) ) {
             mTank->paint( &painter );

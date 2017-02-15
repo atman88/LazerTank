@@ -29,7 +29,6 @@ public slots:
     void renderLater(const QRect &rect);
     void renderNow();
     void renderPieceLater( const Piece& piece );
-    void onPieceStopped();
     void onBoardLoaded();
 
 protected:
