@@ -30,6 +30,7 @@ public:
     void paint( QPainter* painter );
     void move( int direction );
     bool isMoving();
+    void eraseLastMove();
     QVariant getRotation();
     QVariant getX();
     QVariant getY();
@@ -39,7 +40,7 @@ public:
 signals:
     void changed( const QRect& rect );
     void moved( int boardX, int boardY );
-    void pathAdded( Piece& piece );
+    void pieceDirty( Piece& piece );
     void movingInto( int x, int y, int curRotation );
 
 public slots:

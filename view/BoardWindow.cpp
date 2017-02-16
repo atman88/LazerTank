@@ -19,7 +19,7 @@ BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
 
     mTank = new Tank(this);
     QObject::connect( mTank, &Tank::changed,   this, &BoardWindow::renderLater      );
-    QObject::connect( mTank, &Tank::pathAdded, this, &BoardWindow::renderPieceLater );
+    QObject::connect( mTank, &Tank::pieceDirty, this, &BoardWindow::renderPieceLater );
 
     mShot = new Shot(mTank);
     QObject::connect( mShot, &Shot::pathAdded,   this, &BoardWindow::renderPieceLater );
@@ -213,8 +213,11 @@ void BoardWindow::render(QRegion* region)
                 case FLAG:
                     painter.drawPixmap( x*24, y*24, mFlagPixmap);
                     break;
-                default:
+                case WATER:
                     painter.fillRect(x*24, y*24, 24, 24, Qt::blue);
+                    break;
+                default: // EMPTY
+                    painter.fillRect(x*24, y*24, 24, 24, Qt::black);
                     break;
                 }
                 pos = Piece(MOVE, x, y);
@@ -289,6 +292,10 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
         switch( ev->key() ) {
         case Qt::Key_Space:
             mShot->stop();
+            break;
+
+        case Qt::Key_Backspace:
+            mTank->eraseLastMove();
             break;
 
         default:

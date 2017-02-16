@@ -34,15 +34,21 @@ bool Board::load( QString& fileName )
     mInitialTankX = mInitialTankY = 0;
     mPieces.clear();
 
-    bool done = false;
     do {
         int nRead = file.readLine(line, sizeof line);
-        done = nRead < 0;
+        if ( nRead && line[nRead-1 ]== '\n' ) {
+            --nRead;
+        }
+        if ( nRead <= 0 ) {
+            break;
+        }
+
         int x;
         for( x = 0; x < nRead; ++x ) {
             switch( line[x] ) {
             case 'S': mTiles[y*BOARD_MAX_HEIGHT+x] = STONE;     break;
             case 'w': mTiles[y*BOARD_MAX_HEIGHT+x] = WATER;     break;
+            case 'e': mTiles[y*BOARD_MAX_HEIGHT+x] = EMPTY;     break;
             case 'F': mTiles[y*BOARD_MAX_HEIGHT+x] = FLAG;      break;
             case 'm': mTiles[y*BOARD_MAX_HEIGHT+x] = TILE_SUNK; break;
             case 'M':
@@ -61,11 +67,7 @@ bool Board::load( QString& fileName )
         if ( x > mWidth ) {
             mWidth = x;
         }
-
-        if ( ++y >= BOARD_MAX_HEIGHT ) {
-            break;
-        }
-    } while( !done );
+    } while( ++y < BOARD_MAX_HEIGHT );
     file.close();
 
     mHeight = y;

@@ -136,7 +136,7 @@ void Tank::move( int direction )
             PieceList::iterator it = mMoves.end();
             *--it = Piece( MOVE, it->getX(), it->getY(), direction );
             if ( mMoves.size() > 1 ) {
-                emit pathAdded( mMoves.back() );
+                emit pieceDirty( mMoves.back() );
             }
         }
         if ( mMoves.size() == 1 ) {
@@ -156,7 +156,7 @@ void Tank::move( int direction )
         Game* game = getGame();
         if ( game && game->canMoveFrom( TANK, direction, &x, &y ) ) {
             mMoves.push_back( Piece( MOVE, x, y, direction ) );
-            emit pathAdded( mMoves.back() );
+            emit pieceDirty( mMoves.back() );
             if ( !game->getAggregate()->active() ) {
                 followLater();
             }
@@ -223,6 +223,15 @@ void Tank::onAnimationsFinished()
         mMoves.pop_front();
     }
     followLater();
+}
+
+void Tank::eraseLastMove()\
+{
+    if ( mMoves.size() ) {
+        Piece& piece = mMoves.back();
+        emit pieceDirty( piece );
+        mMoves.pop_back();
+    }
 }
 
 void Tank::followLater()

@@ -5,7 +5,7 @@
 
 #include "model/piece.h"
 
-#define BOARD_MAX_LEVEL 4
+#define BOARD_MAX_LEVEL 5
 
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
 #define BOARD_MAX_HEIGHT PIECE_MAX_ROWCOUNT
@@ -17,7 +17,8 @@ typedef enum {
     TILE_SUNK,
     STONE,
     WATER,
-    FLAG
+    FLAG,
+    EMPTY
 } BoardTileId;
 
 class Board : public QObject
