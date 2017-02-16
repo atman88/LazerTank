@@ -26,10 +26,10 @@ public:
     Push& getMovingPiece();
     AnimationAggregator* getAggregate();
     bool canMoveFrom(PieceType what, int angle, int *x, int *y , bool canPush = true);
-    bool canShootFrom( int angle, int *x, int *y );
+    bool canShootFrom( int *angle, int *x, int *y );
     bool getAdjacentPosition( int angle, int *x, int *y );
     bool canPlaceAt(PieceType what, int x, int y , int fromAngle, bool canPush);
-    bool canShootThru(int angle, int x, int y );
+    bool canShootThru( int x, int y, int *angle );
 
 signals:
     void pieceAdded( const Piece& );

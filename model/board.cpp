@@ -33,36 +33,61 @@ bool Board::load( QString& fileName )
     mWidth = 0;
     mInitialTankX = mInitialTankY = 0;
     mPieces.clear();
+    memset( mTiles, EMPTY, sizeof mTiles );
 
     do {
         int nRead = file.readLine(line, sizeof line);
-        if ( nRead && line[nRead-1 ]== '\n' ) {
-            --nRead;
-        }
-        if ( nRead <= 0 ) {
-            break;
-        }
 
-        int x;
-        for( x = 0; x < nRead; ++x ) {
-            switch( line[x] ) {
-            case 'S': mTiles[y*BOARD_MAX_HEIGHT+x] = STONE;     break;
-            case 'w': mTiles[y*BOARD_MAX_HEIGHT+x] = WATER;     break;
-            case 'e': mTiles[y*BOARD_MAX_HEIGHT+x] = EMPTY;     break;
-            case 'F': mTiles[y*BOARD_MAX_HEIGHT+x] = FLAG;      break;
-            case 'm': mTiles[y*BOARD_MAX_HEIGHT+x] = TILE_SUNK; break;
-            case 'M':
-                mTiles[y*BOARD_MAX_HEIGHT+x] = DIRT;
-                mPieces.insert( Piece( TILE, x, y ) );
+        int i = 0, x = 0;
+        while( i < nRead ) {
+            while( isspace(line[i]) ) {
+                ++i;
+            }
+
+            switch( line[i++] ) {
+            case 0:
+                --i;
                 break;
+            case 'S': mTiles[y*BOARD_MAX_WIDTH + x++] = STONE;     break;
+            case 'w': mTiles[y*BOARD_MAX_WIDTH + x++] = WATER;     break;
+            case 'e': mTiles[y*BOARD_MAX_WIDTH + x++] = EMPTY;     break;
+            case 'F': mTiles[y*BOARD_MAX_WIDTH + x++] = FLAG;      break;
+            case 'm': mTiles[y*BOARD_MAX_WIDTH + x++] = TILE_SUNK; break;
+            case 'M':
+                mPieces.insert( Piece( TILE, x, y ) );
+                mTiles[y*BOARD_MAX_HEIGHT + x++] = DIRT;
+                break;
+            case '[':
+                if ( nRead-i >= 2 ) {
+                    int c1 = line[i++];
+                    switch( (c1 << 8) | line[i++] ) {
+                    case ('S' <<8)|'/':  mTiles[y*BOARD_MAX_WIDTH + x++] = STONE_MIRROR___0; break;
+                    case ('\\'<<8)|'S':  mTiles[y*BOARD_MAX_WIDTH + x++] = STONE_MIRROR__90; break;
+                    case ('/' <<8)|'S':  mTiles[y*BOARD_MAX_WIDTH + x++] = STONE_MIRROR_180; break;
+                    case ('S' <<8)|'\\': mTiles[y*BOARD_MAX_WIDTH + x++] = STONE_MIRROR_270; break;
+                    case ('S' <<8)|'-':  mTiles[y*BOARD_MAX_WIDTH + x++] = STONE_SLIT__0; break;
+                    case ('S' <<8)|'|':  mTiles[y*BOARD_MAX_WIDTH + x++] = STONE_SLIT_90; break;
+                    default:
+                        ;
+                    }
+                }
+                break;
+
             case 'T':
                 mInitialTankX = x;
                 mInitialTankY = y;
 
                 // fall through
 
-            default:  mTiles[y*BOARD_MAX_HEIGHT+x] = DIRT;  break;
+            default:  mTiles[y*BOARD_MAX_WIDTH + x++] = DIRT;  break;
             }
+
+            if ( x >= BOARD_MAX_WIDTH ) {
+                break;
+            }
+        }
+        if ( !x ) {
+            break;
         }
         if ( x > mWidth ) {
             mWidth = x;

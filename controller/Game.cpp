@@ -35,8 +35,8 @@ bool Game::canMoveFrom( PieceType what, int angle, int *x, int *y, bool canPush 
     return getAdjacentPosition(angle, x, y) && canPlaceAt( what, *x, *y, angle, canPush );
 }
 
-bool Game::canShootFrom( int angle, int *x, int *y ) {
-    return getAdjacentPosition(angle, x, y) && canShootThru( angle, *x, *y );
+bool Game::canShootFrom(int *angle, int *x, int *y ) {
+    return getAdjacentPosition(*angle, x, y) && canShootThru( *x, *y, angle );
 }
 
 void Game::onTankMoved( int x, int y )
@@ -91,7 +91,7 @@ bool Game::canPlaceAt(PieceType what, int x, int y, int fromAngle, bool canPush 
     return false;
 }
 
-bool Game::canShootThru( int angle, int x, int y )
+bool Game::canShootThru( int x, int y, int *angle )
 {
     switch( mBoard->tileAt(x,y) ) {
     case DIRT:
@@ -99,7 +99,7 @@ bool Game::canShootThru( int angle, int x, int y )
     {   PieceType type = mBoard->pieceAt(x,y);
         if ( type != NONE ) {
             int toX = x, toY = y;
-            if ( canMoveFrom( type, angle, &toX, &toY, false ) ) {
+            if ( canMoveFrom( type, *angle, &toX, &toY, false ) ) {
                 mBoard->erasePieceAt( x, y );
                 mMovingPiece.start( type, x*24, y*24, toX*24, toY*24 );
             }
@@ -109,6 +109,38 @@ bool Game::canShootThru( int angle, int x, int y )
     }
     case WATER:
         return true;
+    case STONE_SLIT__0:
+        return *angle == 90 || *angle == 270;
+    case STONE_SLIT_90:
+        return *angle == 0 || *angle == 180;
+    case STONE_MIRROR___0:
+        switch( *angle ) {
+        case   0: *angle =  90; return true;
+        case 270: *angle = 180; return true;
+        }
+        break;
+    case STONE_MIRROR__90:
+        switch( *angle ) {
+        case 90: *angle = 180; return true;
+        case  0: *angle = 270; return true;
+        }
+        break;
+    case STONE_MIRROR_180:
+        switch( *angle ) {
+        case 180: *angle = 270; return true;
+        case  90: *angle =   0; return true;
+        }
+        break;
+    case STONE_MIRROR_270:
+        switch( *angle ) {
+        case 270: *angle =  0; return true;
+        case 180: *angle = 90; return true;
+        }
+        break;
+        if ( *angle == 270 ) {
+            *angle = 0;
+        }
+        break;
     default:
         ;
     }

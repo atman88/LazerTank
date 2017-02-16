@@ -38,11 +38,20 @@ void Shot::setSequence( const QVariant &sequence )
         }
 
         do {
-            if ( !game->canShootFrom( direction, &x, &y ) ) {
+            int startDir = direction;
+            PieceType pieceType;
+            if ( !game->canShootFrom( &direction, &x, &y ) ) {
                 mAnimation->stop();
                 break;
             }
-            mPath.push_back( Piece(SHOT_STRAIGHT,x,y,direction) );
+            if ( direction - startDir == 90 || (direction == 0 && startDir == 270) ) {
+                pieceType = SHOT_RIGHT;
+            } else if ( direction - startDir == -90 || (direction == 270 && startDir == 0) ) {
+                pieceType = SHOT_LEFT;
+            } else {
+                pieceType = SHOT_STRAIGHT;
+            }
+            mPath.push_back( Piece(pieceType,x,y,direction) );
             setProperty("path", QVariant::fromValue(mPath));
             emit pathAdded( mPath.back() );
         } while( ++seq < sequence.toInt() );
@@ -71,7 +80,7 @@ void Shot::fire( int direction, int x, int y )
     stop();
 
     Game* game = getGame();
-    if ( game && game->canShootFrom( direction, &x, &y ) ) {
+    if ( game && game->canShootFrom( &direction, &x, &y ) ) {
         mSequence = QVariant(-1);
         mDirection = direction;
         mAnimation->start();

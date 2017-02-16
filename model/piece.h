@@ -12,7 +12,9 @@ typedef enum {
     TANK,
     MOVE,
     TILE,
-    SHOT_STRAIGHT
+    SHOT_STRAIGHT,
+    SHOT_LEFT,
+    SHOT_RIGHT
 } PieceType;
 
 class Piece

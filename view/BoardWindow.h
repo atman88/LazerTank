@@ -41,9 +41,10 @@ protected:
     void exposeEvent(QExposeEvent *event) override;
 
 private:
+    void renderRotatedPixmap(QPixmap& pixmap, int x, int y, int angle, QPainter &painter );
     void renderMove( int x, int y, int angle = 0 );
-    void renderPiece( PieceType type, int x, int y, int angle, QPainter *painter );
-    void renderListAt(QPainter* painter, PieceSet::iterator *iterator, PieceSet::iterator end, Piece &pos );
+    void renderPiece(PieceType type, int x, int y, int angle, QPainter &painter );
+    void renderListAt(PieceSet::iterator *iterator, PieceSet::iterator end, Piece& pos, QPainter& painter );
 
     Tank* mTank;
     Shot* mShot;
@@ -59,6 +60,9 @@ private:
     QPixmap mTilePixmap;
     QPixmap mMoveIndicatorPixmap;
     QPixmap mShotStraightPixmap;
+    QPixmap mShotRightPixmap;
+    QPixmap mWallMirrorPixmap;
+    QPixmap mStoneSlitPixmap;
 
     int mActiveMoveDirection;
 };
