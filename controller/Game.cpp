@@ -13,6 +13,7 @@ Game::Game( Board* board )
     mHandle.game = this;
     setProperty("GameHandle", QVariant::fromValue(mHandle));
     mMovingPiece.setParent( this );
+    mMovingPiece.init( this );
 }
 
 GameHandle Game::getHandle()
@@ -126,4 +127,9 @@ void Game::onTankMovingInto( int x, int y, int fromAngle )
             }
         }
     }
+}
+
+AnimationAggregator* Game::getAggregate()
+{
+    return &mAggregate;
 }

@@ -2,11 +2,10 @@
 #define BOARD_H
 
 #include <QObject>
-#include <string>
 
 #include "model/piece.h"
 
-#define BOARD_MAX_LEVEL 3
+#define BOARD_MAX_LEVEL 4
 
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
 #define BOARD_MAX_HEIGHT PIECE_MAX_ROWCOUNT

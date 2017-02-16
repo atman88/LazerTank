@@ -1,4 +1,6 @@
 #include <iostream>
+#include <QEvent>
+#include <QCoreApplication>
 #include "tank.h"
 #include "controller/Game.h"
 
@@ -10,10 +12,20 @@ Tank::Tank( QObject *parent ) : QObject(parent)
     mRotateAnimation = new QPropertyAnimation(this,"rotation");
     mHorizontalAnimation = new QPropertyAnimation(this,"x");
     mVerticalAnimation   = new QPropertyAnimation(this,"y");
-    QObject::connect(mRotateAnimation,    &QVariantAnimation::finished,this,&Tank::animationFinished);
-    QObject::connect(mVerticalAnimation,  &QVariantAnimation::finished,this,&Tank::animationFinished);
-    QObject::connect(mHorizontalAnimation,&QVariantAnimation::finished,this,&Tank::animationFinished);
     mBoundingRect.setRect(0,0,24,24);
+}
+
+void Tank::init( Game* game )
+{
+    mFollowEvent = new QEvent(QEvent::User);
+    AnimationAggregator* aggregate = game->getAggregate();
+    QObject::connect( mRotateAnimation,     &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
+    QObject::connect( mHorizontalAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
+    QObject::connect( mVerticalAnimation,   &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
+    QObject::connect( aggregate,            &AnimationAggregator::finished,    this,      &Tank::onAnimationsFinished          );
+//    if ( !((bool) con) ) {
+//        cout << "tank aggregate connection failed!";
+//    }
 }
 
 void Tank::paint( QPainter* painter )
@@ -128,7 +140,7 @@ void Tank::move( int direction )
             }
         }
         if ( mMoves.size() == 1 ) {
-            followPath();
+            followLater();
         }
     } else {
         int x, y;
@@ -145,8 +157,8 @@ void Tank::move( int direction )
         if ( game && game->canMoveFrom( TANK, direction, &x, &y ) ) {
             mMoves.push_back( Piece( MOVE, x, y, direction ) );
             emit pathAdded( mMoves.back() );
-            if ( mMoves.size() == 1 ) {
-                followPath();
+            if ( !game->getAggregate()->active() ) {
+                followLater();
             }
         }
     }
@@ -157,10 +169,10 @@ bool Tank::followPath()
     if ( mMoves.empty() ) {
         return false;
     }
-
     Piece move( mMoves.front() );
     int curRotation = mRotation.toInt();
     int direction = move.getAngle();
+    cout << "follow " << direction << " (" << move.getX() << "," << move.getY() << ")\n";
 
     if ( direction != curRotation ) {
         mRotateAnimation->stop();
@@ -200,26 +212,22 @@ void Tank::animateMove( int from, int to, QPropertyAnimation *animation )
     }
 }
 
-bool Tank::isStopped()
+void Tank::onAnimationsFinished()
 {
-    return mRotateAnimation->state()     == QPropertyAnimation::Stopped
-        && mHorizontalAnimation->state() == QPropertyAnimation::Stopped
-        && mVerticalAnimation->state()   == QPropertyAnimation::Stopped;
+    int rotation = mRotation.toInt() % 360;
+    setRotation( QVariant( rotation ) );
+    Piece& piece = mMoves.front();
+    if ( piece.getAngle() == rotation
+      && piece.getX() == mBoundingRect.left()/24
+      && piece.getY() == mBoundingRect.top()/24 ) {
+        mMoves.pop_front();
+    }
+    followLater();
 }
 
-void Tank::animationFinished()
+void Tank::followLater()
 {
-    if ( isStopped() ) {
-        int rotation = mRotation.toInt() % 360;
-        setRotation( QVariant( rotation ) );
-        Piece& piece = mMoves.front();
-        if ( piece.getAngle() == rotation
-          && piece.getX() == mBoundingRect.left()/24
-          && piece.getY() == mBoundingRect.top()/24 ) {
-            mMoves.pop_front();
-        }
-        followPath();
-    }
+    QCoreApplication::sendEvent( this, mFollowEvent );
 }
 
 PieceList& Tank::getMoves()
@@ -232,4 +240,13 @@ Game* Tank::getGame()
     QObject* p = parent();
     QVariant hv = p->property("GameHandle");
     return hv.value<GameHandle>().game;
+}
+
+bool Tank::event( QEvent* event )
+{
+    if ( event->type() == QEvent::User ) {
+        followPath();
+        return true;
+    }
+    return QObject::event( event );
 }

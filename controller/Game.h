@@ -3,6 +3,7 @@
 
 #include <QObject>
 
+#include "animationaggregator.h"
 #include "model/board.h"
 #include "view/push.h"
 
@@ -21,7 +22,9 @@ public:
     Game( Board* board );
     GameHandle getHandle();
     Board* getBoard();
+    QAbstractAnimation::State animationState();
     Push& getMovingPiece();
+    AnimationAggregator* getAggregate();
     bool canMoveFrom(PieceType what, int angle, int *x, int *y , bool canPush = true);
     bool canShootFrom( int angle, int *x, int *y );
     bool getAdjacentPosition( int angle, int *x, int *y );
@@ -40,6 +43,8 @@ public slots:
     void onTankMovingInto( int x, int y, int fromAngle );
 
 private:
+    AnimationAggregator mAggregate;
+
     GameHandle mHandle;
     Board* mBoard;
     Push mMovingPiece;

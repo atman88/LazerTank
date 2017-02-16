@@ -65,6 +65,7 @@ void BoardWindow::setGame(const GameHandle handle )
             onBoardLoaded();
             QObject::connect( board, &Board::boardLoaded, this, &BoardWindow::onBoardLoaded );
         }
+        mTank->init( mGame );
     }
 }
 
@@ -303,8 +304,8 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
     if ( event->button() == Qt::RightButton ) {
         QMenu menu;
         QAction* action;
-        QString text( "level%1" );
-        for( int level = 1; level <= 3; ++level ) {
+        QString text( "level %1" );
+        for( int level = 1; level <= BOARD_MAX_LEVEL; ++level ) {
             action = menu.addAction( text.arg(level) );
             action->setData( QVariant(level) );
         }

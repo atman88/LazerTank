@@ -1,3 +1,4 @@
+#include <iostream>
 #include "push.h"
 #include "controller/Game.h"
 
@@ -14,8 +15,19 @@ Push::Push(QObject *parent) : QObject(parent)
     mBoundingRect.setRect(0,0,24,24);
 }
 
+void Push::init( Game* game )
+{
+    QObject::connect( this, &Push::stateChanged, game->getAggregate(), &AnimationAggregator::onStateChanged );
+}
+
 void Push::start( PieceType what, int fromX, int fromY, int toX, int toY )
 {
+    if ( mType != NONE ) {
+        cout << "Push already started!\n";
+        return;
+    }
+
+    cout << "Push start " << (fromX/24) << "," << (fromY/24) << "\n";
     mBoundingRect.moveLeft( fromX );
     mBoundingRect.moveTop( fromY );
     mType = what;
@@ -31,6 +43,7 @@ void Push::start( PieceType what, int fromX, int fromY, int toX, int toY )
         mVerticalAnimation->setEndValue( toY );
         mVerticalAnimation->start();
     }
+    emit stateChanged(QAbstractAnimation::Running, QAbstractAnimation::Stopped);
 }
 
 PieceType Push::getType()
@@ -82,8 +95,10 @@ void Push::onStopped()
             } else {
                 board->addPiece( mType, x, y );
             }
+            cout << "Push finished (" << x << "," << y << ")\n";
         }
         mType = NONE;
+        emit stateChanged(QAbstractAnimation::Stopped, QAbstractAnimation::Running);
     }
 }
 

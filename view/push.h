@@ -8,6 +8,8 @@
 #include "model/piece.h"
 #include "model/board.h"
 
+class Game;
+
 class Push : public QObject
 {
     Q_OBJECT
@@ -16,6 +18,7 @@ class Push : public QObject
 
 public:
     explicit Push(QObject *parent = 0);
+    void init( Game* game );
     PieceType getType();
     QVariant getX();
     QVariant getY();
@@ -23,6 +26,7 @@ public:
 
 signals:
     void pieceMoved( const QRect& );
+    void stateChanged(QAbstractAnimation::State newState, QAbstractAnimation::State oldState);
 
 public slots:
     void setX( const QVariant& x );
