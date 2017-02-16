@@ -40,6 +40,11 @@ void Tank::paint( QPainter* painter )
         painter->translate(-centerX, -centerY);
     }
     painter->drawPixmap( x, y, mPixmap );
+    if ( !painter->transform().isRotating() ) {
+        mPreviousPaintRect = mBoundingRect;
+    } else {
+        mPreviousPaintRect = painter->transform().mapRect( mBoundingRect );
+    }
 }
 
 void Tank::reset( int boardX, int boardY )
@@ -75,7 +80,7 @@ void Tank::setX( const QVariant& x )
 {
     int xv = x.toInt();
     if ( xv != mBoundingRect.left() ) {
-        QRect dirty( mBoundingRect );
+        QRect dirty( mPreviousPaintRect );
         mBoundingRect.moveLeft( xv );
         dirty |= mBoundingRect;
         emit changed( dirty );
@@ -90,7 +95,7 @@ void Tank::setY( const QVariant& y )
 {
     int yv = y.toInt();
     if ( yv != mBoundingRect.top() ) {
-        QRect dirty( mBoundingRect );
+        QRect dirty( mPreviousPaintRect );
         mBoundingRect.moveTop( yv );
         dirty |= mBoundingRect;
         emit changed( dirty );
@@ -110,7 +115,7 @@ void Tank::setRotation( const QVariant& angle )
 {
     if ( mRotation != angle ) {
         mRotation = angle;
-        emit changed( mBoundingRect );
+        emit changed( mPreviousPaintRect );
     }
 }
 

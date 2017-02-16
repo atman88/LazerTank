@@ -58,6 +58,7 @@ private:
 
     QPixmap mPixmap;
     QRect mBoundingRect;
+    QRect mPreviousPaintRect;
     QVariant mRotation;
     QPropertyAnimation* mRotateAnimation;
     QPropertyAnimation* mHorizontalAnimation;
