@@ -17,7 +17,8 @@ Push::Push(QObject *parent) : QObject(parent)
 
 void Push::init( Game* game )
 {
-    QObject::connect( this, &Push::stateChanged, game->getAggregate(), &AnimationAggregator::onStateChanged );
+    QObject::connect( this, &Push::stateChanged, game->getMoveAggregate(), &AnimationAggregator::onStateChanged );
+    QObject::connect( this, &Push::stateChanged, game->getShotAggregate(), &AnimationAggregator::onStateChanged );
 }
 
 void Push::start( PieceType what, int fromX, int fromY, int toX, int toY )

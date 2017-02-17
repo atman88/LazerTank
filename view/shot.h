@@ -14,7 +14,8 @@ class Shot : public QObject
 
 public:
     explicit Shot(QObject *parent = 0);
-
+    void init( Game* game );
+    PieceList& getPath();
     QVariant getSequence();
 
 signals:
@@ -24,8 +25,7 @@ signals:
 
 public slots:
     void setSequence( const QVariant& shotSequence );
-    void animationFinished();
-    void fire( int direction, int x, int y );
+    void fire(int direction);
     void stop();
 
 private:
@@ -35,6 +35,8 @@ private:
 
     PieceList mPath;
     int mDirection;
+    bool mStopping;
+    bool mEndReached;
 };
 
 #endif // SHOT_H

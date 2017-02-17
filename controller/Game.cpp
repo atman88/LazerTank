@@ -12,6 +12,8 @@ Game::Game( Board* board )
     }
     mHandle.game = this;
     setProperty("GameHandle", QVariant::fromValue(mHandle));
+    mMoveAggregate.setObjectName("MoveAggregate");
+    mShotAggregate.setObjectName("ShotAggregate");
     mMovingPiece.setParent( this );
     mMovingPiece.init( this );
 }
@@ -41,7 +43,7 @@ bool Game::canShootFrom(int *angle, int *x, int *y ) {
 
 void Game::onTankMoved( int x, int y )
 {
-    cout << "moved to " << x << "," << y << std::endl;
+//    cout << "moved to " << x << "," << y << std::endl;
     if ( mBoard && mBoard->tileAt(x,y) == FLAG ) {
         QMessageBox msgBox;
         msgBox.setText("Level completed!");
@@ -108,6 +110,7 @@ bool Game::canShootThru( int x, int y, int *angle )
         return true;
     }
     case WATER:
+    case FLAG:
         return true;
     case STONE_SLIT__0:
         return *angle == 90 || *angle == 270;
@@ -141,6 +144,12 @@ bool Game::canShootThru( int x, int y, int *angle )
             *angle = 0;
         }
         break;
+    case WOOD:
+        mBoard->setTileAt( WOOD_DAMAGED, x, y );
+        break;
+    case WOOD_DAMAGED:
+        mBoard->setTileAt( DIRT, x, y );
+        break;
     default:
         ;
     }
@@ -155,13 +164,20 @@ void Game::onTankMovingInto( int x, int y, int fromAngle )
             int toX = x, toY = y;
             if ( getAdjacentPosition(fromAngle, &toX, &toY) ) {
                 mBoard->erasePieceAt( x, y );
-                mMovingPiece.start( TILE, x*24, y*24, toX*24, toY*24 );
+                mMovingPiece.start( hit, x*24, y*24, toX*24, toY*24 );
+            } else {
+                cout << "no adjacent for angle " << fromAngle << std::endl;
             }
         }
     }
 }
 
-AnimationAggregator* Game::getAggregate()
+AnimationAggregator* Game::getMoveAggregate()
 {
-    return &mAggregate;
+    return &mMoveAggregate;
+}
+
+AnimationAggregator* Game::getShotAggregate()
+{
+    return &mShotAggregate;
 }

@@ -63,6 +63,8 @@ private:
     QPixmap mShotRightPixmap;
     QPixmap mWallMirrorPixmap;
     QPixmap mStoneSlitPixmap;
+    QPixmap mWoodPixmap;
+    QPixmap mWoodDamaged;
 
     int mActiveMoveDirection;
 };

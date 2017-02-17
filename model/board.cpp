@@ -49,6 +49,7 @@ bool Board::load( QString& fileName )
                 --i;
                 break;
             case 'S': mTiles[y*BOARD_MAX_WIDTH + x++] = STONE;     break;
+            case 'W': mTiles[y*BOARD_MAX_WIDTH + x++] = WOOD;      break;
             case 'w': mTiles[y*BOARD_MAX_WIDTH + x++] = WATER;     break;
             case 'e': mTiles[y*BOARD_MAX_WIDTH + x++] = EMPTY;     break;
             case 'F': mTiles[y*BOARD_MAX_WIDTH + x++] = FLAG;      break;

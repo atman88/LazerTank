@@ -19,6 +19,8 @@ BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
     mShotRightPixmap.load( ":/images/shot-right.png");
     mWallMirrorPixmap.load( ":/images/wall-mirror.png");
     mStoneSlitPixmap.load( ":/images/stone-slit.png");
+    mWoodPixmap.load(":/images/wood.png");
+    mWoodDamaged.load(":/images/wood-damaged.png");
 
     mTank = new Tank(this);
     QObject::connect( mTank, &Tank::changed,   this, &BoardWindow::renderLater      );
@@ -50,8 +52,6 @@ GameHandle BoardWindow::getGame() const
 
 void BoardWindow::setGame(const GameHandle handle )
 {
-    // TODO disconnect any old game
-
     setProperty("GameHandle", QVariant::fromValue(handle));
 
     mGame = handle.game;
@@ -69,6 +69,7 @@ void BoardWindow::setGame(const GameHandle handle )
             QObject::connect( board, &Board::boardLoaded, this, &BoardWindow::onBoardLoaded );
         }
         mTank->init( mGame );
+        mShot->init( mGame );
     }
 }
 
@@ -207,10 +208,8 @@ void BoardWindow::render(QRegion* region)
         PieceSet tiles = v.value<PieceSet>();
         PieceSet::iterator tileIterator = tiles.lower_bound( pos );
 
-        v = mShot->property( "path" );
-        PieceList shotList = v.value<PieceList>();
         PieceSet shots;
-        loadDrawSet( shotList, shots );
+        loadDrawSet( mShot->getPath(), shots );
         PieceSet::iterator shotIterator = shots.lower_bound( pos );
 
         for( int y = minY; y <= maxY; ++y ) {
@@ -218,6 +217,12 @@ void BoardWindow::render(QRegion* region)
                 switch( board->tileAt(x, y) ) {
                 case STONE:
                     painter.drawPixmap( x*24, y*24, mStonePixmap);
+                    break;
+                case WOOD:
+                    painter.drawPixmap( x*24, y*24, mWoodPixmap);
+                    break;
+                case WOOD_DAMAGED:
+                    painter.drawPixmap( x*24, y*24, mWoodDamaged);
                     break;
                 case DIRT:
                     painter.drawPixmap( x*24, y*24, mDirtPixmap);
@@ -305,9 +310,7 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
       && mGame ) {
         switch( ev->key() ) {
         case Qt::Key_Space:
-            if ( !mTank->isMoving() ) {
-                mShot->fire( mTank->getRotation().toInt(), mTank->getX().toInt()/24, mTank->getY().toInt()/24 );
-            }
+            mShot->fire( mTank->getRotation().toInt() );
             break;
         default:
             int rotation = keyToAngle(ev->key());

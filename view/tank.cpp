@@ -17,8 +17,7 @@ Tank::Tank( QObject *parent ) : QObject(parent)
 
 void Tank::init( Game* game )
 {
-    mFollowEvent = new QEvent(QEvent::User);
-    AnimationAggregator* aggregate = game->getAggregate();
+    AnimationAggregator* aggregate = game->getMoveAggregate();
     QObject::connect( mRotateAnimation,     &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
     QObject::connect( mHorizontalAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
     QObject::connect( mVerticalAnimation,   &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
@@ -145,7 +144,7 @@ void Tank::move( int direction )
             }
         }
         if ( mMoves.size() == 1 ) {
-            followLater();
+            followPath();
         }
     } else {
         int x, y;
@@ -162,47 +161,43 @@ void Tank::move( int direction )
         if ( game && game->canMoveFrom( TANK, direction, &x, &y ) ) {
             mMoves.push_back( Piece( MOVE, x, y, direction ) );
             emit pieceDirty( mMoves.back() );
-            if ( !game->getAggregate()->active() ) {
-                followLater();
-            }
+            followPath();
         }
     }
 }
 
-bool Tank::followPath()
+void Tank::followPath()
 {
-    if ( mMoves.empty() ) {
-        return false;
-    }
-    Piece move( mMoves.front() );
-    int curRotation = mRotation.toInt();
-    int direction = move.getAngle();
-    cout << "follow " << direction << " (" << move.getX() << "," << move.getY() << ")\n";
+    Game* game = getGame();
+    if ( !game->getMoveAggregate()->active() && mMoves.size() ) {
+        Piece move( mMoves.front() );
+        int curRotation = mRotation.toInt();
+        int direction = move.getAngle();
+//    cout << "follow " << direction << " (" << move.getX() << "," << move.getY() << ")\n";
 
-    if ( direction != curRotation ) {
-        mRotateAnimation->stop();
+        if ( direction != curRotation ) {
+            mRotateAnimation->stop();
 
-        if ( curRotation == 0 && direction > 180 ) {
-            curRotation = 360;
-            mRotateAnimation->setStartValue( QVariant(curRotation) );
-        } else {
-            mRotateAnimation->setStartValue( mRotation );
-            if ( direction == 0 && curRotation > 180 ) {
-                direction = 360;
+            if ( curRotation == 0 && direction > 180 ) {
+                curRotation = 360;
+                mRotateAnimation->setStartValue( QVariant(curRotation) );
+            } else {
+                mRotateAnimation->setStartValue( mRotation );
+                if ( direction == 0 && curRotation > 180 ) {
+                    direction = 360;
+                }
             }
+            mRotateAnimation->setEndValue( direction );
+            mRotateAnimation->setDuration( abs(direction-curRotation) * 1000 / 90);
+            mRotateAnimation->start();
         }
-        mRotateAnimation->setEndValue( direction );
-        mRotateAnimation->setDuration( abs(direction-curRotation) * 1000 / 90);
-        mRotateAnimation->start();
+
+        int x = move.getX();
+        int y = move.getY();
+        animateMove( mBoundingRect.left(), x*24, mHorizontalAnimation );
+        animateMove( mBoundingRect.top(),  y*24, mVerticalAnimation   );
+        emit movingInto( x, y, curRotation % 360 );
     }
-
-    int x = move.getX();
-    int y = move.getY();
-    animateMove( mBoundingRect.left(), x*24, mHorizontalAnimation );
-    animateMove( mBoundingRect.top(),  y*24, mVerticalAnimation   );
-    emit movingInto( x, y, curRotation );
-
-    return isMoving();
 }
 
 void Tank::animateMove( int from, int to, QPropertyAnimation *animation )
@@ -227,7 +222,7 @@ void Tank::onAnimationsFinished()
       && piece.getY() == mBoundingRect.top()/24 ) {
         mMoves.pop_front();
     }
-    followLater();
+    followPath();
 }
 
 void Tank::eraseLastMove()\
@@ -237,11 +232,6 @@ void Tank::eraseLastMove()\
         emit pieceDirty( piece );
         mMoves.pop_back();
     }
-}
-
-void Tank::followLater()
-{
-    QCoreApplication::sendEvent( this, mFollowEvent );
 }
 
 PieceList& Tank::getMoves()
@@ -254,13 +244,4 @@ Game* Tank::getGame()
     QObject* p = parent();
     QVariant hv = p->property("GameHandle");
     return hv.value<GameHandle>().game;
-}
-
-bool Tank::event( QEvent* event )
-{
-    if ( event->type() == QEvent::User ) {
-        followPath();
-        return true;
-    }
-    return QObject::event( event );
 }

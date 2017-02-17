@@ -4,7 +4,6 @@
 #include <QObject>
 #include <QPainter>
 #include <QPropertyAnimation>
-#include <QEvent>
 
 #include "model/piece.h"
 
@@ -35,7 +34,6 @@ public:
     QVariant getX();
     QVariant getY();
     const QRect& getRect();
-    bool event( QEvent* event ) override;
 
 signals:
     void changed( const QRect& rect );
@@ -51,8 +49,7 @@ public slots:
     void onAnimationsFinished();
 
 private:
-    bool followPath();
-    void followLater();
+    void followPath();
     void animateMove( int from, int to, QPropertyAnimation *animation );
     Game* getGame();
 
@@ -65,8 +62,6 @@ private:
     QPropertyAnimation* mVerticalAnimation;
 
     PieceList mMoves;
-
-    QEvent* mFollowEvent;
 };
 
 #endif // TANK_H

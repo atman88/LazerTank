@@ -5,7 +5,7 @@
 
 #include "model/piece.h"
 
-#define BOARD_MAX_LEVEL 6
+#define BOARD_MAX_LEVEL 7
 
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
 #define BOARD_MAX_HEIGHT PIECE_MAX_ROWCOUNT
@@ -24,7 +24,9 @@ typedef enum {
     STONE_MIRROR_180,
     STONE_MIRROR_270,
     STONE_SLIT__0,
-    STONE_SLIT_90
+    STONE_SLIT_90,
+    WOOD,
+    WOOD_DAMAGED
 } BoardTileId;
 
 class Board : public QObject

@@ -24,7 +24,8 @@ public:
     Board* getBoard();
     QAbstractAnimation::State animationState();
     Push& getMovingPiece();
-    AnimationAggregator* getAggregate();
+    AnimationAggregator* getMoveAggregate();
+    AnimationAggregator* getShotAggregate();
     bool canMoveFrom(PieceType what, int angle, int *x, int *y , bool canPush = true);
     bool canShootFrom( int *angle, int *x, int *y );
     bool getAdjacentPosition( int angle, int *x, int *y );
@@ -43,7 +44,8 @@ public slots:
     void onTankMovingInto( int x, int y, int fromAngle );
 
 private:
-    AnimationAggregator mAggregate;
+    AnimationAggregator mMoveAggregate;
+    AnimationAggregator mShotAggregate;
 
     GameHandle mHandle;
     Board* mBoard;

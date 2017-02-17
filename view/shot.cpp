@@ -1,14 +1,17 @@
+#include <iostream>
 #include "shot.h"
 
 Shot::Shot(QObject *parent) : QObject(parent)
 {
     mAnimation = new QPropertyAnimation(this,"sequence");
-    QObject::connect(mAnimation, &QVariantAnimation::finished,this,&Shot::animationFinished);
     mAnimation->setStartValue(0);
     mAnimation->setEndValue(BOARD_MAX_WIDTH * BOARD_MAX_HEIGHT); // use a reasonable watermark value
-    mAnimation->setDuration(60*1000);
+    mAnimation->setDuration(60/8 * BOARD_MAX_WIDTH * BOARD_MAX_HEIGHT);
+}
 
-    setProperty("path", QVariant::fromValue(mPath));
+void Shot::init( Game* game )
+{
+    QObject::connect( mAnimation, &QPropertyAnimation::stateChanged, game->getShotAggregate(), &AnimationAggregator::onStateChanged );
 }
 
 QVariant Shot::getSequence()
@@ -18,74 +21,70 @@ QVariant Shot::getSequence()
 
 void Shot::setSequence( const QVariant &sequence )
 {
-    int seq = mSequence.toInt();
-    if ( seq < sequence.toInt() ) {
-        Game* game = getGame();
-        if ( !game ) {
-            return;
-        }
-
-        int direction, x, y;
-        if ( !mPath.size() ) {
-            direction = mDirection;
-            x = parent()->property( "x" ).toInt() / 24;
-            y = parent()->property( "y" ).toInt() / 24;
-        } else {
-            Piece& p = mPath.back();
-            direction = p.getAngle();
-            x = p.getX();
-            y = p.getY();
-        }
-
-        do {
-            int startDir = direction;
-            PieceType pieceType;
-            if ( !game->canShootFrom( &direction, &x, &y ) ) {
-                mAnimation->stop();
-                break;
-            }
-            if ( direction - startDir == 90 || (direction == 0 && startDir == 270) ) {
-                pieceType = SHOT_RIGHT;
-            } else if ( direction - startDir == -90 || (direction == 270 && startDir == 0) ) {
-                pieceType = SHOT_LEFT;
+    int seq = sequence.toInt();
+    if ( mSequence.toInt() != seq ) {
+        if ( !mEndReached ) {
+            int direction, x, y;
+            if ( !mPath.size() ) {
+                direction = mDirection;
+                x = parent()->property( "x" ).toInt() / 24;
+                y = parent()->property( "y" ).toInt() / 24;
             } else {
-                pieceType = SHOT_STRAIGHT;
+                Piece& p = mPath.back();
+                direction = p.getAngle();
+                x = p.getX();
+                y = p.getY();
             }
-            mPath.push_back( Piece(pieceType,x,y,direction) );
-            setProperty("path", QVariant::fromValue(mPath));
-            emit pathAdded( mPath.back() );
-        } while( ++seq < sequence.toInt() );
-        mSequence = sequence;
+
+            int startDir = direction;
+            Game* game = getGame();
+            if ( !game || !game->canShootFrom( &direction, &x, &y ) ) {
+                mStopping = true;
+                mEndReached = true;
+            } else {
+                PieceType pieceType;
+                if ( direction - startDir == 90 || (direction == 0 && startDir == 270) ) {
+                    pieceType = SHOT_RIGHT;
+                } else if ( direction - startDir == -90 || (direction == 270 && startDir == 0) ) {
+                    pieceType = SHOT_LEFT;
+                } else {
+                    pieceType = SHOT_STRAIGHT;
+                }
+                mPath.push_back( Piece(pieceType,x,y,direction) );
+                emit pathAdded( mPath.back() );
+            }
+        }
+        if ( mStopping && seq > 5 ) {
+            if ( !mPath.empty() ) {
+                Piece& piece = mPath.front();
+                emit pathRemoved( piece );
+                mPath.pop_front();
+            }
+        }
+        mSequence = seq;
+    }
+    if ( mPath.empty() ) {
+        std::cout << "shot finished\n";
+        mAnimation->stop();
     }
 }
 
 void Shot::stop()
 {
-    mAnimation->stop();
-
-    for( auto it = mPath.begin(); it != mPath.end(); ++it ) {
-        emit pathRemoved( *it );
-    }
-    mPath.clear();
-    setProperty("path", QVariant::fromValue(mPath));
+    mStopping = true;
 }
 
-void Shot::animationFinished()
+void Shot::fire( int direction )
 {
-    stop();
-}
-
-void Shot::fire( int direction, int x, int y )
-{
-    stop();
-
-    Game* game = getGame();
-    if ( game && game->canShootFrom( &direction, &x, &y ) ) {
-        mSequence = QVariant(-1);
-        mDirection = direction;
-        mAnimation->start();
-
-        emit pathAdded(mPath.back());
+    if ( !(direction % 90) ) {
+        Game* game = getGame();
+        if ( game && !game->getShotAggregate()->active() ) {
+            mSequence = QVariant(-1);
+            mDirection = direction;
+            mStopping = false;
+            mEndReached = false;
+            mAnimation->start();
+        }
     }
 }
 
@@ -98,4 +97,9 @@ Game* Shot::getGame()
         p = p->parent();
     }
     return v.value<GameHandle>().game;
+}
+
+PieceList& Shot::getPath()
+{
+    return mPath;
 }
