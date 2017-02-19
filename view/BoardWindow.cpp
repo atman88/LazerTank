@@ -21,9 +21,12 @@ BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
     mStoneSlitPixmap.load( ":/images/stone-slit.png");
     mWoodPixmap.load(":/images/wood.png");
     mWoodDamaged.load(":/images/wood-damaged.png");
+    mTileMirrorPixmap.load(":/images/tile-mirror.png");
+    mCannonPixmap.load(":/images/cannon.png");
 
-    mTank = new Tank(this);
-    QObject::connect( mTank, &Tank::changed,   this, &BoardWindow::renderLater      );
+    mTank = new Tank();
+    mTank->setParent(this);
+    QObject::connect( mTank, &Tank::changed,    this, &BoardWindow::renderLater      );
     QObject::connect( mTank, &Tank::pieceDirty, this, &BoardWindow::renderPieceLater );
 
     mShot = new Shot(mTank);
@@ -69,7 +72,7 @@ void BoardWindow::setGame(const GameHandle handle )
             QObject::connect( board, &Board::boardLoaded, this, &BoardWindow::onBoardLoaded );
         }
         mTank->init( mGame );
-        mShot->init( mGame );
+        mShot->init( mGame->getShotAggregate() );
     }
 }
 
@@ -140,6 +143,8 @@ void BoardWindow::renderPiece( PieceType type, int x, int y, int angle, QPainter
     case MOVE:          pixmap = &mMoveIndicatorPixmap; break;
     case TILE:          pixmap = &mTilePixmap;          break;
     case SHOT_STRAIGHT: pixmap = &mShotStraightPixmap;  break;
+    case TILE_MIRROR:   pixmap = &mTileMirrorPixmap;    break;
+    case CANNON:        pixmap = &mCannonPixmap;        break;
     case SHOT_RIGHT:
         pixmap = &mShotRightPixmap;
         angle = (angle + 270) % 360;
@@ -204,12 +209,14 @@ void BoardWindow::render(QRegion* region)
         loadDrawSet( mTank->getMoves(), moves );
         PieceSet::iterator moveIterator = moves.lower_bound( pos );
 
-        QVariant v = board->property( "tiles" );
-        PieceSet tiles = v.value<PieceSet>();
+        const PieceSet tiles = board->getPieces();
         PieceSet::iterator tileIterator = tiles.lower_bound( pos );
 
         PieceSet shots;
         loadDrawSet( mShot->getPath(), shots );
+        if ( shots.empty() ) {
+            loadDrawSet( mGame->getCannonShot().getPath(), shots );
+        }
         PieceSet::iterator shotIterator = shots.lower_bound( pos );
 
         for( int y = minY; y <= maxY; ++y ) {
@@ -267,7 +274,7 @@ void BoardWindow::render(QRegion* region)
 
         Push& movingPiece = mGame->getMovingPiece();
         if ( movingPiece.getType() != NONE ) {
-            renderPiece( movingPiece.getType(), movingPiece.getX().toInt(), movingPiece.getY().toInt(), 0, painter );
+            renderPiece( movingPiece.getType(), movingPiece.getX().toInt(), movingPiece.getY().toInt(), movingPiece.getPieceAngle(), painter );
         }
         if ( region->intersects( mTank->getRect() ) ) {
             mTank->paint( &painter );

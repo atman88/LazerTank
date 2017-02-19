@@ -21,7 +21,7 @@ void Push::init( Game* game )
     QObject::connect( this, &Push::stateChanged, game->getShotAggregate(), &AnimationAggregator::onStateChanged );
 }
 
-void Push::start( PieceType what, int fromX, int fromY, int toX, int toY )
+void Push::start( Piece& what, int fromX, int fromY, int toX, int toY )
 {
     if ( mType != NONE ) {
         cout << "Push already started!\n";
@@ -31,7 +31,8 @@ void Push::start( PieceType what, int fromX, int fromY, int toX, int toY )
     cout << "Push start " << (fromX/24) << "," << (fromY/24) << "\n";
     mBoundingRect.moveLeft( fromX );
     mBoundingRect.moveTop( fromY );
-    mType = what;
+    mType = what.getType();
+    mPieceAngle = what.getAngle();
 
     if ( toX != fromX ) {
         mHorizontalAnimation->setStartValue( fromX );
@@ -50,6 +51,11 @@ void Push::start( PieceType what, int fromX, int fromY, int toX, int toY )
 PieceType Push::getType()
 {
     return mType;
+}
+
+int Push::getPieceAngle()
+{
+    return mPieceAngle;
 }
 
 QVariant Push::getX()
@@ -91,10 +97,10 @@ void Push::onStopped()
         if ( board ) {
             int x = getX().toInt()/24;
             int y = getY().toInt()/24;
-            if ( mType == TILE && board->tileAt(x,y) == WATER ) {
+            if ( board->tileAt(x,y) != WATER ) {
+                board->addPiece( mType, x, y, mPieceAngle );
+            } else if ( mType == TILE ) {
                 board->setTileAt( TILE_SUNK, x, y );
-            } else {
-                board->addPiece( mType, x, y );
             }
             cout << "Push finished (" << x << "," << y << ")\n";
         }

@@ -8,12 +8,12 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     qRegisterMetaType<GameHandle>("GameHandle");
-    qRegisterMetaType<PieceList>("tiles");
 
     BoardWindow window;
     Board board;
     Game game( &board );
     window.setGame( game.getHandle() );
+    game.init( &window );
     board.load( 1 );
     window.show();
 

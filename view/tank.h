@@ -5,35 +5,24 @@
 #include <QPainter>
 #include <QPropertyAnimation>
 
+#include "view/shooter.h"
 #include "model/piece.h"
 
 class Game;
 
-class Tank : public QObject
+class Tank : public Shooter
 {
     Q_OBJECT
-    Q_PROPERTY(QVariant rotation READ getRotation WRITE setRotation)
-    Q_PROPERTY(QVariant x READ getX WRITE setX)
-    Q_PROPERTY(QVariant y READ getY WRITE setY)
 
 public:
-    explicit Tank(QObject *parent = Q_NULLPTR );
-    ~Tank() {
-        if ( mRotateAnimation ) {
-            delete mRotateAnimation;
-        }
-    }
+    Tank(QObject *parent = 0);
+    virtual ~Tank() {}
 
     void init( Game* game );
     PieceList& getMoves();
     void paint( QPainter* painter );
     void move( int direction );
-    bool isMoving();
     void eraseLastMove();
-    QVariant getRotation();
-    QVariant getX();
-    QVariant getY();
-    const QRect& getRect();
 
 signals:
     void changed( const QRect& rect );
@@ -43,10 +32,10 @@ signals:
 
 public slots:
     void reset( int x, int y );
-    void setRotation(const QVariant &angle );
-    void setX(const QVariant &x );
-    void setY(const QVariant &y );
     void onAnimationsFinished();
+    void setX(const QVariant &x ) override;
+    void setY(const QVariant &y ) override;
+    void setRotation( const QVariant& angle ) override;
 
 private:
     void followPath();
@@ -54,9 +43,7 @@ private:
     Game* getGame();
 
     QPixmap mPixmap;
-    QRect mBoundingRect;
     QRect mPreviousPaintRect;
-    QVariant mRotation;
     QPropertyAnimation* mRotateAnimation;
     QPropertyAnimation* mHorizontalAnimation;
     QPropertyAnimation* mVerticalAnimation;

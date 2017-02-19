@@ -21,6 +21,17 @@ bool Board::load( int level ) {
     return rc;
 }
 
+const PieceSet& Board::getPieces()
+{
+    return mPieces;
+}
+
+void Board::initPiece( PieceType type, int x, int y, int angle )
+{
+    mPieces.insert( Piece( type, x, y, angle ) );
+    mTiles[y*BOARD_MAX_HEIGHT + x++] = DIRT;
+}
+
 bool Board::load( QString& fileName )
 {
     QFile file( fileName );
@@ -54,10 +65,12 @@ bool Board::load( QString& fileName )
             case 'e': mTiles[y*BOARD_MAX_WIDTH + x++] = EMPTY;     break;
             case 'F': mTiles[y*BOARD_MAX_WIDTH + x++] = FLAG;      break;
             case 'm': mTiles[y*BOARD_MAX_WIDTH + x++] = TILE_SUNK; break;
-            case 'M':
-                mPieces.insert( Piece( TILE, x, y ) );
-                mTiles[y*BOARD_MAX_HEIGHT + x++] = DIRT;
-                break;
+
+            case 'M': initPiece( TILE,   x++, y      ); break;
+            case '^': initPiece( CANNON, x++, y      ); break;
+            case '>': initPiece( CANNON, x++, y,  90 ); break;
+            case 'v': initPiece( CANNON, x++, y, 180 ); break;
+            case '<': initPiece( CANNON, x++, y, 270 ); break;
             case '[':
                 if ( nRead-i >= 2 ) {
                     int c1 = line[i++];
@@ -68,6 +81,10 @@ bool Board::load( QString& fileName )
                     case ('S' <<8)|'\\': mTiles[y*BOARD_MAX_WIDTH + x++] = STONE_MIRROR_270; break;
                     case ('S' <<8)|'-':  mTiles[y*BOARD_MAX_WIDTH + x++] = STONE_SLIT__0; break;
                     case ('S' <<8)|'|':  mTiles[y*BOARD_MAX_WIDTH + x++] = STONE_SLIT_90; break;
+                    case ('M' <<8)|'/':  initPiece( TILE_MIRROR, x++, y,   0 ); break;
+                    case ('\\'<<8)|'M':  initPiece( TILE_MIRROR, x++, y,  90 ); break;
+                    case ('/' <<8)|'M':  initPiece( TILE_MIRROR, x++, y, 180 ); break;
+                    case ('M' <<8)|'\\': initPiece( TILE_MIRROR, x++, y, 270 ); break;
                     default:
                         ;
                     }
@@ -97,12 +114,11 @@ bool Board::load( QString& fileName )
     file.close();
 
     mHeight = y;
-    setProperty( "tiles", QVariant::fromValue(mPieces) );
 
     return true;
 }
 
-PieceType Board::pieceAt( int x, int y )
+PieceType Board::pieceTypeAt( int x, int y )
 {
     Piece pos( NONE, x, y );
     PieceSet::iterator it = mPieces.find( pos );
@@ -112,20 +128,30 @@ PieceType Board::pieceAt( int x, int y )
     return NONE;
 }
 
+bool Board::pieceAt(int x, int y , Piece *result)
+{
+    Piece pos( NONE, x, y );
+    PieceSet::iterator it = mPieces.find( pos );
+    if ( it != mPieces.end() ) {
+        *result = *it;
+        return true;
+    }
+    return false;
+}
+
 void Board::erasePieceAt( int x, int y )
 {
     Piece pos( NONE, x, y );
     PieceSet::iterator it = mPieces.find( pos );
     if ( it != mPieces.end() ) {
         mPieces.erase( it );
-        setProperty( "tiles", QVariant::fromValue(mPieces) );
+        emit tileChanged( x, y );
     }
 }
 
-void Board::addPiece( PieceType type, int x, int y )
+void Board::addPiece( PieceType type, int x, int y, int angle )
 {
-    mPieces.insert( Piece( type, x, y ) );
-    setProperty( "tiles", QVariant::fromValue(mPieces) );
+    mPieces.insert( Piece( type, x, y, angle ) );
 }
 
 int Board::getWidth()
@@ -152,5 +178,17 @@ void Board::setTileAt( BoardTileId id, int x, int y )
     if ( x >= 0 && y >= 0 && x < mWidth && y < mHeight ) {
         mTiles[y*BOARD_MAX_WIDTH+x] = id;
         emit tileChanged( x, y );
+    }
+}
+
+bool Board::canSightThru( int x, int y )
+{
+    switch( tileAt( x, y ) ) {
+    case DIRT:
+    case WATER:
+    case TILE_SUNK:
+        return pieceTypeAt( x, y ) == NONE;
+    default:
+        return false;
     }
 }

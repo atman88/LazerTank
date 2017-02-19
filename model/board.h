@@ -5,7 +5,7 @@
 
 #include "model/piece.h"
 
-#define BOARD_MAX_LEVEL 7
+#define BOARD_MAX_LEVEL 8
 
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
 #define BOARD_MAX_HEIGHT PIECE_MAX_ROWCOUNT
@@ -26,7 +26,7 @@ typedef enum {
     STONE_SLIT__0,
     STONE_SLIT_90,
     WOOD,
-    WOOD_DAMAGED
+    WOOD_DAMAGED,
 } BoardTileId;
 
 class Board : public QObject
@@ -41,10 +41,12 @@ public:
     int getHeight();
     BoardTileId tileAt( int x, int y );
     void setTileAt( BoardTileId, int x, int y );
-    PieceType pieceAt( int x, int y );
+    PieceType pieceTypeAt( int x, int y );
+    bool pieceAt( int x, int y, Piece *result );
     void erasePieceAt( int x , int y );
-    void addPiece( PieceType type, int x, int y );
-
+    void addPiece( PieceType type, int x, int y, int angle = 0 );
+    const PieceSet& getPieces();
+    bool canSightThru( int x, int y );
     bool load( int level );
     bool load( QString& fileName );
 
@@ -56,6 +58,7 @@ signals:
     void tileChanged(int x, int y);
 
 private:
+    void initPiece( PieceType type, int x, int y, int angle = 0 );
     int mLevel;
     int mHeight;
     int mWidth;

@@ -14,7 +14,9 @@ typedef enum {
     TILE,
     SHOT_STRAIGHT,
     SHOT_LEFT,
-    SHOT_RIGHT
+    SHOT_RIGHT,
+    TILE_MIRROR,
+    CANNON
 } PieceType;
 
 class Piece

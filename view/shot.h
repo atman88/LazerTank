@@ -4,8 +4,11 @@
 #include <QObject>
 #include <QRect>
 #include <QPropertyAnimation>
-#include "Game.h"
+
 #include "piece.h"
+#include "controller/animationaggregator.h"
+
+class Game;
 
 class Shot : public QObject
 {
@@ -14,18 +17,18 @@ class Shot : public QObject
 
 public:
     explicit Shot(QObject *parent = 0);
-    void init( Game* game );
+    void init(AnimationAggregator *aggregate);
     PieceList& getPath();
     QVariant getSequence();
 
 signals:
     void stopped();
-    void pathRemoved( Piece segment );
-    void pathAdded( Piece segment );
+    void pathRemoved( const Piece& segment );
+    void pathAdded( const Piece& segment );
 
 public slots:
     void setSequence( const QVariant& shotSequence );
-    void fire(int direction);
+    void fire( int direction );
     void stop();
 
 private:

@@ -1,6 +1,8 @@
 #ifndef BOARDWINDOW_H
 #define BOARDWINDOW_H
 
+class BoardWindow;
+
 #include <QtGui>
 #include <QMouseEvent>
 #include "tank.h"
@@ -65,6 +67,8 @@ private:
     QPixmap mStoneSlitPixmap;
     QPixmap mWoodPixmap;
     QPixmap mWoodDamaged;
+    QPixmap mTileMirrorPixmap;
+    QPixmap mCannonPixmap;
 
     int mActiveMoveDirection;
 };

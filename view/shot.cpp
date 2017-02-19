@@ -1,5 +1,7 @@
 #include <iostream>
 #include "shot.h"
+#include "model/board.h"
+#include "controller/Game.h"
 
 Shot::Shot(QObject *parent) : QObject(parent)
 {
@@ -9,9 +11,9 @@ Shot::Shot(QObject *parent) : QObject(parent)
     mAnimation->setDuration(60/8 * BOARD_MAX_WIDTH * BOARD_MAX_HEIGHT);
 }
 
-void Shot::init( Game* game )
+void Shot::init( AnimationAggregator* aggregate )
 {
-    QObject::connect( mAnimation, &QPropertyAnimation::stateChanged, game->getShotAggregate(), &AnimationAggregator::onStateChanged );
+    QObject::connect( mAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
 }
 
 QVariant Shot::getSequence()
@@ -22,51 +24,49 @@ QVariant Shot::getSequence()
 void Shot::setSequence( const QVariant &sequence )
 {
     int seq = sequence.toInt();
-    if ( mSequence.toInt() != seq ) {
-        if ( !mEndReached ) {
-            int direction, x, y;
-            if ( !mPath.size() ) {
-                direction = mDirection;
-                x = parent()->property( "x" ).toInt() / 24;
-                y = parent()->property( "y" ).toInt() / 24;
-            } else {
-                Piece& p = mPath.back();
-                direction = p.getAngle();
-                x = p.getX();
-                y = p.getY();
-            }
+    if ( !mEndReached ) {
+        int direction, x, y;
+        if ( !mPath.size() ) {
+            direction = mDirection;
+            x = parent()->property( "x" ).toInt() / 24;
+            y = parent()->property( "y" ).toInt() / 24;
+        } else {
+            Piece& p = mPath.back();
+            direction = p.getAngle();
+            x = p.getX();
+            y = p.getY();
+        }
 
-            int startDir = direction;
-            Game* game = getGame();
-            if ( !game || !game->canShootFrom( &direction, &x, &y ) ) {
-                mStopping = true;
-                mEndReached = true;
+        int startDir = direction;
+        Game* game = getGame();
+        if ( !game || !game->canShootFrom( &direction, &x, &y ) ) {
+            mStopping = true;
+            mEndReached = true;
+        } else {
+            PieceType pieceType;
+            if ( direction - startDir == 90 || (direction == 0 && startDir == 270) ) {
+                pieceType = SHOT_RIGHT;
+            } else if ( direction - startDir == -90 || (direction == 270 && startDir == 0) ) {
+                pieceType = SHOT_LEFT;
             } else {
-                PieceType pieceType;
-                if ( direction - startDir == 90 || (direction == 0 && startDir == 270) ) {
-                    pieceType = SHOT_RIGHT;
-                } else if ( direction - startDir == -90 || (direction == 270 && startDir == 0) ) {
-                    pieceType = SHOT_LEFT;
-                } else {
-                    pieceType = SHOT_STRAIGHT;
-                }
-                mPath.push_back( Piece(pieceType,x,y,direction) );
-                emit pathAdded( mPath.back() );
+                pieceType = SHOT_STRAIGHT;
             }
+            mPath.push_back( Piece(pieceType,x,y,direction) );
+            emit pathAdded( mPath.back() );
         }
-        if ( mStopping && seq > 5 ) {
-            if ( !mPath.empty() ) {
-                Piece& piece = mPath.front();
-                emit pathRemoved( piece );
-                mPath.pop_front();
-            }
+    }
+    if ( mStopping && seq > 5 ) {
+        if ( !mPath.empty() ) {
+            Piece& piece = mPath.front();
+            emit pathRemoved( piece );
+            mPath.pop_front();
         }
-        mSequence = seq;
     }
     if ( mPath.empty() ) {
         std::cout << "shot finished\n";
         mAnimation->stop();
     }
+    mSequence = seq;
 }
 
 void Shot::stop()

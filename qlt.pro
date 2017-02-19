@@ -16,15 +16,17 @@ HEADERS += controller/Game.h \
            view/tank.h \
     view/shot.h \
     view/push.h \
-    controller/animationaggregator.h
+    controller/animationaggregator.h \
+    view/shooter.h
 SOURCES += controller/Game.cpp \
            view/BoardWindow.cpp \
-           view/tank.cpp \
            model/board.cpp \
            model/piece.cpp \
     view/shot.cpp \
     view/push.cpp \
-    controller/animationaggregator.cpp
+    controller/animationaggregator.cpp \
+    view/shooter.cpp \
+    view/tank.cpp
 RESOURCES += qml.qrc
 
 test{

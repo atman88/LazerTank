@@ -22,7 +22,8 @@ public:
     PieceType getType();
     QVariant getX();
     QVariant getY();
-    void start(PieceType what, int fromX, int fromY, int toX, int toY);
+    int getPieceAngle();
+    void start(Piece& what, int fromX, int fromY, int toX, int toY);
 
 signals:
     void pieceMoved( const QRect& );
@@ -39,6 +40,7 @@ private:
     QPropertyAnimation* mHorizontalAnimation;
     QPropertyAnimation* mVerticalAnimation;
     PieceType mType;
+    int mPieceAngle;
     QRect mBoundingRect;
 };
 

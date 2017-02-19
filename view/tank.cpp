@@ -4,27 +4,21 @@
 #include "tank.h"
 #include "controller/Game.h"
 
-Tank::Tank( QObject *parent ) : QObject(parent)
+Tank::Tank(QObject* parent) : Shooter(parent)
 {
-    mPixmap.load(":/images/tank.png");
-    mRotateAnimation = NULL;
-    mRotation = 0;
     mRotateAnimation = new QPropertyAnimation(this,"rotation");
     mHorizontalAnimation = new QPropertyAnimation(this,"x");
     mVerticalAnimation   = new QPropertyAnimation(this,"y");
-    mBoundingRect.setRect(0,0,24,24);
 }
 
 void Tank::init( Game* game )
 {
+    mPixmap.load(":/images/tank.png");
     AnimationAggregator* aggregate = game->getMoveAggregate();
     QObject::connect( mRotateAnimation,     &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
     QObject::connect( mHorizontalAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
     QObject::connect( mVerticalAnimation,   &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
     QObject::connect( aggregate,            &AnimationAggregator::finished,    this,      &Tank::onAnimationsFinished          );
-//    if ( !((bool) con) ) {
-//        cout << "tank aggregate connection failed!";
-//    }
 }
 
 void Tank::paint( QPainter* painter )
@@ -57,22 +51,8 @@ void Tank::reset( int boardX, int boardY )
     mVerticalAnimation->setStartValue( p.x() );
     mHorizontalAnimation->setEndValue( p.x() );
     mVerticalAnimation->setEndValue( p.x() );
+    mRotation = 0;
     mMoves.clear();
-}
-
-QVariant Tank::getX()
-{
-    return QVariant(mBoundingRect.left());
-}
-
-QVariant Tank::getY()
-{
-    return QVariant(mBoundingRect.top());
-}
-
-const QRect& Tank::getRect()
-{
-    return mBoundingRect;
 }
 
 void Tank::setX( const QVariant& x )
@@ -105,10 +85,6 @@ void Tank::setY( const QVariant& y )
     }
 }
 
-QVariant Tank::getRotation()
-{
-    return mRotation;
-}
 
 void Tank::setRotation( const QVariant& angle )
 {
@@ -116,13 +92,6 @@ void Tank::setRotation( const QVariant& angle )
         mRotation = angle;
         emit changed( mPreviousPaintRect );
     }
-}
-
-bool Tank::isMoving()
-{
-    return mHorizontalAnimation->state() == QPropertyAnimation::Running
-        || mVerticalAnimation->state()   == QPropertyAnimation::Running
-        || mRotateAnimation->state()     == QPropertyAnimation::Running;
 }
 
 void Tank::move( int direction )
