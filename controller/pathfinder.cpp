@@ -66,10 +66,10 @@ void PathFinder::buildPath( int x, int y )
         if ( --mPassValue < 0 ) {
             mPassValue = TRAVERSIBLE-1;
         }
-        if      ( mSearchMap[ (y-1) * BOARD_MAX_WIDTH + x   ] == mPassValue ) { --y; direction =   0; }
-        else if ( mSearchMap[ y     * BOARD_MAX_WIDTH + x-1 ] == mPassValue ) { --x; direction = 270; }
-        else if ( mSearchMap[ (y+1) * BOARD_MAX_WIDTH + x   ] == mPassValue ) { ++y; direction = 180; }
-        else if ( mSearchMap[ y     * BOARD_MAX_WIDTH + x+1 ] == mPassValue ) { ++x; direction =  90; }
+        if      ( y > 0          && mSearchMap[ (y-1) * BOARD_MAX_WIDTH + x   ] == mPassValue ) { --y; direction =   0; }
+        else if ( x > 0          && mSearchMap[ y     * BOARD_MAX_WIDTH + x-1 ] == mPassValue ) { --x; direction = 270; }
+        else if ( y < mMapHeight && mSearchMap[ (y+1) * BOARD_MAX_WIDTH + x   ] == mPassValue ) { ++y; direction = 180; }
+        else if ( x < mMapWidth  && mSearchMap[ y     * BOARD_MAX_WIDTH + x+1 ] == mPassValue ) { ++x; direction =  90; }
         else {
             break;
         }
@@ -98,9 +98,7 @@ void PathFinder::tryAt( int x, int y )
         case TARGET:
             printSearchMap();
 
-            mMoves.clear();
             buildPath( x, y );
-            emit pathFound( mMoves );
             std::longjmp( mJmpBuf, 1 );
 
         default:
@@ -148,10 +146,11 @@ void PathFinder::run()
 {
     mStopping = false;
 
+    mMoves.clear();
     if ( !setjmp( mJmpBuf ) ) {
         // initialize the search map
         Game* game = getGame();
-        if ( game ) {
+        if ( game && game->canPlaceAt( TANK, mFromX, mFromY, 0, false )) {
             Board* board = game->getBoard();
             mMapWidth  = board->getWidth();
             mMapHeight = board->getHeight();
@@ -175,4 +174,5 @@ void PathFinder::run()
             }
         }
     }
+    emit pathFound( mMoves );
 }
