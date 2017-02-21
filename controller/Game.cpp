@@ -21,8 +21,9 @@ Game::Game( Board* board )
 
 void Game::init( BoardWindow* window )
 {
-    QObject::connect( &mCannonShot, &Shot::pathAdded,   window, &BoardWindow::renderSquareLater );
-    QObject::connect( &mCannonShot, &Shot::pathRemoved, window, &BoardWindow::renderSquareLater );
+    QObject::connect( &mCannonShot, &Shot::pathAdded,     window, &BoardWindow::renderSquareLater );
+    QObject::connect( &mCannonShot, &Shot::pathRemoved,   window, &BoardWindow::renderSquareLater );
+    QObject::connect( &mMovingPiece, &Push::stateChanged, this,   &Game::onMovingPieceChanged     );
 }
 
 GameHandle Game::getHandle()
@@ -65,7 +66,9 @@ void Game::onTankMoved( int x, int y )
     mTankBoardX = x;
     mTankBoardY = y;
 
-    sightCannons();
+    if ( mMovingPiece.getType() == NONE ) {
+        sightCannons();
+    }
 }
 
 void Game::sightCannons()
@@ -125,6 +128,14 @@ void Game::sightCannons()
         mActiveCannon.setX( fireX*24 );
         mActiveCannon.setY( fireY*24 );
         mCannonShot.fire( fireAngle );
+    }
+}
+
+__attribute__((unused))
+void Game::onMovingPieceChanged(QAbstractAnimation::State newState, QAbstractAnimation::State oldState)
+{
+    if ( newState == QAbstractAnimation::Stopped ) {
+        sightCannons();
     }
 }
 

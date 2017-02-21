@@ -44,10 +44,10 @@ public slots:
     void onTankMoved( int x, int y );
     void onBoardTileChanged( int x, int y );
     void onTankMovingInto( int x, int y, int fromAngle );
-
-private:
+    void onMovingPieceChanged(QAbstractAnimation::State newState, QAbstractAnimation::State oldState);
     void sightCannons();
 
+private:
     AnimationAggregator mMoveAggregate;
     AnimationAggregator mShotAggregate;
 
