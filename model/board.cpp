@@ -145,7 +145,7 @@ void Board::erasePieceAt( int x, int y )
     PieceSet::iterator it = mPieces.find( pos );
     if ( it != mPieces.end() ) {
         mPieces.erase( it );
-        emit tileChanged( x, y );
+        emit pieceErasedAt( x, y );
     }
 }
 
@@ -177,7 +177,7 @@ void Board::setTileAt( BoardTileId id, int x, int y )
 {
     if ( x >= 0 && y >= 0 && x < mWidth && y < mHeight ) {
         mTiles[y*BOARD_MAX_WIDTH+x] = id;
-        emit tileChanged( x, y );
+        emit tileChangedAt( x, y );
     }
 }
 

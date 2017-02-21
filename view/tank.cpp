@@ -58,6 +58,8 @@ void Tank::reset( int boardX, int boardY )
     mVerticalAnimation->setEndValue( p.x() );
     mRotation = 0;
     mMoves.clear();
+
+    emit moved( boardX, boardY );
 }
 
 void Tank::setX( const QVariant& x )
@@ -101,7 +103,7 @@ void Tank::setRotation( const QVariant& angle )
 
 void Tank::move( int direction )
 {
-    if ( direction == -1 ) {
+    if ( direction < 0 ) {
         followPath();
         return;
     }
@@ -117,9 +119,12 @@ void Tank::move( int direction )
             mMoves.push_back( Piece( MOVE, mBoundingRect.left()/24, mBoundingRect.top()/24, direction ) );
         } else {
             PieceList::iterator it = mMoves.end();
-            *--it = Piece( MOVE, it->getX(), it->getY(), direction );
+            --it;
+            int x = it->getX();
+            int y = it->getY();
+            *it = Piece( MOVE, x, y, direction );
             if ( mMoves.size() > 1 ) {
-                emit pieceDirty( mMoves.back() );
+                emit squareDirty( x, y );
             }
         }
         if ( mMoves.size() == 1 ) {
@@ -139,7 +144,7 @@ void Tank::move( int direction )
         Game* game = getGame();
         if ( game && game->canMoveFrom( TANK, direction, &x, &y ) ) {
             mMoves.push_back( Piece( MOVE, x, y, direction ) );
-            emit pieceDirty( mMoves.back() );
+            emit squareDirty( x, y );
             followPath();
         }
     }
@@ -208,7 +213,7 @@ void Tank::eraseLastMove()\
 {
     if ( mMoves.size() ) {
         Piece& piece = mMoves.back();
-        emit pieceDirty( piece );
+        emit squareDirty( piece.getX(), piece.getY() );
         mMoves.pop_back();
     }
 }
@@ -228,12 +233,12 @@ Game* Tank::getGame()
 void Tank::setMoves( PieceList moves )
 {
     for( auto it : mMoves ) {
-        emit pieceDirty( it );
+        emit squareDirty( it.getX(), it.getY() );
     }
 
     mMoves = moves;
 
     for( auto it : moves ) {
-        emit pieceDirty( it );
+        emit squareDirty( it.getX(), it.getY() );
     }
 }

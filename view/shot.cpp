@@ -52,13 +52,13 @@ void Shot::setSequence( const QVariant &sequence )
                 pieceType = SHOT_STRAIGHT;
             }
             mPath.push_back( Piece(pieceType,x,y,direction) );
-            emit pathAdded( mPath.back() );
+            emit pathAdded( x, y );
         }
     }
     if ( mStopping && seq > 5 ) {
         if ( !mPath.empty() ) {
             Piece& piece = mPath.front();
-            emit pathRemoved( piece );
+            emit pathRemoved( piece.getX(), piece.getY() );
             mPath.pop_front();
         }
     }
@@ -77,8 +77,7 @@ void Shot::stop()
 void Shot::fire( int direction )
 {
     if ( !(direction % 90) ) {
-        Game* game = getGame();
-        if ( game && !game->getShotAggregate()->active() ) {
+        if ( mAnimation->state() == QPropertyAnimation::Stopped ) {
             mSequence = QVariant(-1);
             mDirection = direction;
             mStopping = false;

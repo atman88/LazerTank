@@ -26,12 +26,12 @@ BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
 
     mTank = new Tank();
     mTank->setParent(this);
-    QObject::connect( mTank, &Tank::changed,    this, &BoardWindow::renderLater      );
-    QObject::connect( mTank, &Tank::pieceDirty, this, &BoardWindow::renderPieceLater );
+    QObject::connect( mTank, &Tank::changed,    this, &BoardWindow::renderLater       );
+    QObject::connect( mTank, &Tank::squareDirty, this, &BoardWindow::renderSquareLater );
 
     mShot = new Shot(mTank);
-    QObject::connect( mShot, &Shot::pathAdded,   this, &BoardWindow::renderPieceLater );
-    QObject::connect( mShot, &Shot::pathRemoved, this, &BoardWindow::renderPieceLater );
+    QObject::connect( mShot, &Shot::pathAdded,   this, &BoardWindow::renderSquareLater );
+    QObject::connect( mShot, &Shot::pathRemoved, this, &BoardWindow::renderSquareLater );
 
     mPathFinder.setParent(this);
     QObject::connect( &mPathFinder, &PathFinder::pathFound, mTank, &Tank::setMoves );
@@ -62,17 +62,16 @@ void BoardWindow::setGame(const GameHandle handle )
 
     mGame = handle.game;
     if ( mGame ) {
-        QObject::connect( mGame,                   &Game::pieceAdded,   this,  &BoardWindow::renderPieceLater );
-        QObject::connect( mGame,                   &Game::pieceRemoved, this,  &BoardWindow::renderPieceLater );
         QObject::connect( &mGame->getMovingPiece(),&Push::pieceMoved,   this,  &BoardWindow::renderLater      );
-        QObject::connect( mGame,                   &Game::rectDirty,    this,  &BoardWindow::renderLater      );
         QObject::connect( mTank,                   &Tank::movingInto,   mGame, &Game::onTankMovingInto        );
         QObject::connect( mTank,                   &Tank::moved,        mGame, &Game::onTankMoved             );
 
         Board* board = mGame->getBoard();
         if ( board ) {
             onBoardLoaded();
-            QObject::connect( board, &Board::boardLoaded, this, &BoardWindow::onBoardLoaded );
+            QObject::connect( board, &Board::boardLoaded,   this, &BoardWindow::onBoardLoaded     );
+            QObject::connect( board, &Board::tileChangedAt, this, &BoardWindow::renderSquareLater );
+            QObject::connect( board, &Board::pieceErasedAt, this, &BoardWindow::renderSquareLater );
         }
         mTank->init( mGame );
         mShot->init( mGame->getShotAggregate() );
@@ -120,9 +119,9 @@ void BoardWindow::renderNow()
     mDirtyRegion->setRects(NULL, 0);
 }
 
-void BoardWindow::renderPieceLater( const Piece& piece )
+void BoardWindow::renderSquareLater( int col, int row )
 {
-    QRect dirty(piece.getX()*24, piece.getY()*24, 24, 24);
+    QRect dirty(col*24, row*24, 24, 24);
     renderLater( dirty );
 }
 

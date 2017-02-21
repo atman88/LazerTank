@@ -28,7 +28,7 @@ public:
 signals:
     void changed( const QRect& rect );
     void moved( int boardX, int boardY );
-    void pieceDirty( Piece& piece );
+    void squareDirty( int col, int row );
     void movingInto( int x, int y, int curRotation );
 
 public slots:

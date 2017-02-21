@@ -8,7 +8,7 @@ Game::Game( Board* board )
 {
     mBoard = board;
     if ( board ) {
-        QObject::connect( board, &Board::tileChanged, this, &Game::onBoardTileChanged);
+        QObject::connect( board, &Board::tileChangedAt, this, &Game::onBoardTileChanged);
     }
     mHandle.game = this;
     setProperty("GameHandle", QVariant::fromValue(mHandle));
@@ -21,8 +21,8 @@ Game::Game( Board* board )
 
 void Game::init( BoardWindow* window )
 {
-    QObject::connect( &mCannonShot, &Shot::pathAdded,   window, &BoardWindow::renderPieceLater );
-    QObject::connect( &mCannonShot, &Shot::pathRemoved, window, &BoardWindow::renderPieceLater );
+    QObject::connect( &mCannonShot, &Shot::pathAdded,   window, &BoardWindow::renderSquareLater );
+    QObject::connect( &mCannonShot, &Shot::pathRemoved, window, &BoardWindow::renderSquareLater );
 }
 
 GameHandle Game::getHandle()
@@ -65,6 +65,11 @@ void Game::onTankMoved( int x, int y )
     mTankBoardX = x;
     mTankBoardY = y;
 
+    sightCannons();
+}
+
+void Game::sightCannons()
+{
     // fire any cannon
     const PieceSet& pieces = mBoard->getPieces();
     bool sighted = false;
@@ -72,43 +77,43 @@ void Game::onTankMoved( int x, int y )
     for( auto it = pieces.cbegin(); !sighted && it != pieces.cend(); ++it ) {
         if ( it->getType() == CANNON ) {
             fireAngle = it->getAngle();
-            if ( x == it->getX() ) {
+            if ( mTankBoardX == it->getX() ) {
                 fireY = it->getY();
                 int dir;
-                if ( fireAngle == 0 && y < fireY ) {
+                if ( fireAngle == 0 && mTankBoardY < fireY ) {
                     dir = -1;
-                } else if ( fireAngle == 180 && y > fireY ) {
+                } else if ( fireAngle == 180 && mTankBoardY > fireY ) {
                     dir = 1;
                 } else {
                     continue;
                 }
-                for( int sy = fireY+dir; ; sy += dir ) {
-                    if ( sy == y ) {
-                        fireX = x;
+                for( int y = fireY+dir; ; y += dir ) {
+                    if ( y == mTankBoardY ) {
+                        fireX = mTankBoardX;
                         sighted = true;
                         break;
                     }
-                    if ( !mBoard->canSightThru( x, sy ) ) {
+                    if ( !mBoard->canSightThru( mTankBoardX, y ) ) {
                         break;
                     }
                 }
-            } else if ( y == it->getY() ) {
+            } else if ( mTankBoardY == it->getY() ) {
                 fireX = it->getX();
                 int dir;
-                if ( fireAngle == 270 && x < fireX ) {
+                if ( fireAngle == 270 && mTankBoardX < fireX ) {
                     dir = -1;
-                } else if ( fireAngle == 90 && x > fireX ) {
+                } else if ( fireAngle == 90 && mTankBoardX > fireX ) {
                     dir = 1;
                 } else {
                     continue;
                 }
-                for( int sx = fireX+dir; ; sx += dir ) {
-                    if ( sx == x ) {
-                        fireY = y;
+                for( int x = fireX+dir; ; x += dir ) {
+                    if ( x == mTankBoardX ) {
+                        fireY = mTankBoardY;
                         sighted = true;
                         break;
                     }
-                    if ( !mBoard->canSightThru( sx, y ) ) {
+                    if ( !mBoard->canSightThru( x, mTankBoardY ) ) {
                         break;
                     }
                 }
@@ -138,7 +143,9 @@ bool Game::getAdjacentPosition( int angle, int *x, int *y )
 
 void Game::onBoardTileChanged( int x, int y )
 {
-    emit rectDirty( QRect( x*24, y*24, 24, 24 ) );
+    if ( mBoard->tileAt( x, y ) == DIRT ) {
+        sightCannons();
+    }
 }
 
 bool Game::canPlaceAt(PieceType what, int x, int y, int fromAngle, bool canPush )

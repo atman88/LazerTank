@@ -5,7 +5,7 @@
 
 #include "model/piece.h"
 
-#define BOARD_MAX_LEVEL 11
+#define BOARD_MAX_LEVEL 12
 
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
 #define BOARD_MAX_HEIGHT PIECE_MAX_ROWCOUNT
@@ -55,7 +55,8 @@ public:
 
 signals:
     void boardLoaded();
-    void tileChanged(int x, int y);
+    void tileChangedAt(int x, int y);
+    void pieceErasedAt(int x, int y);
 
 private:
     void initPiece( PieceType type, int x, int y, int angle = 0 );

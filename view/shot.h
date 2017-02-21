@@ -23,8 +23,8 @@ public:
 
 signals:
     void stopped();
-    void pathRemoved( const Piece& segment );
-    void pathAdded( const Piece& segment );
+    void pathRemoved( int col, int row );
+    void pathAdded( int col, int row );
 
 public slots:
     void setSequence( const QVariant& shotSequence );

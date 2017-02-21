@@ -40,18 +40,14 @@ public:
     bool canPlaceAt(PieceType what, int x, int y , int fromAngle, bool canPush);
     bool canShootThru( int x, int y, int *angle );
 
-signals:
-    void pieceAdded( const Piece& );
-    void pieceRemoved( const Piece& );
-    void rectDirty( const QRect& );
-    void boardTileChanged( QRect rect );
-
 public slots:
     void onTankMoved( int x, int y );
     void onBoardTileChanged( int x, int y );
     void onTankMovingInto( int x, int y, int fromAngle );
 
 private:
+    void sightCannons();
+
     AnimationAggregator mMoveAggregate;
     AnimationAggregator mShotAggregate;
 
