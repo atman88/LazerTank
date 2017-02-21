@@ -8,6 +8,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     qRegisterMetaType<GameHandle>("GameHandle");
+    qRegisterMetaType<PieceList>( "PieceList" );
 
     BoardWindow window;
     Board board;

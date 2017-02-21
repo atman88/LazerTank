@@ -33,6 +33,9 @@ BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
     QObject::connect( mShot, &Shot::pathAdded,   this, &BoardWindow::renderPieceLater );
     QObject::connect( mShot, &Shot::pathRemoved, this, &BoardWindow::renderPieceLater );
 
+    mPathFinder.setParent(this);
+    QObject::connect( &mPathFinder, &PathFinder::pathFound, mTank, &Tank::setMoves );
+
     mActiveMoveDirection = -1;
 }
 
@@ -351,8 +354,9 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
 
 void BoardWindow::mousePressEvent( QMouseEvent* event )
 {
-    if ( event->button() == Qt::RightButton ) {
-        QMenu menu;
+    switch( event->button() ) {
+    case Qt::RightButton:
+    {   QMenu menu;
         QAction* action;
         QString text( "level %1" );
         for( int level = 1; level <= BOARD_MAX_LEVEL; ++level ) {
@@ -364,5 +368,24 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
             cout << "menu " << action->property("text").toString().toStdString() << " selected" << std::endl;
             mGame->getBoard()->load( action->data().toInt() );
         }
+        break;
+    }
+    case Qt::LeftButton:
+        mTank->stop();
+        mPathFinder.findPath( event->pos().x()/24, event->pos().y()/24, mTank->getX().toInt()/24, mTank->getY().toInt()/24, mTank->getRotation().toInt() );
+        break;
+    default:
+        ;
+    }
+}
+
+void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
+{
+    switch( event->button() ) {
+    case Qt::LeftButton:
+        mTank->move();
+        break;
+    default:
+        ;
     }
 }

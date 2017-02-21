@@ -40,11 +40,16 @@ void Tank::paint( QPainter* painter )
     }
 }
 
-void Tank::reset( int boardX, int boardY )
+void Tank::stop()
 {
     mRotateAnimation->stop();
     mHorizontalAnimation->stop();
     mVerticalAnimation->stop();
+}
+
+void Tank::reset( int boardX, int boardY )
+{
+    stop();
     QPoint p( boardX*24, boardY*24 );
     mBoundingRect.moveTopLeft( p );
     mHorizontalAnimation->setStartValue( p.x() );
@@ -96,6 +101,11 @@ void Tank::setRotation( const QVariant& angle )
 
 void Tank::move( int direction )
 {
+    if ( direction == -1 ) {
+        followPath();
+        return;
+    }
+
     int fromRotation;
     if ( !mMoves.size() ) {
         fromRotation = mRotation.toInt();
@@ -213,4 +223,17 @@ Game* Tank::getGame()
     QObject* p = parent();
     QVariant hv = p->property("GameHandle");
     return hv.value<GameHandle>().game;
+}
+
+void Tank::setMoves( PieceList moves )
+{
+    for( auto it : mMoves ) {
+        emit pieceDirty( it );
+    }
+
+    mMoves = moves;
+
+    for( auto it : moves ) {
+        emit pieceDirty( it );
+    }
 }

@@ -146,13 +146,12 @@ bool Game::canPlaceAt(PieceType what, int x, int y, int fromAngle, bool canPush 
     switch( mBoard->tileAt(x,y) ) {
     case DIRT:
     case TILE_SUNK:
-        if ( canPush ) {
-            PieceType what = mBoard->pieceTypeAt( x, y );
-            if ( what != NONE ) {
-                return canMoveFrom( what, fromAngle, &x, &y, false );
-            }
+    {   PieceType what = mBoard->pieceTypeAt( x, y );
+        if ( what != NONE ) {
+            return canPush && canMoveFrom( what, fromAngle, &x, &y, false );
         }
         return true;
+    }
     case FLAG:
         return what == TANK;
     case WATER:

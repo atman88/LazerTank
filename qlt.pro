@@ -17,7 +17,8 @@ HEADERS += controller/Game.h \
     view/shot.h \
     view/push.h \
     controller/animationaggregator.h \
-    view/shooter.h
+    view/shooter.h \
+    controller/pathfinder.h
 SOURCES += controller/Game.cpp \
            view/BoardWindow.cpp \
            model/board.cpp \
@@ -26,7 +27,8 @@ SOURCES += controller/Game.cpp \
     view/push.cpp \
     controller/animationaggregator.cpp \
     view/shooter.cpp \
-    view/tank.cpp
+    view/tank.cpp \
+    controller/pathfinder.cpp
 RESOURCES += qml.qrc
 
 test{

@@ -21,7 +21,8 @@ public:
     void init( Game* game );
     PieceList& getMoves();
     void paint( QPainter* painter );
-    void move( int direction );
+    void move( int direction = -1 );
+    void stop();
     void eraseLastMove();
 
 signals:
@@ -33,6 +34,7 @@ signals:
 public slots:
     void reset( int x, int y );
     void onAnimationsFinished();
+    void setMoves( PieceList moves );
     void setX(const QVariant &x ) override;
     void setY(const QVariant &y ) override;
     void setRotation( const QVariant& angle ) override;

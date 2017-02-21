@@ -8,6 +8,7 @@ class BoardWindow;
 #include "tank.h"
 #include "shot.h"
 #include "controller/Game.h"
+#include "controller/pathfinder.h"
 
 class BoardWindow : public QWindow
 {
@@ -38,6 +39,7 @@ protected:
     void keyPressEvent(QKeyEvent *ev) override;
     void keyReleaseEvent(QKeyEvent *ev) override;
     void mousePressEvent( QMouseEvent* event ) override;
+    void mouseReleaseEvent( QMouseEvent* event ) override;
 
     void resizeEvent(QResizeEvent *event) override;
     void exposeEvent(QExposeEvent *event) override;
@@ -50,6 +52,7 @@ private:
 
     Tank* mTank;
     Shot* mShot;
+    PathFinder mPathFinder;
 
     QBackingStore *mBackingStore;
     QRegion *mDirtyRegion;
