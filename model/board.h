@@ -5,7 +5,7 @@
 
 #include "model/piece.h"
 
-#define BOARD_MAX_LEVEL 10
+#define BOARD_MAX_LEVEL 11
 
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
 #define BOARD_MAX_HEIGHT PIECE_MAX_ROWCOUNT

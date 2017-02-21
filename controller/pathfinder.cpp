@@ -39,8 +39,8 @@ Game* PathFinder::getGame()
 
 void PathFinder::printSearchMap()
 {
-    for( int y = 0; y < mMapHeight; ++y ) {
-        for( int x = 0; x < mMapWidth; ++x ) {
+    for( int y = 0; y <= mMaxY; ++y ) {
+        for( int x = 0; x <= mMaxX; ++x ) {
             switch( mSearchMap[y * BOARD_MAX_WIDTH + x] ) {
             case 0:          cout << '0'; break;
             case 1:          cout << '1'; break;
@@ -66,10 +66,10 @@ void PathFinder::buildPath( int x, int y )
         if ( --mPassValue < 0 ) {
             mPassValue = TRAVERSIBLE-1;
         }
-        if      ( y > 0          && mSearchMap[ (y-1) * BOARD_MAX_WIDTH + x   ] == mPassValue ) { --y; direction =   0; }
-        else if ( x > 0          && mSearchMap[ y     * BOARD_MAX_WIDTH + x-1 ] == mPassValue ) { --x; direction = 270; }
-        else if ( y < mMapHeight && mSearchMap[ (y+1) * BOARD_MAX_WIDTH + x   ] == mPassValue ) { ++y; direction = 180; }
-        else if ( x < mMapWidth  && mSearchMap[ y     * BOARD_MAX_WIDTH + x+1 ] == mPassValue ) { ++x; direction =  90; }
+        if      ( y > 0     && mSearchMap[ (y-1) * BOARD_MAX_WIDTH + x   ] == mPassValue ) { --y; direction =   0; }
+        else if ( x > 0     && mSearchMap[ y     * BOARD_MAX_WIDTH + x-1 ] == mPassValue ) { --x; direction = 270; }
+        else if ( y < mMaxY && mSearchMap[ (y+1) * BOARD_MAX_WIDTH + x   ] == mPassValue ) { ++y; direction = 180; }
+        else if ( x < mMaxX && mSearchMap[ y     * BOARD_MAX_WIDTH + x+1 ] == mPassValue ) { ++x; direction =  90; }
         else {
             break;
         }
@@ -83,8 +83,8 @@ void PathFinder::buildPath( int x, int y )
 
 void PathFinder::tryAt( int x, int y )
 {
-    if ( x >= 0 && x < mMapWidth
-      && y >= 0 && y < mMapHeight ) {
+    if ( x >= 0 && x <= mMaxX
+      && y >= 0 && y <= mMaxY ) {
         switch( mSearchMap[y*BOARD_MAX_WIDTH + x] ) {
         case TRAVERSIBLE:
             mSearchMap[y*BOARD_MAX_WIDTH + x] = mPassValue;
@@ -152,11 +152,11 @@ void PathFinder::run()
         Game* game = getGame();
         if ( game && game->canPlaceAt( TANK, mFromX, mFromY, 0, false )) {
             Board* board = game->getBoard();
-            mMapWidth  = board->getWidth();
-            mMapHeight = board->getHeight();
+            mMaxX  = board->getWidth()-1;
+            mMaxY = board->getHeight()-1;
 
-            for( int y = mMapHeight; !mStopping && --y >= 0; ) {
-                for( int x = mMapWidth; !mStopping && --x >= 0; ) {
+            for( int y = mMaxY; !mStopping && y >= 0; --y ) {
+                for( int x = mMaxX; !mStopping && x >= 0; --x ) {
                     mSearchMap[y*BOARD_MAX_WIDTH+x] = game->canPlaceAt( TANK, x, y, 0, false ) ? TRAVERSIBLE : BLOCKED;
                 }
             }

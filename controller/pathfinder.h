@@ -35,8 +35,8 @@ private:
     int mTargetX, mTargetY, mTargetRotation;
     bool mStopping;
     char mSearchMap[BOARD_MAX_HEIGHT*BOARD_MAX_WIDTH];
-    int mMapWidth;
-    int mMapHeight;
+    int mMaxX;
+    int mMaxY;
     int mSearchX[MAX_POINTS];
     int mSearchY[MAX_POINTS];
     int mPassValue;
