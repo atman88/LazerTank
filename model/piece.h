@@ -15,8 +15,10 @@ typedef enum {
     SHOT_STRAIGHT,
     SHOT_LEFT,
     SHOT_RIGHT,
+    SHOT_END,
     TILE_MIRROR,
-    CANNON
+    CANNON,
+    PieceTypeUpperBound   // must be last
 } PieceType;
 
 class Piece
@@ -42,6 +44,7 @@ public:
     int getX() const;
     int getY() const;
     int getAngle() const;
+    void getBounds( QRect &rect ) const;
 
     static int encodePos( int x, int y )
     {

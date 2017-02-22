@@ -1,0 +1,16 @@
+S S  S [S/[\SSFS[S/[\SS S  S  S S
+S S [S/ .  . ... .  . .[S-[S-[\SS
+S S [S| .  . ... .  . . S  S [S|S
+S S [S\ .  . ... .  . .[\S S [S|S
+S S [S/ .  M ... .  . .[/S S [S|S
+S S [S\ .  M ... .  . .[\S S [S|S
+S S [S/ .  M ... .  . .[/S S [S|S
+S S [S\ .  M ... .  . .[\S S [S|S
+S S [S/ .  . ... .  . .[/S S [S|S
+S S [S| w  w www w  w w S  S [S|S
+S S [S| w  w www w  w w S  S [S|S
+S S [S\ w  w www w  w w[\S S [S|S
+S S  .  w  w www w  w w .  S [S|S
+S[S/ .  w  w www w  w w . [S-[/SS
+S[S\ .  .  . ... .  . .[/S S  S S
+S S  S  .  . .T. .  . . .  S  S S

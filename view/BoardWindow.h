@@ -45,10 +45,11 @@ protected:
     void exposeEvent(QExposeEvent *event) override;
 
 private:
-    void renderRotatedPixmap(QPixmap& pixmap, int x, int y, int angle, QPainter &painter );
+    void renderRotatedPixmap(const QPixmap* pixmap, int x, int y, int angle, QPainter &painter );
     void renderMove( int x, int y, int angle = 0 );
     void renderPiece(PieceType type, int x, int y, int angle, QPainter &painter );
     void renderListAt(PieceSet::iterator *iterator, PieceSet::iterator end, Piece& pos, QPainter& painter );
+    void renderListIn(PieceSet::iterator *iterator, PieceSet::iterator end, QRect& dirty, QPainter& painter );
 
     Tank* mTank;
     Shot* mShot;
@@ -58,20 +59,6 @@ private:
     QRegion *mDirtyRegion;
 
     Game* mGame;
-    QPixmap mStonePixmap;
-    QPixmap mDirtPixmap;
-    QPixmap mTileSunkPixmap;
-    QPixmap mFlagPixmap;
-    QPixmap mTilePixmap;
-    QPixmap mMoveIndicatorPixmap;
-    QPixmap mShotStraightPixmap;
-    QPixmap mShotRightPixmap;
-    QPixmap mWallMirrorPixmap;
-    QPixmap mStoneSlitPixmap;
-    QPixmap mWoodPixmap;
-    QPixmap mWoodDamaged;
-    QPixmap mTileMirrorPixmap;
-    QPixmap mCannonPixmap;
 
     int mActiveMoveDirection;
 };

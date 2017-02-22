@@ -5,7 +5,7 @@
 
 #include "model/piece.h"
 
-#define BOARD_MAX_LEVEL 13
+#define BOARD_MAX_LEVEL 14
 
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
 #define BOARD_MAX_HEIGHT PIECE_MAX_ROWCOUNT
@@ -13,21 +13,22 @@
 using namespace std;
 
 typedef enum {
-    DIRT,
+    DIRT = PieceTypeUpperBound,
     TILE_SUNK,
     STONE,
     WATER,
     FLAG,
     EMPTY,
-    STONE_MIRROR___0,
+    STONE_MIRROR,
     STONE_MIRROR__90,
     STONE_MIRROR_180,
     STONE_MIRROR_270,
-    STONE_SLIT__0,
+    STONE_SLIT,
     STONE_SLIT_90,
     WOOD,
     WOOD_DAMAGED,
-} BoardTileId;
+    TileTypeUpperBound
+} TileType;
 
 class Board : public QObject
 {
@@ -39,8 +40,8 @@ public:
     int getLevel();
     int getWidth();
     int getHeight();
-    BoardTileId tileAt( int x, int y );
-    void setTileAt( BoardTileId, int x, int y );
+    TileType tileAt( int x, int y );
+    void setTileAt( TileType, int x, int y );
     PieceType pieceTypeAt( int x, int y );
     bool pieceAt( int x, int y, Piece *result );
     void erasePieceAt( int x , int y );
@@ -64,7 +65,7 @@ private:
     int mHeight;
     int mWidth;
 
-    BoardTileId mTiles[BOARD_MAX_WIDTH*BOARD_MAX_HEIGHT];
+    unsigned char mTiles[BOARD_MAX_WIDTH*BOARD_MAX_HEIGHT];
 
     PieceSet mPieces;
 };

@@ -40,6 +40,8 @@ void Shot::setSequence( const QVariant &sequence )
         int startDir = direction;
         Game* game = getGame();
         if ( !game || !game->canShootFrom( &direction, &x, &y ) ) {
+            mPath.push_back( Piece(SHOT_END, x, y, direction ) );
+            emit pathAdded( x, y );
             mStopping = true;
             mEndReached = true;
         } else {

@@ -2,7 +2,6 @@
 #include <QFile>
 #include "board.h"
 
-
 Board::Board( QObject* parent )  : QObject(parent)
 {
     mLevel = 0;
@@ -41,16 +40,17 @@ bool Board::load( QString& fileName )
 
     char line[BOARD_MAX_WIDTH];
     int y = 0;
+    unsigned char* row = mTiles;
     mWidth = 0;
     mInitialTankX = mInitialTankY = 0;
     mPieces.clear();
-    memset( mTiles, EMPTY, sizeof mTiles );
 
     do {
         int nRead = file.readLine(line, sizeof line);
+        memset( row, EMPTY, BOARD_MAX_WIDTH * (sizeof *row) );
 
         int i = 0, x = 0;
-        while( i < nRead ) {
+        while( i < nRead && x < BOARD_MAX_WIDTH ) {
             while( isspace(line[i]) ) {
                 ++i;
             }
@@ -59,12 +59,12 @@ bool Board::load( QString& fileName )
             case 0:
                 --i;
                 break;
-            case 'S': mTiles[y*BOARD_MAX_WIDTH + x++] = STONE;     break;
-            case 'W': mTiles[y*BOARD_MAX_WIDTH + x++] = WOOD;      break;
-            case 'w': mTiles[y*BOARD_MAX_WIDTH + x++] = WATER;     break;
-            case 'e': mTiles[y*BOARD_MAX_WIDTH + x++] = EMPTY;     break;
-            case 'F': mTiles[y*BOARD_MAX_WIDTH + x++] = FLAG;      break;
-            case 'm': mTiles[y*BOARD_MAX_WIDTH + x++] = TILE_SUNK; break;
+            case 'S': row[x++] = STONE;     break;
+            case 'W': row[x++] = WOOD;      break;
+            case 'w': row[x++] = WATER;     break;
+            case 'e': row[x++] = EMPTY;     break;
+            case 'F': row[x++] = FLAG;      break;
+            case 'm': row[x++] = TILE_SUNK; break;
 
             case 'M': initPiece( TILE,   x++, y      ); break;
             case '^': initPiece( CANNON, x++, y      ); break;
@@ -75,12 +75,12 @@ bool Board::load( QString& fileName )
                 if ( nRead-i >= 2 ) {
                     int c1 = line[i++];
                     switch( (c1 << 8) | line[i++] ) {
-                    case ('S' <<8)|'/':  mTiles[y*BOARD_MAX_WIDTH + x++] = STONE_MIRROR___0; break;
-                    case ('\\'<<8)|'S':  mTiles[y*BOARD_MAX_WIDTH + x++] = STONE_MIRROR__90; break;
-                    case ('/' <<8)|'S':  mTiles[y*BOARD_MAX_WIDTH + x++] = STONE_MIRROR_180; break;
-                    case ('S' <<8)|'\\': mTiles[y*BOARD_MAX_WIDTH + x++] = STONE_MIRROR_270; break;
-                    case ('S' <<8)|'-':  mTiles[y*BOARD_MAX_WIDTH + x++] = STONE_SLIT__0; break;
-                    case ('S' <<8)|'|':  mTiles[y*BOARD_MAX_WIDTH + x++] = STONE_SLIT_90; break;
+                    case ('S' <<8)|'/':  row[x++] = STONE_MIRROR;     break;
+                    case ('\\'<<8)|'S':  row[x++] = STONE_MIRROR__90; break;
+                    case ('/' <<8)|'S':  row[x++] = STONE_MIRROR_180; break;
+                    case ('S' <<8)|'\\': row[x++] = STONE_MIRROR_270; break;
+                    case ('S' <<8)|'-':  row[x++] = STONE_SLIT;       break;
+                    case ('S' <<8)|'|':  row[x++] = STONE_SLIT_90;    break;
                     case ('M' <<8)|'/':  initPiece( TILE_MIRROR, x++, y,   0 ); break;
                     case ('\\'<<8)|'M':  initPiece( TILE_MIRROR, x++, y,  90 ); break;
                     case ('/' <<8)|'M':  initPiece( TILE_MIRROR, x++, y, 180 ); break;
@@ -97,11 +97,7 @@ bool Board::load( QString& fileName )
 
                 // fall through
 
-            default:  mTiles[y*BOARD_MAX_WIDTH + x++] = DIRT;  break;
-            }
-
-            if ( x >= BOARD_MAX_WIDTH ) {
-                break;
+            default:  row[x++] = DIRT;  break;
             }
         }
         if ( !x ) {
@@ -110,6 +106,7 @@ bool Board::load( QString& fileName )
         if ( x > mWidth ) {
             mWidth = x;
         }
+        row += BOARD_MAX_WIDTH;
     } while( ++y < BOARD_MAX_HEIGHT );
     file.close();
 
@@ -169,11 +166,11 @@ int Board::getLevel()
     return mLevel;
 }
 
-BoardTileId Board::tileAt( int x, int y ) {
-    return (x >= 0 && y >= 0 && x < mWidth && y < mHeight) ? mTiles[y*BOARD_MAX_WIDTH+x] : STONE;
+TileType Board::tileAt( int x, int y ) {
+    return (x >= 0 && y >= 0 && x < mWidth && y < mHeight) ? ((TileType) mTiles[y*BOARD_MAX_WIDTH+x]) : STONE;
 }
 
-void Board::setTileAt( BoardTileId id, int x, int y )
+void Board::setTileAt( TileType id, int x, int y )
 {
     if ( x >= 0 && y >= 0 && x < mWidth && y < mHeight ) {
         mTiles[y*BOARD_MAX_WIDTH+x] = id;

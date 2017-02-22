@@ -44,7 +44,6 @@ private:
     void animateMove( int from, int to, QPropertyAnimation *animation );
     Game* getGame();
 
-    QPixmap mPixmap;
     QRect mPreviousPaintRect;
     QPropertyAnimation* mRotateAnimation;
     QPropertyAnimation* mHorizontalAnimation;

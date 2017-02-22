@@ -3,26 +3,14 @@
 #include <QAction>
 #include "BoardWindow.h"
 
+#include "util/imageutils.h"
+
 BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
 {
     create();
 
     mBackingStore = new QBackingStore(this);
     mDirtyRegion = new QRegion();
-    mStonePixmap.load(":/images/wall-stone.png");
-    mDirtPixmap.load(":/images/dirt.png");
-    mTileSunkPixmap.load(":/images/tile-sunk.png");
-    mFlagPixmap.load(":/images/flag.png");
-    mTilePixmap.load(":/images/tile-metal.png");
-    mMoveIndicatorPixmap.load(":/images/move-indicator.png");
-    mShotStraightPixmap.load( ":/images/shot-straight.png");
-    mShotRightPixmap.load( ":/images/shot-right.png");
-    mWallMirrorPixmap.load( ":/images/wall-mirror.png");
-    mStoneSlitPixmap.load( ":/images/stone-slit.png");
-    mWoodPixmap.load(":/images/wood.png");
-    mWoodDamaged.load(":/images/wood-damaged.png");
-    mTileMirrorPixmap.load(":/images/tile-mirror.png");
-    mCannonPixmap.load(":/images/cannon.png");
 
     mTank = new Tank();
     mTank->setParent(this);
@@ -125,7 +113,7 @@ void BoardWindow::renderSquareLater( int col, int row )
     renderLater( dirty );
 }
 
-void BoardWindow::renderRotatedPixmap( QPixmap& pixmap, int x, int y, int angle, QPainter& painter )
+void BoardWindow::renderRotatedPixmap( const QPixmap* pixmap, int x, int y, int angle, QPainter& painter )
 {
     if ( angle ) {
         int centerX = x + 24/2;
@@ -134,48 +122,42 @@ void BoardWindow::renderRotatedPixmap( QPixmap& pixmap, int x, int y, int angle,
         painter.rotate(angle);
         painter.translate(-centerX, -centerY);
     }
-    painter.drawPixmap( x, y, pixmap);
+    painter.drawPixmap( x, y, *pixmap);
     painter.resetTransform();
 }
 
 void BoardWindow::renderPiece( PieceType type, int x, int y, int angle, QPainter& painter )
 {
-    QPixmap* pixmap;
+    const QPixmap* pixmap = getPixmap( type );
+
     switch( type ) {
-    case MOVE:          pixmap = &mMoveIndicatorPixmap; break;
-    case TILE:          pixmap = &mTilePixmap;          break;
-    case SHOT_STRAIGHT: pixmap = &mShotStraightPixmap;  break;
-    case TILE_MIRROR:   pixmap = &mTileMirrorPixmap;    break;
-    case CANNON:        pixmap = &mCannonPixmap;        break;
     case SHOT_RIGHT:
-        pixmap = &mShotRightPixmap;
         angle = (angle + 270) % 360;
         break;
     case SHOT_LEFT:
-        pixmap = &mShotRightPixmap;
+        pixmap = getPixmap( SHOT_RIGHT );
         angle = (angle + 180) % 360;
         break;
     default:
+        break;
+    }
+
+    if ( pixmap->isNull() ) {
+        cout << "no pixmap for " << type << std::endl;
         return;
     }
 
-    renderRotatedPixmap( *pixmap, x, y, angle, painter );
+    renderRotatedPixmap( pixmap, x, y, angle, painter );
 }
 
-void BoardWindow::renderListAt(PieceSet::iterator *iterator, PieceSet::iterator end, Piece& pos, QPainter& painter )
+void BoardWindow::renderListIn(PieceSet::iterator *iterator, PieceSet::iterator end, QRect& dirty, QPainter& painter )
 {
+    QRect bounds;
     while( *iterator != end ) {
-        int delta = (*iterator)->encodedPos() - pos.encodedPos();
-        if ( delta > 0 ) {
-            break;
-        }
-        if ( delta == 0 ) {
-            // advance to the possible last duplicate
-            Piece piece(  **iterator );
-            while( *iterator != end && (++*iterator)->encodedPos() == pos.encodedPos() ) {
-                piece = **iterator;
-            }
-            renderPiece( piece.getType(), piece.getX()*24, piece.getY()*24, piece.getAngle(), painter );
+        (*iterator)->getBounds( bounds );
+        if ( dirty.intersects( bounds ) ) {
+            renderPiece( (*iterator)->getType(), bounds.left(), bounds.top(), (*iterator)->getAngle(), painter );
+        } else if ( bounds.top() >= dirty.bottom() ) {
             break;
         }
         ++*iterator;
@@ -203,8 +185,8 @@ void BoardWindow::render(QRegion* region)
         QRect rect( region->boundingRect() );
         int minX = rect.left()/24;
         int minY = rect.top()/24;
-        int maxX = rect.right()/24;
-        int maxY = rect.bottom()/24;
+        int maxX = (rect.right() +24-1)/24;
+        int maxY = (rect.bottom()+24-1)/24;
 
         Piece pos(MOVE, minX, minY);
         PieceSet moves;
@@ -223,56 +205,45 @@ void BoardWindow::render(QRegion* region)
 
         for( int y = minY; y <= maxY; ++y ) {
             for( int x = minX; x <= maxX; ++x ) {
-                switch( board->tileAt(x, y) ) {
-                case STONE:
-                    painter.drawPixmap( x*24, y*24, mStonePixmap);
-                    break;
-                case WOOD:
-                    painter.drawPixmap( x*24, y*24, mWoodPixmap);
-                    break;
-                case WOOD_DAMAGED:
-                    painter.drawPixmap( x*24, y*24, mWoodDamaged);
-                    break;
-                case DIRT:
-                    painter.drawPixmap( x*24, y*24, mDirtPixmap);
-                    break;
-                case TILE_SUNK:
-                    painter.drawPixmap( x*24, y*24, mTileSunkPixmap);
-                    break;
-                case FLAG:
-                    painter.drawPixmap( x*24, y*24, mFlagPixmap);
-                    break;
-                case WATER:
-                    painter.fillRect(x*24, y*24, 24, 24, Qt::blue);
-                    break;
-                case STONE_MIRROR___0:
-                    painter.drawPixmap(x*24, y*24, 24, 24, mWallMirrorPixmap);
-                    break;
-                case STONE_MIRROR__90:
-                    renderRotatedPixmap( mWallMirrorPixmap, x*24, y*24, 90, painter);
-                    break;
-                case STONE_MIRROR_180:
-                    renderRotatedPixmap( mWallMirrorPixmap, x*24, y*24, 180, painter);
-                    break;
-                case STONE_MIRROR_270:
-                    renderRotatedPixmap( mWallMirrorPixmap, x*24, y*24, 270, painter);
-                    break;
-                case STONE_SLIT__0:
-                    painter.drawPixmap(x*24, y*24, 24, 24, mStoneSlitPixmap);
-                    break;
-                case STONE_SLIT_90:
-                    renderRotatedPixmap( mStoneSlitPixmap, x*24, y*24, 90, painter);
-                    break;
-                default: // EMPTY
-                    painter.fillRect(x*24, y*24, 24, 24, Qt::black);
-                    break;
+                TileType type = board->tileAt( x, y );
+                const QPixmap* pixmap = getPixmap( type );
+                if ( !pixmap->isNull() ) {
+                    painter.drawPixmap( x*24, y*24, *pixmap );
+                } else {
+                    int angle = 0;
+                    switch( type ) {
+                    case WATER:
+                        painter.fillRect(x*24, y*24, 24, 24, Qt::blue);
+                        break;
+                    case STONE_MIRROR__90:
+                        pixmap = getPixmap( STONE_MIRROR );
+                        angle = 90;
+                        break;
+                    case STONE_MIRROR_180:
+                        pixmap = getPixmap( STONE_MIRROR );
+                        angle = 180;
+                        break;
+                    case STONE_MIRROR_270:
+                        pixmap = getPixmap( STONE_MIRROR );
+                        angle = 270;
+                        break;
+                    case STONE_SLIT_90:
+                        pixmap = getPixmap( STONE_SLIT );
+                        angle = 90;
+                        break;
+                    default: // EMPTY
+                        painter.fillRect(x*24, y*24, 24, 24, Qt::black);
+                        break;
+                    }
+                    if ( angle ) {
+                        renderRotatedPixmap( pixmap, x*24, y*24, angle, painter);
+                    }
                 }
-                pos = Piece(MOVE, x, y);
-                renderListAt( &tileIterator, tiles.end(), pos, painter );
-                renderListAt( &moveIterator, moves.end(), pos, painter );
-                renderListAt( &shotIterator, shots.end(), pos, painter );
             }
         }
+
+        renderListIn( &tileIterator, tiles.end(), rect, painter );
+        renderListIn( &moveIterator, moves.end(), rect, painter );
 
         Push& movingPiece = mGame->getMovingPiece();
         if ( movingPiece.getType() != NONE ) {
@@ -281,6 +252,7 @@ void BoardWindow::render(QRegion* region)
         if ( region->intersects( mTank->getRect() ) ) {
             mTank->paint( &painter );
         }
+        renderListIn( &shotIterator, shots.end(), rect, painter );
 
         mBackingStore->endPaint();
         mBackingStore->flush(*region);

@@ -1,3 +1,5 @@
+#include <QRect>
+
 #include "piece.h"
 
 PieceType Piece::getType() const
@@ -18,4 +20,9 @@ int Piece::getY() const
 int Piece::getAngle() const
 {
     return mAngle;
+}
+
+void Piece::getBounds( QRect& rect ) const
+{
+    rect.setRect( mX*24, mY*24, 24, 24 );
 }

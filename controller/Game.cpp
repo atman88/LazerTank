@@ -131,8 +131,7 @@ void Game::sightCannons()
     }
 }
 
-__attribute__((unused))
-void Game::onMovingPieceChanged(QAbstractAnimation::State newState, QAbstractAnimation::State oldState)
+void Game::onMovingPieceChanged(QAbstractAnimation::State newState, QAbstractAnimation::State oldState  __attribute__((unused)) )
 {
     if ( newState == QAbstractAnimation::Stopped ) {
         sightCannons();
@@ -254,11 +253,11 @@ bool Game::canShootThru( int x, int y, int *angle )
     case WATER:
     case FLAG:
         return true;
-    case STONE_SLIT__0:
+    case STONE_SLIT:
         return *angle == 90 || *angle == 270;
     case STONE_SLIT_90:
         return *angle == 0 || *angle == 180;
-    case STONE_MIRROR___0: return getShotReflection(   0, angle );
+    case STONE_MIRROR:     return getShotReflection(   0, angle );
     case STONE_MIRROR__90: return getShotReflection(  90, angle );
     case STONE_MIRROR_180: return getShotReflection( 180, angle );
     case STONE_MIRROR_270: return getShotReflection( 270, angle );

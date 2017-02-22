@@ -3,6 +3,7 @@
 #include <QCoreApplication>
 #include "tank.h"
 #include "controller/Game.h"
+#include "util/imageutils.h"
 
 Tank::Tank(QObject* parent) : Shooter(parent)
 {
@@ -13,7 +14,6 @@ Tank::Tank(QObject* parent) : Shooter(parent)
 
 void Tank::init( Game* game )
 {
-    mPixmap.load(":/images/tank.png");
     AnimationAggregator* aggregate = game->getMoveAggregate();
     QObject::connect( mRotateAnimation,     &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
     QObject::connect( mHorizontalAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
@@ -32,7 +32,7 @@ void Tank::paint( QPainter* painter )
         painter->rotate( mRotation.toDouble() );
         painter->translate(-centerX, -centerY);
     }
-    painter->drawPixmap( x, y, mPixmap );
+    painter->drawPixmap( x, y, *getPixmap(TANK) );
     if ( !painter->transform().isRotating() ) {
         mPreviousPaintRect = mBoundingRect;
     } else {
