@@ -26,22 +26,22 @@ void Shot::setSequence( const QVariant &sequence )
     int seq = sequence.toInt();
     if ( !mEndReached ) {
         int direction, x, y;
-        if ( !mPath.size() ) {
+        const PieceList* pathList = mPath.getList();
+        if ( !pathList->size() ) {
             direction = mDirection;
             x = parent()->property( "x" ).toInt() / 24;
             y = parent()->property( "y" ).toInt() / 24;
         } else {
-            Piece& p = mPath.back();
-            direction = p.getAngle();
-            x = p.getX();
-            y = p.getY();
+            Piece* p = pathList->back();
+            direction = p->getAngle();
+            x = p->getX();
+            y = p->getY();
         }
 
         int startDir = direction;
         Game* game = getGame();
         if ( !game || !game->canShootFrom( &direction, &x, &y ) ) {
-            mPath.push_back( Piece(SHOT_END, x, y, direction ) );
-            emit pathAdded( x, y );
+            mPath.append( SHOT_END, x, y, direction );
             mStopping = true;
             mEndReached = true;
         } else {
@@ -53,18 +53,13 @@ void Shot::setSequence( const QVariant &sequence )
             } else {
                 pieceType = SHOT_STRAIGHT;
             }
-            mPath.push_back( Piece(pieceType,x,y,direction) );
-            emit pathAdded( x, y );
+            mPath.append( pieceType, x, y, direction );
         }
     }
     if ( mStopping && seq > 5 ) {
-        if ( !mPath.empty() ) {
-            Piece& piece = mPath.front();
-            emit pathRemoved( piece.getX(), piece.getY() );
-            mPath.pop_front();
-        }
+        mPath.eraseFront();
     }
-    if ( mPath.empty() ) {
+    if ( !mPath.count() ) {
         std::cout << "shot finished\n";
         mAnimation->stop();
     }
@@ -100,7 +95,7 @@ Game* Shot::getGame()
     return v.value<GameHandle>().game;
 }
 
-PieceList& Shot::getPath()
+PieceListManager& Shot::getPath()
 {
     return mPath;
 }

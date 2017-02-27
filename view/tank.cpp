@@ -57,7 +57,7 @@ void Tank::reset( int boardX, int boardY )
     mHorizontalAnimation->setEndValue( p.x() );
     mVerticalAnimation->setEndValue( p.x() );
     mRotation = 0;
-    mMoves.clear();
+    mMoves.reset();
 
     emit moved( boardX, boardY );
 }
@@ -109,42 +109,39 @@ void Tank::move( int direction )
     }
 
     int fromRotation;
-    if ( !mMoves.size() ) {
+    if ( !mMoves.count() ) {
         fromRotation = mRotation.toInt();
     } else {
-        fromRotation = mMoves.back().getAngle();
+        fromRotation = mMoves.getList()->back()->getAngle();
     }
     if ( direction != fromRotation ) {
-        if ( mMoves.empty() ) {
-            mMoves.push_back( Piece( MOVE, mBoundingRect.left()/24, mBoundingRect.top()/24, direction ) );
+        if ( !mMoves.count() ) {
+            mMoves.append( MOVE, mBoundingRect.left()/24, mBoundingRect.top()/24, direction );
         } else {
-            PieceList::iterator it = mMoves.end();
-            --it;
-            int x = it->getX();
-            int y = it->getY();
-            *it = Piece( MOVE, x, y, direction );
-            if ( mMoves.size() > 1 ) {
-                emit squareDirty( x, y );
-            }
+            mMoves.replaceBack( direction );
         }
-        if ( mMoves.size() == 1 ) {
+        if ( mMoves.count() == 1 ) {
             followPath();
         }
     } else {
         int x, y;
-        if ( mMoves.empty() ) {
+        if ( !mMoves.count() ) {
             x = mBoundingRect.left()/24;
             y = mBoundingRect.top()/24;
         } else {
-            Piece& last = mMoves.back();
-            x = last.getX();
-            y = last.getY();
+            Piece* last = mMoves.getList()->back();
+            x = last->getX();
+            y = last->getY();
         }
 
         Game* game = getGame();
-        if ( game && game->canMoveFrom( TANK, direction, &x, &y ) ) {
-            mMoves.push_back( Piece( MOVE, x, y, direction ) );
-            emit squareDirty( x, y );
+        bool hasPush = false;
+        if ( game && game->canMoveFrom( TANK, direction, &x, &y, true, &hasPush ) ) {
+            mMoves.append( MOVE, x, y, direction, hasPush );
+
+            if ( hasPush ) {
+                game->onFuturePush( mMoves.getList()->back() );
+            }
             followPath();
         }
     }
@@ -153,10 +150,10 @@ void Tank::move( int direction )
 void Tank::followPath()
 {
     Game* game = getGame();
-    if ( !game->getMoveAggregate()->active() && mMoves.size() ) {
-        Piece move( mMoves.front() );
+    if ( !game->getMoveAggregate()->active() && mMoves.count() ) {
+        Piece* move = mMoves.getList()->front();
         int curRotation = mRotation.toInt();
-        int direction = move.getAngle();
+        int direction = move->getAngle();
 //    cout << "follow " << direction << " (" << move.getX() << "," << move.getY() << ")\n";
 
         if ( direction != curRotation ) {
@@ -176,8 +173,8 @@ void Tank::followPath()
             mRotateAnimation->start();
         }
 
-        int x = move.getX();
-        int y = move.getY();
+        int x = move->getX();
+        int y = move->getY();
         animateMove( mBoundingRect.left(), x*24, mHorizontalAnimation );
         animateMove( mBoundingRect.top(),  y*24, mVerticalAnimation   );
         emit movingInto( x, y, curRotation % 360 );
@@ -200,25 +197,18 @@ void Tank::onAnimationsFinished()
 {
     int rotation = mRotation.toInt() % 360;
     setRotation( QVariant( rotation ) );
-    Piece& piece = mMoves.front();
-    if ( piece.getAngle() == rotation
-      && piece.getX() == mBoundingRect.left()/24
-      && piece.getY() == mBoundingRect.top()/24 ) {
-        mMoves.pop_front();
-    }
-    followPath();
-}
-
-void Tank::eraseLastMove()\
-{
-    if ( mMoves.size() ) {
-        Piece& piece = mMoves.back();
-        emit squareDirty( piece.getX(), piece.getY() );
-        mMoves.pop_back();
+    if ( mMoves.count() ) {
+        Piece* piece = mMoves.getList()->front();
+        if ( piece->getAngle() == rotation
+          && piece->getX() == mBoundingRect.left()/24
+          && piece->getY() == mBoundingRect.top()/24 ) {
+            mMoves.eraseFront();
+        }
+        followPath();
     }
 }
 
-PieceList& Tank::getMoves()
+PieceListManager& Tank::getMoves()
 {
     return mMoves;
 }
@@ -228,17 +218,4 @@ Game* Tank::getGame()
     QObject* p = parent();
     QVariant hv = p->property("GameHandle");
     return hv.value<GameHandle>().game;
-}
-
-void Tank::setMoves( PieceList moves )
-{
-    for( auto it : mMoves ) {
-        emit squareDirty( it.getX(), it.getY() );
-    }
-
-    mMoves = moves;
-
-    for( auto it : moves ) {
-        emit squareDirty( it.getX(), it.getY() );
-    }
 }

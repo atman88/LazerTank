@@ -7,6 +7,8 @@ struct GameHandle;
 class Game;
 
 #include "animationaggregator.h"
+#include "pathfinder.h"
+#include "model/piecedelta.h"
 #include "model/board.h"
 #include "view/push.h"
 #include "view/shot.h"
@@ -34,11 +36,14 @@ public:
     Shot& getCannonShot();
     AnimationAggregator* getMoveAggregate();
     AnimationAggregator* getShotAggregate();
-    bool canMoveFrom(PieceType what, int angle, int *x, int *y , bool canPush = true);
+    bool canMoveFrom(PieceType what, int angle, int *x, int *y , bool futuristic, bool* pushResult = 0 );
     bool canShootFrom( int *angle, int *x, int *y );
     bool getAdjacentPosition( int angle, int *x, int *y );
-    bool canPlaceAt(PieceType what, int x, int y , int fromAngle, bool canPush);
+    bool canPlaceAtNonFuturistic(PieceType what, int x, int y , int fromAngle, bool *pushResult = 0);
     bool canShootThru( int x, int y, int *angle );
+    void onFuturePush(Piece *pushingPiece );
+    void findPath(int fromX, int fromY, int targetX, int targetY, int targetRotation );
+    const PieceSet* getDeltaPieces();
 
 public slots:
     void onTankMoved( int x, int y );
@@ -46,16 +51,24 @@ public slots:
     void onTankMovingInto( int x, int y, int fromAngle );
     void onMovingPieceChanged(QAbstractAnimation::State newState, QAbstractAnimation::State oldState);
     void sightCannons();
+    void endMoveDeltaTracking();
 
 private:
+    bool canMoveFrom(PieceType what, int angle, int *x, int *y, PieceSetManager* pieceManager, bool *pushResult = 0 );
+    bool canPlaceAt(PieceType what, int x, int y , int fromAngle, PieceSetManager* pieceManager, bool *pushResult = 0);
+
     AnimationAggregator mMoveAggregate;
     AnimationAggregator mShotAggregate;
 
     GameHandle mHandle;
     Board* mBoard;
+    PathFinder mPathFinder;
     Push mMovingPiece;
     Shooter mActiveCannon;
     Shot mCannonShot;
+    bool mTrackingFuturePushes;
+    PieceSetManager mFuturePieceManager;
+    PieceDelta mFutureDelta;
 
     int mTankBoardX;
     int mTankBoardY;

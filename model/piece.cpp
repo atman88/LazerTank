@@ -22,7 +22,7 @@ int Piece::getAngle() const
     return mAngle;
 }
 
-void Piece::getBounds( QRect& rect ) const
+void Piece::getBounds( QRect *rect ) const
 {
-    rect.setRect( mX*24, mY*24, 24, 24 );
+    rect->setRect( mX*24, mY*24, 24, 24 );
 }

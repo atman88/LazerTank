@@ -8,7 +8,6 @@ class BoardWindow;
 #include "tank.h"
 #include "shot.h"
 #include "controller/Game.h"
-#include "controller/pathfinder.h"
 
 class BoardWindow : public QWindow
 {
@@ -24,6 +23,7 @@ public:
 
     GameHandle getGame() const;
     virtual void render(QRegion *region);
+    Tank* getTank();
 
 signals:
 
@@ -45,22 +45,24 @@ protected:
     void exposeEvent(QExposeEvent *event) override;
 
 private:
-    void renderRotatedPixmap(const QPixmap* pixmap, int x, int y, int angle, QPainter &painter );
+    void renderOneRect( const QRect* rect, Board* board, const PieceSet* moves, const PieceSet* tiles,
+      const PieceSet* deltas, const PieceSet* shots, QPainter* painter );
+    void renderRotatedPixmap(const QPixmap* pixmap, int x, int y, int angle, QPainter* painter );
     void renderMove( int x, int y, int angle = 0 );
-    void renderPiece(PieceType type, int x, int y, int angle, QPainter &painter );
-    void renderListAt(PieceSet::iterator *iterator, PieceSet::iterator end, Piece& pos, QPainter& painter );
-    void renderListIn(PieceSet::iterator *iterator, PieceSet::iterator end, QRect& dirty, QPainter& painter );
+    void renderPiece(PieceType type, int x, int y, int angle, QPainter* painter );
+    void renderListIn(PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter );
 
     Tank* mTank;
     Shot* mShot;
-    PathFinder mPathFinder;
 
     QBackingStore *mBackingStore;
-    QRegion *mDirtyRegion;
+    QRegion mDirtyRegion;
+    QRegion mRenderRegion;
 
     Game* mGame;
 
     int mActiveMoveDirection;
+bool INRENDERNOW;
 };
 
 #endif // BOARDWINDOW_H

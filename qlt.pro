@@ -19,7 +19,10 @@ HEADERS += controller/Game.h \
     controller/animationaggregator.h \
     view/shooter.h \
     controller/pathfinder.h \
-    util/imageutils.h
+    util/imageutils.h \
+    model/piecesetmanager.h \
+    model/piecelistmanager.h \
+    model/piecedelta.h
 SOURCES += controller/Game.cpp \
            view/BoardWindow.cpp \
            model/board.cpp \
@@ -30,7 +33,10 @@ SOURCES += controller/Game.cpp \
     view/shooter.cpp \
     view/tank.cpp \
     controller/pathfinder.cpp \
-    util/imageutils.cpp
+    util/imageutils.cpp \
+    model/piecesetmanager.cpp \
+    model/piecelistmanager.cpp \
+    model/piecedelta.cpp
 RESOURCES += qml.qrc
 
 test{

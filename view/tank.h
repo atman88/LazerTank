@@ -6,7 +6,7 @@
 #include <QPropertyAnimation>
 
 #include "view/shooter.h"
-#include "model/piece.h"
+#include "model/piecelistmanager.h"
 
 class Game;
 
@@ -19,22 +19,19 @@ public:
     virtual ~Tank() {}
 
     void init( Game* game );
-    PieceList& getMoves();
+    PieceListManager& getMoves();
     void paint( QPainter* painter );
     void move( int direction = -1 );
     void stop();
-    void eraseLastMove();
 
 signals:
     void changed( const QRect& rect );
     void moved( int boardX, int boardY );
-    void squareDirty( int col, int row );
     void movingInto( int x, int y, int curRotation );
 
 public slots:
     void reset( int x, int y );
     void onAnimationsFinished();
-    void setMoves( PieceList moves );
     void setX(const QVariant &x ) override;
     void setY(const QVariant &y ) override;
     void setRotation( const QVariant& angle ) override;
@@ -49,7 +46,7 @@ private:
     QPropertyAnimation* mHorizontalAnimation;
     QPropertyAnimation* mVerticalAnimation;
 
-    PieceList mMoves;
+    PieceListManager mMoves;
 };
 
 #endif // TANK_H

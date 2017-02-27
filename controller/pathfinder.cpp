@@ -75,10 +75,10 @@ void PathFinder::buildPath( int x, int y )
         }
 
         if ( lastX != mTargetX || lastY != mTargetY || direction != mTargetRotation ) {
-            mMoves.push_back( Piece( MOVE, lastX, lastY, direction ) );
+            mMoves.append( MOVE, lastX, lastY, direction );
         }
     }
-    mMoves.push_back( Piece( MOVE, x, y, direction ) );
+    mMoves.append( MOVE, x, y, direction );
 }
 
 void PathFinder::tryAt( int x, int y )
@@ -146,18 +146,18 @@ void PathFinder::run()
 {
     mStopping = false;
 
-    mMoves.clear();
+    mMoves.reset();
     if ( !setjmp( mJmpBuf ) ) {
         // initialize the search map
         Game* game = getGame();
-        if ( game && game->canPlaceAt( TANK, mFromX, mFromY, 0, false )) {
+        if ( game && game->canPlaceAtNonFuturistic( TANK, mFromX, mFromY, 0 )) {
             Board* board = game->getBoard();
             mMaxX  = board->getWidth()-1;
             mMaxY = board->getHeight()-1;
 
             for( int y = mMaxY; !mStopping && y >= 0; --y ) {
                 for( int x = mMaxX; !mStopping && x >= 0; --x ) {
-                    mSearchMap[y*BOARD_MAX_WIDTH+x] = game->canPlaceAt( TANK, x, y, 0, false ) ? TRAVERSIBLE : BLOCKED;
+                    mSearchMap[y*BOARD_MAX_WIDTH+x] = game->canPlaceAtNonFuturistic( TANK, x, y, 0 ) ? TRAVERSIBLE : BLOCKED;
                 }
             }
 
@@ -174,5 +174,5 @@ void PathFinder::run()
             }
         }
     }
-    emit pathFound( mMoves );
+    emit pathFound( &mMoves );
 }

@@ -7,7 +7,7 @@ class PathFinder;
 #include <csetjmp>
 #include <QThread>
 #include "model/board.h"
-#include "model/piece.h"
+#include "model/piecelistmanager.h"
 
 #define MAX_POINTS (((BOARD_MAX_HEIGHT>BOARD_MAX_WIDTH) ? BOARD_MAX_HEIGHT : BOARD_MAX_WIDTH) * 2)
 
@@ -21,7 +21,7 @@ public:
     void run() override;
 
 signals:
-    void pathFound( PieceList path );
+    void pathFound( PieceListManager* path );
 
 private:
     void tryAt(int x, int y);
@@ -43,7 +43,7 @@ private:
     int mPushIndex;
     int mPushDirection;
 
-    PieceList mMoves;
+    PieceListManager mMoves;
 
     std::jmp_buf mJmpBuf;
 };

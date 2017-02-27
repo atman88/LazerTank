@@ -2,11 +2,9 @@
 #include <QFile>
 #include "board.h"
 
-Board::Board( QObject* parent )  : QObject(parent)
+Board::Board( QObject* parent )  : QObject(parent), mLevel(0), mWidth(16), mHeight(16)
 {
-    mLevel = 0;
-    mWidth = 16;
-    mHeight = 16;
+    memset( mTiles, EMPTY, sizeof mTiles );
 }
 
 bool Board::load( int level ) {
@@ -20,15 +18,15 @@ bool Board::load( int level ) {
     return rc;
 }
 
-const PieceSet& Board::getPieces()
+PieceSetManager& Board::getPieceManager()
 {
-    return mPieces;
+    return mPieceManager;
 }
 
 void Board::initPiece( PieceType type, int x, int y, int angle )
 {
-    mPieces.insert( Piece( type, x, y, angle ) );
-    mTiles[y*BOARD_MAX_HEIGHT + x++] = DIRT;
+    mPieceManager.insert( type, x, y, angle );
+    mTiles[y*BOARD_MAX_HEIGHT + x] = DIRT;
 }
 
 bool Board::load( QString& fileName )
@@ -43,7 +41,7 @@ bool Board::load( QString& fileName )
     unsigned char* row = mTiles;
     mWidth = 0;
     mInitialTankX = mInitialTankY = 0;
-    mPieces.clear();
+    mPieceManager.reset();
 
     do {
         int nRead = file.readLine(line, sizeof line);
@@ -115,42 +113,6 @@ bool Board::load( QString& fileName )
     return true;
 }
 
-PieceType Board::pieceTypeAt( int x, int y )
-{
-    Piece pos( NONE, x, y );
-    PieceSet::iterator it = mPieces.find( pos );
-    if ( it != mPieces.end() ) {
-        return it->getType();
-    }
-    return NONE;
-}
-
-bool Board::pieceAt(int x, int y , Piece *result)
-{
-    Piece pos( NONE, x, y );
-    PieceSet::iterator it = mPieces.find( pos );
-    if ( it != mPieces.end() ) {
-        *result = *it;
-        return true;
-    }
-    return false;
-}
-
-void Board::erasePieceAt( int x, int y )
-{
-    Piece pos( NONE, x, y );
-    PieceSet::iterator it = mPieces.find( pos );
-    if ( it != mPieces.end() ) {
-        mPieces.erase( it );
-        emit pieceErasedAt( x, y );
-    }
-}
-
-void Board::addPiece( PieceType type, int x, int y, int angle )
-{
-    mPieces.insert( Piece( type, x, y, angle ) );
-}
-
 int Board::getWidth()
 {
     return mWidth;
@@ -166,7 +128,7 @@ int Board::getLevel()
     return mLevel;
 }
 
-TileType Board::tileAt( int x, int y ) {
+TileType Board::tileAt( int x, int y ) const {
     return (x >= 0 && y >= 0 && x < mWidth && y < mHeight) ? ((TileType) mTiles[y*BOARD_MAX_WIDTH+x]) : STONE;
 }
 
@@ -182,9 +144,10 @@ bool Board::canSightThru( int x, int y )
 {
     switch( tileAt( x, y ) ) {
     case DIRT:
-    case WATER:
     case TILE_SUNK:
-        return pieceTypeAt( x, y ) == NONE;
+        return mPieceManager.typeAt( x, y ) == NONE;
+    case WATER:
+        return true;
     default:
         return false;
     }

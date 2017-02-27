@@ -5,7 +5,7 @@
 #include <QRect>
 #include <QPropertyAnimation>
 
-#include "piece.h"
+#include "piecelistmanager.h"
 #include "controller/animationaggregator.h"
 
 class Game;
@@ -18,13 +18,11 @@ class Shot : public QObject
 public:
     explicit Shot(QObject *parent = 0);
     void init(AnimationAggregator *aggregate);
-    PieceList& getPath();
+    PieceListManager &getPath();
     QVariant getSequence();
 
 signals:
     void stopped();
-    void pathRemoved( int col, int row );
-    void pathAdded( int col, int row );
 
 public slots:
     void setSequence( const QVariant& shotSequence );
@@ -36,7 +34,7 @@ private:
     QVariant mSequence;
     QPropertyAnimation* mAnimation;
 
-    PieceList mPath;
+    PieceListManager mPath;
     int mDirection;
     bool mStopping;
     bool mEndReached;

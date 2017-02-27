@@ -26,22 +26,24 @@ public:
 const QPixmap* getPixmap( unsigned type )
 {
     static std::map<int,NamedPixmap> nameMap = {
-        { STONE,        { "wall-stone"    } },
-        { DIRT,         { "dirt"          } },
-        { TILE_SUNK,    { "tile-sunk"     } },
-        { FLAG,         { "flag"          } },
-        { TILE,         { "tile-metal"    } },
-        { MOVE,         { "move-indicator"} },
-        { SHOT_STRAIGHT,{ "shot-straight" } },
-        { SHOT_RIGHT,   { "shot-right"    } },
-        { SHOT_END,     { "shot-end"      } },
-        { STONE_MIRROR, { "wall-mirror"   } },
-        { STONE_SLIT,   { "stone-slit"    } },
-        { WOOD,         { "wood"          } },
-        { WOOD_DAMAGED, { "wood-damaged"  } },
-        { TILE_MIRROR,  { "tile-mirror"   } },
-        { CANNON,       { "cannon"        } },
-        { TANK,         { "tank"          } }
+        { STONE,             { "wall-stone"         } },
+        { DIRT,              { "dirt"               } },
+        { TILE_SUNK,         { "tile-sunk"          } },
+        { FLAG,              { "flag"               } },
+        { TILE,              { "tile-metal"         } },
+        { MOVE,              { "move-indicator"     } },
+        { SHOT_STRAIGHT,     { "shot-straight"      } },
+        { SHOT_RIGHT,        { "shot-right"         } },
+        { SHOT_END,          { "shot-end"           } },
+        { STONE_MIRROR,      { "wall-mirror"        } },
+        { STONE_SLIT,        { "stone-slit"         } },
+        { WOOD,              { "wood"               } },
+        { WOOD_DAMAGED,      { "wood-damaged"       } },
+        { TILE_MIRROR,       { "tile-mirror"        } },
+        { CANNON,            { "cannon"             } },
+        { TANK,              { "tank"               } },
+        { TILE_FUTURE_ERASE, { "tile-future-erase"  } },
+        { TILE_FUTURE_INSERT,{ "tile-future-insert" } }
     };
     static NamedPixmap* nameArray[TileTypeUpperBound] = { 0 };
     static QString pathFormat( ":/images/%1.png" );

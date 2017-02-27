@@ -23,6 +23,7 @@ public:
     QVariant getX();
     QVariant getY();
     int getPieceAngle();
+    QRect* getBounds();
     void start(Piece& what, int fromX, int fromY, int toX, int toY);
 
 signals:

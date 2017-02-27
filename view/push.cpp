@@ -58,6 +58,11 @@ int Push::getPieceAngle()
     return mPieceAngle;
 }
 
+QRect* Push::getBounds()
+{
+    return &mBoundingRect;
+}
+
 QVariant Push::getX()
 {
     return QVariant( mBoundingRect.left() );
@@ -98,11 +103,11 @@ void Push::onStopped()
             int x = getX().toInt()/24;
             int y = getY().toInt()/24;
             if ( board->tileAt(x,y) != WATER ) {
-                board->addPiece( mType, x, y, mPieceAngle );
+                board->getPieceManager().insert( mType, x, y, mPieceAngle );
             } else if ( mType == TILE ) {
                 board->setTileAt( TILE_SUNK, x, y );
             }
-            cout << "Push finished (" << x << "," << y << ")\n";
+//            cout << "Push finished (" << x << "," << y << ")\n";
         }
         mType = NONE;
         emit stateChanged(QAbstractAnimation::Stopped, QAbstractAnimation::Running);

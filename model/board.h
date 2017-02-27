@@ -3,9 +3,9 @@
 
 #include <QObject>
 
-#include "model/piece.h"
+#include "model/piecesetmanager.h"
 
-#define BOARD_MAX_LEVEL 14
+#define BOARD_MAX_LEVEL 15
 
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
 #define BOARD_MAX_HEIGHT PIECE_MAX_ROWCOUNT
@@ -40,13 +40,9 @@ public:
     int getLevel();
     int getWidth();
     int getHeight();
-    TileType tileAt( int x, int y );
+    TileType tileAt( int x, int y ) const;
     void setTileAt( TileType, int x, int y );
-    PieceType pieceTypeAt( int x, int y );
-    bool pieceAt( int x, int y, Piece *result );
-    void erasePieceAt( int x , int y );
-    void addPiece( PieceType type, int x, int y, int angle = 0 );
-    const PieceSet& getPieces();
+    PieceSetManager& getPieceManager();
     bool canSightThru( int x, int y );
     bool load( int level );
     bool load( QString& fileName );
@@ -56,18 +52,17 @@ public:
 
 signals:
     void boardLoaded();
-    void tileChangedAt(int x, int y);
-    void pieceErasedAt(int x, int y);
+    void tileChangedAt(int x, int y) const;
 
 private:
     void initPiece( PieceType type, int x, int y, int angle = 0 );
     int mLevel;
-    int mHeight;
     int mWidth;
+    int mHeight;
 
     unsigned char mTiles[BOARD_MAX_WIDTH*BOARD_MAX_HEIGHT];
 
-    PieceSet mPieces;
+    PieceSetManager mPieceManager;
 };
 
 #endif // BOARD_H
