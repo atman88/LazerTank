@@ -58,7 +58,7 @@ void BoardWindow::setGame(const GameHandle handle )
             QObject::connect( board, &Board::boardLoaded,   this, &BoardWindow::onBoardLoaded     );
             QObject::connect( board, &Board::tileChangedAt, this, &BoardWindow::renderSquareLater );
             PieceSetManager& pm = board->getPieceManager();
-            QObject::connect( &pm, &PieceSetManager::erasingAt,  this, &BoardWindow::renderSquareLater );
+            QObject::connect( &pm, &PieceSetManager::erasedAt,  this, &BoardWindow::renderSquareLater );
             QObject::connect( &pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
         }
         mTank->init( mGame );

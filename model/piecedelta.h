@@ -11,23 +11,23 @@ class PieceDelta : public QObject
 
 public:
     explicit PieceDelta(QObject *parent = 0);
-    void init( PieceSetManager* masterManager, PieceSetManager* changesManager );
-    bool update();
-    const PieceSet* getPieces();
+    void init( const PieceSetManager* masterManager, PieceSetManager* changesManager );
+    const PieceSetManager* getPieceManager() const;
+    bool enabled() const;
+    void enable( bool newValue = true );
 
-signals:
-    void squareDirty( int x, int y );
+public slots:
+    void onChangeAt( int x, int y );
 
 private:
-    void setDirtyFor( Piece* piece );
-
     PieceSetManager   mPieceManager;
 
-    PieceSetManager*  mMasterManager;
-    PieceSetManager*  mChangesManager;
+    const PieceSetManager*  mMasterManager;
+    PieceSetManager*        mChangesManager;
 
     int mLastMasterTransactionNo;
     int mLastChangesTransactionNo;
+    bool mEnabled;
 };
 
 #endif // PIECEDELTA_H

@@ -4,13 +4,11 @@
 
 #include "controller/Game.h"
 
-Game::Game( Board* board )
+Game::Game( Board* board ) : mBoard(board)
 {
-    mBoard = board;
     if ( board ) {
         QObject::connect( board, &Board::tileChangedAt, this, &Game::onBoardTileChanged );
         mFutureDelta.init( &board->getPieceManager(), &mFuturePieceManager );
-        mTrackingFuturePushes = false;
     }
 
     mHandle.game = this;
@@ -28,19 +26,20 @@ void Game::init( BoardWindow* window )
 {
     QObject::connect( &mCannonShot.getPath(), &PieceListManager::appended, window, &BoardWindow::renderSquareLater );
     QObject::connect( &mCannonShot.getPath(), &PieceListManager::erased,   window, &BoardWindow::renderSquareLater );
-    QObject::connect( &mFutureDelta,          &PieceDelta::squareDirty,    window, &BoardWindow::renderSquareLater );
+    QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::erasedAt,   window, &BoardWindow::renderSquareLater );
+    QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::insertedAt, window, &BoardWindow::renderSquareLater );
 
     QObject::connect( &mMovingPiece, &Push::stateChanged, this, &Game::onMovingPieceChanged );
 
-    QObject::connect( &mMoveAggregate, &AnimationAggregator::finished, this, &Game::endMoveDeltaTracking );
-    QObject::connect( &mPathFinder,    &PathFinder::pathFound,         this, &Game::endMoveDeltaTracking );
+    QObject::connect( window->getTank(), &Tank::idled,           this, &Game::endMoveDeltaTracking );
+    QObject::connect( &mPathFinder,      &PathFinder::pathFound, this, &Game::endMoveDeltaTracking );
 
     QObject::connect( &mPathFinder, &PathFinder::pathFound, &window->getTank()->getMoves(), &PieceListManager::reset );
 }
 
 void Game::endMoveDeltaTracking()
 {
-    mTrackingFuturePushes = false;
+    mFutureDelta.enable( false );
 }
 
 GameHandle Game::getHandle()
@@ -65,7 +64,7 @@ bool Game::canMoveFrom(PieceType what, int angle, int *x, int *y, PieceSetManage
 bool Game::canMoveFrom(PieceType what, int angle, int *x, int *y, bool futuristic, bool *pushResult ) {
     if ( getAdjacentPosition(angle, x, y) ) {
         PieceSetManager* pieceManager;
-        if ( futuristic && mTrackingFuturePushes ) {
+        if ( futuristic && mFutureDelta.enabled() ) {
             pieceManager = &mFuturePieceManager;
         } else {
             pieceManager = &mBoard->getPieceManager();
@@ -351,10 +350,7 @@ Shot& Game::getCannonShot()
 void Game::onFuturePush( Piece* pushingPiece )
 {
     if ( mBoard ) {
-        if ( !mTrackingFuturePushes ) {
-            mFuturePieceManager.reset( &mBoard->getPieceManager() );
-            mTrackingFuturePushes = true;
-        }
+        mFutureDelta.enable();
 
         PieceType pushedType;
         int x = pushingPiece->getX();
@@ -367,7 +363,9 @@ void Game::onFuturePush( Piece* pushingPiece )
                 return;
             }
             pushedType = pushedPiece->getType();
-            mFuturePieceManager.erase( pushedPiece );
+            if ( !mFuturePieceManager.erase( pushedPiece ) ) {
+                cout << "*** failed to erase future piece at " << x << "," << y << std::endl;
+            }
         }
 
         if ( !getAdjacentPosition( angle, &x, &y ) ) {
@@ -381,20 +379,15 @@ void Game::onFuturePush( Piece* pushingPiece )
 void Game::findPath( int fromX, int fromY, int targetX, int targetY, int targetRotation )
 {
     // the path finder doesn't support pushing, so cancel any active push before using:
-    mTrackingFuturePushes = false;
-    // reset now to repaint:
-    mFuturePieceManager.reset();
+    mFutureDelta.enable( false );
 
     mPathFinder.findPath( fromX, fromY, targetX, targetY, targetRotation );
 }
 
 const PieceSet* Game::getDeltaPieces()
 {
-    if ( mTrackingFuturePushes ) {
-        if ( mFutureDelta.update() ) {
-            return mFutureDelta.getPieces();
-        }
-        mTrackingFuturePushes = false;
+    if ( mFutureDelta.enabled() ) {
+        return mFutureDelta.getPieceManager()->getPieces();
     }
     return 0;
 }

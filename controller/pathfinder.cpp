@@ -96,8 +96,8 @@ void PathFinder::tryAt( int x, int y )
             break;
 
         case TARGET:
-            printSearchMap();
-
+//            printSearchMap();
+//
             buildPath( x, y );
             std::longjmp( mJmpBuf, 1 );
 

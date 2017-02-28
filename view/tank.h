@@ -28,6 +28,7 @@ signals:
     void changed( const QRect& rect );
     void moved( int boardX, int boardY );
     void movingInto( int x, int y, int curRotation );
+    void idled();
 
 public slots:
     void reset( int x, int y );

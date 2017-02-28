@@ -31,7 +31,7 @@ PieceType PieceSetManager::typeAt( int x, int y )
     return NONE;
 }
 
-Piece* PieceSetManager::pieceAt( int x, int y )
+Piece* PieceSetManager::pieceAt( int x, int y ) const
 {
     SimplePiece pos( NONE, x, y );
     PieceSet::iterator it = mPieces.find( &pos );
@@ -41,30 +41,36 @@ Piece* PieceSetManager::pieceAt( int x, int y )
     return 0;
 }
 
-void PieceSetManager::erase( Piece *key )
+bool PieceSetManager::erase( Piece* key )
 {
     PieceSet::iterator it = mPieces.find( key );
     if ( it != mPieces.end() ) {
         Piece* piece = *it;
-        emit erasingAt( piece->getX(), piece->getY() );
+        int x = piece->getX();
+        int y = piece->getY();
+
         mPieces.erase( it );
-        ++mLastTransactionNo;
         delete piece;
+        ++mLastTransactionNo;
+
+        emit erasedAt( x, y );
+        return true;
     }
+    return false;
 }
 
-void PieceSetManager::eraseAt( int x, int y )
+bool PieceSetManager::eraseAt( int x, int y )
 {
     SimplePiece pos( NONE, x, y );
-    erase( &pos );
+    return erase( &pos );
 }
 
-void PieceSetManager::reset(PieceSetManager *source)
+void PieceSetManager::reset(const PieceSetManager* source)
 {
     while( !mPieces.empty() ) {
         PieceSet::iterator it = mPieces.end();
         Piece* piece = *--it;
-        emit erasingAt( piece->getX(), piece->getY() );
+        emit erasedAt( piece->getX(), piece->getY() );
         mPieces.erase( it );
         delete piece;
     }

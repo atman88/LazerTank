@@ -1,3 +1,4 @@
+#include <iostream>
 #include <QVector>
 
 #include "piecedelta.h"
@@ -6,66 +7,72 @@ PieceDelta::PieceDelta(QObject *parent) : QObject(parent)
 {
 }
 
-void PieceDelta::init( PieceSetManager *masterManager, PieceSetManager *changesManager )
+void PieceDelta::init( const PieceSetManager* masterManager, PieceSetManager* changesManager )
 {
     mMasterManager  = masterManager;
     mChangesManager = changesManager;
 }
 
-bool PieceDelta::update()
+const PieceSetManager* PieceDelta::getPieceManager() const
 {
-    if ( mLastMasterTransactionNo  != mMasterManager->getLastTransactionNo()
-      || mLastChangesTransactionNo != mChangesManager->getLastTransactionNo() ) {
-        mPieceManager.reset();
+    return &mPieceManager;
+}
 
-        const PieceSet* masterSet  = mMasterManager->getPieces();
-        const PieceSet* changesSet = mChangesManager->getPieces();
-        auto masterIterator  = masterSet->cbegin();
-        auto changesIterator = changesSet->cbegin();
+bool PieceDelta::enabled() const
+{
+    return mEnabled;
+}
 
-        while( masterIterator != masterSet->cend() && changesIterator != changesSet->cend() ) {
-            Piece* masterPiece = *masterIterator;
-            Piece* changesPiece  = *changesIterator;
-            if ( *masterPiece < *changesPiece ) {
-                mPieceManager.insert( TILE_FUTURE_ERASE, masterPiece->getX(), masterPiece->getY(), masterPiece->getAngle() );
-                ++masterIterator;
-                setDirtyFor( masterPiece );
-            } else if ( *changesPiece < *masterPiece ) {
-                mPieceManager.insert( TILE_FUTURE_INSERT, changesPiece->getX(), changesPiece->getY(), changesPiece->getAngle() );
-                ++changesIterator;
-                setDirtyFor( changesPiece );
-            } else {
-                ++masterIterator;
-                ++changesIterator;
-            }
+void PieceDelta::enable( bool newValue )
+{
+    if ( newValue != mEnabled ) {
+        std::cout << "delta enable " << newValue << std::endl;
+
+        if ( !newValue ) {
+            QObject::disconnect( mMasterManager,  0, this, 0 );
+            QObject::disconnect( mChangesManager, 0, this, 0 );
+
+            mPieceManager.reset(); // reset now for rendering
+        } else {
+            mChangesManager->reset( mMasterManager );
+            QObject::connect( mMasterManager,  &PieceSetManager::insertedAt, this, &PieceDelta::onChangeAt );
+            QObject::connect( mMasterManager,  &PieceSetManager::erasedAt,   this, &PieceDelta::onChangeAt );
+            QObject::connect( mChangesManager, &PieceSetManager::insertedAt, this, &PieceDelta::onChangeAt );
+            QObject::connect( mChangesManager, &PieceSetManager::erasedAt,   this, &PieceDelta::onChangeAt );
         }
-
-        while( masterIterator != masterSet->cend() ) {
-            Piece* piece = *masterIterator;
-            mPieceManager.insert( TILE_FUTURE_ERASE, piece->getX(), piece->getY(), piece->getAngle() );
-            ++masterIterator;
-            setDirtyFor( piece );
-        }
-
-        while( changesIterator != changesSet->cend() ) {
-            Piece* piece = *changesIterator;
-            mPieceManager.insert( TILE_FUTURE_INSERT, piece->getX(), piece->getY(), piece->getAngle() );
-            ++changesIterator;
-            setDirtyFor( piece );
-        }
-
-        mLastMasterTransactionNo  = mMasterManager->getLastTransactionNo();
-        mLastChangesTransactionNo = mChangesManager->getLastTransactionNo();
+        mEnabled = newValue;
     }
-    return mPieceManager.count() != 0;
 }
 
-const PieceSet* PieceDelta::getPieces()
+void PieceDelta::onChangeAt( int x, int y )
 {
-    return mPieceManager.getPieces();
-}
+    Piece* masterPiece  = mMasterManager->pieceAt(  x, y );
+    Piece* changesPiece = mChangesManager->pieceAt( x, y );
 
-void PieceDelta::setDirtyFor(Piece *piece)
-{
-    emit squareDirty( piece->getX(), piece->getY() );
+    if ( !masterPiece ) {
+        if ( !changesPiece ) {
+            if ( mPieceManager.eraseAt( x, y ) ) {
+                std::cout << "delta erasedAt " << x << "," << y << " (gone)" << std::endl;
+            }
+        } else {
+            Piece* curDeltaPiece = mPieceManager.pieceAt( x, y );
+            if ( curDeltaPiece ) {
+                if ( curDeltaPiece->getType() == TILE_FUTURE_INSERT ) {
+                    return;
+                }
+                mPieceManager.erase( curDeltaPiece );
+                std::cout << "delta erasedAt " << x << "," << y << " (->INSERT)" << std::endl;
+            }
+            mPieceManager.insert( TILE_FUTURE_INSERT, x, y, changesPiece->getAngle() );
+            std::cout << "delta future INSERT " << x << "," << y << std::endl;
+        }
+    } else {
+        if ( !changesPiece ) {
+            mPieceManager.insert( TILE_FUTURE_ERASE, x, y, masterPiece->getAngle() );
+            std::cout << "delta future ERASE " << x << "," << y << std::endl;
+        } else {
+            mPieceManager.eraseAt( x, y );
+            std::cout << "delta erasedAt " << x << "," << y << " (same)" << std::endl;
+        }
+    }
 }

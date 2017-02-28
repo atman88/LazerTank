@@ -150,7 +150,12 @@ void Tank::move( int direction )
 void Tank::followPath()
 {
     Game* game = getGame();
-    if ( !game->getMoveAggregate()->active() && mMoves.count() ) {
+    if ( game && !game->getMoveAggregate()->active() ) {
+        if ( !mMoves.count() ) {
+            emit idled();
+            return;
+        }
+
         Piece* move = mMoves.getList()->front();
         int curRotation = mRotation.toInt();
         int direction = move->getAngle();

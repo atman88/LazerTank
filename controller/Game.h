@@ -66,7 +66,6 @@ private:
     Push mMovingPiece;
     Shooter mActiveCannon;
     Shot mCannonShot;
-    bool mTrackingFuturePushes;
     PieceSetManager mFuturePieceManager;
     PieceDelta mFutureDelta;
 

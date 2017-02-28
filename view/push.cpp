@@ -28,7 +28,7 @@ void Push::start( Piece& what, int fromX, int fromY, int toX, int toY )
         return;
     }
 
-    cout << "Push start " << (fromX/24) << "," << (fromY/24) << "\n";
+//    cout << "Push start " << (fromX/24) << "," << (fromY/24) << "\n";
     mBoundingRect.moveLeft( fromX );
     mBoundingRect.moveTop( fromY );
     mType = what.getType();
