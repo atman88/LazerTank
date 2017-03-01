@@ -9,6 +9,7 @@ class BoardWindow;
 #include "shot.h"
 #include "controller/Game.h"
 
+
 class BoardWindow : public QWindow
 {
     Q_OBJECT
@@ -24,6 +25,7 @@ public:
     GameHandle getGame() const;
     virtual void render(QRegion *region);
     Tank* getTank();
+    void onTankKilled();
 
 signals:
 
@@ -49,9 +51,9 @@ private:
       const PieceSet* deltas, const PieceSet* shots, QPainter* painter );
     void renderRotatedPixmap(const QPixmap* pixmap, int x, int y, int angle, QPainter* painter );
     void renderMove( int x, int y, int angle = 0 );
-    void renderPiece(PieceType type, int x, int y, int angle, QPainter* painter );
+    void renderPiece(PieceType type, int x, int y, int angle, Piece* source, QPainter* painter );
     void renderListIn(PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter );
-
+    void drawShotRight( int x, int y, int angle, QPainter* painter );
     Tank* mTank;
     Shot* mShot;
 
@@ -62,7 +64,6 @@ private:
     Game* mGame;
 
     int mActiveMoveDirection;
-bool INRENDERNOW;
 };
 
 #endif // BOARDWINDOW_H

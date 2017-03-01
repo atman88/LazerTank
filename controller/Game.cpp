@@ -1,4 +1,5 @@
 #include <iostream>
+#include <Qt>
 #include <QVariant>
 #include <QMessageBox>
 
@@ -8,6 +9,7 @@ Game::Game( Board* board ) : mBoard(board)
 {
     if ( board ) {
         QObject::connect( board, &Board::tileChangedAt, this, &Game::onBoardTileChanged );
+        QObject::connect( board, &Board::boardLoaded,   this, &Game::onBoardLoaded      );
         mFutureDelta.init( &board->getPieceManager(), &mFuturePieceManager );
     }
 
@@ -24,8 +26,11 @@ Game::Game( Board* board ) : mBoard(board)
 
 void Game::init( BoardWindow* window )
 {
-    QObject::connect( &mCannonShot.getPath(), &PieceListManager::appended, window, &BoardWindow::renderSquareLater );
-    QObject::connect( &mCannonShot.getPath(), &PieceListManager::erased,   window, &BoardWindow::renderSquareLater );
+    window->setGame( mHandle );
+
+    QObject::connect( mCannonShot.getPath(), &PieceListManager::appended, window, &BoardWindow::renderSquareLater );
+    QObject::connect( mCannonShot.getPath(), &PieceListManager::erased,   window, &BoardWindow::renderSquareLater );
+    QObject::connect( mCannonShot.getPath(), &PieceListManager::replaced, window, &BoardWindow::renderSquareLater );
     QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::erasedAt,   window, &BoardWindow::renderSquareLater );
     QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::insertedAt, window, &BoardWindow::renderSquareLater );
 
@@ -35,6 +40,14 @@ void Game::init( BoardWindow* window )
     QObject::connect( &mPathFinder,      &PathFinder::pathFound, this, &Game::endMoveDeltaTracking );
 
     QObject::connect( &mPathFinder, &PathFinder::pathFound, &window->getTank()->getMoves(), &PieceListManager::reset );
+
+    QObject::connect( &mCannonShot, &Shot::tankKilled, window, &BoardWindow::onTankKilled );
+}
+
+void Game::onBoardLoaded()
+{
+    mFutureDelta.enable( false );
+    mCannonShot.reset();
 }
 
 void Game::endMoveDeltaTracking()
@@ -75,8 +88,8 @@ bool Game::canMoveFrom(PieceType what, int angle, int *x, int *y, bool futuristi
 }
 
 
-bool Game::canShootFrom(int *angle, int *x, int *y ) {
-    return getAdjacentPosition(*angle, x, y) && canShootThru( *x, *y, angle );
+bool Game::canShootFrom(int *angle, int *x, int *y, int *endOffset, Shot* source ) {
+    return getAdjacentPosition(*angle, x, y) && canShootThru( *x, *y, angle, endOffset, source );
 }
 
 void Game::onTankMoved( int x, int y )
@@ -249,8 +262,25 @@ bool getShotReflection( int mirrorAngle, int *shotAngle )
     return false;
 }
 
-bool Game::canShootThru( int x, int y, int *angle )
+bool Game::onShootThruMovingPiece( int offset, int angle, int *endOffset )
 {
+    if ( abs(offset) < 24 ) {
+        // do we want to do this? Needs to update the animation more sensibly?
+//        int x = mMovingPiece.getEndX()/24;
+//        int y = mMovingPiece.getEndY()/24;
+//        if ( canMoveFrom( mMovingPiece.getType(), angle, &x, &y, false ) ) {
+//            mMovingPiece.extend(angle);
+//        }
+        *endOffset = abs(offset);
+        return true;
+    }
+    return false;
+}
+
+bool Game::canShootThru( int x, int y, int *angle, int *endOffset, Shot* source )
+{
+    *endOffset = 0;
+
     switch( mBoard->tileAt(x,y) ) {
     case DIRT:
     case TILE_SUNK:
@@ -282,13 +312,31 @@ bool Game::canShootThru( int x, int y, int *angle )
             }
             break;
         }
+
+        if ( mMovingPiece.getType() != NONE ) {
+            int movingPieceX = mMovingPiece.getX().toInt();
+            int movingPieceY = mMovingPiece.getY().toInt();
+            switch( *angle ) {
+            case  90:
+            case 270:
+                if ( y == movingPieceY/24 && onShootThruMovingPiece( movingPieceX - x*24, *angle, endOffset ) ) {
+                    return false;
+                }
+                break;
+            case   0:
+            case 180:
+                if ( x == movingPieceX/24 && onShootThruMovingPiece( movingPieceY - y*24, *angle, endOffset ) ) {
+                    return false;
+                }
+                break;
+            }
+        }
+
         if ( x == mTankBoardX && y == mTankBoardY ) {
-            QMessageBox msgBox;
-            msgBox.setText("Level lost!");
-            msgBox.exec();
-            mBoard->load( mBoard->getLevel() );
+            source->setIsKill();
             return false;
         }
+
         return true;
     }
     case WATER:

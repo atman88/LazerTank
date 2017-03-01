@@ -35,6 +35,16 @@ void PieceListManager::append( Piece* piece )
     append( piece->getType(), piece->getX(), piece->getY(), piece->getAngle(), piece->hasPush() );
 }
 
+void PieceListManager::append( PieceType type, int x, int y, int angle, int pusheeOffset )
+{
+    PusheePiece* piece = new PusheePiece( type, x, y, angle, pusheeOffset );
+    mPieces.push_back( piece );
+    if ( mSet ) {
+        mSet->insert( piece );
+    }
+    emit appended( x, y );
+}
+
 bool PieceListManager::eraseFront()
 {
     if ( !mPieces.empty() ) {
@@ -71,21 +81,15 @@ bool PieceListManager::eraseBack()
     return false;
 }
 
-bool PieceListManager::replaceBack( int newAngle )
+bool PieceListManager::replaceBack(PieceType type, int newAngle )
 {
     if ( !mPieces.empty() ) {
-        PieceList::iterator old = mPieces.end();
-        Piece* oldPiece = *--old;
-        int x = oldPiece->getX();
-        int y = oldPiece->getY();
-        PusherPiece* newPiece = new PusherPiece( oldPiece->getType(), x, y, newAngle, oldPiece->hasPush() );
-        if ( mSet ) {
-            mSet->erase( oldPiece );
-            mSet->insert( newPiece );
+        Piece* piece = mPieces.back();
+        piece->setType( type );
+        if ( newAngle >= 0 ) {
+            piece->setAngle( newAngle );
         }
-        *old = newPiece;
-        delete oldPiece;
-        emit replaced( x, y );
+        emit replaced( piece->getX(), piece->getY() );
         return true;
     }
     return false;

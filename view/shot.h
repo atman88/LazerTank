@@ -18,16 +18,19 @@ class Shot : public QObject
 public:
     explicit Shot(QObject *parent = 0);
     void init(AnimationAggregator *aggregate);
-    PieceListManager &getPath();
+    PieceListManager* getPath();
     QVariant getSequence();
 
 signals:
-    void stopped();
+    void tankKilled();
+
 
 public slots:
     void setSequence( const QVariant& shotSequence );
     void fire( int direction );
     void stop();
+    void reset();
+    void setIsKill();
 
 private:
     Game* getGame();
@@ -36,8 +39,10 @@ private:
 
     PieceListManager mPath;
     int mDirection;
+    int mDistance;
     bool mStopping;
     bool mEndReached;
+    int mKillSequence;
 };
 
 #endif // SHOT_H

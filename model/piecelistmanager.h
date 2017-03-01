@@ -15,10 +15,11 @@ public:
     const PieceList* getList() const;
     const PieceSet* toSet();
     void append( PieceType type, int x, int y, int angle = 0, bool hasPush = false );
+    void append( PieceType type, int x, int y, int angle, int pusheeOffset );
     void append( Piece* piece );
     bool eraseFront();
     bool eraseBack();
-    bool replaceBack( int newAngle );
+    bool replaceBack( PieceType type, int newAngle = -1 );
     int count() const;
 
 signals:

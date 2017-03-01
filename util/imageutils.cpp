@@ -32,13 +32,11 @@ const QPixmap* getPixmap( unsigned type )
         { FLAG,              { "flag"               } },
         { TILE,              { "tile-metal"         } },
         { MOVE,              { "move-indicator"     } },
-        { SHOT_STRAIGHT,     { "shot-straight"      } },
-        { SHOT_RIGHT,        { "shot-right"         } },
         { SHOT_END,          { "shot-end"           } },
         { STONE_MIRROR,      { "wall-mirror"        } },
         { STONE_SLIT,        { "stone-slit"         } },
         { WOOD,              { "wood"               } },
-        { WOOD_DAMAGED,      { "wood-damaged"       } },
+        { DAMAGE,            { "damage"             } },
         { TILE_MIRROR,       { "tile-mirror"        } },
         { CANNON,            { "cannon"             } },
         { TANK,              { "tank"               } },
@@ -58,7 +56,7 @@ const QPixmap* getPixmap( unsigned type )
     if ( !p ) {
         auto it = nameMap.find( type );
         if ( it == nameMap.end() ) {
-            cout << "didn't' find pixmap " << type << std::endl;
+            cout << "didn't find pixmap " << type << std::endl;
             p = &NullPixmap;
         } else {
             p = &it->second;
@@ -70,4 +68,14 @@ const QPixmap* getPixmap( unsigned type )
         nameArray[type] = p;
     }
     return p;
+}
+
+void drawPixmap( int x, int y, unsigned type, QPainter* painter )
+{
+    const QPixmap* pixmap = getPixmap(type);
+    if ( pixmap ) {
+        painter->drawPixmap( x, y, *pixmap );
+    } else {
+        std::cout << "*** attempt to paint undefined pixmap " << type << std::endl;
+    }
 }

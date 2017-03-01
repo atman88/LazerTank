@@ -80,7 +80,7 @@ void Push::setX( const QVariant& x )
         QRect dirty( mBoundingRect );
         mBoundingRect.moveLeft( xv );
         dirty |= mBoundingRect;
-        emit pieceMoved( dirty );
+        emit rectDirty( dirty );
     }
 }
 
@@ -91,8 +91,24 @@ void Push::setY( const QVariant& y )
         QRect dirty( mBoundingRect );
         mBoundingRect.moveTop( yv );
         dirty |= mBoundingRect;
-        emit pieceMoved( dirty );
+        emit rectDirty( dirty );
     }
+}
+
+int Push::getEndX()
+{
+    if ( mType != NONE ) {
+        return mHorizontalAnimation->endValue().toInt();
+    }
+    return mBoundingRect.left();
+}
+
+int Push::getEndY()
+{
+    if ( mType != NONE ) {
+        return mVerticalAnimation->endValue().toInt();
+    }
+    return mBoundingRect.top();
 }
 
 void Push::onStopped()
@@ -106,6 +122,9 @@ void Push::onStopped()
                 board->getPieceManager().insert( mType, x, y, mPieceAngle );
             } else if ( mType == TILE ) {
                 board->setTileAt( TILE_SUNK, x, y );
+            } else {
+                // erase it from the display:
+                emit rectDirty( mBoundingRect );
             }
 //            cout << "Push finished (" << x << "," << y << ")\n";
         }

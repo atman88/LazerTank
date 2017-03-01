@@ -38,6 +38,7 @@ void Tank::paint( QPainter* painter )
     } else {
         mPreviousPaintRect = painter->transform().mapRect( mBoundingRect );
     }
+    painter->resetTransform();
 }
 
 void Tank::stop()
@@ -49,17 +50,19 @@ void Tank::stop()
 
 void Tank::reset( int boardX, int boardY )
 {
-    stop();
     QPoint p( boardX*24, boardY*24 );
-    mBoundingRect.moveTopLeft( p );
+    reset( p );
+}
+
+void Tank::reset( QPoint& p )
+{
+    stop();
     mHorizontalAnimation->setStartValue( p.x() );
     mVerticalAnimation->setStartValue( p.x() );
     mHorizontalAnimation->setEndValue( p.x() );
     mVerticalAnimation->setEndValue( p.x() );
-    mRotation = 0;
+    Shooter::reset( p );
     mMoves.reset();
-
-    emit moved( boardX, boardY );
 }
 
 void Tank::setX( const QVariant& x )
@@ -118,7 +121,7 @@ void Tank::move( int direction )
         if ( !mMoves.count() ) {
             mMoves.append( MOVE, mBoundingRect.left()/24, mBoundingRect.top()/24, direction );
         } else {
-            mMoves.replaceBack( direction );
+            mMoves.replaceBack( MOVE, direction );
         }
         if ( mMoves.count() == 1 ) {
             followPath();

@@ -16,10 +16,12 @@ typedef enum {
     SHOT_LEFT,
     SHOT_RIGHT,
     SHOT_END,
+    SHOT_END_KILL,
     TILE_MIRROR,
     CANNON,
     TILE_FUTURE_ERASE,
     TILE_FUTURE_INSERT,
+    DAMAGE,
     PieceTypeUpperBound   // must be last
 } PieceType;
 
@@ -53,6 +55,10 @@ public:
     int getAngle() const;
     void getBounds( QRect *rect ) const;
     virtual bool hasPush() const = 0;
+    virtual int getPusheeOffset() const = 0;
+
+    void setType( PieceType type );
+    void setAngle( int angle );
 
     int encodedPos() const
     {
@@ -85,6 +91,11 @@ public:
     {
         return false;
     }
+
+    int getPusheeOffset() const override
+    {
+        return 0;
+    }
 };
 
 class PusherPiece : public SimplePiece
@@ -107,6 +118,23 @@ public:
 
 private:
     bool mHasPush;
+};
+
+class PusheePiece : public SimplePiece
+{
+public:
+    PusheePiece( PieceType type = NONE, int x = 0, int y = 0, int angle = 0, int pusheeOffset = 0 )
+        : SimplePiece(type,x,y,angle), mPusheeOffset(pusheeOffset)
+    {
+    }
+
+    int getPusheeOffset() const override
+    {
+        return mPusheeOffset;
+    }
+
+private:
+    int mPusheeOffset;
 };
 
 struct PieceSetComparator {

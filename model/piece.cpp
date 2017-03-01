@@ -26,3 +26,13 @@ void Piece::getBounds( QRect *rect ) const
 {
     rect->setRect( mX*24, mY*24, 24, 24 );
 }
+
+void Piece::setType( PieceType type )
+{
+    mType = type;
+}
+
+void Piece::setAngle(int angle)
+{
+    mAngle = angle;
+}

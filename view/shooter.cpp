@@ -1,9 +1,13 @@
 #include "shooter.h"
 
-Shooter::Shooter(QObject *parent) : QObject(parent)
+Shooter::Shooter(QObject *parent) : QObject(parent), mRotation(0), mBoundingRect( QRect(0,0,24,24) )
+{
+}
+
+void Shooter::reset( QPoint& p )
 {
     mRotation = 0;
-    mBoundingRect.setRect(0,0,24,24);
+    mBoundingRect.moveTopLeft( p );
 }
 
 QVariant Shooter::getX()

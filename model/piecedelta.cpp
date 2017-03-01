@@ -3,7 +3,7 @@
 
 #include "piecedelta.h"
 
-PieceDelta::PieceDelta(QObject *parent) : QObject(parent)
+PieceDelta::PieceDelta(QObject *parent) : QObject(parent), mEnabled(false)
 {
 }
 

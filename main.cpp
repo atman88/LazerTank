@@ -12,7 +12,6 @@ int main(int argc, char *argv[])
     BoardWindow window;
     Board board;
     Game game( &board );
-    window.setGame( game.getHandle() );
     game.init( &window );
     board.load( 1 );
     window.show();

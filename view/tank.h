@@ -31,7 +31,8 @@ signals:
     void idled();
 
 public slots:
-    void reset( int x, int y );
+    void reset( int boardX, int boardY );
+    void reset( QPoint& p );
     void onAnimationsFinished();
     void setX(const QVariant &x ) override;
     void setY(const QVariant &y ) override;

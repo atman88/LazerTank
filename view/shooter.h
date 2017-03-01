@@ -16,12 +16,11 @@ public:
     Shooter(QObject *parent = 0);
     virtual ~Shooter() {}
 
+    void reset( QPoint& p );
     QVariant getRotation();
     QVariant getX();
     QVariant getY();
     const QRect& getRect();
-
-signals:
 
 public slots:
     virtual void setRotation(const QVariant &angle );

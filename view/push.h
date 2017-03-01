@@ -25,9 +25,11 @@ public:
     int getPieceAngle();
     QRect* getBounds();
     void start(Piece& what, int fromX, int fromY, int toX, int toY);
+    int getEndX();
+    int getEndY();
 
 signals:
-    void pieceMoved( const QRect& );
+    void rectDirty( const QRect& );
     void stateChanged(QAbstractAnimation::State newState, QAbstractAnimation::State oldState);
 
 public slots:
