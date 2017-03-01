@@ -5,7 +5,7 @@
 
 #include "model/piecesetmanager.h"
 
-#define BOARD_MAX_LEVEL 17
+#define BOARD_MAX_LEVEL 18
 
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
 #define BOARD_MAX_HEIGHT PIECE_MAX_ROWCOUNT

@@ -15,9 +15,9 @@ BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
     mTank = new Tank();
     mTank->setParent(this);
     QObject::connect( mTank, &Tank::changed,    this, &BoardWindow::renderLater       );
-    QObject::connect( &mTank->getMoves(), &PieceListManager::appended, this, &BoardWindow::renderSquareLater );
-    QObject::connect( &mTank->getMoves(), &PieceListManager::erased,   this, &BoardWindow::renderSquareLater );
-    QObject::connect( &mTank->getMoves(), &PieceListManager::replaced, this, &BoardWindow::renderSquareLater );
+    QObject::connect( mTank->getMoves(), &PieceListManager::appended, this, &BoardWindow::renderSquareLater );
+    QObject::connect( mTank->getMoves(), &PieceListManager::erased,   this, &BoardWindow::renderSquareLater );
+    QObject::connect( mTank->getMoves(), &PieceListManager::replaced, this, &BoardWindow::renderSquareLater );
 
     mShot = new Shot(mTank);
     QObject::connect( mShot, &Shot::tankKilled, this, &BoardWindow::onTankKilled );
@@ -308,7 +308,7 @@ void BoardWindow::render(QRegion* region)
         return;
     }
 
-    const PieceSet* moves = mTank->getMoves().toSet();
+    const PieceSet* moves = mTank->getMoves()->toSet();
     const PieceSet* tiles = board->getPieceManager().getPieces();
     const PieceSet* deltas = mGame->getDeltaPieces();
 
@@ -404,9 +404,16 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
             break;
 
         case Qt::Key_Backspace:
-            mTank->getMoves().eraseBack();
+        {   PieceListManager* moveManager = mTank->getMoves();
+            Piece* piece = moveManager->getList()->back();
+            if ( piece ) {
+                if ( piece->hasPush() && mGame ) {
+                    mGame->undoPush( piece );
+                }
+                mTank->getMoves()->eraseBack();
+            }
             break;
-
+        }
         default:
             if ( keyToAngle(ev->key()) >= 0 ) {
                 mActiveMoveDirection = -1;

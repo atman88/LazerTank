@@ -1,0 +1,16 @@
+[S/ .  .  .  .  . [\S .  F [S/ .  .  .  .  . [\S
+ .  .  .  .  .  .  w  .  .  .  .  w  w  w  .  .
+ .  w  w [M/ w  w  w  w  w  w  w  w  w [\M w  .
+ .  w  w  w [M/ w  w  w  w  w  w[/M  w  w  .  .
+ . [M/ w  w [/M[M/ w  w [\M w [M/[/M w  .  .  w
+ .  w [M/[/M . [M\ w [\M[M\ .  .  .  .  . [\M w
+ .  w [M\[\M[M/ . [/M[M\[\M .  . [M/ w [/M w  w
+ .  w  .  w [M\[\M w  w [M\ . [\M[/M w [M/[/M w
+ .  w [M/ w  w  w [\M w  w  M  .  w  w [M\[\M w
+ . [S\ w  w  w  w  W [\M M [M/[/M[M/ w [\M w  w
+ .  S  w  w  w  w  W  W  W [M\[\M[M\[\M[M\[/M w
+ .  S  w  w [M\[\M[M\ W  W [\M[M\ w  w [\M w  w
+ .  S  w  w  w [M\ w  .  .  w [\M w  w [M\[\M w
+ .  S  w [M\[\M w  w [M\ v  W  w  w  w  w  w  w
+ .  S [M\[\M[M\[\M[M\[\M W [M/[/M[M/[/M[M/[/M w
+[S\ .  .  .  .  .  .  .  T  .  .  .  .  .  . [/S

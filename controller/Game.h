@@ -44,6 +44,7 @@ public:
     void onFuturePush(Piece *pushingPiece );
     void findPath(int fromX, int fromY, int targetX, int targetY, int targetRotation );
     const PieceSet* getDeltaPieces();
+    void undoPush( Piece* pusher );
 
 public slots:
     void onTankMoved( int x, int y );

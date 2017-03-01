@@ -39,7 +39,7 @@ void Game::init( BoardWindow* window )
     QObject::connect( window->getTank(), &Tank::idled,           this, &Game::endMoveDeltaTracking );
     QObject::connect( &mPathFinder,      &PathFinder::pathFound, this, &Game::endMoveDeltaTracking );
 
-    QObject::connect( &mPathFinder, &PathFinder::pathFound, &window->getTank()->getMoves(), &PieceListManager::reset );
+    QObject::connect( &mPathFinder, &PathFinder::pathFound, window->getTank()->getMoves(), &PieceListManager::reset );
 
     QObject::connect( &mCannonShot, &Shot::tankKilled, window, &BoardWindow::onTankKilled );
 }
@@ -438,4 +438,19 @@ const PieceSet* Game::getDeltaPieces()
         return mFutureDelta.getPieceManager()->getPieces();
     }
     return 0;
+}
+
+void Game::undoPush( Piece* pusher )
+{
+    int x = pusher->getX();
+    int y = pusher->getY();
+    if ( getAdjacentPosition( pusher->getAngle(), &x, &y ) ) {
+        Piece* pushee = mFuturePieceManager.pieceAt( x, y );
+        if ( pushee ) {
+            PieceType type = pushee->getType();
+            int angle = pushee->getAngle();
+            mFuturePieceManager.erase( pushee );
+            mFuturePieceManager.insert( type, pusher->getX(), pusher->getY(), angle );
+        }
+    }
 }

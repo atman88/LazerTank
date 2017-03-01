@@ -19,7 +19,7 @@ public:
     virtual ~Tank() {}
 
     void init( Game* game );
-    PieceListManager& getMoves();
+    PieceListManager* getMoves();
     void paint( QPainter* painter );
     void move( int direction = -1 );
     void stop();

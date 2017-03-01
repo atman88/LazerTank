@@ -216,9 +216,9 @@ void Tank::onAnimationsFinished()
     }
 }
 
-PieceListManager& Tank::getMoves()
+PieceListManager* Tank::getMoves()
 {
-    return mMoves;
+    return &mMoves;
 }
 
 Game* Tank::getGame()
