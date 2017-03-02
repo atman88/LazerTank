@@ -1,0 +1,16 @@
+ S  S w.. . M....[\Sv S S
+ S [S/w.. M ..... . .[\Sv
+ w  . w.M w ..... . . . .
+ w  w www M ..... . . . .
+ .  w www w w.... . . . w
+ .  . www w ww... . . w w
+ w  w ww. w www.. . w w w
+ .  . .w. < F>wWw w w w .
+ .  . .ww S .ww.M . w w .
+ .  . .Mw w wwwM. . . w w
+ .  . ... . wwwww . . . w
+ .  . ... . ...ww w . . w
+ W  . S^S . ...ww w w w w
+ W  . .W> . ....w S M . M
+ W [M\SWW[M\...ww M . T .
+[S\[M\..W W ..ww. S . . S

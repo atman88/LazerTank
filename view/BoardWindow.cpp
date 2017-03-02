@@ -268,7 +268,7 @@ void BoardWindow::renderOneRect( const QRect* rect, Board* board, const PieceSet
                 int wy = y*24;
                 switch( type ) {
                 case WATER:
-                    painter->fillRect(wx, wy, 24, 24, Qt::blue);
+                    painter->fillRect(wx, wy, 24, 24, QColor(33,33,255));
                     break;
                 case STONE_MIRROR__90:
                     pixmap = getPixmap( STONE_MIRROR );
