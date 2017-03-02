@@ -5,8 +5,10 @@
 
 #include "controller/Game.h"
 
-Game::Game( Board* board ) : mBoard(board)
+Game::Game( Board* board ) : mBoard(board), mTankBoardX(0), mTankBoardY(0)
 {
+    mCannonShot.setColor( QColor(255,50,83) );
+
     if ( board ) {
         QObject::connect( board, &Board::tileChangedAt, this, &Game::onBoardTileChanged );
         QObject::connect( board, &Board::boardLoaded,   this, &Game::onBoardLoaded      );
@@ -46,6 +48,8 @@ void Game::init( BoardWindow* window )
 
 void Game::onBoardLoaded()
 {
+    mTankBoardX = mBoard->mInitialTankX;
+    mTankBoardY = mBoard->mInitialTankY;
     mFutureDelta.enable( false );
     mCannonShot.reset();
 }
@@ -306,7 +310,7 @@ bool Game::canShootThru( int x, int y, int *angle, int *endOffset, Shot* source 
             // push it:
             int toX = x, toY = y;
             if ( canMoveFrom( what->getType(), *angle, &toX, &toY, false ) ) {
-                SimplePiece simple( *what );
+                SimplePiece simple( what );
                 pm.eraseAt( x, y );
                 mMovingPiece.start( simple, x*24, y*24, toX*24, toY*24 );
             }
@@ -370,7 +374,7 @@ void Game::onTankMovingInto( int x, int y, int fromAngle )
         if ( what ) {
             int toX = x, toY = y;
             if ( getAdjacentPosition(fromAngle, &toX, &toY) ) {
-                SimplePiece simple( *what );
+                SimplePiece simple( what );
                 pm.eraseAt( x, y );
                 mMovingPiece.start( simple, x*24, y*24, toX*24, toY*24 );
             } else {

@@ -55,6 +55,8 @@ private:
     void renderPiece(PieceType type, int x, int y, int angle, Piece* source, QPainter* painter );
     void renderListIn(PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter );
     void drawShotRight( int x, int y, int angle, QPainter* painter );
+    void drawShotEnd( int x, int y, int angle, Piece* piece, QPainter* painter );
+    QPen mPen;
     Tank* mTank;
     Shot* mShot;
 

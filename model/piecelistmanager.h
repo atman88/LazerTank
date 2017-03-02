@@ -17,7 +17,9 @@ public:
     const PieceSet* toSet();
     void append( PieceType type, int x, int y, int angle = 0, bool hasPush = false );
     void append( PieceType type, int x, int y, int angle, int pusheeOffset );
-    void append( Piece* piece );
+    void append( PieceType type, int x, int y, int angle, QColor* color );
+    void append( PieceType type, int x, int y, int angle, int pusheeOffset, QColor* color );
+    void append(Piece* source );
     bool eraseFront();
     bool eraseBack();
     bool replaceBack( PieceType type, int newAngle = -1 );
@@ -32,6 +34,8 @@ public slots:
     void reset( PieceListManager* source = 0 );
 
 private:
+    void appendInternal( Piece* piece );
+
     PieceList mPieces;
     PieceSet *mSet;
 };

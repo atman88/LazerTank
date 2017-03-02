@@ -32,12 +32,12 @@ public:
     {
     }
 
-    Piece( Piece& source )
+    Piece( Piece* source )
     {
-        mType  = source.mType;
-        mX     = source.mX;
-        mY     = source.mY;
-        mAngle = source.mAngle;
+        mType  = source->mType;
+        mX     = source->mX;
+        mY     = source->mY;
+        mAngle = source->mAngle;
     }
 
     virtual ~Piece()
@@ -56,6 +56,7 @@ public:
     void getBounds( QRect *rect ) const;
     virtual bool hasPush() const = 0;
     virtual int getPusheeOffset() const = 0;
+    virtual QColor* getColor() const = 0;
 
     void setType( PieceType type );
     void setAngle( int angle );
@@ -83,7 +84,7 @@ public:
     SimplePiece( PieceType type = NONE, int x = 0, int y = 0, int angle = 0 ) : Piece(type,x,y,angle)
     {
     }
-    SimplePiece( Piece& source ) : Piece(source)
+    SimplePiece( Piece* source ) : Piece(source)
     {
     }
 
@@ -96,6 +97,11 @@ public:
     {
         return 0;
     }
+
+    QColor* getColor() const override
+    {
+        return 0;
+    }
 };
 
 class PusherPiece : public SimplePiece
@@ -103,6 +109,10 @@ class PusherPiece : public SimplePiece
 public:
     PusherPiece( PieceType type = NONE, int x = 0, int y = 0, int angle = 0, bool hasPush = false )
         : SimplePiece(type,x,y,angle), mHasPush(hasPush)
+    {
+    }
+
+    PusherPiece( Piece* source ) : SimplePiece(source), mHasPush(source->hasPush())
     {
     }
 
@@ -128,6 +138,10 @@ public:
     {
     }
 
+    PusheePiece( Piece* source ) : SimplePiece(source), mPusheeOffset(source->getPusheeOffset())
+    {
+    }
+
     int getPusheeOffset() const override
     {
         return mPusheeOffset;
@@ -135,6 +149,32 @@ public:
 
 private:
     int mPusheeOffset;
+};
+
+class ColoredPiece : public PusheePiece
+{
+public:
+    ColoredPiece( PieceType type, int x, int y, int angle, int pusheeOffset, QColor* color )
+        : PusheePiece(type,x,y,angle,pusheeOffset), mColor(color)
+    {
+    }
+
+    ColoredPiece( PieceType type, int x, int y, int angle, QColor* color )
+        : PusheePiece(type,x,y,angle), mColor(color)
+    {
+    }
+
+    ColoredPiece( Piece* source ) : PusheePiece(source), mColor(source->getColor())
+    {
+    }
+
+    QColor* getColor() const override
+    {
+        return mColor;
+    }
+
+private:
+    QColor* mColor;
 };
 
 struct PieceSetComparator {

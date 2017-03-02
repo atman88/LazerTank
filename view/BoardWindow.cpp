@@ -8,6 +8,8 @@
 
 BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
 {
+    mPen.setWidth(2);
+
     create();
 
     mBackingStore = new QBackingStore(this);
@@ -20,6 +22,7 @@ BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
     QObject::connect( mTank->getMoves(), &PieceListManager::replaced, this, &BoardWindow::renderSquareLater );
 
     mShot = new Shot(mTank);
+    mShot->setColor( QColor(0,255,33) );
     QObject::connect( mShot, &Shot::tankKilled, this, &BoardWindow::onTankKilled );
     QObject::connect( mShot->getPath(), &PieceListManager::appended, this, &BoardWindow::renderSquareLater );
     QObject::connect( mShot->getPath(), &PieceListManager::erased,   this, &BoardWindow::renderSquareLater );
@@ -148,9 +151,8 @@ void BoardWindow::drawShotRight( int x, int y, int angle, QPainter* painter )
     painter->resetTransform();
 }
 
-void drawShotEnd( int x, int y, int angle, Piece* piece, QPainter* painter )
+void BoardWindow::drawShotEnd( int x, int y, int angle, Piece* piece, QPainter* painter )
 {
-
     if ( piece ) {
         int offset = piece->getPusheeOffset();
 
@@ -160,16 +162,38 @@ void drawShotEnd( int x, int y, int angle, Piece* piece, QPainter* painter )
         if ( angle ) {
             renderRotation( x, y, angle, painter );
         }
+        int cx = x+24/2;
+        int cy = y+24;
         if ( offset ) {
-            painter->drawLine( x+12,y+24,x+12,y+24-offset );
+            painter->drawLine( cx,cy,cx,cy-offset );
+            cy -= offset;
         }
-        drawPixmap( x, y-offset, SHOT_END, painter );
+
+        painter->drawPoint(cx,--cy);
+        QColor color = mPen.color();
+        int alpha = color.alpha();
+        for( int i = 1; i <= 4; ++i ) {
+            painter->drawLine( cx-(i*2)-2,   cy, cx-(i*2),   cy );
+            painter->drawLine( cx+(i*2)-1, cy, cx+(i*2)+2+1, cy );
+            painter->drawPoint( cx-i, cy-i );
+            painter->drawPoint( cx+i, cy-i );
+
+            alpha = (alpha >> 1 ) + (alpha >> 2);
+            color.setAlpha( alpha );
+            mPen.setColor( color );
+            painter->setPen( mPen );
+        }
         painter->resetTransform();
     }
 }
 
 void BoardWindow::renderPiece( PieceType type, int x, int y, int angle, Piece* source, QPainter* painter )
 {
+    if ( source && source->getColor() ) {
+        mPen.setColor( *source->getColor() );
+        painter->setPen(mPen);
+    }
+
     switch( type ) {
     case SHOT_STRAIGHT:
         if ( angle ) {
@@ -338,11 +362,7 @@ void BoardWindow::render(QRegion* region)
     QRegion r( rect );
     mBackingStore->beginPaint(r);
     QPaintDevice *device = mBackingStore->paintDevice();
-    QPen pen;
-    pen.setColor( QColor(0,255,33) );
-    pen.setWidth(2);
     QPainter painter(device);
-    painter.setPen( pen );
 
     renderOneRect( &rect, board, moves, tiles, deltas, shots, &painter );
 

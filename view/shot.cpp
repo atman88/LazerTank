@@ -73,7 +73,7 @@ void Shot::setSequence( const QVariant &sequence )
         int startDir = direction;
         int endOffset;
         if ( !game->canShootFrom( &direction, &x, &y, &endOffset, this ) ) {
-            mPath.append( SHOT_END, x, y, direction, endOffset );
+            mPath.append( SHOT_END, x, y, direction, endOffset, &mColor );
             mStopping = true;
             mEndReached = true;
         } else {
@@ -85,7 +85,7 @@ void Shot::setSequence( const QVariant &sequence )
             } else {
                 pieceType = SHOT_STRAIGHT;
             }
-            mPath.append( pieceType, x, y, direction );
+            mPath.append( pieceType, x, y, direction, &mColor );
         }
     }
 
@@ -97,6 +97,16 @@ void Shot::setSequence( const QVariant &sequence )
         std::cout << "shot finished\n";
         mAnimation.stop();
     }
+}
+
+void Shot::setColor(QColor color)
+{
+    mColor = color;
+}
+
+const QColor* Shot::getColor() const
+{
+    return &mColor;
 }
 
 void Shot::stop()

@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QRect>
+#include <QColor>
 #include <QPropertyAnimation>
 
 #include "piecelistmanager.h"
@@ -20,10 +21,11 @@ public:
     void init(AnimationAggregator *aggregate);
     PieceListManager* getPath();
     QVariant getSequence();
+    void setColor( QColor color );
+    const QColor* getColor() const;
 
 signals:
     void tankKilled();
-
 
 public slots:
     void setSequence( const QVariant& shotSequence );
@@ -36,6 +38,7 @@ private:
     Game* getGame();
     QVariant mSequence;
     QPropertyAnimation mAnimation;
+    QColor  mColor;
 
     PieceListManager mPath;
     int mDirection;
