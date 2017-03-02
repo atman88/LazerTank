@@ -7,11 +7,11 @@
 
 Tank::Tank(QObject* parent) : Shooter(parent)
 {
-    mRotateAnimation.setParent(this);
+    mRotateAnimation.setTargetObject(this);
     mRotateAnimation.setPropertyName("rotation");
-    mHorizontalAnimation.setParent(this);
+    mHorizontalAnimation.setTargetObject(this);
     mHorizontalAnimation.setPropertyName("x");
-    mVerticalAnimation.setParent(this);
+    mVerticalAnimation.setTargetObject(this);
     mVerticalAnimation.setPropertyName("y");
 }
 

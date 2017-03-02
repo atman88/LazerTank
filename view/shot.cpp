@@ -5,7 +5,7 @@
 
 Shot::Shot(QObject *parent) : QObject(parent), mDistance(0), mStopping(false), mEndReached(false), mKillSequence(0)
 {
-    mAnimation.setParent(this);
+    mAnimation.setTargetObject(this);
     mAnimation.setPropertyName("sequence");
     mAnimation.setStartValue(0);
     mAnimation.setEndValue(BOARD_MAX_WIDTH * BOARD_MAX_HEIGHT); // use a reasonable watermark value

@@ -4,9 +4,9 @@
 
 Push::Push(QObject *parent) : QObject(parent)
 {
-    mHorizontalAnimation.setParent(this);
+    mHorizontalAnimation.setTargetObject(this);
     mHorizontalAnimation.setPropertyName("pieceX");
-    mVerticalAnimation.setParent(this);
+    mVerticalAnimation.setTargetObject(this);
     mVerticalAnimation.setPropertyName("pieceY");
     QObject::connect( &mHorizontalAnimation, &QVariantAnimation::finished, this, &Push::onStopped );
     QObject::connect( &mVerticalAnimation,   &QVariantAnimation::finished, this, &Push::onStopped );
