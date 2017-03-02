@@ -11,6 +11,7 @@ class PieceListManager : public QObject
 
 public:
     explicit PieceListManager(QObject *parent = 0);
+    ~PieceListManager();
 
     const PieceList* getList() const;
     const PieceSet* toSet();

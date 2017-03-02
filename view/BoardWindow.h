@@ -20,6 +20,7 @@ public:
     ~BoardWindow()
     {
         delete mTank;
+        delete mBackingStore;
     }
 
     GameHandle getGame() const;

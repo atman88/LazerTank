@@ -4,6 +4,13 @@ PieceSetManager::PieceSetManager( QObject* parent ) : QObject(parent), mLastTran
 {
 }
 
+PieceSetManager::~PieceSetManager()
+{
+    for( auto it : mPieces ) {
+        delete it;
+    }
+}
+
 const PieceSet* PieceSetManager::getPieces() const
 {
     return &mPieces;

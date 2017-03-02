@@ -4,12 +4,14 @@
 
 Push::Push(QObject *parent) : QObject(parent)
 {
-    mHorizontalAnimation = new QPropertyAnimation( this, "pieceX" );
-    mVerticalAnimation   = new QPropertyAnimation( this, "pieceY" );
-    QObject::connect(mHorizontalAnimation, &QVariantAnimation::finished,this,&Push::onStopped);
-    QObject::connect(mVerticalAnimation,   &QVariantAnimation::finished,this,&Push::onStopped);
-    mHorizontalAnimation->setDuration( 1000 );
-    mVerticalAnimation->setDuration( 1000 );
+    mHorizontalAnimation.setParent(this);
+    mHorizontalAnimation.setPropertyName("pieceX");
+    mVerticalAnimation.setParent(this);
+    mVerticalAnimation.setPropertyName("pieceY");
+    QObject::connect( &mHorizontalAnimation, &QVariantAnimation::finished, this, &Push::onStopped );
+    QObject::connect( &mVerticalAnimation,   &QVariantAnimation::finished, this, &Push::onStopped );
+    mHorizontalAnimation.setDuration( 1000 );
+    mVerticalAnimation.setDuration( 1000 );
 
     mType = NONE;
     mBoundingRect.setRect(0,0,24,24);
@@ -35,15 +37,15 @@ void Push::start( Piece& what, int fromX, int fromY, int toX, int toY )
     mPieceAngle = what.getAngle();
 
     if ( toX != fromX ) {
-        mHorizontalAnimation->setStartValue( fromX );
-        mHorizontalAnimation->setEndValue( toX );
-        mHorizontalAnimation->start();
+        mHorizontalAnimation.setStartValue( fromX );
+        mHorizontalAnimation.setEndValue( toX );
+        mHorizontalAnimation.start();
     }
 
     if ( toY != fromY ) {
-        mVerticalAnimation->setStartValue( fromY );
-        mVerticalAnimation->setEndValue( toY );
-        mVerticalAnimation->start();
+        mVerticalAnimation.setStartValue( fromY );
+        mVerticalAnimation.setEndValue( toY );
+        mVerticalAnimation.start();
     }
     emit stateChanged(QAbstractAnimation::Running, QAbstractAnimation::Stopped);
 }
@@ -98,7 +100,7 @@ void Push::setY( const QVariant& y )
 int Push::getEndX()
 {
     if ( mType != NONE ) {
-        return mHorizontalAnimation->endValue().toInt();
+        return mHorizontalAnimation.endValue().toInt();
     }
     return mBoundingRect.left();
 }
@@ -106,7 +108,7 @@ int Push::getEndX()
 int Push::getEndY()
 {
     if ( mType != NONE ) {
-        return mVerticalAnimation->endValue().toInt();
+        return mVerticalAnimation.endValue().toInt();
     }
     return mBoundingRect.top();
 }

@@ -7,18 +7,21 @@
 
 Tank::Tank(QObject* parent) : Shooter(parent)
 {
-    mRotateAnimation = new QPropertyAnimation(this,"rotation");
-    mHorizontalAnimation = new QPropertyAnimation(this,"x");
-    mVerticalAnimation   = new QPropertyAnimation(this,"y");
+    mRotateAnimation.setParent(this);
+    mRotateAnimation.setPropertyName("rotation");
+    mHorizontalAnimation.setParent(this);
+    mHorizontalAnimation.setPropertyName("x");
+    mVerticalAnimation.setParent(this);
+    mVerticalAnimation.setPropertyName("y");
 }
 
 void Tank::init( Game* game )
 {
     AnimationAggregator* aggregate = game->getMoveAggregate();
-    QObject::connect( mRotateAnimation,     &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
-    QObject::connect( mHorizontalAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
-    QObject::connect( mVerticalAnimation,   &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
-    QObject::connect( aggregate,            &AnimationAggregator::finished,    this,      &Tank::onAnimationsFinished          );
+    QObject::connect( &mRotateAnimation,     &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
+    QObject::connect( &mHorizontalAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
+    QObject::connect( &mVerticalAnimation,   &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
+    QObject::connect( aggregate, &AnimationAggregator::finished, this, &Tank::onAnimationsFinished );
 }
 
 void Tank::paint( QPainter* painter )
@@ -43,9 +46,9 @@ void Tank::paint( QPainter* painter )
 
 void Tank::stop()
 {
-    mRotateAnimation->stop();
-    mHorizontalAnimation->stop();
-    mVerticalAnimation->stop();
+    mRotateAnimation.stop();
+    mHorizontalAnimation.stop();
+    mVerticalAnimation.stop();
 }
 
 void Tank::reset( int boardX, int boardY )
@@ -57,10 +60,10 @@ void Tank::reset( int boardX, int boardY )
 void Tank::reset( QPoint& p )
 {
     stop();
-    mHorizontalAnimation->setStartValue( p.x() );
-    mVerticalAnimation->setStartValue( p.x() );
-    mHorizontalAnimation->setEndValue( p.x() );
-    mVerticalAnimation->setEndValue( p.x() );
+    mHorizontalAnimation.setStartValue( p.x() );
+    mVerticalAnimation.setStartValue( p.x() );
+    mHorizontalAnimation.setEndValue( p.x() );
+    mVerticalAnimation.setEndValue( p.x() );
     Shooter::reset( p );
     mMoves.reset();
 }
@@ -165,26 +168,26 @@ void Tank::followPath()
 //    cout << "follow " << direction << " (" << move.getX() << "," << move.getY() << ")\n";
 
         if ( direction != curRotation ) {
-            mRotateAnimation->stop();
+            mRotateAnimation.stop();
 
             if ( curRotation == 0 && direction > 180 ) {
                 curRotation = 360;
-                mRotateAnimation->setStartValue( QVariant(curRotation) );
+                mRotateAnimation.setStartValue( QVariant(curRotation) );
             } else {
-                mRotateAnimation->setStartValue( mRotation );
+                mRotateAnimation.setStartValue( mRotation );
                 if ( direction == 0 && curRotation > 180 ) {
                     direction = 360;
                 }
             }
-            mRotateAnimation->setEndValue( direction );
-            mRotateAnimation->setDuration( abs(direction-curRotation) * 1000 / 90);
-            mRotateAnimation->start();
+            mRotateAnimation.setEndValue( direction );
+            mRotateAnimation.setDuration( abs(direction-curRotation) * 1000 / 90);
+            mRotateAnimation.start();
         }
 
         int x = move->getX();
         int y = move->getY();
-        animateMove( mBoundingRect.left(), x*24, mHorizontalAnimation );
-        animateMove( mBoundingRect.top(),  y*24, mVerticalAnimation   );
+        animateMove( mBoundingRect.left(), x*24, &mHorizontalAnimation );
+        animateMove( mBoundingRect.top(),  y*24, &mVerticalAnimation   );
         emit movingInto( x, y, curRotation % 360 );
     }
 }

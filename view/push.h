@@ -40,8 +40,8 @@ public slots:
 private:
     Board* getBoard();
 
-    QPropertyAnimation* mHorizontalAnimation;
-    QPropertyAnimation* mVerticalAnimation;
+    QPropertyAnimation mHorizontalAnimation;
+    QPropertyAnimation mVerticalAnimation;
     PieceType mType;
     int mPieceAngle;
     QRect mBoundingRect;

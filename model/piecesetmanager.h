@@ -12,6 +12,7 @@ class PieceSetManager : public QObject
 
 public:
     explicit PieceSetManager( QObject* parent = 0 );
+    ~PieceSetManager();
 
     const PieceSet* getPieces() const;
     void insert( PieceType type, int x, int y, int angle );

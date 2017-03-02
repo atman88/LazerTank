@@ -4,6 +4,17 @@ PieceListManager::PieceListManager(QObject *parent) : QObject(parent), mSet(0)
 {
 }
 
+PieceListManager::~PieceListManager()
+{
+    if ( mSet ) {
+        delete mSet;
+    }
+
+    for( auto it : mPieces ) {
+        delete it;
+    }
+}
+
 const PieceList* PieceListManager::getList() const
 {
     return &mPieces;

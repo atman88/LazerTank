@@ -5,15 +5,16 @@
 
 Shot::Shot(QObject *parent) : QObject(parent), mDistance(0), mStopping(false), mEndReached(false), mKillSequence(0)
 {
-    mAnimation = new QPropertyAnimation(this,"sequence");
-    mAnimation->setStartValue(0);
-    mAnimation->setEndValue(BOARD_MAX_WIDTH * BOARD_MAX_HEIGHT); // use a reasonable watermark value
-    mAnimation->setDuration(60/8 * BOARD_MAX_WIDTH * BOARD_MAX_HEIGHT);
+    mAnimation.setParent(this);
+    mAnimation.setPropertyName("sequence");
+    mAnimation.setStartValue(0);
+    mAnimation.setEndValue(BOARD_MAX_WIDTH * BOARD_MAX_HEIGHT); // use a reasonable watermark value
+    mAnimation.setDuration(60/8 * BOARD_MAX_WIDTH * BOARD_MAX_HEIGHT);
 }
 
 void Shot::init( AnimationAggregator* aggregate )
 {
-    QObject::connect( mAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
+    QObject::connect( &mAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
 }
 
 void Shot::reset()
@@ -46,7 +47,7 @@ void Shot::setSequence( const QVariant &sequence )
             mPath.replaceBack( SHOT_END_KILL );
             break;
         case 3:
-            mAnimation->pause();
+            mAnimation.pause();
             emit tankKilled();
             break;
         default:
@@ -94,7 +95,7 @@ void Shot::setSequence( const QVariant &sequence )
 
     if ( !mPath.count() ) {
         std::cout << "shot finished\n";
-        mAnimation->stop();
+        mAnimation.stop();
     }
 }
 
@@ -113,7 +114,7 @@ void Shot::fire( int direction )
     if ( !(direction % 90) ) {
         reset();
         mDirection = direction;
-        mAnimation->start();
+        mAnimation.start();
     }
 }
 

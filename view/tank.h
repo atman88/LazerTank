@@ -44,9 +44,9 @@ private:
     Game* getGame();
 
     QRect mPreviousPaintRect;
-    QPropertyAnimation* mRotateAnimation;
-    QPropertyAnimation* mHorizontalAnimation;
-    QPropertyAnimation* mVerticalAnimation;
+    QPropertyAnimation mRotateAnimation;
+    QPropertyAnimation mHorizontalAnimation;
+    QPropertyAnimation mVerticalAnimation;
 
     PieceListManager mMoves;
 };

@@ -35,7 +35,7 @@ public slots:
 private:
     Game* getGame();
     QVariant mSequence;
-    QPropertyAnimation* mAnimation;
+    QPropertyAnimation mAnimation;
 
     PieceListManager mPath;
     int mDirection;
