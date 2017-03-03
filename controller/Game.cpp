@@ -3,7 +3,8 @@
 #include <QVariant>
 #include <QMessageBox>
 
-#include "controller/Game.h"
+#include "Game.h"
+#include "speedcontroller.h"
 
 Game::Game( Board* board ) : mBoard(board), mTankBoardX(0), mTankBoardY(0)
 {
@@ -37,6 +38,8 @@ void Game::init( BoardWindow* window )
     QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::insertedAt, window, &BoardWindow::renderSquareLater );
 
     QObject::connect( &mMovingPiece, &Push::stateChanged, this, &Game::onMovingPieceChanged );
+
+    QObject::connect( window, &BoardWindow::setSpeed, &mSpeedController, &SpeedController::setSpeed );
 
     QObject::connect( window->getTank(), &Tank::idled,           this, &Game::endMoveDeltaTracking );
     QObject::connect( &mPathFinder,      &PathFinder::pathFound, this, &Game::endMoveDeltaTracking );
@@ -397,6 +400,11 @@ AnimationAggregator* Game::getShotAggregate()
 Shot& Game::getCannonShot()
 {
     return mCannonShot;
+}
+
+SpeedController *Game::getSpeedController()
+{
+    return &mSpeedController;
 }
 
 void Game::onFuturePush( Piece* pushingPiece )

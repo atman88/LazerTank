@@ -22,6 +22,11 @@ void Tank::init( Game* game )
     QObject::connect( &mHorizontalAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
     QObject::connect( &mVerticalAnimation,   &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
     QObject::connect( aggregate, &AnimationAggregator::finished, this, &Tank::onAnimationsFinished );
+
+    SpeedController* controller = game->getSpeedController();
+    mRotateAnimation.setController( controller );
+    mHorizontalAnimation.setController( controller );
+    mVerticalAnimation.setController( controller );
 }
 
 void Tank::paint( QPainter* painter )
@@ -164,43 +169,14 @@ void Tank::followPath()
 
         Piece* move = mMoves.getList()->front();
         int curRotation = mRotation.toInt();
-        int direction = move->getAngle();
-//    cout << "follow " << direction << " (" << move.getX() << "," << move.getY() << ")\n";
-
-        if ( direction != curRotation ) {
-            mRotateAnimation.stop();
-
-            if ( curRotation == 0 && direction > 180 ) {
-                curRotation = 360;
-                mRotateAnimation.setStartValue( QVariant(curRotation) );
-            } else {
-                mRotateAnimation.setStartValue( mRotation );
-                if ( direction == 0 && curRotation > 180 ) {
-                    direction = 360;
-                }
-            }
-            mRotateAnimation.setEndValue( direction );
-            mRotateAnimation.setDuration( abs(direction-curRotation) * 1000 / 90);
-            mRotateAnimation.start();
-        }
-
         int x = move->getX();
         int y = move->getY();
-        animateMove( mBoundingRect.left(), x*24, &mHorizontalAnimation );
-        animateMove( mBoundingRect.top(),  y*24, &mVerticalAnimation   );
-        emit movingInto( x, y, curRotation % 360 );
-    }
-}
 
-void Tank::animateMove( int from, int to, QPropertyAnimation *animation )
-{
-    int delta = to - from;
-    if ( delta ) {
-        animation->stop();
-        animation->setStartValue( from );
-        animation->setEndValue( to );
-        animation->setDuration(abs(delta) * 1000 / 24);
-        animation->start();
+        mRotateAnimation.animateBetween( curRotation, move->getAngle() );
+        mHorizontalAnimation.animateBetween( mBoundingRect.left(), x*24 );
+        mVerticalAnimation.animateBetween(   mBoundingRect.top(),  y*24 );
+
+        emit movingInto( x, y, curRotation % 360 );
     }
 }
 

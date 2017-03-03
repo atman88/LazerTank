@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <QPropertyAnimation>
 
+#include "controller/speedcontroller.h"
 #include "view/shooter.h"
 #include "model/piecelistmanager.h"
 
@@ -40,15 +41,16 @@ public slots:
 
 private:
     void followPath();
-    void animateMove( int from, int to, QPropertyAnimation *animation );
     Game* getGame();
 
     QRect mPreviousPaintRect;
-    QPropertyAnimation mRotateAnimation;
-    QPropertyAnimation mHorizontalAnimation;
-    QPropertyAnimation mVerticalAnimation;
+    RotateSpeedControlledAnimation mRotateAnimation;
+    MoveSpeedControlledAnimation   mHorizontalAnimation;
+    MoveSpeedControlledAnimation   mVerticalAnimation;
 
     PieceListManager mMoves;
+
+    int mSpeed;
 };
 
 #endif // TANK_H

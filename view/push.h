@@ -5,6 +5,7 @@
 #include <QPropertyAnimation>
 #include <QRect>
 
+#include "controller/speedcontroller.h"
 #include "model/piece.h"
 #include "model/board.h"
 
@@ -40,8 +41,8 @@ public slots:
 private:
     Board* getBoard();
 
-    QPropertyAnimation mHorizontalAnimation;
-    QPropertyAnimation mVerticalAnimation;
+    MoveSpeedControlledAnimation mHorizontalAnimation;
+    MoveSpeedControlledAnimation mVerticalAnimation;
     PieceType mType;
     int mPieceAngle;
     QRect mBoundingRect;

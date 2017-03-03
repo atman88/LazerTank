@@ -9,7 +9,6 @@ class BoardWindow;
 #include "shot.h"
 #include "controller/Game.h"
 
-
 class BoardWindow : public QWindow
 {
     Q_OBJECT
@@ -29,6 +28,7 @@ public:
     void onTankKilled();
 
 signals:
+    void setSpeed( int speed );
 
 public slots:
     void setGame( const GameHandle game );

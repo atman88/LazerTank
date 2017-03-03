@@ -34,6 +34,7 @@ public:
     QAbstractAnimation::State animationState();
     Push& getMovingPiece();
     Shot& getCannonShot();
+    SpeedController* getSpeedController();
     AnimationAggregator* getMoveAggregate();
     AnimationAggregator* getShotAggregate();
     bool canMoveFrom(PieceType what, int angle, int *x, int *y , bool futuristic, bool* pushResult = 0 );
@@ -60,6 +61,7 @@ private:
     bool canPlaceAt(PieceType what, int x, int y, int fromAngle, PieceSetManager* pieceManager, bool *pushResult = 0);
     bool onShootThruMovingPiece( int offset, int angle, int *endOffset );
 
+    SpeedController mSpeedController;
     AnimationAggregator mMoveAggregate;
     AnimationAggregator mShotAggregate;
 

@@ -405,6 +405,11 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
         case Qt::Key_Space:
             mShot->fire( mTank->getRotation().toInt() );
             break;
+
+        case Qt::Key_Shift:
+            emit setSpeed(HIGH_SPEED);
+            break;
+
         default:
             int rotation = keyToAngle(ev->key());
             if ( rotation >= 0 ) {
@@ -421,6 +426,10 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
         switch( ev->key() ) {
         case Qt::Key_Space:
             mShot->stop();
+            break;
+
+        case Qt::Key_Shift:
+            emit setSpeed(LOW_SPEED);
             break;
 
         case Qt::Key_Backspace:

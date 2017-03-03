@@ -21,6 +21,10 @@ void Push::init( Game* game )
 {
     QObject::connect( this, &Push::stateChanged, game->getMoveAggregate(), &AnimationAggregator::onStateChanged );
     QObject::connect( this, &Push::stateChanged, game->getShotAggregate(), &AnimationAggregator::onStateChanged );
+
+    SpeedController* SpeedController = game->getSpeedController();
+    mHorizontalAnimation.setController( SpeedController );
+    mVerticalAnimation.setController( SpeedController );
 }
 
 void Push::start( Piece& what, int fromX, int fromY, int toX, int toY )
@@ -30,23 +34,14 @@ void Push::start( Piece& what, int fromX, int fromY, int toX, int toY )
         return;
     }
 
-//    cout << "Push start " << (fromX/24) << "," << (fromY/24) << "\n";
     mBoundingRect.moveLeft( fromX );
     mBoundingRect.moveTop( fromY );
     mType = what.getType();
     mPieceAngle = what.getAngle();
 
-    if ( toX != fromX ) {
-        mHorizontalAnimation.setStartValue( fromX );
-        mHorizontalAnimation.setEndValue( toX );
-        mHorizontalAnimation.start();
-    }
+    mHorizontalAnimation.animateBetween( fromX, toX );
+    mVerticalAnimation.animateBetween( fromY, toY );
 
-    if ( toY != fromY ) {
-        mVerticalAnimation.setStartValue( fromY );
-        mVerticalAnimation.setEndValue( toY );
-        mVerticalAnimation.start();
-    }
     emit stateChanged(QAbstractAnimation::Running, QAbstractAnimation::Stopped);
 }
 
