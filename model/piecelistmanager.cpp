@@ -1,6 +1,6 @@
 #include "piecelistmanager.h"
 
-PieceListManager::PieceListManager(QObject *parent) : QObject(parent), mSet(0)
+PieceListManager::PieceListManager(QObject *parent) : QObject(parent), mSet(0), mMultiSet(0)
 {
 }
 
@@ -8,6 +8,10 @@ PieceListManager::~PieceListManager()
 {
     if ( mSet ) {
         delete mSet;
+    }
+
+    if ( mMultiSet ) {
+        delete mMultiSet;
     }
 
     for( auto it : mPieces ) {
@@ -20,7 +24,7 @@ const PieceList* PieceListManager::getList() const
     return &mPieces;
 }
 
-const PieceSet *PieceListManager::toSet()
+const PieceSet* PieceListManager::toSet()
 {
     if ( !mSet ) {
         mSet = new PieceSet;
@@ -31,11 +35,25 @@ const PieceSet *PieceListManager::toSet()
     return mSet;
 }
 
+const PieceMultiSet* PieceListManager::toMultiSet()
+{
+    if ( !mMultiSet ) {
+        mMultiSet = new PieceMultiSet;
+        for( auto iterator = mPieces.begin(); iterator != mPieces.end(); ++iterator  ) {
+            mMultiSet->insert( *iterator );
+        }
+    }
+    return mMultiSet;
+}
+
 void PieceListManager::appendInternal( Piece* piece )
 {
     mPieces.push_back( piece );
     if ( mSet ) {
         mSet->insert( piece );
+    }
+    if ( mMultiSet ) {
+        mMultiSet->insert( piece );
     }
     emit appended( piece->getX(), piece->getY() );
 }
@@ -73,38 +91,47 @@ void PieceListManager::append( Piece* source )
     }
 }
 
+bool PieceListManager::eraseInternal( PieceList::iterator it )
+{
+    if ( it == mPieces.end() ) {
+        return false;
+    }
+
+    Piece* piece = *it;
+    mPieces.erase( it );
+
+    int x = piece->getX();
+    int y = piece->getY();
+
+    if ( mSet ) {
+        mSet->erase( piece );
+    }
+
+    if ( mMultiSet ) {
+        auto pair = mMultiSet->equal_range( piece );
+        for( PieceMultiSet::iterator sit = pair.first; sit != pair.second; ++sit ) {
+            if ( *sit == piece ) {
+                mMultiSet->erase(sit);
+                break;
+            }
+        }
+    }
+
+    delete piece;
+    emit erased( x, y );
+    return true;
+}
+
 bool PieceListManager::eraseFront()
 {
-    if ( !mPieces.empty() ) {
-        Piece* piece = mPieces.front();
-        int x = piece->getX();
-        int y = piece->getY();
-
-        mPieces.pop_front();
-        if ( mSet ) {
-            mSet->erase( piece );
-        }
-        delete piece;
-        emit erased( x, y );
-        return true;
-    }
-    return false;
+    return eraseInternal( mPieces.begin() );
 }
 
 bool PieceListManager::eraseBack()
 {
     if ( !mPieces.empty() ) {
-        Piece* piece = mPieces.back();
-        int x = piece->getX();
-        int y = piece->getY();
-
-        mPieces.pop_back();
-        if ( mSet ) {
-            mSet->erase( piece );
-        }
-        delete piece;
-        emit erased( x, y );
-        return true;
+        PieceList::iterator it = mPieces.end();
+        return eraseInternal( --it );
     }
     return false;
 }

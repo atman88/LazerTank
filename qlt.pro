@@ -3,7 +3,7 @@
 ######################################################################
 
 TEMPLATE = app
-INCLUDEPATH += . view controller model test/controller
+INCLUDEPATH += . view controller model
 QT += widgets
 
 QMAKE_CXXFLAGS += -std=gnu++11
@@ -22,7 +22,9 @@ HEADERS += controller/Game.h \
     util/imageutils.h \
     model/piecesetmanager.h \
     model/piecelistmanager.h \
-    model/piecedelta.h
+    model/piecedelta.h \
+    controller/speedcontroller.h
+
 SOURCES += controller/Game.cpp \
            view/BoardWindow.cpp \
            model/board.cpp \
@@ -36,15 +38,23 @@ SOURCES += controller/Game.cpp \
     util/imageutils.cpp \
     model/piecesetmanager.cpp \
     model/piecelistmanager.cpp \
-    model/piecedelta.cpp
+    model/piecedelta.cpp \
+    controller/speedcontroller.cpp
+
 RESOURCES += qml.qrc
 
 test{
+    INCLUDEPATH += test/controller
+
+    HEADERS += test/testmain.h
+
     TARGET = qlttest
 
     QT += testlib
 
-    SOURCES += test/controller/testgame.cpp
+    SOURCES += test/testmain.cpp \
+        test/controller/testgame.cpp \
+        test/model/testpiecelistmanager.cpp
 }
 else{
     TARGET = qlt

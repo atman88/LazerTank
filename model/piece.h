@@ -186,5 +186,6 @@ struct PieceSetComparator {
 
 typedef std::list<Piece*> PieceList;
 typedef std::set<Piece*,PieceSetComparator> PieceSet;
+typedef std::multiset<Piece*,PieceSetComparator> PieceMultiSet;
 
 #endif // PIECE_H

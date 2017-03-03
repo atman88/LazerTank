@@ -48,7 +48,7 @@ protected:
     void exposeEvent(QExposeEvent *event) override;
 
 private:
-    void renderOneRect( const QRect* rect, Board* board, const PieceSet* moves, const PieceSet* tiles,
+    void renderOneRect( const QRect* rect, Board* board, const PieceMultiSet* moves, const PieceSet* tiles,
       const PieceSet* deltas, const PieceSet* shots, QPainter* painter );
     void renderRotatedPixmap(const QPixmap* pixmap, int x, int y, int angle, QPainter* painter );
     void renderMove( int x, int y, int angle = 0 );

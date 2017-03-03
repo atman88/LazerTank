@@ -239,7 +239,7 @@ void BoardWindow::renderListIn(PieceSet::iterator iterator, PieceSet::iterator e
     }
 }
 
-void BoardWindow::renderOneRect( const QRect* rect, Board* board, const PieceSet* moves, const PieceSet* tiles,
+void BoardWindow::renderOneRect( const QRect* rect, Board* board, const PieceMultiSet* moves, const PieceSet* tiles,
   const PieceSet* deltas, const PieceSet* shots, QPainter* painter )
 {
     int minX = rect->left()/24;
@@ -332,7 +332,7 @@ void BoardWindow::render(QRegion* region)
         return;
     }
 
-    const PieceSet* moves = mTank->getMoves()->toSet();
+    const PieceMultiSet* moves = mTank->getMoves()->toMultiSet();
     const PieceSet* tiles = board->getPieceManager().getPieces();
     const PieceSet* deltas = mGame->getDeltaPieces();
 

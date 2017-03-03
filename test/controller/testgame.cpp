@@ -1,17 +1,8 @@
 #include <iostream>
-#include <QTest>
+#include "../testmain.h"
 #include "controller/Game.h"
 
-class TestGame : public QObject
-{
-    Q_OBJECT
-
-private slots:
-    void testMove();
-    void testCannon();
-};
-
-void TestGame::testMove()
+void TestMain::testMove()
 {
     Board board;
     QString fileName( ":/maps/testsimple.txt" );
@@ -31,7 +22,7 @@ void TestGame::testMove()
     QCOMPARE( game.canPlaceAtNonFuturistic(TANK,board.mInitialTankX,board.mInitialTankY,0), true );
 }
 
-void TestGame::testCannon()
+void TestMain::testCannon()
 {
     BoardWindow window;
     Board board;
@@ -44,6 +35,3 @@ void TestGame::testCannon()
     tank->move(0);
     tank->move(0);
 }
-
-QTEST_MAIN(TestGame)
-#include "testgame.moc"
