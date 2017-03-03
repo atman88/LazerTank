@@ -22,8 +22,7 @@ HEADERS += controller/Game.h \
     util/imageutils.h \
     model/piecesetmanager.h \
     model/piecelistmanager.h \
-    model/piecedelta.h \
-    controller/speedcontroller.h
+    model/piecedelta.h
 
 SOURCES += controller/Game.cpp \
            view/BoardWindow.cpp \
@@ -38,8 +37,7 @@ SOURCES += controller/Game.cpp \
     util/imageutils.cpp \
     model/piecesetmanager.cpp \
     model/piecelistmanager.cpp \
-    model/piecedelta.cpp \
-    controller/speedcontroller.cpp
+    model/piecedelta.cpp
 
 RESOURCES += qml.qrc
 
