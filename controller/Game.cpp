@@ -13,7 +13,7 @@ Game::Game( Board* board ) : mBoard(board), mTankBoardX(0), mTankBoardY(0)
     if ( board ) {
         QObject::connect( board, &Board::tileChangedAt, this, &Game::onBoardTileChanged );
         QObject::connect( board, &Board::boardLoaded,   this, &Game::onBoardLoaded      );
-        mFutureDelta.init( &board->getPieceManager(), &mFuturePieceManager );
+        mFutureDelta.init( board, &mFutureBoard );
     }
 
     mHandle.game = this;
@@ -85,9 +85,9 @@ bool Game::canMoveFrom(PieceType what, int angle, int *x, int *y, bool futuristi
     if ( getAdjacentPosition(angle, x, y) ) {
         PieceSetManager* pieceManager;
         if ( futuristic && mFutureDelta.enabled() ) {
-            pieceManager = &mFuturePieceManager;
+            pieceManager = mFutureDelta.getFutureBoard()->getPieceManager();
         } else {
-            pieceManager = &mBoard->getPieceManager();
+            pieceManager = mBoard->getPieceManager();
         }
         return canPlaceAt( what, *x, *y, angle, pieceManager, pushResult );
     }
@@ -124,7 +124,7 @@ void Game::onTankMoved( int x, int y )
 void Game::sightCannons()
 {
     // fire any cannon
-    const PieceSet* pieces = mBoard->getPieceManager().getPieces();
+    const PieceSet* pieces = mBoard->getPieceManager()->getPieces();
     bool sighted = false;
     int fireAngle, fireX, fireY;
     for( auto it = pieces->cbegin(); !sighted && it != pieces->cend(); ++it ) {
@@ -210,7 +210,7 @@ void Game::onBoardTileChanged( int x, int y )
 
 bool Game::canPlaceAtNonFuturistic(PieceType what, int x, int y, int fromAngle, bool *pushResult )
 {
-    return canPlaceAt( what, x, y, fromAngle, &mBoard->getPieceManager(), pushResult );
+    return canPlaceAt( what, x, y, fromAngle, mBoard->getPieceManager(), pushResult );
 }
 
 bool Game::canPlaceAt(PieceType what, int x, int y, int fromAngle, PieceSetManager* pieceManager, bool *pushResult )
@@ -291,8 +291,8 @@ bool Game::canShootThru( int x, int y, int *angle, int *endOffset, Shot* source 
     switch( mBoard->tileAt(x,y) ) {
     case DIRT:
     case TILE_SUNK:
-    {   PieceSetManager& pm = mBoard->getPieceManager();
-        Piece* what = pm.pieceAt( x, y );
+    {   PieceSetManager* pm = mBoard->getPieceManager();
+        Piece* what = pm->pieceAt( x, y );
         if ( what ) {
             switch( what->getType() ) {
             case TILE_MIRROR:
@@ -302,7 +302,7 @@ bool Game::canShootThru( int x, int y, int *angle, int *endOffset, Shot* source 
                 break;
             case CANNON:
                 if ( abs( what->getAngle() - *angle ) == 180 ) {
-                    pm.eraseAt( x, y );
+                    pm->eraseAt( x, y );
                     return false;
                 }
                 break;
@@ -314,7 +314,7 @@ bool Game::canShootThru( int x, int y, int *angle, int *endOffset, Shot* source 
             int toX = x, toY = y;
             if ( canMoveFrom( what->getType(), *angle, &toX, &toY, false ) ) {
                 SimplePiece simple( what );
-                pm.eraseAt( x, y );
+                pm->eraseAt( x, y );
                 mMovingPiece.start( simple, x*24, y*24, toX*24, toY*24 );
             }
             break;
@@ -372,13 +372,13 @@ bool Game::canShootThru( int x, int y, int *angle, int *endOffset, Shot* source 
 void Game::onTankMovingInto( int x, int y, int fromAngle )
 {
     if ( mBoard ) {
-        PieceSetManager& pm = mBoard->getPieceManager();
-        Piece* what = pm.pieceAt( x, y );
+        PieceSetManager* pm = mBoard->getPieceManager();
+        Piece* what = pm->pieceAt( x, y );
         if ( what ) {
             int toX = x, toY = y;
             if ( getAdjacentPosition(fromAngle, &toX, &toY) ) {
                 SimplePiece simple( what );
-                pm.eraseAt( x, y );
+                pm->eraseAt( x, y );
                 mMovingPiece.start( simple, x*24, y*24, toX*24, toY*24 );
             } else {
                 cout << "no adjacent for angle " << fromAngle << std::endl;
@@ -417,13 +417,13 @@ void Game::onFuturePush( Piece* pushingPiece )
         int y = pushingPiece->getY();
         int angle = pushingPiece->getAngle();
 
-        {   Piece* pushedPiece = mFuturePieceManager.pieceAt( x, y );
+        {   Piece* pushedPiece = mFutureBoard.getPieceManager()->pieceAt( x, y );
             if ( !pushedPiece ) {
                 cout << "*** pushed piece not found!" << std::endl;
                 return;
             }
             pushedType = pushedPiece->getType();
-            if ( !mFuturePieceManager.erase( pushedPiece ) ) {
+            if ( !mFutureBoard.getPieceManager()->erase( pushedPiece ) ) {
                 cout << "*** failed to erase future piece at " << x << "," << y << std::endl;
             }
         }
@@ -432,7 +432,7 @@ void Game::onFuturePush( Piece* pushingPiece )
             cout << "*** failed to push future piece at " << x << "," << y << std::endl;
             return;
         }
-        mFuturePieceManager.insert( pushedType, x, y, angle );
+        mFutureBoard.getPieceManager()->insert( pushedType, x, y, angle );
     }
 }
 
@@ -457,12 +457,13 @@ void Game::undoPush( Piece* pusher )
     int x = pusher->getX();
     int y = pusher->getY();
     if ( getAdjacentPosition( pusher->getAngle(), &x, &y ) ) {
-        Piece* pushee = mFuturePieceManager.pieceAt( x, y );
+        Piece* pushee = mFutureBoard.getPieceManager()->pieceAt( x, y );
         if ( pushee ) {
             PieceType type = pushee->getType();
             int angle = pushee->getAngle();
-            mFuturePieceManager.erase( pushee );
-            mFuturePieceManager.insert( type, pusher->getX(), pusher->getY(), angle );
+            PieceSetManager* pieceManager = mFutureBoard.getPieceManager();
+            pieceManager->erase( pushee );
+            pieceManager->insert( type, pusher->getX(), pusher->getY(), angle );
         }
     }
 }

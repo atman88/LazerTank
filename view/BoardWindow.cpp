@@ -64,9 +64,9 @@ void BoardWindow::setGame(const GameHandle handle )
             onBoardLoaded();
             QObject::connect( board, &Board::boardLoaded,   this, &BoardWindow::onBoardLoaded     );
             QObject::connect( board, &Board::tileChangedAt, this, &BoardWindow::renderSquareLater );
-            PieceSetManager& pm = board->getPieceManager();
-            QObject::connect( &pm, &PieceSetManager::erasedAt,  this, &BoardWindow::renderSquareLater );
-            QObject::connect( &pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
+            PieceSetManager* pm = board->getPieceManager();
+            QObject::connect( pm, &PieceSetManager::erasedAt,  this, &BoardWindow::renderSquareLater );
+            QObject::connect( pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
         }
         mTank->init( mGame );
         mShot->init( mGame->getShotAggregate() );
@@ -333,7 +333,7 @@ void BoardWindow::render(QRegion* region)
     }
 
     const PieceMultiSet* moves = mTank->getMoves()->toMultiSet();
-    const PieceSet* tiles = board->getPieceManager().getPieces();
+    const PieceSet* tiles = board->getPieceManager()->getPieces();
     const PieceSet* deltas = mGame->getDeltaPieces();
 
     const PieceSet* shots = mGame->getCannonShot().getPath()->toSet();

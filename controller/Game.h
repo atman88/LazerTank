@@ -71,7 +71,7 @@ private:
     Push mMovingPiece;
     Shooter mActiveCannon;
     Shot mCannonShot;
-    PieceSetManager mFuturePieceManager;
+    Board mFutureBoard;
     PieceDelta mFutureDelta;
 
     int mTankBoardX;

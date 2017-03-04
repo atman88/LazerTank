@@ -65,12 +65,9 @@ void Tank::reset( int boardX, int boardY )
 void Tank::reset( QPoint& p )
 {
     stop();
-    mHorizontalAnimation.setStartValue( p.x() );
-    mVerticalAnimation.setStartValue( p.x() );
-    mHorizontalAnimation.setEndValue( p.x() );
-    mVerticalAnimation.setEndValue( p.x() );
     Shooter::reset( p );
     mMoves.reset();
+    mRotation = 0;
 }
 
 void Tank::setX( const QVariant& x )

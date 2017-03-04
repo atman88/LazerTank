@@ -1,0 +1,45 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/wall-stone.png</file>
+        <file>images/dirt.png</file>
+        <file>images/tank.png</file>
+        <file>images/move-indicator.png</file>
+        <file>maps/testsimple.txt</file>
+        <file>images/tile-metal.png</file>
+        <file>images/flag.png</file>
+        <file>maps/level2.txt</file>
+        <file>images/tile-sunk.png</file>
+        <file>maps/level1.txt</file>
+        <file>maps/level3.txt</file>
+        <file>maps/level4.txt</file>
+        <file>maps/level5.txt</file>
+        <file>maps/level6.txt</file>
+        <file>images/wall-mirror.png</file>
+        <file>images/stone-slit.png</file>
+        <file>maps/level7.txt</file>
+        <file>images/wood.png</file>
+        <file>maps/level8.txt</file>
+        <file>images/tile-mirror.png</file>
+        <file>images/cannon.png</file>
+        <file>maps/level9.txt</file>
+        <file>maps/level10.txt</file>
+        <file>maps/level11.txt</file>
+        <file>maps/level12.txt</file>
+        <file>maps/level13.txt</file>
+        <file>maps/level14.txt</file>
+        <file>maps/level15.txt</file>
+        <file>images/tile-future-erase.png</file>
+        <file>images/tile-future-insert.png</file>
+        <file>maps/level16.txt</file>
+        <file>maps/level17.txt</file>
+        <file>images/damage.png</file>
+        <file>maps/level18.txt</file>
+        <file>maps/level19.txt</file>
+        <file>maps/level20.txt</file>
+        <file>maps/level21.txt</file>
+        <file>maps/level22.txt</file>
+        <file>maps/level23.txt</file>
+        <file>maps/level24.txt</file>
+        <file>maps/level25.txt</file>
+    </qresource>
+</RCC>

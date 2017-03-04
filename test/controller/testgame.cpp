@@ -9,7 +9,7 @@ void TestMain::testMove()
     board.load( fileName );
     cout << "board " << board.getWidth() << "x" << board.getHeight() << std::endl;
 
-    const PieceSet* tiles = board.getPieceManager().getPieces();
+    const PieceSet* tiles = board.getPieceManager()->getPieces();
     QCOMPARE( tiles->size(), 1UL );
     QCOMPARE( (*tiles->begin())->encodedPos(), Piece::encodePos(1,2));
 

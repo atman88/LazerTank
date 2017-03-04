@@ -18,9 +18,9 @@ bool Board::load( int level ) {
     return rc;
 }
 
-PieceSetManager& Board::getPieceManager()
+PieceSetManager* Board::getPieceManager()
 {
-    return mPieceManager;
+    return &mPieceManager;
 }
 
 void Board::initPiece( PieceType type, int x, int y, int angle )
@@ -109,8 +109,19 @@ bool Board::load( QString& fileName )
     file.close();
 
     mHeight = y;
+    mLevel = -1;
 
     return true;
+}
+
+void Board::load( const Board* source )
+{
+    mLevel  = source->mLevel;
+    mWidth  = source->mWidth;
+    mHeight = source->mHeight;
+    memcpy( mTiles, source->mTiles, sizeof mTiles );
+    mPieceManager.reset( &source->mPieceManager );
+    emit boardLoaded();
 }
 
 int Board::getWidth()

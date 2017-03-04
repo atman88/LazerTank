@@ -5,7 +5,7 @@
 
 #include "model/piecesetmanager.h"
 
-#define BOARD_MAX_LEVEL 23
+#define BOARD_MAX_LEVEL 25
 
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
 #define BOARD_MAX_HEIGHT PIECE_MAX_ROWCOUNT
@@ -42,10 +42,11 @@ public:
     int getHeight();
     TileType tileAt( int x, int y ) const;
     void setTileAt( TileType, int x, int y );
-    PieceSetManager& getPieceManager();
+    PieceSetManager* getPieceManager();
     bool canSightThru( int x, int y );
     bool load( int level );
     bool load( QString& fileName );
+    void load( const Board* source );
 
     int mInitialTankX;
     int mInitialTankY;

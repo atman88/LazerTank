@@ -116,7 +116,7 @@ void Push::onStopped()
             int x = getX().toInt()/24;
             int y = getY().toInt()/24;
             if ( board->tileAt(x,y) != WATER ) {
-                board->getPieceManager().insert( mType, x, y, mPieceAngle );
+                board->getPieceManager()->insert( mType, x, y, mPieceAngle );
             } else if ( mType == TILE ) {
                 board->setTileAt( TILE_SUNK, x, y );
             } else {

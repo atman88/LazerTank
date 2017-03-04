@@ -3,6 +3,7 @@
 
 #include <QObject>
 
+#include "board.h"
 #include "piecesetmanager.h"
 
 class PieceDelta : public QObject
@@ -11,8 +12,9 @@ class PieceDelta : public QObject
 
 public:
     explicit PieceDelta(QObject *parent = 0);
-    void init( const PieceSetManager* masterManager, PieceSetManager* changesManager );
+    void init( Board* masterBoard, Board* futureBoard );
     const PieceSetManager* getPieceManager() const;
+    Board* getFutureBoard();
     bool enabled() const;
     void enable( bool newValue = true );
 
@@ -22,11 +24,9 @@ public slots:
 private:
     PieceSetManager   mPieceManager;
 
-    const PieceSetManager*  mMasterManager;
-    PieceSetManager*        mChangesManager;
+    Board*  mMasterBoard;
+    Board*  mFutureBoard;
 
-    int mLastMasterTransactionNo;
-    int mLastChangesTransactionNo;
     bool mEnabled;
 };
 
