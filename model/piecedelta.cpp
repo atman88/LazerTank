@@ -68,6 +68,8 @@ void PieceDelta::onChangeAt( int x, int y )
                 } else {
                     mPieceManager.insert( TILE_FUTURE_INSERT, x, y );
                 }
+            } else if ( mFutureBoard->tileAt(x,y) == TILE_SUNK ) {
+                mPieceManager.eraseAt( x, y );
             }
         } else {
             Piece* curDeltaPiece = mPieceManager.pieceAt( x, y );

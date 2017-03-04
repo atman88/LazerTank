@@ -1,0 +1,16 @@
+[S/....[\S..F.[S/....[\S
+ . .... v .... v .... .
+ w wwww w wwww w wwww w
+ . .... . .MM. . .... .
+ . .... . .... . .... .
+ . .... . SSSS . .... .
+[S\.... . .... . ....[/S
+ S SSSS S .... S SSSS S
+ W WWWW v WWWW v WWWW W
+ W W>WW W WvvW W WW<W W
+ W WWWW W WWWW W WWWW W
+ > WW>W W <WW> W W<WW <
+ W WWWW W WWWW W WWWW W
+ > WWW< > W^^W < >WWW <
+ W WWWW W WWWW W WWWW .
+ . .... . .T.. . .... .
