@@ -15,7 +15,7 @@ public:
     ~PieceSetManager();
 
     const PieceSet* getPieces() const;
-    void insert( PieceType type, int x, int y, int angle );
+    void insert( PieceType type, int x, int y, int angle = 0 );
     void insert( Piece* piece );
     PieceType typeAt( int x, int y );
     Piece* pieceAt(int x, int y ) const;

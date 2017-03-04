@@ -36,6 +36,8 @@ void PieceDelta::enable( bool newValue )
         if ( !newValue ) {
             QObject::disconnect( mMasterBoard->getPieceManager(), 0, this, 0 );
             QObject::disconnect( mFutureBoard->getPieceManager(), 0, this, 0 );
+            QObject::disconnect( mMasterBoard, &Board::tileChangedAt, this, 0 );
+            QObject::disconnect( mFutureBoard, &Board::tileChangedAt, this, 0 );
 
             mPieceManager.reset(); // reset now for rendering
         } else {
@@ -46,6 +48,8 @@ void PieceDelta::enable( bool newValue )
             QObject::connect( masterManager, &PieceSetManager::erasedAt,   this, &PieceDelta::onChangeAt );
             QObject::connect( futureManager, &PieceSetManager::insertedAt, this, &PieceDelta::onChangeAt );
             QObject::connect( futureManager, &PieceSetManager::erasedAt,   this, &PieceDelta::onChangeAt );
+            QObject::connect( mMasterBoard, &Board::tileChangedAt, this, &PieceDelta::onChangeAt );
+            QObject::connect( mFutureBoard, &Board::tileChangedAt, this, &PieceDelta::onChangeAt );
         }
         mEnabled = newValue;
     }
@@ -53,13 +57,17 @@ void PieceDelta::enable( bool newValue )
 
 void PieceDelta::onChangeAt( int x, int y )
 {
-    const Piece* masterPiece  = mMasterBoard->getPieceManager()->pieceAt( x, y );
-    const Piece* changesPiece = mFutureBoard->getPieceManager()->pieceAt( x, y );
+    const Piece* masterPiece = mMasterBoard->getPieceManager()->pieceAt( x, y );
+    const Piece* futurePiece = mFutureBoard->getPieceManager()->pieceAt( x, y );
 
     if ( !masterPiece ) {
-        if ( !changesPiece ) {
-            if ( mPieceManager.eraseAt( x, y ) ) {
-                std::cout << "delta erasedAt " << x << "," << y << " (gone)" << std::endl;
+        if ( !futurePiece ) {
+            if ( mMasterBoard->tileAt(x,y) != TILE_SUNK ) {
+                if ( mFutureBoard->tileAt(x,y) != TILE_SUNK ) {
+                    mPieceManager.eraseAt( x, y );
+                } else {
+                    mPieceManager.insert( TILE_FUTURE_INSERT, x, y );
+                }
             }
         } else {
             Piece* curDeltaPiece = mPieceManager.pieceAt( x, y );
@@ -70,11 +78,11 @@ void PieceDelta::onChangeAt( int x, int y )
                 mPieceManager.erase( curDeltaPiece );
                 std::cout << "delta erasedAt " << x << "," << y << " (->INSERT)" << std::endl;
             }
-            mPieceManager.insert( TILE_FUTURE_INSERT, x, y, changesPiece->getAngle() );
+            mPieceManager.insert( TILE_FUTURE_INSERT, x, y, futurePiece->getAngle() );
             std::cout << "delta future INSERT " << x << "," << y << std::endl;
         }
     } else {
-        if ( !changesPiece ) {
+        if ( !futurePiece ) {
             mPieceManager.insert( TILE_FUTURE_ERASE, x, y, masterPiece->getAngle() );
             std::cout << "delta future ERASE " << x << "," << y << std::endl;
         } else {

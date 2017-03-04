@@ -77,19 +77,19 @@ Push& Game::getMovingPiece()
     return mMovingPiece;
 }
 
-bool Game::canMoveFrom(PieceType what, int angle, int *x, int *y, PieceSetManager* pieceManager, bool *pushResult ) {
-    return getAdjacentPosition(angle, x, y) && canPlaceAt( what, *x, *y, angle, pieceManager, pushResult );
+bool Game::canMoveFrom(PieceType what, int angle, int *x, int *y, Board* board, bool *pushResult ) {
+    return getAdjacentPosition(angle, x, y) && canPlaceAt( what, *x, *y, angle, board, pushResult );
 }
 
 bool Game::canMoveFrom(PieceType what, int angle, int *x, int *y, bool futuristic, bool *pushResult ) {
     if ( getAdjacentPosition(angle, x, y) ) {
-        PieceSetManager* pieceManager;
+        Board* board;
         if ( futuristic && mFutureDelta.enabled() ) {
-            pieceManager = mFutureDelta.getFutureBoard()->getPieceManager();
+            board = mFutureDelta.getFutureBoard();
         } else {
-            pieceManager = mBoard->getPieceManager();
+            board = mBoard;
         }
-        return canPlaceAt( what, *x, *y, angle, pieceManager, pushResult );
+        return canPlaceAt( what, *x, *y, angle, board, pushResult );
     }
     return false;
 }
@@ -210,19 +210,19 @@ void Game::onBoardTileChanged( int x, int y )
 
 bool Game::canPlaceAtNonFuturistic(PieceType what, int x, int y, int fromAngle, bool *pushResult )
 {
-    return canPlaceAt( what, x, y, fromAngle, mBoard->getPieceManager(), pushResult );
+    return canPlaceAt( what, x, y, fromAngle, mBoard, pushResult );
 }
 
-bool Game::canPlaceAt(PieceType what, int x, int y, int fromAngle, PieceSetManager* pieceManager, bool *pushResult )
+bool Game::canPlaceAt(PieceType what, int x, int y, int fromAngle, Board* board, bool *pushResult )
 {
-    switch( mBoard->tileAt(x,y) ) {
+    switch( board->tileAt(x,y) ) {
     case DIRT:
     case TILE_SUNK:
-    {   PieceType hit = pieceManager->typeAt( x, y );
+    {   PieceType hit = board->getPieceManager()->typeAt( x, y );
         if ( hit != NONE ) {
             if ( what == TANK && pushResult ) {
                 *pushResult = true;
-                return canMoveFrom( hit, fromAngle, &x, &y, pieceManager );
+                return canMoveFrom( hit, fromAngle, &x, &y, board );
             }
             return false;
         }
@@ -409,31 +409,30 @@ SpeedController *Game::getSpeedController()
 
 void Game::onFuturePush( Piece* pushingPiece )
 {
-    if ( mBoard ) {
-        mFutureDelta.enable();
+    mFutureDelta.enable();
 
-        PieceType pushedType;
-        int x = pushingPiece->getX();
-        int y = pushingPiece->getY();
-        int angle = pushingPiece->getAngle();
+    PieceType pushedType;
+    int x = pushingPiece->getX();
+    int y = pushingPiece->getY();
+    int angle = pushingPiece->getAngle();
 
-        {   Piece* pushedPiece = mFutureBoard.getPieceManager()->pieceAt( x, y );
-            if ( !pushedPiece ) {
-                cout << "*** pushed piece not found!" << std::endl;
-                return;
-            }
-            pushedType = pushedPiece->getType();
-            if ( !mFutureBoard.getPieceManager()->erase( pushedPiece ) ) {
-                cout << "*** failed to erase future piece at " << x << "," << y << std::endl;
-            }
-        }
-
-        if ( !getAdjacentPosition( angle, &x, &y ) ) {
-            cout << "*** failed to push future piece at " << x << "," << y << std::endl;
+    // scoping pushedPiece here so it falls out of scope after erased:
+    {   Piece* pushedPiece = mFutureBoard.getPieceManager()->pieceAt( x, y );
+        if ( !pushedPiece ) {
+            cout << "*** pushed piece not found!" << std::endl;
             return;
         }
-        mFutureBoard.getPieceManager()->insert( pushedType, x, y, angle );
+        pushedType = pushedPiece->getType();
+        if ( !mFutureBoard.getPieceManager()->erase( pushedPiece ) ) {
+            cout << "*** failed to erase future piece at " << x << "," << y << std::endl;
+        }
     }
+
+    if ( !getAdjacentPosition( angle, &x, &y ) ) {
+        cout << "*** failed to get future push position for " << angle << "/" << x << "," << y << std::endl;
+        return;
+    }
+    mFutureBoard.addPushResult( pushedType, x, y, angle );
 }
 
 void Game::findPath( int fromX, int fromY, int targetX, int targetY, int targetRotation )

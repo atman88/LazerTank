@@ -111,16 +111,12 @@ int Push::getEndY()
 void Push::onStopped()
 {
     if ( mType != NONE ) {
+        int x = getX().toInt()/24;
+        int y = getY().toInt()/24;
         Board* board = getBoard();
         if ( board ) {
-            int x = getX().toInt()/24;
-            int y = getY().toInt()/24;
-            if ( board->tileAt(x,y) != WATER ) {
-                board->getPieceManager()->insert( mType, x, y, mPieceAngle );
-            } else if ( mType == TILE ) {
-                board->setTileAt( TILE_SUNK, x, y );
-            } else {
-                // erase it from the display:
+            if ( !board->addPushResult( mType, x, y, mPieceAngle ) ) {
+                // Nothing changed so erase ourself from the display:
                 emit rectDirty( mBoundingRect );
             }
 //            cout << "Push finished (" << x << "," << y << ")\n";

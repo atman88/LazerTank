@@ -163,3 +163,18 @@ bool Board::canSightThru( int x, int y )
         return false;
     }
 }
+
+bool Board::addPushResult( PieceType mType, int x, int y, int pieceAngle )
+{
+    if ( tileAt(x,y) != WATER ) {
+        mPieceManager.insert( mType, x, y, pieceAngle );
+        return true;
+    }
+
+    if ( mType == TILE ) {
+        setTileAt( TILE_SUNK, x, y );
+        return true;
+    }
+
+    return false;
+}

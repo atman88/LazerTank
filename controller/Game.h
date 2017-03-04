@@ -57,8 +57,8 @@ public slots:
     void endMoveDeltaTracking();
 
 private:
-    bool canMoveFrom(PieceType what, int angle, int *x, int *y, PieceSetManager* pieceManager, bool *pushResult = 0 );
-    bool canPlaceAt(PieceType what, int x, int y, int fromAngle, PieceSetManager* pieceManager, bool *pushResult = 0);
+    bool canMoveFrom(PieceType what, int angle, int *x, int *y, Board* board, bool *pushResult = 0 );
+    bool canPlaceAt(PieceType what, int x, int y, int fromAngle, Board* board, bool *pushResult = 0);
     bool onShootThruMovingPiece( int offset, int angle, int *endOffset );
 
     SpeedController mSpeedController;
