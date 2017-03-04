@@ -50,7 +50,7 @@ private:
 
     PieceListManager mMoves;
 
-    int mSpeed;
+    bool mInReset;
 };
 
 #endif // TANK_H

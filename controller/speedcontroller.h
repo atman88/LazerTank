@@ -5,8 +5,8 @@
 #include <QPropertyAnimation>
 
 // movement speed in ms/square
-#define LOW_SPEED   1000
-#define HIGH_SPEED   500
+#define LOW_SPEED   800
+#define HIGH_SPEED  400
 
 class SpeedController : public QObject
 {

@@ -55,6 +55,7 @@ void Game::onBoardLoaded()
     mTankBoardY = mBoard->mInitialTankY;
     mFutureDelta.enable( false );
     mCannonShot.reset();
+    mSpeedController.setSpeed(LOW_SPEED);
 }
 
 void Game::endMoveDeltaTracking()

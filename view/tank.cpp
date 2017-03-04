@@ -5,7 +5,7 @@
 #include "controller/Game.h"
 #include "util/imageutils.h"
 
-Tank::Tank(QObject* parent) : Shooter(parent)
+Tank::Tank(QObject* parent) : Shooter(parent), mInReset(false)
 {
     mRotateAnimation.setTargetObject(this);
     mRotateAnimation.setPropertyName("rotation");
@@ -64,10 +64,12 @@ void Tank::reset( int boardX, int boardY )
 
 void Tank::reset( QPoint& p )
 {
-    stop();
-    Shooter::reset( p );
-    mMoves.reset();
-    mRotation = 0;
+    mInReset = true;
+        stop();
+        Shooter::reset( p );
+        mMoves.reset();
+        mRotation = 0;
+    mInReset = false;
 }
 
 void Tank::setX( const QVariant& x )
@@ -179,16 +181,18 @@ void Tank::followPath()
 
 void Tank::onAnimationsFinished()
 {
-    int rotation = mRotation.toInt() % 360;
-    setRotation( QVariant( rotation ) );
-    if ( mMoves.count() ) {
-        Piece* piece = mMoves.getList()->front();
-        if ( piece->getAngle() == rotation
-          && piece->getX() == mBoundingRect.left()/24
-          && piece->getY() == mBoundingRect.top()/24 ) {
-            mMoves.eraseFront();
+    if ( !mInReset ) {
+        int rotation = mRotation.toInt() % 360;
+        setRotation( QVariant( rotation ) );
+        if ( mMoves.count() ) {
+            Piece* piece = mMoves.getList()->front();
+            if ( piece->getAngle() == rotation
+              && piece->getX() == mBoundingRect.left()/24
+              && piece->getY() == mBoundingRect.top()/24 ) {
+                mMoves.eraseFront();
+            }
+            followPath();
         }
-        followPath();
     }
 }
 
