@@ -2,7 +2,7 @@
 #include <QFile>
 #include "board.h"
 
-Board::Board( QObject* parent )  : QObject(parent), mLevel(0), mWidth(16), mHeight(16)
+Board::Board( QObject* parent )  : QObject(parent), mLevel(0), mWidth(16), mHeight(16), mFlagX(-1), mFlagY(-1)
 {
     memset( mTiles, EMPTY, sizeof mTiles );
 }
@@ -29,6 +29,16 @@ void Board::initPiece( PieceType type, int x, int y, int angle )
     mTiles[y*BOARD_MAX_HEIGHT + x] = DIRT;
 }
 
+int Board::getFlagY() const
+{
+    return mFlagY;
+}
+
+int Board::getFlagX() const
+{
+    return mFlagX;
+}
+
 bool Board::load( QString& fileName )
 {
     QFile file( fileName );
@@ -41,6 +51,7 @@ bool Board::load( QString& fileName )
     unsigned char* row = mTiles;
     mWidth = 0;
     mInitialTankX = mInitialTankY = 0;
+    mFlagX = mFlagY = -1;
     mPieceManager.reset();
 
     do {
@@ -61,8 +72,12 @@ bool Board::load( QString& fileName )
             case 'W': row[x++] = WOOD;      break;
             case 'w': row[x++] = WATER;     break;
             case 'e': row[x++] = EMPTY;     break;
-            case 'F': row[x++] = FLAG;      break;
             case 'm': row[x++] = TILE_SUNK; break;
+            case 'F':
+                mFlagX = x;
+                mFlagY = y;
+                row[x++] = FLAG;
+                break;
 
             case 'M': initPiece( TILE,   x++, y      ); break;
             case '^': initPiece( CANNON, x++, y      ); break;

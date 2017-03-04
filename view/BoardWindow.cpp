@@ -410,6 +410,14 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
             emit setSpeed(HIGH_SPEED);
             break;
 
+        case Qt::Key_C: // attempt to capture the flag
+        {   Board* board = mGame->getBoard();
+            if ( board ) {
+                mTank->stop();
+                mGame->findPath( board->getFlagX(), board->getFlagY(), mTank->getX().toInt()/24, mTank->getY().toInt()/24, mTank->getRotation().toInt() );
+            }
+            break;
+        }
         default:
             int rotation = keyToAngle(ev->key());
             if ( rotation >= 0 ) {
@@ -431,6 +439,10 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
         case Qt::Key_Shift:
             emit setSpeed(LOW_SPEED);
             break;
+
+        case Qt::Key_C:
+                mTank->move();
+                break;
 
         case Qt::Key_Backspace:
         {   PieceListManager* moveManager = mTank->getMoves();
