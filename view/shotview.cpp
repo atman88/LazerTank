@@ -2,7 +2,7 @@
 #include <QPainterPath>
 #include "shotview.h"
 #include "model/board.h"
-#include "controller/Game.h"
+#include "controller/game.h"
 #include "util/renderutils.h"
 
 ShotView::ShotView(QObject *parent) : QObject(parent), mKillShowing(false), mEndAngle(-1), mShooter(0)

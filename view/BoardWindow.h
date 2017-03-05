@@ -7,7 +7,7 @@ class BoardWindow;
 #include <QMouseEvent>
 #include "tank.h"
 #include "shotview.h"
-#include "controller/Game.h"
+#include "controller/game.h"
 
 class BoardWindow : public QWindow
 {

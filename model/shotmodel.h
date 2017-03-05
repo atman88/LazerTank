@@ -13,9 +13,18 @@ class ShotModel : public ShotView
 
 public:
     explicit ShotModel(QObject *parent = 0);
-    void init(AnimationAggregator *aggregate);
+    void init(AnimationStateAggregator *aggregate);
     QVariant getSequence();
     void reset();
+
+    int getLeadingCol() const;
+    void setLeadingCol(int leadingCol);
+
+    int getLeadingRow() const;
+    void setLeadingRow(int leadingRow);
+
+    int getLeadingDirection() const;
+    void setLeadingDirection(int leadingDirection);
 
 signals:
     void tankKilled();

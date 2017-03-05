@@ -1,6 +1,6 @@
 #include <iostream>
 #include "../testmain.h"
-#include "controller/Game.h"
+#include "controller/game.h"
 
 void TestMain::testMove()
 {

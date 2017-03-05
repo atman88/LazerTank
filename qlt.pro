@@ -9,13 +9,12 @@ QT += widgets
 QMAKE_CXXFLAGS += -std=gnu++11
 
 # Input
-HEADERS += controller/Game.h \
+HEADERS += \
            model/board.h \
            model/piece.h \
            view/BoardWindow.h \
            view/tank.h \
     view/push.h \
-    controller/animationaggregator.h \
     view/shooter.h \
     controller/pathfinder.h \
     util/imageutils.h \
@@ -25,14 +24,15 @@ HEADERS += controller/Game.h \
     controller/speedcontroller.h \
     model/shotmodel.h \
     view/shotview.h \
-    util/renderutils.h
+    util/renderutils.h \
+    controller/animationstateaggregator.h \
+    controller/game.h
 
-SOURCES += controller/Game.cpp \
+SOURCES += \
            view/BoardWindow.cpp \
            model/board.cpp \
            model/piece.cpp \
     view/push.cpp \
-    controller/animationaggregator.cpp \
     view/shooter.cpp \
     view/tank.cpp \
     controller/pathfinder.cpp \
@@ -43,7 +43,9 @@ SOURCES += controller/Game.cpp \
     controller/speedcontroller.cpp \
     model/shotmodel.cpp \
     view/shotview.cpp \
-    util/renderutils.cpp
+    util/renderutils.cpp \
+    controller/animationstateaggregator.cpp \
+    controller/game.cpp
 
 RESOURCES += qml.qrc
 

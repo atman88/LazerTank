@@ -2,7 +2,7 @@
 #include <QEvent>
 #include <QCoreApplication>
 #include "tank.h"
-#include "controller/Game.h"
+#include "controller/game.h"
 #include "util/imageutils.h"
 #include "util/renderutils.h"
 
@@ -18,11 +18,11 @@ Tank::Tank(QObject* parent) : Shooter(parent), mInReset(false)
 
 void Tank::init( Game* game )
 {
-    AnimationAggregator* aggregate = game->getMoveAggregate();
-    QObject::connect( &mRotateAnimation,     &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
-    QObject::connect( &mHorizontalAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
-    QObject::connect( &mVerticalAnimation,   &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
-    QObject::connect( aggregate, &AnimationAggregator::finished, this, &Tank::onAnimationsFinished );
+    AnimationStateAggregator* aggregate = game->getMoveAggregate();
+    QObject::connect( &mRotateAnimation,     &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
+    QObject::connect( &mHorizontalAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
+    QObject::connect( &mVerticalAnimation,   &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
+    QObject::connect( aggregate, &AnimationStateAggregator::finished, this, &Tank::onAnimationsFinished );
 
     SpeedController* controller = game->getSpeedController();
     mRotateAnimation.setController( controller );

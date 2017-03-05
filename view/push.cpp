@@ -1,6 +1,6 @@
 #include <iostream>
 #include "push.h"
-#include "controller/Game.h"
+#include "controller/game.h"
 #include "util/renderutils.h"
 
 Push::Push(QObject *parent) : QObject(parent)
@@ -20,8 +20,8 @@ Push::Push(QObject *parent) : QObject(parent)
 
 void Push::init( Game* game )
 {
-    QObject::connect( this, &Push::stateChanged, game->getMoveAggregate(), &AnimationAggregator::onStateChanged );
-    QObject::connect( this, &Push::stateChanged, game->getShotAggregate(), &AnimationAggregator::onStateChanged );
+    QObject::connect( this, &Push::stateChanged, game->getMoveAggregate(), &AnimationStateAggregator::onStateChanged );
+    QObject::connect( this, &Push::stateChanged, game->getShotAggregate(), &AnimationStateAggregator::onStateChanged );
 
     SpeedController* SpeedController = game->getSpeedController();
     mHorizontalAnimation.setController( SpeedController );

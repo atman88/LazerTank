@@ -11,7 +11,7 @@
 
 #include "piecelistmanager.h"
 #include "shooter.h"
-#include "controller/animationaggregator.h"
+#include "controller/animationstateaggregator.h"
 
 class Game;
 

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <QApplication>
 #include "view/BoardWindow.h"
-#include "controller/Game.h"
+#include "controller/game.h"
 
 int main(int argc, char *argv[])
 {
@@ -10,10 +10,8 @@ int main(int argc, char *argv[])
     qRegisterMetaType<GameHandle>("GameHandle");
 
     BoardWindow window;
-    Board board;
-    Game game( &board );
+    Game game;
     game.init( &window );
-    board.load( 1 );
     window.show();
 
     return app.exec();

@@ -345,7 +345,7 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
         {   Board* board = mGame->getBoard();
             if ( board ) {
                 mTank->stop();
-                mGame->findPath( board->getFlagX(), board->getFlagY(), mTank->getX().toInt()/24, mTank->getY().toInt()/24, mTank->getRotation().toInt() );
+                mGame->findPath( board->getFlagX(), board->getFlagY(), mTank->getRotation().toInt() );
             }
             break;
         }
@@ -380,7 +380,7 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
             Piece* piece = moveManager->getList()->back();
             if ( piece ) {
                 if ( piece->hasPush() && mGame ) {
-                    mGame->undoPush( piece );
+                    mGame->undoFuturePush( piece );
                 }
                 mTank->getMoves()->eraseBack();
             }
@@ -414,7 +414,7 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
     }
     case Qt::LeftButton:
         mTank->stop();
-        mGame->findPath( event->pos().x()/24, event->pos().y()/24, mTank->getX().toInt()/24, mTank->getY().toInt()/24, mTank->getRotation().toInt() );
+        mGame->findPath( event->pos().x()/24, event->pos().y()/24, mTank->getRotation().toInt() );
         break;
     default:
         ;

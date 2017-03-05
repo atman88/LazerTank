@@ -3,7 +3,7 @@
 #include <QVariant>
 
 #include "pathfinder.h"
-#include "Game.h"
+#include "game.h"
 
 // search map values:
 #define TRAVERSIBLE 3
@@ -14,15 +14,15 @@ PathFinder::PathFinder(QObject *parent) : QThread(parent)
 {
 }
 
-void PathFinder::findPath( int fromX, int fromY, int targetX, int targetY, int targetRotation )
+void PathFinder::findPath( int targetX, int targetY, int startingX, int startingY, int startingRotation )
 {
     mStopping = true;
 
-    mFromX = fromX;
-    mFromY = fromY;
     mTargetX = targetX;
     mTargetY = targetY;
-    mTargetRotation = targetRotation;
+    mStartingX = startingX;
+    mStartingY = startingY;
+    mStartingRotation = startingRotation;
     start( LowPriority );
 }
 
@@ -59,7 +59,7 @@ void PathFinder::buildPath( int x, int y )
 {
     int direction = 0;
 
-    while( y != mFromY || x != mFromX ) {
+    while( y != mTargetY || x != mTargetX ) {
         int lastX = x;
         int lastY = y;
 
@@ -74,7 +74,7 @@ void PathFinder::buildPath( int x, int y )
             break;
         }
 
-        if ( lastX != mTargetX || lastY != mTargetY || direction != mTargetRotation ) {
+        if ( lastX != mStartingX || lastY != mStartingY || direction != mStartingRotation ) {
             mMoves.append( MOVE, lastX, lastY, direction );
         }
     }
@@ -150,7 +150,7 @@ void PathFinder::run()
     if ( !setjmp( mJmpBuf ) ) {
         // initialize the search map
         Game* game = getGame();
-        if ( game && game->canPlaceAtNonFuturistic( TANK, mFromX, mFromY, 0 )) {
+        if ( game && game->canPlaceAtNonFuturistic( TANK, mTargetX, mTargetY, 0 )) {
             Board* board = game->getBoard();
             mMaxX  = board->getWidth()-1;
             mMaxY = board->getHeight()-1;
@@ -161,12 +161,12 @@ void PathFinder::run()
                 }
             }
 
-            mSearchMap[mTargetY*BOARD_MAX_WIDTH+mTargetX] = TARGET;
+            mSearchMap[mStartingY*BOARD_MAX_WIDTH+mStartingX] = TARGET;
             mPassValue = 0;
-            mSearchMap[mFromY*BOARD_MAX_WIDTH+mFromX] = mPassValue;
+            mSearchMap[mTargetY*BOARD_MAX_WIDTH+mTargetX] = mPassValue;
 
-            mSearchX[0] = mFromX;
-            mSearchY[0] = mFromY;
+            mSearchX[0] = mTargetX;
+            mSearchY[0] = mTargetY;
             int nPoints = 1;
             while( nPoints > 0 && !mStopping ) {
                 nPoints = pass1( nPoints );

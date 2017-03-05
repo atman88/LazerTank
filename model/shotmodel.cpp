@@ -1,5 +1,5 @@
 #include "shotmodel.h"
-#include "controller/Game.h"
+#include "controller/game.h"
 
 ShotModel::ShotModel(QObject *parent) : ShotView(parent), mLeadingCol(-1), mLeadingRow(-1), mDistance(0), mStopping(false),
   mKillSequence(0)
@@ -21,9 +21,9 @@ void ShotModel::reset()
     ShotView::reset();
 }
 
-void ShotModel::init( AnimationAggregator* aggregate )
+void ShotModel::init( AnimationStateAggregator* aggregate )
 {
-    QObject::connect( &mAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationAggregator::onStateChanged );
+    QObject::connect( &mAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
 }
 
 QVariant ShotModel::getSequence()
@@ -71,7 +71,7 @@ void ShotModel::setSequence( const QVariant &sequence )
     if ( !hasEndPoint() ) {
         int startDirection = mLeadingDirection;
         int endOffset;
-        if ( game->canShootFrom( &mLeadingDirection, &mLeadingCol, &mLeadingRow, &endOffset, this ) ) {
+        if ( game->advanceShot( &mLeadingDirection, &mLeadingCol, &mLeadingRow, &endOffset, this ) ) {
             grow( mLeadingCol, mLeadingRow, startDirection, mLeadingDirection );
         } else {
             growEnd( startDirection, endOffset );
@@ -107,4 +107,24 @@ Game* ShotModel::getGame()
         p = p->parent();
     }
     return v.value<GameHandle>().game;
+}
+
+int ShotModel::getLeadingRow() const
+{
+    return mLeadingRow;
+}
+
+void ShotModel::setLeadingRow(int leadingRow)
+{
+    mLeadingRow = leadingRow;
+}
+
+void ShotModel::setLeadingCol(int leadingCol)
+{
+    mLeadingCol = leadingCol;
+}
+
+int ShotModel::getLeadingCol() const
+{
+    return mLeadingCol;
 }
