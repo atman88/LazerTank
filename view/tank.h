@@ -21,7 +21,7 @@ public:
 
     void init( Game* game );
     PieceListManager* getMoves();
-    void paint( QPainter* painter );
+    void render( QPainter* painter );
     void move( int direction = -1 );
     void stop();
 

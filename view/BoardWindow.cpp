@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include "BoardWindow.h"
 
+#include "util/renderutils.h"
 #include "util/imageutils.h"
 
 BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
@@ -21,12 +22,10 @@ BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
     QObject::connect( mTank->getMoves(), &PieceListManager::erased,   this, &BoardWindow::renderSquareLater );
     QObject::connect( mTank->getMoves(), &PieceListManager::replaced, this, &BoardWindow::renderSquareLater );
 
-    mShot = new Shot(mTank);
+    mShot = new ShotModel(mTank);
     mShot->setColor( QColor(0,255,33) );
-    QObject::connect( mShot, &Shot::tankKilled, this, &BoardWindow::onTankKilled );
-    QObject::connect( mShot->getPath(), &PieceListManager::appended, this, &BoardWindow::renderSquareLater );
-    QObject::connect( mShot->getPath(), &PieceListManager::erased,   this, &BoardWindow::renderSquareLater );
-    QObject::connect( mShot->getPath(), &PieceListManager::replaced, this, &BoardWindow::renderSquareLater );
+    QObject::connect( mShot, &ShotModel::tankKilled, this, &BoardWindow::onTankKilled );
+    QObject::connect( mShot, &ShotView::rectDirty, this, &BoardWindow::renderLater );
 
     mActiveMoveDirection = -1;
 
@@ -119,15 +118,6 @@ void BoardWindow::renderSquareLater( int col, int row )
 {
     QRect dirty(col*24, row*24, 24, 24);
     renderLater( dirty );
-}
-
-void renderRotation( int x, int y, int angle, QPainter* painter )
-{
-    int centerX = x + 24/2;
-    int centerY = y + 24/2;
-    painter->translate(centerX, centerY);
-    painter->rotate(angle);
-    painter->translate(-centerX, -centerY);
 }
 
 void BoardWindow::renderRotatedPixmap( const QPixmap* pixmap, int x, int y, int angle, QPainter* painter )
@@ -240,7 +230,7 @@ void BoardWindow::renderListIn(PieceSet::iterator iterator, PieceSet::iterator e
 }
 
 void BoardWindow::renderOneRect( const QRect* rect, Board* board, const PieceMultiSet* moves, const PieceSet* tiles,
-  const PieceSet* deltas, const PieceSet* shots, QPainter* painter )
+  const PieceSet* deltas, QPainter* painter )
 {
     int minX = rect->left()/24;
     int minY = rect->top() /24;
@@ -254,7 +244,6 @@ void BoardWindow::renderOneRect( const QRect* rect, Board* board, const PieceMul
     if ( deltas ) {
         deltasIterator = deltas->lower_bound( &pos );
     }
-    PieceSet::iterator shotIterator = shots->lower_bound( &pos );
 
     for( int y = minY; y <= maxY; ++y ) {
         for( int x = minX; x <= maxX; ++x ) {
@@ -316,10 +305,11 @@ void BoardWindow::renderOneRect( const QRect* rect, Board* board, const PieceMul
     }
 
     if ( rect->intersects( mTank->getRect() ) ) {
-        mTank->paint( painter );
+        mTank->render( painter );
     }
 
-    renderListIn( shotIterator, shots->end(), rect, painter );
+    mGame->getCannonShot().render( rect, painter );
+    mShot->render( rect, painter );
 }
 
 void BoardWindow::render(QRegion* region)
@@ -335,11 +325,6 @@ void BoardWindow::render(QRegion* region)
     const PieceMultiSet* moves = mTank->getMoves()->toMultiSet();
     const PieceSet* tiles = board->getPieceManager()->getPieces();
     const PieceSet* deltas = mGame->getDeltaPieces();
-
-    const PieceSet* shots = mGame->getCannonShot().getPath()->toSet();
-    if ( shots->empty() ) {
-        shots = mShot->getPath()->toSet();
-    }
 
     QVector<QRect> rects = region->rects();
     int i = rects.size();
@@ -364,7 +349,7 @@ void BoardWindow::render(QRegion* region)
     QPaintDevice *device = mBackingStore->paintDevice();
     QPainter painter(device);
 
-    renderOneRect( &rect, board, moves, tiles, deltas, shots, &painter );
+    renderOneRect( &rect, board, moves, tiles, deltas, &painter );
 
     mBackingStore->endPaint();
     mBackingStore->flush(r);
@@ -403,7 +388,7 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
       && mGame ) {
         switch( ev->key() ) {
         case Qt::Key_Space:
-            mShot->fire( mTank->getRotation().toInt() );
+            mShot->fire( mTank );
             break;
 
         case Qt::Key_Shift:

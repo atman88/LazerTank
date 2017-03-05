@@ -31,9 +31,7 @@ void Game::init( BoardWindow* window )
 {
     window->setGame( mHandle );
 
-    QObject::connect( mCannonShot.getPath(), &PieceListManager::appended, window, &BoardWindow::renderSquareLater );
-    QObject::connect( mCannonShot.getPath(), &PieceListManager::erased,   window, &BoardWindow::renderSquareLater );
-    QObject::connect( mCannonShot.getPath(), &PieceListManager::replaced, window, &BoardWindow::renderSquareLater );
+    QObject::connect( &mCannonShot, &ShotModel::rectDirty, window, &BoardWindow::renderLater );
     QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::erasedAt,   window, &BoardWindow::renderSquareLater );
     QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::insertedAt, window, &BoardWindow::renderSquareLater );
 
@@ -46,7 +44,7 @@ void Game::init( BoardWindow* window )
 
     QObject::connect( &mPathFinder, &PathFinder::pathFound, window->getTank()->getMoves(), &PieceListManager::reset );
 
-    QObject::connect( &mCannonShot, &Shot::tankKilled, window, &BoardWindow::onTankKilled );
+    QObject::connect( &mCannonShot, &ShotModel::tankKilled, window, &BoardWindow::onTankKilled );
 }
 
 void Game::onBoardLoaded()
@@ -96,7 +94,7 @@ bool Game::canMoveFrom(PieceType what, int angle, int *x, int *y, bool futuristi
 }
 
 
-bool Game::canShootFrom(int *angle, int *x, int *y, int *endOffset, Shot* source ) {
+bool Game::canShootFrom(int *angle, int *x, int *y, int *endOffset, ShotModel* source ) {
     return getAdjacentPosition(*angle, x, y) && canShootThru( *x, *y, angle, endOffset, source );
 }
 
@@ -178,7 +176,8 @@ void Game::sightCannons()
         mCannonShot.setParent( &mActiveCannon );
         mActiveCannon.setX( fireX*24 );
         mActiveCannon.setY( fireY*24 );
-        mCannonShot.fire( fireAngle );
+        mActiveCannon.setRotation( fireAngle );
+        mCannonShot.fire( &mActiveCannon );
     }
 }
 
@@ -285,7 +284,7 @@ bool Game::onShootThruMovingPiece( int offset, int angle, int *endOffset )
     return false;
 }
 
-bool Game::canShootThru( int x, int y, int *angle, int *endOffset, Shot* source )
+bool Game::canShootThru( int x, int y, int *angle, int *endOffset, ShotModel* source )
 {
     *endOffset = 0;
 
@@ -398,7 +397,7 @@ AnimationAggregator* Game::getShotAggregate()
     return &mShotAggregate;
 }
 
-Shot& Game::getCannonShot()
+ShotModel& Game::getCannonShot()
 {
     return mCannonShot;
 }

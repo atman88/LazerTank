@@ -14,7 +14,6 @@ HEADERS += controller/Game.h \
            model/piece.h \
            view/BoardWindow.h \
            view/tank.h \
-    view/shot.h \
     view/push.h \
     controller/animationaggregator.h \
     view/shooter.h \
@@ -23,13 +22,15 @@ HEADERS += controller/Game.h \
     model/piecesetmanager.h \
     model/piecelistmanager.h \
     model/piecedelta.h \
-    controller/speedcontroller.h
+    controller/speedcontroller.h \
+    model/shotmodel.h \
+    view/shotview.h \
+    util/renderutils.h
 
 SOURCES += controller/Game.cpp \
            view/BoardWindow.cpp \
            model/board.cpp \
            model/piece.cpp \
-    view/shot.cpp \
     view/push.cpp \
     controller/animationaggregator.cpp \
     view/shooter.cpp \
@@ -39,7 +40,10 @@ SOURCES += controller/Game.cpp \
     model/piecesetmanager.cpp \
     model/piecelistmanager.cpp \
     model/piecedelta.cpp \
-    controller/speedcontroller.cpp
+    controller/speedcontroller.cpp \
+    model/shotmodel.cpp \
+    view/shotview.cpp \
+    util/renderutils.cpp
 
 RESOURCES += qml.qrc
 

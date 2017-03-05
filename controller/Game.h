@@ -11,7 +11,7 @@ class Game;
 #include "model/piecedelta.h"
 #include "model/board.h"
 #include "view/push.h"
-#include "view/shot.h"
+#include "model/shotmodel.h"
 #include "view/shooter.h"
 #include "view/BoardWindow.h"
 
@@ -33,15 +33,15 @@ public:
     Board* getBoard();
     QAbstractAnimation::State animationState();
     Push& getMovingPiece();
-    Shot& getCannonShot();
+    ShotModel& getCannonShot();
     SpeedController* getSpeedController();
     AnimationAggregator* getMoveAggregate();
     AnimationAggregator* getShotAggregate();
     bool canMoveFrom(PieceType what, int angle, int *x, int *y , bool futuristic, bool* pushResult = 0 );
-    bool canShootFrom(int *angle, int *x, int *y , int *endOffset, Shot* source );
+    bool canShootFrom(int *angle, int *x, int *y , int *endOffset, ShotModel* source );
     bool getAdjacentPosition( int angle, int *x, int *y );
     bool canPlaceAtNonFuturistic(PieceType what, int x, int y , int fromAngle, bool *pushResult = 0);
-    bool canShootThru( int x, int y, int *angle , int *endOffset, Shot* source );
+    bool canShootThru( int x, int y, int *angle , int *endOffset, ShotModel* source );
     void onFuturePush(Piece *pushingPiece );
     void findPath(int fromX, int fromY, int targetX, int targetY, int targetRotation );
     const PieceSet* getDeltaPieces();
@@ -70,7 +70,7 @@ private:
     PathFinder mPathFinder;
     Push mMovingPiece;
     Shooter mActiveCannon;
-    Shot mCannonShot;
+    ShotModel mCannonShot;
     Board mFutureBoard;
     PieceDelta mFutureDelta;
 

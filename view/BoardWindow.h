@@ -6,7 +6,7 @@ class BoardWindow;
 #include <QtGui>
 #include <QMouseEvent>
 #include "tank.h"
-#include "shot.h"
+#include "shotview.h"
 #include "controller/Game.h"
 
 class BoardWindow : public QWindow
@@ -49,7 +49,7 @@ protected:
 
 private:
     void renderOneRect( const QRect* rect, Board* board, const PieceMultiSet* moves, const PieceSet* tiles,
-      const PieceSet* deltas, const PieceSet* shots, QPainter* painter );
+      const PieceSet* deltas, QPainter* painter );
     void renderRotatedPixmap(const QPixmap* pixmap, int x, int y, int angle, QPainter* painter );
     void renderMove( int x, int y, int angle = 0 );
     void renderPiece(PieceType type, int x, int y, int angle, Piece* source, QPainter* painter );
@@ -58,7 +58,7 @@ private:
     void drawShotEnd( int x, int y, int angle, Piece* piece, QPainter* painter );
     QPen mPen;
     Tank* mTank;
-    Shot* mShot;
+    ShotModel* mShot;
 
     QBackingStore *mBackingStore;
     QRegion mDirtyRegion;

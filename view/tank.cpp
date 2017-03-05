@@ -4,6 +4,7 @@
 #include "tank.h"
 #include "controller/Game.h"
 #include "util/imageutils.h"
+#include "util/renderutils.h"
 
 Tank::Tank(QObject* parent) : Shooter(parent), mInReset(false)
 {
@@ -29,18 +30,14 @@ void Tank::init( Game* game )
     mVerticalAnimation.setController( controller );
 }
 
-void Tank::paint( QPainter* painter )
+void Tank::render( QPainter* painter )
 {
     int x = mBoundingRect.left();
     int y = mBoundingRect.top();
     if ( mRotation != 0 ) {
-        int centerX = x+24/2;
-        int centerY = y+24/2;
-        painter->translate( centerX, centerY );
-        painter->rotate( mRotation.toDouble() );
-        painter->translate(-centerX, -centerY);
+        renderRotation( x, y, mRotation.toInt(), painter );
     }
-    painter->drawPixmap( x, y, *getPixmap(TANK) );
+    drawPixmap( x, y, TANK, painter );
     if ( !painter->transform().isRotating() ) {
         mPreviousPaintRect = mBoundingRect;
     } else {
