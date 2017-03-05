@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QPropertyAnimation>
 #include <QRect>
-
+#include <QPainter>
 #include "controller/speedcontroller.h"
 #include "model/piece.h"
 #include "model/board.h"
@@ -28,6 +28,7 @@ public:
     void start(Piece& what, int fromX, int fromY, int toX, int toY);
     int getEndX();
     int getEndY();
+    void render( const QRect* rect, QPainter* painter );
 
 signals:
     void rectDirty( const QRect& );
@@ -46,6 +47,7 @@ private:
     PieceType mType;
     int mPieceAngle;
     QRect mBoundingRect;
+    QRect mRenderedBoundingRect;
 };
 
 #endif // PUSH_H

@@ -59,7 +59,7 @@ public slots:
 private:
     bool canMoveFrom(PieceType what, int angle, int *x, int *y, Board* board, bool *pushResult = 0 );
     bool canPlaceAt(PieceType what, int x, int y, int fromAngle, Board* board, bool *pushResult = 0);
-    bool onShootThruMovingPiece( int offset, int angle, int *endOffset );
+    bool onShootThruMovingPiece( int offset, int *endOffset );
 
     SpeedController mSpeedController;
     AnimationAggregator mMoveAggregate;

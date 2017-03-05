@@ -31,15 +31,19 @@ QPoint toStartPoint( int x, int y, int angle )
     return QPoint(x, y);
 }
 
+QPoint ShotView::getStartPoint()
+{
+    if ( mShooter ) {
+        return toStartPoint( mShooter->getX().toInt(), mShooter->getY().toInt(), mShooter->getRotation().toInt() );
+    }
+    return mTailPoint;
+}
+
 void ShotView::render( const QRect* rect, QPainter* painter )
 {
     if ( !mEndPoint.isNull() ) {
         QPainterPath painterPath;
-        if ( mShooter ) {
-            painterPath.moveTo( toStartPoint( mShooter->getX().toInt(), mShooter->getY().toInt(), mShooter->getRotation().toInt() ) );
-        } else {
-            painterPath.moveTo( mTailPoint );
-        }
+        painterPath.moveTo( getStartPoint() );
 
         for( auto it : mBendPoints ) {
             painterPath.lineTo( it );
@@ -130,11 +134,12 @@ void ShotView::growEnd( int endAngle, int endOffset )
     int x = mEndPoint.x();
     int y = mEndPoint.y();
 
+    int centerAdjust = (mEndPoint != getStartPoint() ? 24/2 : 0);
     switch( endAngle ) {
-    case   0: if ( y % 24 ) y += endOffset - 24/2; break;
-    case  90: if ( x % 24 ) x += endOffset + 24/2; break;
-    case 180: if ( y % 24 ) y += endOffset + 24/2; break;
-    case 270: if ( x % 24 ) x += endOffset - 24/2; break;
+    case   0: y += endOffset - centerAdjust; break;
+    case  90: x += endOffset + centerAdjust; break;
+    case 180: y += endOffset + centerAdjust; break;
+    case 270: x += endOffset - centerAdjust; break;
     }
 
     mEndPoint.setX( x );

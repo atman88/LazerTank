@@ -42,6 +42,7 @@ protected:
 private:
     bool trimToward(QPoint target);
     void emitDirtySegment( QPoint p1, QPoint p2 );
+    QPoint getStartPoint();
 
     QPen mPen;
     std::list<QPoint> mBendPoints;

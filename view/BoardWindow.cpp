@@ -120,15 +120,6 @@ void BoardWindow::renderSquareLater( int col, int row )
     renderLater( dirty );
 }
 
-void BoardWindow::renderRotatedPixmap( const QPixmap* pixmap, int x, int y, int angle, QPainter* painter )
-{
-    if ( angle ) {
-        renderRotation( x, y, angle, painter );
-    }
-    painter->drawPixmap( x, y, *pixmap );
-    painter->resetTransform();
-}
-
 void BoardWindow::drawShotRight( int x, int y, int angle, QPainter* painter )
 {
     if ( angle ) {
@@ -177,51 +168,13 @@ void BoardWindow::drawShotEnd( int x, int y, int angle, Piece* piece, QPainter* 
     }
 }
 
-void BoardWindow::renderPiece( PieceType type, int x, int y, int angle, Piece* source, QPainter* painter )
-{
-    if ( source && source->getColor() ) {
-        mPen.setColor( *source->getColor() );
-        painter->setPen(mPen);
-    }
-
-    switch( type ) {
-    case SHOT_STRAIGHT:
-        if ( angle ) {
-            renderRotation( x, y, angle, painter );
-        }
-        painter->drawLine( x+12,y,x+12,y+23 );
-        painter->resetTransform();
-        return;
-    case SHOT_RIGHT:
-        drawShotRight( x, y, (angle + 270) % 360, painter );
-        return;
-    case SHOT_LEFT:
-        drawShotRight( x, y, (angle + 180) % 360, painter );
-        return;
-    case SHOT_END_KILL:
-    case SHOT_END:
-        drawShotEnd( x, y, angle, source, painter );
-        return;
-    default:
-        break;
-    }
-
-    const QPixmap* pixmap = getPixmap( type );
-    if ( pixmap->isNull() ) {
-        cout << "no pixmap for " << type << std::endl;
-        return;
-    }
-
-    renderRotatedPixmap( pixmap, x, y, angle, painter );
-}
-
 void BoardWindow::renderListIn(PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter )
 {
     QRect bounds;
     while( iterator != end ) {
         (*iterator)->getBounds( &bounds );
         if ( dirty->intersects( bounds ) ) {
-            renderPiece( (*iterator)->getType(), bounds.left(), bounds.top(), (*iterator)->getAngle(), *iterator, painter );
+            renderPiece( (*iterator)->getType(), bounds.left(), bounds.top(), (*iterator)->getAngle(), painter );
         } else if ( bounds.top() >= dirty->bottom() ) {
             break;
         }
@@ -296,14 +249,7 @@ void BoardWindow::renderOneRect( const QRect* rect, Board* board, const PieceMul
     }
     renderListIn( moveIterator, moves->end(), rect, painter );
 
-    Push& movingPiece = mGame->getMovingPiece();
-    if ( movingPiece.getType() != NONE ) {
-        QRect* bounds = movingPiece.getBounds();
-        if ( rect->intersects( *bounds ) ) {
-            renderPiece( movingPiece.getType(), bounds->left(), bounds->top(), movingPiece.getPieceAngle(), 0, painter );
-        }
-    }
-
+    mGame->getMovingPiece().render( rect, painter );
     if ( rect->intersects( mTank->getRect() ) ) {
         mTank->render( painter );
     }

@@ -50,9 +50,7 @@ protected:
 private:
     void renderOneRect( const QRect* rect, Board* board, const PieceMultiSet* moves, const PieceSet* tiles,
       const PieceSet* deltas, QPainter* painter );
-    void renderRotatedPixmap(const QPixmap* pixmap, int x, int y, int angle, QPainter* painter );
     void renderMove( int x, int y, int angle = 0 );
-    void renderPiece(PieceType type, int x, int y, int angle, Piece* source, QPainter* painter );
     void renderListIn(PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter );
     void drawShotRight( int x, int y, int angle, QPainter* painter );
     void drawShotEnd( int x, int y, int angle, Piece* piece, QPainter* painter );

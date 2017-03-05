@@ -269,16 +269,16 @@ bool getShotReflection( int mirrorAngle, int *shotAngle )
     return false;
 }
 
-bool Game::onShootThruMovingPiece( int offset, int angle, int *endOffset )
+bool Game::onShootThruMovingPiece( int offset, /*int angle,*/ int *endOffset )
 {
     if ( abs(offset) < 24 ) {
-        // do we want to do this? Needs to update the animation more sensibly?
+        // enable if future tracking support implemented for push
 //        int x = mMovingPiece.getEndX()/24;
 //        int y = mMovingPiece.getEndY()/24;
 //        if ( canMoveFrom( mMovingPiece.getType(), angle, &x, &y, false ) ) {
 //            mMovingPiece.extend(angle);
 //        }
-        *endOffset = abs(offset);
+        *endOffset = offset;
         return true;
     }
     return false;
@@ -326,13 +326,13 @@ bool Game::canShootThru( int x, int y, int *angle, int *endOffset, ShotModel* so
             switch( *angle ) {
             case  90:
             case 270:
-                if ( y == movingPieceY/24 && onShootThruMovingPiece( movingPieceX - x*24, *angle, endOffset ) ) {
+                if ( y == movingPieceY/24 && onShootThruMovingPiece( movingPieceX - x*24, endOffset ) ) {
                     return false;
                 }
                 break;
             case   0:
             case 180:
-                if ( x == movingPieceX/24 && onShootThruMovingPiece( movingPieceY - y*24, *angle, endOffset ) ) {
+                if ( x == movingPieceX/24 && onShootThruMovingPiece( movingPieceY - y*24, endOffset ) ) {
                     return false;
                 }
                 break;

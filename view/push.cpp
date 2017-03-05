@@ -1,6 +1,7 @@
 #include <iostream>
 #include "push.h"
 #include "controller/Game.h"
+#include "util/renderutils.h"
 
 Push::Push(QObject *parent) : QObject(parent)
 {
@@ -43,6 +44,14 @@ void Push::start( Piece& what, int fromX, int fromY, int toX, int toY )
     mVerticalAnimation.animateBetween( fromY, toY );
 
     emit stateChanged(QAbstractAnimation::Running, QAbstractAnimation::Stopped);
+}
+
+void Push::render( const QRect* rect, QPainter* painter )
+{
+    if ( mType != NONE && mBoundingRect.intersects( *rect ) ) {
+        renderPiece( mType, mBoundingRect.left(), mBoundingRect.top(), mPieceAngle, painter );
+        mRenderedBoundingRect = mBoundingRect;
+    }
 }
 
 PieceType Push::getType()
@@ -115,13 +124,13 @@ void Push::onStopped()
         int y = getY().toInt()/24;
         Board* board = getBoard();
         if ( board ) {
-            if ( !board->addPushResult( mType, x, y, mPieceAngle ) ) {
-                // Nothing changed so erase ourself from the display:
-                emit rectDirty( mBoundingRect );
-            }
-//            cout << "Push finished (" << x << "," << y << ")\n";
+            board->addPushResult( mType, x, y, mPieceAngle );
         }
         mType = NONE;
+        if ( !mRenderedBoundingRect.isNull() ) {
+            emit rectDirty( mRenderedBoundingRect );
+            mRenderedBoundingRect = QRect();
+        }
         emit stateChanged(QAbstractAnimation::Stopped, QAbstractAnimation::Running);
     }
 }
