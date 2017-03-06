@@ -1,34 +1,34 @@
 #include <iostream>
 #include <QVector>
 
-#include "piecedelta.h"
+#include "boarddelta.h"
 
-PieceDelta::PieceDelta(QObject *parent) : QObject(parent), mEnabled(false)
+BoardDelta::BoardDelta(QObject *parent) : QObject(parent), mEnabled(false)
 {
 }
 
-void PieceDelta::init( Board* masterBoard, Board* futureBoard )
+void BoardDelta::init( Board* masterBoard, Board* futureBoard )
 {
     mMasterBoard = masterBoard;
     mFutureBoard = futureBoard;
 }
 
-const PieceSetManager* PieceDelta::getPieceManager() const
+const PieceSetManager* BoardDelta::getPieceManager() const
 {
     return &mPieceManager;
 }
 
-Board* PieceDelta::getFutureBoard()
+Board* BoardDelta::getFutureBoard()
 {
     return mFutureBoard;
 }
 
-bool PieceDelta::enabled() const
+bool BoardDelta::enabled() const
 {
     return mEnabled;
 }
 
-void PieceDelta::enable( bool newValue )
+void BoardDelta::enable( bool newValue )
 {
     if ( newValue != mEnabled ) {
         std::cout << "delta enable " << newValue << std::endl;
@@ -44,18 +44,18 @@ void PieceDelta::enable( bool newValue )
             mFutureBoard->load( mMasterBoard );
             const PieceSetManager* masterManager = mMasterBoard->getPieceManager();
             PieceSetManager*       futureManager = mFutureBoard->getPieceManager();
-            QObject::connect( masterManager, &PieceSetManager::insertedAt, this, &PieceDelta::onChangeAt );
-            QObject::connect( masterManager, &PieceSetManager::erasedAt,   this, &PieceDelta::onChangeAt );
-            QObject::connect( futureManager, &PieceSetManager::insertedAt, this, &PieceDelta::onChangeAt );
-            QObject::connect( futureManager, &PieceSetManager::erasedAt,   this, &PieceDelta::onChangeAt );
-            QObject::connect( mMasterBoard, &Board::tileChangedAt, this, &PieceDelta::onChangeAt );
-            QObject::connect( mFutureBoard, &Board::tileChangedAt, this, &PieceDelta::onChangeAt );
+            QObject::connect( masterManager, &PieceSetManager::insertedAt, this, &BoardDelta::onChangeAt );
+            QObject::connect( masterManager, &PieceSetManager::erasedAt,   this, &BoardDelta::onChangeAt );
+            QObject::connect( futureManager, &PieceSetManager::insertedAt, this, &BoardDelta::onChangeAt );
+            QObject::connect( futureManager, &PieceSetManager::erasedAt,   this, &BoardDelta::onChangeAt );
+            QObject::connect( mMasterBoard, &Board::tileChangedAt, this, &BoardDelta::onChangeAt );
+            QObject::connect( mFutureBoard, &Board::tileChangedAt, this, &BoardDelta::onChangeAt );
         }
         mEnabled = newValue;
     }
 }
 
-void PieceDelta::onChangeAt( int x, int y )
+void BoardDelta::onChangeAt( int x, int y )
 {
     const Piece* masterPiece = mMasterBoard->getPieceManager()->pieceAt( x, y );
     const Piece* futurePiece = mFutureBoard->getPieceManager()->pieceAt( x, y );

@@ -13,25 +13,58 @@ class ShotModel : public ShotView
 
 public:
     explicit ShotModel(QObject *parent = 0);
-    void init(AnimationStateAggregator *aggregate);
+
+    /**
+     * @brief Initialization method
+     * @param aggregate The aggregator this shot should participate in
+     */
+    void init( AnimationStateAggregator* aggregate );
+
+    /**
+     * @brief Getter method needed for animation sequencing
+     */
     QVariant getSequence();
+
+    /**
+     * @brief Return this shot to its inactive state
+     */
     void reset();
 
+    /**
+     * @brief Get the column (x) where the laser beam has extended to
+     * @return The column number or -1 if the shot is inactive
+     */
     int getLeadingCol() const;
     void setLeadingCol(int leadingCol);
 
+    /**
+     * @brief Get the column (x) where the laser beam has extended to
+     * @return The row number or -1 if the shot is inactive
+     */
     int getLeadingRow() const;
     void setLeadingRow(int leadingRow);
 
-    int getLeadingDirection() const;
-    void setLeadingDirection(int leadingDirection);
-
 signals:
+    /**
+     * @brief Notifies that the lazer beam hit the tank
+     */
     void tankKilled();
 
 public slots:
+    /**
+     * @brief Fires (shoots) the laser beam
+     * @param shooter Provides the active point of origin
+     */
     void fire( Shooter* shooter );
+
+    /**
+     * @brief Setter method used by the animation
+     */
     void setSequence( const QVariant& shotSequence );
+
+    /**
+     * @brief Instructs that the beam should stop emitting. I.e. the trigger has been released.
+     */
     void startShedding();
     void setIsKill();
 

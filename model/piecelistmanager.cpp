@@ -145,7 +145,7 @@ void PieceListManager::reset( PieceListManager* source )
     }
 }
 
-int PieceListManager::count() const
+int PieceListManager::size() const
 {
     return mPieces.size();
 }

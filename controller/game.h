@@ -8,7 +8,7 @@ class Game;
 
 #include "animationstateaggregator.h"
 #include "pathfinder.h"
-#include "model/piecedelta.h"
+#include "model/boarddelta.h"
 #include "model/board.h"
 #include "model/shotmodel.h"
 #include "view/push.h"
@@ -214,7 +214,7 @@ private:
     Shooter mActiveCannon;
     ShotModel mCannonShot;
     Board mFutureBoard;
-    PieceDelta mFutureDelta;
+    BoardDelta mFutureDelta;
 
     int mTankBoardX;
     int mTankBoardY;

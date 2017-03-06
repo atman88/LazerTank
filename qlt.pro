@@ -20,13 +20,13 @@ HEADERS += \
     util/imageutils.h \
     model/piecesetmanager.h \
     model/piecelistmanager.h \
-    model/piecedelta.h \
     controller/speedcontroller.h \
     model/shotmodel.h \
     view/shotview.h \
     util/renderutils.h \
     controller/animationstateaggregator.h \
-    controller/game.h
+    controller/game.h \
+    model/boarddelta.h
 
 SOURCES += \
            view/BoardWindow.cpp \
@@ -39,13 +39,13 @@ SOURCES += \
     util/imageutils.cpp \
     model/piecesetmanager.cpp \
     model/piecelistmanager.cpp \
-    model/piecedelta.cpp \
     controller/speedcontroller.cpp \
     model/shotmodel.cpp \
     view/shotview.cpp \
     util/renderutils.cpp \
     controller/animationstateaggregator.cpp \
-    controller/game.cpp
+    controller/game.cpp \
+    model/boarddelta.cpp
 
 RESOURCES += qml.qrc
 

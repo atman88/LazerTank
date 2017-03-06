@@ -116,23 +116,23 @@ void Tank::move( int direction )
     }
 
     int fromRotation;
-    if ( !mMoves.count() ) {
+    if ( !mMoves.size() ) {
         fromRotation = mRotation.toInt();
     } else {
         fromRotation = mMoves.getList()->back()->getAngle();
     }
     if ( direction != fromRotation ) {
-        if ( !mMoves.count() ) {
+        if ( !mMoves.size() ) {
             mMoves.append( MOVE, mBoundingRect.left()/24, mBoundingRect.top()/24, direction );
         } else {
             mMoves.replaceBack( MOVE, direction );
         }
-        if ( mMoves.count() == 1 ) {
+        if ( mMoves.size() == 1 ) {
             followPath();
         }
     } else {
         int x, y;
-        if ( !mMoves.count() ) {
+        if ( !mMoves.size() ) {
             x = mBoundingRect.left()/24;
             y = mBoundingRect.top()/24;
         } else {
@@ -158,7 +158,7 @@ void Tank::followPath()
 {
     Game* game = getGame();
     if ( game && !game->getMoveAggregate()->active() ) {
-        if ( !mMoves.count() ) {
+        if ( !mMoves.size() ) {
             emit idled();
             return;
         }
@@ -181,7 +181,7 @@ void Tank::onAnimationsFinished()
     if ( !mInReset ) {
         int rotation = mRotation.toInt() % 360;
         setRotation( QVariant( rotation ) );
-        if ( mMoves.count() ) {
+        if ( mMoves.size() ) {
             Piece* piece = mMoves.getList()->front();
             if ( piece->getAngle() == rotation
               && piece->getX() == mBoundingRect.left()/24

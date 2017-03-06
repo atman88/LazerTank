@@ -1,6 +1,6 @@
 #include "piecesetmanager.h"
 
-PieceSetManager::PieceSetManager( QObject* parent ) : QObject(parent), mLastTransactionNo(0)
+PieceSetManager::PieceSetManager( QObject* parent ) : QObject(parent)
 {
 }
 
@@ -19,7 +19,6 @@ const PieceSet* PieceSetManager::getPieces() const
 void PieceSetManager::insert( PieceType type, int x, int y, int angle )
 {
     mPieces.insert( new SimplePiece( type, x, y, angle ) );
-    ++mLastTransactionNo;
     emit insertedAt( x, y );
 }
 
@@ -58,7 +57,6 @@ bool PieceSetManager::erase( Piece* key )
 
         mPieces.erase( it );
         delete piece;
-        ++mLastTransactionNo;
 
         emit erasedAt( x, y );
         return true;
@@ -88,15 +86,9 @@ void PieceSetManager::reset(const PieceSetManager* source)
             insert( it->getType(), it->getX(), it->getY(), it->getAngle() );
         }
     }
-    ++mLastTransactionNo;
 }
 
-int PieceSetManager::getLastTransactionNo()
-{
-    return mLastTransactionNo;
-}
-
-int PieceSetManager::count() const
+int PieceSetManager::size() const
 {
     return mPieces.size();
 }
