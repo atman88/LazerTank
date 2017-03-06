@@ -12,7 +12,6 @@ QMAKE_CXXFLAGS += -std=gnu++11
 HEADERS += \
            model/board.h \
            model/piece.h \
-           view/BoardWindow.h \
            view/tank.h \
     view/push.h \
     view/shooter.h \
@@ -26,10 +25,10 @@ HEADERS += \
     util/renderutils.h \
     controller/animationstateaggregator.h \
     controller/game.h \
-    model/boarddelta.h
+    model/boarddelta.h \
+    view/boardwindow.h
 
 SOURCES += \
-           view/BoardWindow.cpp \
            model/board.cpp \
            model/piece.cpp \
     view/push.cpp \
@@ -45,7 +44,8 @@ SOURCES += \
     util/renderutils.cpp \
     controller/animationstateaggregator.cpp \
     controller/game.cpp \
-    model/boarddelta.cpp
+    model/boarddelta.cpp \
+    view/boardwindow.cpp
 
 RESOURCES += qml.qrc
 
