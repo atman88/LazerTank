@@ -32,7 +32,7 @@ signals:
 public slots:
     void fire( Shooter* shooter );
     void setSequence( const QVariant& shotSequence );
-    void stop();
+    void startShedding();
     void setIsKill();
 
 private:
@@ -44,7 +44,7 @@ private:
     int mLeadingRow;
     int mLeadingDirection;
     int mDistance;
-    bool mStopping;
+    bool mShedding;
     int mKillSequence;
 };
 

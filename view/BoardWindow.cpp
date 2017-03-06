@@ -254,8 +254,8 @@ void BoardWindow::renderOneRect( const QRect* rect, Board* board, const PieceMul
         mTank->render( painter );
     }
 
-    mGame->getCannonShot().render( rect, painter );
-    mShot->render( rect, painter );
+    mGame->getCannonShot().render( painter );
+    mShot->render( painter );
 }
 
 void BoardWindow::render(QRegion* region)
@@ -364,7 +364,7 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
     if ( !ev->isAutoRepeat() ) {
         switch( ev->key() ) {
         case Qt::Key_Space:
-            mShot->stop();
+            mShot->startShedding();
             break;
 
         case Qt::Key_Shift:

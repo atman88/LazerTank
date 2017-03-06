@@ -49,5 +49,6 @@
         <file>maps/level31.txt</file>
         <file>maps/level32.txt</file>
         <file>maps/level33.txt</file>
+        <file>maps/level34.txt</file>
     </qresource>
 </RCC>

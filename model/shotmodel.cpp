@@ -1,7 +1,7 @@
 #include "shotmodel.h"
 #include "controller/game.h"
 
-ShotModel::ShotModel(QObject *parent) : ShotView(parent), mLeadingCol(-1), mLeadingRow(-1), mDistance(0), mStopping(false),
+ShotModel::ShotModel(QObject *parent) : ShotView(parent), mLeadingCol(-1), mLeadingRow(-1), mDistance(0), mShedding(false),
   mKillSequence(0)
 {
     mAnimation.setTargetObject(this);
@@ -16,7 +16,7 @@ void ShotModel::reset()
     mLeadingCol = mLeadingRow = -1;
     mSequence = QVariant(-1);
     mDistance = 0;
-    mStopping = false;
+    mShedding = false;
     mKillSequence = 0;
     ShotView::reset();
 }
@@ -56,7 +56,7 @@ void ShotModel::setSequence( const QVariant &sequence )
     if ( mKillSequence ) {
         switch( mKillSequence++ ) {
         case 1:
-            showKill();
+            killTheTank();
             break;
         case 3:
             mAnimation.pause();
@@ -68,29 +68,30 @@ void ShotModel::setSequence( const QVariant &sequence )
         return;
     }
 
-    if ( !hasEndPoint() ) {
+    if ( !hasTerminationPoint() ) {
         int startDirection = mLeadingDirection;
         int endOffset;
         if ( game->advanceShot( &mLeadingDirection, &mLeadingCol, &mLeadingRow, &endOffset, this ) ) {
             grow( mLeadingCol, mLeadingRow, startDirection, mLeadingDirection );
         } else {
-            growEnd( startDirection, endOffset );
-            mStopping = true;
+            addTermination( startDirection, endOffset );
+            mShedding = true;
         }
     }
 
-    if ( ++mDistance > 5 && mStopping && !mKillSequence ) {
-        shedTail();
+    bool isTravelling = true;
+    if ( ++mDistance > 5 && mShedding && !mKillSequence ) {
+        isTravelling = shedTail();
     }
 
-    if ( !commencing() ) {
+    if ( !isTravelling && !mKillSequence ) {
         mAnimation.stop();
     }
 }
 
-void ShotModel::stop()
+void ShotModel::startShedding()
 {
-    mStopping = true;
+    mShedding = true;
 }
 
 void ShotModel::setIsKill()

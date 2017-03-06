@@ -5,17 +5,20 @@
 #include "controller/game.h"
 #include "util/renderutils.h"
 
-ShotView::ShotView(QObject *parent) : QObject(parent), mKillShowing(false), mEndAngle(-1), mShooter(0)
+// Define our own Null value because QPoint's isNull method keys on (0,0) which is a valid model point
+static const QPoint NullPoint(-1,-1);
+
+ShotView::ShotView(QObject *parent) : QObject(parent), mShooter(0), mTerminationAngle(-1), mKillTheTank(false)
 {
+    mLeadPoint = mTailPoint = NullPoint;
     mPen.setWidth( 2 );
 }
 
 void ShotView::reset()
 {
-    mKillShowing = false;
-    mEndAngle = -1;
-    mEndPoint = QPoint();
-    mTailPoint = QPoint();
+    mKillTheTank = false;
+    mTerminationAngle = -1;
+    mLeadPoint = mTailPoint = NullPoint;
     mShooter = 0;
     mBendPoints.clear();
 }
@@ -39,29 +42,35 @@ QPoint ShotView::getStartPoint()
     return mTailPoint;
 }
 
-void ShotView::render( const QRect* rect, QPainter* painter )
+void ShotView::render( QPainter* painter )
 {
-    if ( !mEndPoint.isNull() ) {
-        QPainterPath painterPath;
-        painterPath.moveTo( getStartPoint() );
+    QPoint startPoint = getStartPoint();
+    if ( startPoint != NullPoint ) {
+        if ( mLeadPoint != NullPoint ) {
+            QPainterPath painterPath;
+            painterPath.moveTo( startPoint );
 
-        for( auto it : mBendPoints ) {
-            painterPath.lineTo( it );
+            for( auto it : mBendPoints ) {
+                painterPath.lineTo( it );
+            }
+
+            painterPath.lineTo( mLeadPoint );
+
+            painter->setPen( mPen );
+            painter->drawPath( painterPath );
         }
-        painterPath.lineTo( mEndPoint );
-        painter->setPen( mPen );
-        painter->drawPath( painterPath );
 
-        if ( mEndAngle >= 0 ) {
-            int cx = mEndPoint.x();
-            int cy = mEndPoint.y();
+        if ( mTerminationAngle >= 0 ) {
+            int cx = mLeadPoint.x();
+            int cy = mLeadPoint.y();
 
-            if ( mEndAngle ) {
+            if ( mTerminationAngle ) {
                 painter->translate(cx, cy);
-                painter->rotate(mEndAngle);
+                painter->rotate(mTerminationAngle);
                 painter->translate(-cx, -cy);
             }
 
+            // draw a splat:
             --cy;
             QPen pen( mPen );
             QColor color = pen.color();
@@ -82,9 +91,9 @@ void ShotView::render( const QRect* rect, QPainter* painter )
     }
 }
 
-bool ShotView::hasEndPoint()
+bool ShotView::hasTerminationPoint()
 {
-    return mEndAngle >= 0;
+    return mTerminationAngle >= 0;
 }
 
 QPoint modelToViewPoint( int col, int row )
@@ -95,7 +104,7 @@ QPoint modelToViewPoint( int col, int row )
 void ShotView::commenceFire( Shooter* shooter )
 {
     mShooter = shooter;
-    mEndPoint = toStartPoint( shooter->getX().toInt(), shooter->getY().toInt(), shooter->getRotation().toInt() );
+    mLeadPoint = toStartPoint( shooter->getX().toInt(), shooter->getY().toInt(), shooter->getRotation().toInt() );
 }
 
 void ShotView::emitDirtySegment( QPoint p1, QPoint p2 )
@@ -110,31 +119,38 @@ void ShotView::emitDirtySegment( QPoint p1, QPoint p2 )
 
 void ShotView::grow( int col, int row, int startAngle, int endAngle )
 {
-    QPoint startPoint( mEndPoint );
-    mEndPoint = modelToViewPoint( col, row );
+    QPoint startPoint( mLeadPoint );
+    mLeadPoint = modelToViewPoint( col, row );
 
     if ( startAngle != endAngle ) {
         switch( startAngle ) {
         case   0:
-        case 180: mBendPoints.push_back( QPoint( startPoint.x(), mEndPoint.y()  ) ); break;
+        case 180: mBendPoints.push_back( QPoint( startPoint.x(), mLeadPoint.y()  ) ); break;
         case  90:
-        case 270: mBendPoints.push_back( QPoint( mEndPoint.x(),  startPoint.y() ) ); break;
+        case 270: mBendPoints.push_back( QPoint( mLeadPoint.x(),  startPoint.y() ) ); break;
         default:
             break;
         }
     }
 
-    emitDirtySegment( startPoint, mEndPoint );
+    emitDirtySegment( startPoint, mLeadPoint );
 }
 
-void ShotView::growEnd( int endAngle, int endOffset )
+void ShotView::emitSplatDirty()
 {
-    mEndAngle = endAngle;
+    // dirty an area large enough to cover the the splat
+    QRect rect( mLeadPoint.x()-24/2, mLeadPoint.y()-24/2, 24, 24 );
+    emit rectDirty( rect );
+}
 
-    int x = mEndPoint.x();
-    int y = mEndPoint.y();
+void ShotView::addTermination( int endAngle, int endOffset )
+{
+    mTerminationAngle = endAngle;
 
-    int centerAdjust = (mEndPoint != getStartPoint() ? 24/2 : 0);
+    int x = mLeadPoint.x();
+    int y = mLeadPoint.y();
+
+    int centerAdjust = (mLeadPoint != getStartPoint() ? 24/2 : 0);
     switch( endAngle ) {
     case   0: y += endOffset - centerAdjust; break;
     case  90: x += endOffset + centerAdjust; break;
@@ -142,11 +158,11 @@ void ShotView::growEnd( int endAngle, int endOffset )
     case 270: x += endOffset - centerAdjust; break;
     }
 
-    mEndPoint.setX( x );
-    mEndPoint.setY( y );
+    emitDirtySegment( mLeadPoint, QPoint(x,y) );
 
-    QRect rect( x-24/2, y-24/2, 24, 24 );
-    emit rectDirty( rect );
+    mLeadPoint.setX( x );
+    mLeadPoint.setY( y );
+    emitSplatDirty();
 }
 
 bool ShotView::trimToward( QPoint target )
@@ -164,7 +180,7 @@ bool ShotView::trimToward( QPoint target )
         return false;
     }
 
-    int dx = mTailPoint.x() - mTailPoint.x();
+    int dx = mTailPoint.x() - target.x();
     if ( dx > 24 ) {
         mTailPoint.setX( mTailPoint.x() - 24 );
         return true;
@@ -176,49 +192,45 @@ bool ShotView::trimToward( QPoint target )
     return false;
 }
 
-void ShotView::shedTail()
+bool ShotView::shedTail()
 {
     if ( mShooter ) {
         mTailPoint = toStartPoint( mShooter->getX().toInt(), mShooter->getY().toInt(), mShooter->getRotation().toInt() );
         mShooter = 0;
-    } else {
-        if ( mTailPoint == mEndPoint ) {
-            QRect rect( mEndPoint.x()-24/2, mEndPoint.y()-24/2, 24, 24 );
-            emit rectDirty( rect );
-            mEndPoint = mTailPoint = QPoint(); // stop commencing
-        } else {
-            QPoint startTailPoint( mTailPoint );
-
-            if ( !mBendPoints.empty() ) {
-                if ( !trimToward( mBendPoints.front() ) ) {
-                    mTailPoint = mBendPoints.front();
-                    mBendPoints.pop_front();
-                }
-            } else if ( !trimToward( mEndPoint ) ) {
-                mTailPoint = mEndPoint;
-            }
-
-            emitDirtySegment( startTailPoint, mTailPoint );
-        }
     }
+
+    if ( mTailPoint == mLeadPoint ) {
+        emitSplatDirty();
+        mTailPoint = mLeadPoint = NullPoint;
+    } else {
+        QPoint startTailPoint( mTailPoint );
+
+        if ( !mBendPoints.empty() ) {
+            if ( !trimToward( mBendPoints.front() ) ) {
+                mTailPoint = mBendPoints.front();
+                mBendPoints.pop_front();
+            }
+        } else if ( !trimToward( mLeadPoint ) ) {
+            mTailPoint = mLeadPoint;
+        }
+
+        emitDirtySegment( startTailPoint, mTailPoint );
+        return true;
+    }
+
+    return false;
 }
 
-void ShotView::showKill()
+void ShotView::killTheTank()
 {
-    mKillShowing = true;
-}
-
-bool ShotView::commencing()
-{
-    return !mEndPoint.isNull();
+    QPoint p = mLeadPoint;
+    if ( p == NullPoint ) {
+        p = mTailPoint;
+    }
+    mKillTheTank = true;
 }
 
 void ShotView::setColor(QColor color)
 {
     mPen.setColor( color );
-}
-
-QColor ShotView::getColor() const
-{
-    return mPen.color();
 }

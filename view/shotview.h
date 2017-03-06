@@ -23,10 +23,9 @@ public:
     explicit ShotView(QObject *parent = 0);
     PieceListManager* getPath();
     void setColor( QColor color );
-    QColor getColor() const;
     void reset();
-    void render( const QRect* rect, QPainter* painter );
-    bool hasEndPoint();
+    void render( QPainter* painter );
+    bool hasTerminationPoint();
 
 signals:
     void rectDirty( QRect& rect );
@@ -34,23 +33,23 @@ signals:
 protected:
     void commenceFire( Shooter* shooter );
     void grow( int col, int row, int startAngle, int endAngle );
-    void growEnd( int endAngle, int endOffset );
-    void shedTail();
-    void showKill();
-    bool commencing();
+    void addTermination( int endAngle, int endOffset );
+    bool shedTail();
+    void killTheTank();
 
 private:
     bool trimToward(QPoint target);
     void emitDirtySegment( QPoint p1, QPoint p2 );
+    void emitSplatDirty();
     QPoint getStartPoint();
 
     QPen mPen;
     std::list<QPoint> mBendPoints;
-    bool mKillShowing;
-    QPoint mTailPoint;
-    QPoint mEndPoint;
-    int mEndAngle;
     Shooter* mShooter;
+    QPoint mLeadPoint;
+    QPoint mTailPoint;
+    int mTerminationAngle;
+    bool mKillTheTank;
 };
 
 #endif // SHOTVIEW_H
