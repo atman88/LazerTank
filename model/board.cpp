@@ -29,14 +29,24 @@ void Board::initPiece( PieceType type, int x, int y, int angle )
     mTiles[y*BOARD_MAX_HEIGHT + x] = DIRT;
 }
 
-int Board::getFlagY() const
+int Board::getTankWayPointX() const
 {
-    return mFlagY;
+    return mTankWayPointX;
+}
+
+int Board::getTankWayPointY() const
+{
+    return mTankWayPointXY;
 }
 
 int Board::getFlagX() const
 {
     return mFlagX;
+}
+
+int Board::getFlagY() const
+{
+    return mFlagY;
 }
 
 bool Board::load( QString& fileName )
@@ -50,7 +60,7 @@ bool Board::load( QString& fileName )
     int y = 0;
     unsigned char* row = mTiles;
     mWidth = 0;
-    mInitialTankX = mInitialTankY = 0;
+    mTankWayPointX = mTankWayPointXY = 0;
     mFlagX = mFlagY = -1;
     mPieceManager.reset();
 
@@ -105,8 +115,8 @@ bool Board::load( QString& fileName )
                 break;
 
             case 'T':
-                mInitialTankX = x;
-                mInitialTankY = y;
+                mTankWayPointX = x;
+                mTankWayPointXY = y;
 
                 // fall through
 
@@ -166,20 +176,7 @@ void Board::setTileAt( TileType id, int x, int y )
     }
 }
 
-bool Board::canSightThru( int x, int y )
-{
-    switch( tileAt( x, y ) ) {
-    case DIRT:
-    case TILE_SUNK:
-        return mPieceManager.typeAt( x, y ) == NONE;
-    case WATER:
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool Board::addPushResult( PieceType mType, int x, int y, int pieceAngle )
+bool Board::applyPushResult( PieceType mType, int x, int y, int pieceAngle )
 {
     if ( tileAt(x,y) != WATER ) {
         mPieceManager.insert( mType, x, y, pieceAngle );

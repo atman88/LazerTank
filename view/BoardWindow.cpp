@@ -7,6 +7,8 @@
 #include "util/renderutils.h"
 #include "util/imageutils.h"
 
+using namespace std;
+
 BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
 {
     mPen.setWidth(2);
@@ -79,7 +81,7 @@ void BoardWindow::onBoardLoaded()
         QRect size( 0, 0, board->getWidth()*24, board->getHeight()*24 );
         setGeometry(size);
         mDirtyRegion += size;
-        mTank->reset( board->mInitialTankX, board->mInitialTankY );
+        mTank->reset( board->getTankWayPointX(), board->getTankWayPointY() );
         mShot->reset();
 
         renderLater( size );
@@ -118,54 +120,6 @@ void BoardWindow::renderSquareLater( int col, int row )
 {
     QRect dirty(col*24, row*24, 24, 24);
     renderLater( dirty );
-}
-
-void BoardWindow::drawShotRight( int x, int y, int angle, QPainter* painter )
-{
-    if ( angle ) {
-        renderRotation( x, y, angle, painter );
-    }
-    int cx = x+12;
-    int cy = y+12;
-    painter->drawLine( cx, y+23, cx,   cy );
-    painter->drawLine( cx, cy,   x+23, cy );
-    painter->resetTransform();
-}
-
-void BoardWindow::drawShotEnd( int x, int y, int angle, Piece* piece, QPainter* painter )
-{
-    if ( piece ) {
-        int offset = piece->getPusheeOffset();
-
-        if ( piece->getType() == SHOT_END_KILL ) {
-            drawPixmap( x, y-offset, DAMAGE, painter );
-        }
-        if ( angle ) {
-            renderRotation( x, y, angle, painter );
-        }
-        int cx = x+24/2;
-        int cy = y+24;
-        if ( offset ) {
-            painter->drawLine( cx,cy,cx,cy-offset );
-            cy -= offset;
-        }
-
-        painter->drawPoint(cx,--cy);
-        QColor color = mPen.color();
-        int alpha = color.alpha();
-        for( int i = 1; i <= 4; ++i ) {
-            painter->drawLine( cx-(i*2)-2,   cy, cx-(i*2),   cy );
-            painter->drawLine( cx+(i*2)-1, cy, cx+(i*2)+2+1, cy );
-            painter->drawPoint( cx-i, cy-i );
-            painter->drawPoint( cx+i, cy-i );
-
-            alpha = (alpha >> 1 ) + (alpha >> 2);
-            color.setAlpha( alpha );
-            mPen.setColor( color );
-            painter->setPen( mPen );
-        }
-        painter->resetTransform();
-    }
 }
 
 void BoardWindow::renderListIn(PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter )

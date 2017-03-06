@@ -49,8 +49,8 @@ void Game::init( BoardWindow* window )
 
 void Game::onBoardLoaded()
 {
-    mTankBoardX = mBoard.mInitialTankX;
-    mTankBoardY = mBoard.mInitialTankY;
+    mTankBoardX = mBoard.getTankWayPointX();
+    mTankBoardY = mBoard.getTankWayPointY();
     mFutureDelta.enable( false );
     mCannonShot.reset();
     mSpeedController.setSpeed(LOW_SPEED);
@@ -139,6 +139,19 @@ void Game::onTankMoved( int x, int y )
     }
 }
 
+bool canSightThru( Board* board, int x, int y )
+{
+    switch( board->tileAt( x, y ) ) {
+    case DIRT:
+    case TILE_SUNK:
+        return board->getPieceManager()->typeAt( x, y ) == NONE;
+    case WATER:
+        return true;
+    default:
+        return false;
+    }
+}
+
 void Game::sightCannons()
 {
     // fire any cannon
@@ -164,7 +177,7 @@ void Game::sightCannons()
                         sighted = true;
                         break;
                     }
-                    if ( !mBoard.canSightThru( mTankBoardX, y ) ) {
+                    if ( !canSightThru( &mBoard, mTankBoardX, y ) ) {
                         break;
                     }
                 }
@@ -184,7 +197,7 @@ void Game::sightCannons()
                         sighted = true;
                         break;
                     }
-                    if ( !mBoard.canSightThru( x, mTankBoardY ) ) {
+                    if ( !canSightThru( &mBoard, x, mTankBoardY ) ) {
                         break;
                     }
                 }
@@ -392,7 +405,7 @@ void Game::onTankMovingInto( int x, int y, int fromAngle )
             pm->eraseAt( x, y );
             mMovingPiece.start( simple, x*24, y*24, toX*24, toY*24 );
         } else {
-            cout << "no adjacent for angle " << fromAngle << std::endl;
+            std::cout << "no adjacent for angle " << fromAngle << std::endl;
         }
     }
 }
@@ -429,25 +442,25 @@ void Game::onFuturePush( Piece* pushingPiece )
     // scoping pushedPiece here so it falls out of scope after erased:
     {   Piece* pushedPiece = mFutureBoard.getPieceManager()->pieceAt( x, y );
         if ( !pushedPiece ) {
-            cout << "*** pushed piece not found!" << std::endl;
+            std::cout << "*** pushed piece not found!" << std::endl;
             return;
         }
         pushedType = pushedPiece->getType();
         if ( !mFutureBoard.getPieceManager()->erase( pushedPiece ) ) {
-            cout << "*** failed to erase future piece at " << x << "," << y << std::endl;
+            std::cout << "*** failed to erase future piece at " << x << "," << y << std::endl;
         }
     }
 
     if ( !getAdjacentPosition( angle, &x, &y ) ) {
-        cout << "*** failed to get future push position for " << angle << "/" << x << "," << y << std::endl;
+        std::cout << "*** failed to get future push position for " << angle << "/" << x << "," << y << std::endl;
         return;
     }
-    mFutureBoard.addPushResult( pushedType, x, y, angle );
+    mFutureBoard.applyPushResult( pushedType, x, y, angle );
 }
 
 void Game::findPath(int targetX, int targetY , int startingDirection )
 {
-    // the path finder doesn't support pushing, so cancel any active push before using:
+    // the path finder doesn't support pushing, so cancel any future moves before using:
     mFutureDelta.enable( false );
 
     mPathFinder.findPath( targetX, targetY, mTankBoardX, mTankBoardY, startingDirection );

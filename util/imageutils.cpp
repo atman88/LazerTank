@@ -32,7 +32,6 @@ const QPixmap* getPixmap( unsigned type )
         { FLAG,              { "flag"               } },
         { TILE,              { "tile-metal"         } },
         { MOVE,              { "move-indicator"     } },
-        { SHOT_END,          { "shot-end"           } },
         { STONE_MIRROR,      { "wall-mirror"        } },
         { STONE_SLIT,        { "stone-slit"         } },
         { WOOD,              { "wood"               } },
@@ -48,7 +47,7 @@ const QPixmap* getPixmap( unsigned type )
     static NamedPixmap NullPixmap( "null" );
 
     if ( type >= (sizeof nameArray)/(sizeof *nameArray) ) {
-        cout << "attempt to get INVALID pixmap " << type << std::endl;
+        std::cout << "attempt to get INVALID pixmap " << type << std::endl;
         return &NullPixmap;
     }
 
@@ -56,13 +55,13 @@ const QPixmap* getPixmap( unsigned type )
     if ( !p ) {
         auto it = nameMap.find( type );
         if ( it == nameMap.end() ) {
-            cout << "didn't find pixmap " << type << std::endl;
+            std::cout << "didn't find pixmap " << type << std::endl;
             p = &NullPixmap;
         } else {
             p = &it->second;
             p->load( pathFormat.arg( p->mName ) );
             if ( p->isNull() ) {
-                cout << "failed to load " << pathFormat.arg( p->mName ).toStdString() << std::endl;
+                std::cout << "failed to load " << pathFormat.arg( p->mName ).toStdString() << std::endl;
             }
         }
         nameArray[type] = p;

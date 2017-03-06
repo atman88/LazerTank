@@ -52,8 +52,6 @@ private:
       const PieceSet* deltas, QPainter* painter );
     void renderMove( int x, int y, int angle = 0 );
     void renderListIn(PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter );
-    void drawShotRight( int x, int y, int angle, QPainter* painter );
-    void drawShotEnd( int x, int y, int angle, Piece* piece, QPainter* painter );
     QPen mPen;
     Tank* mTank;
     ShotModel* mShot;

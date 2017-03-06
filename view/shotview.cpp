@@ -5,6 +5,8 @@
 #include "controller/game.h"
 #include "util/renderutils.h"
 
+using namespace std;
+
 // Define our own Null value because QPoint's isNull method keys on (0,0) which is a valid model point
 static const QPoint NullPoint(-1,-1);
 

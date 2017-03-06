@@ -31,7 +31,6 @@ void Push::init( Game* game )
 void Push::start( Piece& what, int fromX, int fromY, int toX, int toY )
 {
     if ( mType != NONE ) {
-        cout << "Push already started!\n";
         return;
     }
 
@@ -124,7 +123,7 @@ void Push::onStopped()
         int y = getY().toInt()/24;
         Board* board = getBoard();
         if ( board ) {
-            board->addPushResult( mType, x, y, mPieceAngle );
+            board->applyPushResult( mType, x, y, mPieceAngle );
         }
         mType = NONE;
         if ( !mRenderedBoundingRect.isNull() ) {

@@ -63,29 +63,10 @@ void PieceListManager::append( PieceType type, int x, int y, int angle, bool has
     appendInternal( new PusherPiece( type, x, y, angle, hasPush ) );
 }
 
-void PieceListManager::append( PieceType type, int x, int y, int angle, int pusheeOffset )
-{
-    appendInternal( new PusheePiece( type, x, y, angle, pusheeOffset ) );
-}
-
-void PieceListManager::append( PieceType type, int x, int y, int angle, QColor* color )
-{
-    appendInternal( new ColoredPiece( type, x, y, angle, color ) );
-}
-
-void PieceListManager::append( PieceType type, int x, int y, int angle, int pusheeOffset, QColor* color )
-{
-    appendInternal( new ColoredPiece( type, x, y, angle, pusheeOffset, color ) );
-}
-
 void PieceListManager::append( Piece* source )
 {
     if ( source->hasPush() ) {
         appendInternal( new PusherPiece(source) );
-    } else if ( source->getPusheeOffset() ) {
-        appendInternal( new PusheePiece(source) );
-    } else if ( source->getColor() ) {
-        appendInternal( new ColoredPiece(source) );
     } else {
         appendInternal( new SimplePiece(source) );
     }

@@ -12,11 +12,6 @@ typedef enum {
     TANK,
     MOVE,
     TILE,
-    SHOT_STRAIGHT,
-    SHOT_LEFT,
-    SHOT_RIGHT,
-    SHOT_END,
-    SHOT_END_KILL,
     TILE_MIRROR,
     CANNON,
     TILE_FUTURE_ERASE,
@@ -25,6 +20,10 @@ typedef enum {
     PieceTypeUpperBound   // must be last
 } PieceType;
 
+/**
+ * @brief The Piece interface
+ * This is an abstract class so that peices can vary in make up.
+ */
 class Piece
 {
 public:
@@ -32,6 +31,9 @@ public:
     {
     }
 
+    /**
+     * @brief Copy constructor
+     */
     Piece( Piece* source )
     {
         mType  = source->mType;
@@ -44,23 +46,50 @@ public:
     {
     }
 
+    /**
+     * @brief Creates a search term used for searching piece sets
+     * @param x Column number
+     * @param y Row number
+     * @return The encoded position value
+     */
     static int encodePos( int x, int y )
     {
         return y * PIECE_MAX_ROWCOUNT + x;
     }
 
     PieceType getType() const;
+    void setType( PieceType type );
     int getX() const;
     int getY() const;
-    int getAngle() const;
-    void getBounds( QRect *rect ) const;
-    virtual bool hasPush() const = 0;
-    virtual int getPusheeOffset() const = 0;
-    virtual QColor* getColor() const = 0;
 
-    void setType( PieceType type );
+
+    /**
+     * @brief Gets the current rotation of this peice
+     */
+    int getAngle() const;
+
+    /**
+     * @brief Changes the current rotation for this piece
+     */
     void setAngle( int angle );
 
+    /**
+     * @brief Gets the rectangular screen area currently occupied by this piece
+     * @param rect The rect to return the result in
+     */
+    void getBounds( QRect *rect ) const;
+
+    /**
+     * @brief Query if this piece is associated with a push operation
+     */
+    virtual bool hasPush() const = 0;
+
+    /**
+     * @brief Create a search term for this piece
+     * @param x Column number
+     * @param y Row number
+     * @return The encoded position value
+     */
     int encodedPos() const
     {
         return encodePos( mX, mY );
@@ -78,6 +107,9 @@ private:
     int mAngle;
 };
 
+/**
+ * @brief A basic piece that has no extended capabilities
+ */
 class SimplePiece : public Piece
 {
 public:
@@ -92,18 +124,11 @@ public:
     {
         return false;
     }
-
-    int getPusheeOffset() const override
-    {
-        return 0;
-    }
-
-    QColor* getColor() const override
-    {
-        return 0;
-    }
 };
 
+/**
+ * @brief A peice that hints whether it has an associated push
+ */
 class PusherPiece : public SimplePiece
 {
 public:
@@ -130,53 +155,7 @@ private:
     bool mHasPush;
 };
 
-class PusheePiece : public SimplePiece
-{
-public:
-    PusheePiece( PieceType type = NONE, int x = 0, int y = 0, int angle = 0, int pusheeOffset = 0 )
-        : SimplePiece(type,x,y,angle), mPusheeOffset(pusheeOffset)
-    {
-    }
-
-    PusheePiece( Piece* source ) : SimplePiece(source), mPusheeOffset(source->getPusheeOffset())
-    {
-    }
-
-    int getPusheeOffset() const override
-    {
-        return mPusheeOffset;
-    }
-
-private:
-    int mPusheeOffset;
-};
-
-class ColoredPiece : public PusheePiece
-{
-public:
-    ColoredPiece( PieceType type, int x, int y, int angle, int pusheeOffset, QColor* color )
-        : PusheePiece(type,x,y,angle,pusheeOffset), mColor(color)
-    {
-    }
-
-    ColoredPiece( PieceType type, int x, int y, int angle, QColor* color )
-        : PusheePiece(type,x,y,angle), mColor(color)
-    {
-    }
-
-    ColoredPiece( Piece* source ) : PusheePiece(source), mColor(source->getColor())
-    {
-    }
-
-    QColor* getColor() const override
-    {
-        return mColor;
-    }
-
-private:
-    QColor* mColor;
-};
-
+// comparator used by the stl
 struct PieceSetComparator {
     bool operator() (const Piece* l, const Piece* r) const
     {
@@ -184,6 +163,7 @@ struct PieceSetComparator {
     }
 };
 
+// stl container types used for pieces
 typedef std::list<Piece*> PieceList;
 typedef std::set<Piece*,PieceSetComparator> PieceSet;
 typedef std::multiset<Piece*,PieceSetComparator> PieceMultiSet;

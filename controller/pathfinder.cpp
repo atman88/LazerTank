@@ -42,16 +42,16 @@ void PathFinder::printSearchMap()
     for( int y = 0; y <= mMaxY; ++y ) {
         for( int x = 0; x <= mMaxX; ++x ) {
             switch( mSearchMap[y * BOARD_MAX_WIDTH + x] ) {
-            case 0:          cout << '0'; break;
-            case 1:          cout << '1'; break;
-            case 2:          cout << '2'; break;
-            case TRAVERSIBLE:cout << ' '; break;
-            case BLOCKED:    cout << 'X'; break;
-            case TARGET:     cout << 'T'; break;
-            default:         cout << '?'; break;
+            case 0:          std::cout << '0'; break;
+            case 1:          std::cout << '1'; break;
+            case 2:          std::cout << '2'; break;
+            case TRAVERSIBLE:std::cout << ' '; break;
+            case BLOCKED:    std::cout << 'X'; break;
+            case TARGET:     std::cout << 'T'; break;
+            default:         std::cout << '?'; break;
             }
         }
-        cout << std::endl;
+        std::cout << std::endl;
     }
 }
 
