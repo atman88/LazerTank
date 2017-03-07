@@ -15,23 +15,23 @@ PathFinder::PathFinder(QObject *parent) : QThread(parent)
 {
 }
 
-void PathFinder::findPath( int targetX, int targetY, int startingX, int startingY, int startingRotation )
+void PathFinder::findPath( int targetCol, int targetRow, int startingCol, int startingRow, int startingRotation )
 {
     mStopping = true;
 
-    mTargetX = targetX;
-    mTargetY = targetY;
-    mStartingX = startingX;
-    mStartingY = startingY;
+    mTargetCol = targetCol;
+    mTargetRow = targetRow;
+    mStartingCol = startingCol;
+    mStartingRow = startingRow;
     mStartingRotation = startingRotation;
     start( LowPriority );
 }
 
 void PathFinder::printSearchMap()
 {
-    for( int y = 0; y <= mMaxY; ++y ) {
-        for( int x = 0; x <= mMaxX; ++x ) {
-            switch( mSearchMap[y * BOARD_MAX_WIDTH + x] ) {
+    for( int row = 0; row <= mMaxRow; ++row ) {
+        for( int col = 0; col <= mMaxCol; ++col ) {
+            switch( mSearchMap[row * BOARD_MAX_WIDTH + col] ) {
             case 0:          std::cout << '0'; break;
             case 1:          std::cout << '1'; break;
             case 2:          std::cout << '2'; break;
@@ -45,42 +45,42 @@ void PathFinder::printSearchMap()
     }
 }
 
-void PathFinder::buildPath( int x, int y )
+void PathFinder::buildPath( int col, int row )
 {
     int direction = 0;
 
-    while( y != mTargetY || x != mTargetX ) {
-        int lastX = x;
-        int lastY = y;
+    while( row != mTargetRow || col != mTargetCol ) {
+        int lastCol = col;
+        int lastRow = row;
 
         if ( --mPassValue < 0 ) {
             mPassValue = TRAVERSIBLE-1;
         }
-        if      ( y > 0     && mSearchMap[ (y-1) * BOARD_MAX_WIDTH + x   ] == mPassValue ) { --y; direction =   0; }
-        else if ( x > 0     && mSearchMap[ y     * BOARD_MAX_WIDTH + x-1 ] == mPassValue ) { --x; direction = 270; }
-        else if ( y < mMaxY && mSearchMap[ (y+1) * BOARD_MAX_WIDTH + x   ] == mPassValue ) { ++y; direction = 180; }
-        else if ( x < mMaxX && mSearchMap[ y     * BOARD_MAX_WIDTH + x+1 ] == mPassValue ) { ++x; direction =  90; }
+        if      ( row > 0       && mSearchMap[(row-1) * BOARD_MAX_WIDTH + col  ] == mPassValue ) { --row; direction =   0; }
+        else if ( col > 0       && mSearchMap[row     * BOARD_MAX_WIDTH + col-1] == mPassValue ) { --col; direction = 270; }
+        else if ( row < mMaxRow && mSearchMap[(row+1) * BOARD_MAX_WIDTH + col  ] == mPassValue ) { ++row; direction = 180; }
+        else if ( col < mMaxCol && mSearchMap[row     * BOARD_MAX_WIDTH + col+1] == mPassValue ) { ++col; direction =  90; }
         else {
             break;
         }
 
-        if ( lastX != mStartingX || lastY != mStartingY || direction != mStartingRotation ) {
-            mMoves.append( MOVE, lastX, lastY, direction );
+        if ( lastCol != mStartingCol || lastRow != mStartingRow || direction != mStartingRotation ) {
+            mMoves.append( MOVE, lastCol, lastRow, direction );
         }
     }
-    mMoves.append( MOVE, x, y, direction );
+    mMoves.append( MOVE, col, row, direction );
 }
 
-void PathFinder::tryAt( int x, int y )
+void PathFinder::tryAt( int col, int row )
 {
-    if ( x >= 0 && x <= mMaxX
-      && y >= 0 && y <= mMaxY ) {
-        switch( mSearchMap[y*BOARD_MAX_WIDTH + x] ) {
+    if ( col >= 0 && col <= mMaxCol
+      && row >= 0 && row <= mMaxRow ) {
+        switch( mSearchMap[row*BOARD_MAX_WIDTH + col] ) {
         case TRAVERSIBLE:
-            mSearchMap[y*BOARD_MAX_WIDTH + x] = mPassValue;
-            if ( mPushIndex >= 0 && mPushIndex < (int) ((sizeof mSearchX)/(sizeof *mSearchX)) ) {
-                mSearchX[mPushIndex] = x;
-                mSearchY[mPushIndex] = y;
+            mSearchMap[row*BOARD_MAX_WIDTH + col] = mPassValue;
+            if ( mPushIndex >= 0 && mPushIndex < (int) ((sizeof mSearchCol)/(sizeof *mSearchCol)) ) {
+                mSearchCol[mPushIndex] = col;
+                mSearchRow[mPushIndex] = row;
                 mPushIndex += mPushDirection;
             }
             break;
@@ -88,7 +88,7 @@ void PathFinder::tryAt( int x, int y )
         case TARGET:
 //            printSearchMap();
 //
-            buildPath( x, y );
+            buildPath( col, row );
             std::longjmp( mJmpBuf, 1 );
 
         default:
@@ -100,18 +100,18 @@ void PathFinder::tryAt( int x, int y )
 int PathFinder::pass1( int nPoints )
 {
     mPassValue = (mPassValue + 1) % TRAVERSIBLE;
-    mPushIndex = (sizeof mSearchX)/(sizeof *mSearchX)-1;
+    mPushIndex = (sizeof mSearchCol)/(sizeof *mSearchCol)-1;
     mPushDirection = -1;
 
     for( int pullIndex = 0; pullIndex < nPoints && !mStopping; ++pullIndex ) {
-        int x = mSearchX[pullIndex];
-        int y = mSearchY[pullIndex];
-        tryAt( x,   y-1 );
-        tryAt( x-1, y   );
-        tryAt( x,   y+1 );
-        tryAt( x+1, y   );
+        int col = mSearchCol[pullIndex];
+        int row = mSearchRow[pullIndex];
+        tryAt( col,   row-1 );
+        tryAt( col-1, row   );
+        tryAt( col,   row+1 );
+        tryAt( col+1, row   );
     }
-    return (sizeof mSearchX)/(sizeof *mSearchX) - mPushIndex;
+    return (sizeof mSearchCol)/(sizeof *mSearchCol) - mPushIndex;
 }
 
 int PathFinder::pass2( int nPoints )
@@ -119,15 +119,15 @@ int PathFinder::pass2( int nPoints )
     mPassValue = (mPassValue + 1) % TRAVERSIBLE;
     mPushIndex = 0;
     mPushDirection = 1;
-    int endIndex = (sizeof mSearchX)/(sizeof *mSearchX) - nPoints;
+    int endIndex = (sizeof mSearchCol)/(sizeof *mSearchCol) - nPoints;
 
-    for( int pullIndex = (sizeof mSearchX)/(sizeof *mSearchX); --pullIndex > endIndex && !mStopping; ) {
-        int x = mSearchX[pullIndex];
-        int y = mSearchY[pullIndex];
-        tryAt( x,   y-1 );
-        tryAt( x-1, y   );
-        tryAt( x,   y+1 );
-        tryAt( x+1, y   );
+    for( int pullIndex = (sizeof mSearchCol)/(sizeof *mSearchCol); --pullIndex > endIndex && !mStopping; ) {
+        int col = mSearchCol[pullIndex];
+        int row = mSearchRow[pullIndex];
+        tryAt( col,   row-1 );
+        tryAt( col-1, row   );
+        tryAt( col,   row+1 );
+        tryAt( col+1, row   );
     }
     return mPushIndex;
 }
@@ -140,23 +140,23 @@ void PathFinder::run()
     if ( !setjmp( mJmpBuf ) ) {
         // initialize the search map
         Game* game = getGame(this);
-        if ( game && game->canPlaceAtNonFuturistic( TANK, mTargetX, mTargetY, 0 )) {
+        if ( game && game->canPlaceAtNonFuturistic( TANK, mTargetCol, mTargetRow, 0 )) {
             Board* board = game->getBoard();
-            mMaxX  = board->getWidth()-1;
-            mMaxY = board->getHeight()-1;
+            mMaxCol  = board->getWidth()-1;
+            mMaxRow = board->getHeight()-1;
 
-            for( int y = mMaxY; !mStopping && y >= 0; --y ) {
-                for( int x = mMaxX; !mStopping && x >= 0; --x ) {
-                    mSearchMap[y*BOARD_MAX_WIDTH+x] = game->canPlaceAtNonFuturistic( TANK, x, y, 0 ) ? TRAVERSIBLE : BLOCKED;
+            for( int row = mMaxRow; !mStopping && row >= 0; --row ) {
+                for( int col = mMaxCol; !mStopping && col >= 0; --col ) {
+                    mSearchMap[row*BOARD_MAX_WIDTH+col] = game->canPlaceAtNonFuturistic( TANK, col, row, 0 ) ? TRAVERSIBLE : BLOCKED;
                 }
             }
 
-            mSearchMap[mStartingY*BOARD_MAX_WIDTH+mStartingX] = TARGET;
+            mSearchMap[mStartingRow*BOARD_MAX_WIDTH+mStartingCol] = TARGET;
             mPassValue = 0;
-            mSearchMap[mTargetY*BOARD_MAX_WIDTH+mTargetX] = mPassValue;
+            mSearchMap[mTargetRow*BOARD_MAX_WIDTH+mTargetCol] = mPassValue;
 
-            mSearchX[0] = mTargetX;
-            mSearchY[0] = mTargetY;
+            mSearchCol[0] = mTargetCol;
+            mSearchRow[0] = mTargetRow;
             int nPoints = 1;
             while( nPoints > 0 && !mStopping ) {
                 nPoints = pass1( nPoints );

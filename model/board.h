@@ -62,18 +62,18 @@ public:
 
     /**
      * @brief Query what the given square is
-     * @param x The column for the square of interest
-     * @param y The row for the square of interest
+     * @param col The column for the square of interest
+     * @param row The row for the square of interest
      * @return The type of square
      */
-    TileType tileAt( int x, int y ) const;
+    TileType tileAt( int col, int row ) const;
 
     /**
      * @brief Change the type for a given square
-     * @param x The column for the square to change
-     * @param y The row for the square to change
+     * @param col The column for the square to change
+     * @param row The row for the square to change
      */
-    void setTileAt( TileType, int x, int y );
+    void setTileAt( TileType, int col, int row );
 
     /**
      * @brief Get managed access to the peices on this board
@@ -84,12 +84,12 @@ public:
     /**
      * @brief Update the board as a result of the given push
      * @param mType The type of piece being pushed
-     * @param x The columnn that the piece is being pushed to
-     * @param y The row that the piece is being pushed to
+     * @param col The columnn that the piece is being pushed to
+     * @param row The row that the piece is being pushed to
      * @param pieceAngle The piece's current rotation
      * @return true if the push resulted in a change to the board
      */
-    bool applyPushResult( PieceType mType, int x, int y , int pieceAngle );
+    bool applyPushResult( PieceType mType, int col, int row, int pieceAngle );
 
     /**
      * @brief load a level
@@ -115,13 +115,13 @@ public:
      * @brief Get the column that the flag is on for this board
      * @return The column of the flag or -1 if the board does not contain a flag (malformed).
      */
-    int getFlagX() const;
+    int getFlagCol() const;
 
     /**
      * @brief Get the row that the flag is on for this board
      * @return The row of the flag or -1 if the board does not contain a flag (malformed).
      */
-    int getFlagY() const;
+    int getFlagRow() const;
 
     /**
      * @brief Get the column that the tank was loaded at for this board
@@ -143,20 +143,20 @@ signals:
 
     /**
      * @brief Signals that the given square has changed
-     * @param x The square's column
-     * @param y The square's row
+     * @param col The square's column
+     * @param row The square's row
      */
-    void tileChangedAt(int x, int y) const;
+    void tileChangedAt( int col, int row ) const;
 
 private:
-    void initPiece( PieceType type, int x, int y, int angle = 0 );
+    void initPiece( PieceType type, int col, int row, int angle = 0 );
     int mLevel;
     int mWidth;
     int mHeight;
-    int mFlagX;
-    int mFlagY;
-    int mTankWayPointX;
-    int mTankWayPointXY;
+    int mFlagCol;
+    int mFlagRow;
+    int mTankWayPointCol;
+    int mTankWayPointRow;
 
     unsigned char mTiles[BOARD_MAX_WIDTH*BOARD_MAX_HEIGHT];
 

@@ -303,7 +303,7 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
         {   Board* board = mGame->getBoard();
             Tank* tank = mGame->getTank();
             tank->stop();
-            mGame->findPath( board->getFlagX(), board->getFlagY(), tank->getRotation().toInt() );
+            mGame->findPath( board->getFlagCol(), board->getFlagRow(), tank->getRotation().toInt() );
             break;
         }
         default:

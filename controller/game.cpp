@@ -100,43 +100,43 @@ Push& Game::getMovingPiece()
 /**
  * @brief Helper method to determine the neighbor square for the given direction
  * @param angle The direction. Legal values are 0, 90, 180, 270.
- * @param x Input starting column. Returns the resultant column
- * @param y Input starting row. Returns the resultant row
+ * @param col Input starting column. Returns the resultant column
+ * @param row Input starting row. Returns the resultant row
  * @return true if the angle is legal
  */
-bool getAdjacentPosition( int angle, int *x, int *y )
+bool getAdjacentPosition( int angle, int *col, int *row )
 {
     switch( angle ) {
-    case   0: *y -= 1; return true;
-    case  90: *x += 1; return true;
-    case 180: *y += 1; return true;
-    case 270: *x -= 1; return true;
+    case   0: *row -= 1; return true;
+    case  90: *col += 1; return true;
+    case 180: *row += 1; return true;
+    case 270: *col -= 1; return true;
     default:
         ;
     }
     return false;
 }
 
-bool Game::canMoveFrom(PieceType what, int angle, int *x, int *y, Board* board, bool *pushResult ) {
-    return getAdjacentPosition(angle, x, y) && canPlaceAt( what, *x, *y, angle, board, pushResult );
+bool Game::canMoveFrom(PieceType what, int angle, int *col, int *row, Board* board, bool *pushResult ) {
+    return getAdjacentPosition(angle, col, row) && canPlaceAt( what, *col, *row, angle, board, pushResult );
 }
 
-bool Game::canMoveFrom(PieceType what, int angle, int *x, int *y, bool futuristic, bool *pushResult ) {
-    if ( getAdjacentPosition(angle, x, y) ) {
+bool Game::canMoveFrom(PieceType what, int angle, int *col, int *row, bool futuristic, bool *pushResult ) {
+    if ( getAdjacentPosition(angle, col, row) ) {
         Board* board;
         if ( futuristic && mFutureDelta.enabled() ) {
             board = mFutureDelta.getFutureBoard();
         } else {
             board = &mBoard;
         }
-        return canPlaceAt( what, *x, *y, angle, board, pushResult );
+        return canPlaceAt( what, *col, *row, angle, board, pushResult );
     }
     return false;
 }
 
 
-bool Game::advanceShot(int *angle, int *x, int *y, int *endOffset, ShotModel* source ) {
-    return getAdjacentPosition(*angle, x, y) && canShootThru( *x, *y, angle, endOffset, source );
+bool Game::advanceShot(int *angle, int *col, int *row, int *endOffset, ShotModel* source ) {
+    return getAdjacentPosition(*angle, col, row) && canShootThru( *col, *row, angle, endOffset, source );
 }
 
 void Game::onTankMoved( int col, int row )
@@ -157,12 +157,12 @@ void Game::onTankMoved( int col, int row )
     }
 }
 
-bool canSightThru( Board* board, int x, int y )
+bool canSightThru( Board* board, int col, int row )
 {
-    switch( board->tileAt( x, y ) ) {
+    switch( board->tileAt( col, row ) ) {
     case DIRT:
     case TILE_SUNK:
-        return board->getPieceManager()->typeAt( x, y ) == NONE;
+        return board->getPieceManager()->typeAt( col, row ) == NONE;
     case WATER:
         return true;
     default:
@@ -241,28 +241,28 @@ void Game::onMovingPieceChanged(QAbstractAnimation::State newState, QAbstractAni
     }
 }
 
-void Game::onBoardTileChanged( int x, int y )
+void Game::onBoardTileChanged( int col, int row )
 {
-    if ( mBoard.tileAt( x, y ) == DIRT ) {
+    if ( mBoard.tileAt( col, row ) == DIRT ) {
         sightCannons();
     }
 }
 
-bool Game::canPlaceAtNonFuturistic(PieceType what, int x, int y, int fromAngle, bool *pushResult )
+bool Game::canPlaceAtNonFuturistic(PieceType what, int col, int row, int fromAngle, bool *pushResult )
 {
-    return canPlaceAt( what, x, y, fromAngle, &mBoard, pushResult );
+    return canPlaceAt( what, col, row, fromAngle, &mBoard, pushResult );
 }
 
-bool Game::canPlaceAt(PieceType what, int x, int y, int fromAngle, Board* board, bool *pushResult )
+bool Game::canPlaceAt(PieceType what, int col, int row, int fromAngle, Board* board, bool *pushResult )
 {
-    switch( board->tileAt(x,y) ) {
+    switch( board->tileAt(col,row) ) {
     case DIRT:
     case TILE_SUNK:
-    {   PieceType hit = board->getPieceManager()->typeAt( x, y );
+    {   PieceType hit = board->getPieceManager()->typeAt( col, row );
         if ( hit != NONE ) {
             if ( what == TANK && pushResult ) {
                 *pushResult = true;
-                return canMoveFrom( hit, fromAngle, &x, &y, board );
+                return canMoveFrom( hit, fromAngle, &col, &row, board );
             }
             return false;
         }
@@ -324,9 +324,9 @@ bool onShootThruMovingPiece( int offset, /*int angle,*/ int *endOffset )
 {
     if ( abs(offset) < 24 ) {
         // enable if future tracking support implemented for push
-//        int x = mMovingPiece.getEndX()/24;
-//        int y = mMovingPiece.getEndY()/24;
-//        if ( canMoveFrom( mMovingPiece.getType(), angle, &x, &y, false ) ) {
+//        int col = mMovingPiece.getEndX()/24;
+//        int row = mMovingPiece.getEndY()/24;
+//        if ( canMoveFrom( mMovingPiece.getType(), angle, &col, &row, false ) ) {
 //            mMovingPiece.extend(angle);
 //        }
         *endOffset = offset;
@@ -362,11 +362,11 @@ bool Game::canShootThru( int col, int row, int *angle, int *endOffset, ShotModel
             }
 
             // push it:
-            int toX = col, toY = row;
-            if ( canMoveFrom( what->getType(), *angle, &toX, &toY, false ) ) {
+            int toCol = col, toRow = row;
+            if ( canMoveFrom( what->getType(), *angle, &toCol, &toRow, false ) ) {
                 SimplePiece simple( what );
                 pm->eraseAt( col, row );
-                mMovingPiece.start( simple, col*24, row*24, toX*24, toY*24 );
+                mMovingPiece.start( simple, col*24, row*24, toCol*24, toRow*24 );
             }
             break;
         }
@@ -420,16 +420,16 @@ bool Game::canShootThru( int col, int row, int *angle, int *endOffset, ShotModel
     return false;
 }
 
-void Game::onTankMovingInto( int x, int y, int fromAngle )
+void Game::onTankMovingInto( int col, int row, int fromAngle )
 {
     PieceSetManager* pm = mBoard.getPieceManager();
-    Piece* what = pm->pieceAt( x, y );
+    Piece* what = pm->pieceAt( col, row );
     if ( what ) {
-        int toX = x, toY = y;
-        if ( getAdjacentPosition(fromAngle, &toX, &toY) ) {
+        int toCol = col, toRow = row;
+        if ( getAdjacentPosition(fromAngle, &toCol, &toRow) ) {
             SimplePiece simple( what );
-            pm->eraseAt( x, y );
-            mMovingPiece.start( simple, x*24, y*24, toX*24, toY*24 );
+            pm->eraseAt( col, row );
+            mMovingPiece.start( simple, col*24, row*24, toCol*24, toRow*24 );
         } else {
             std::cout << "no adjacent for angle " << fromAngle << std::endl;
         }
@@ -461,35 +461,35 @@ void Game::onFuturePush( Piece* pushingPiece )
     mFutureDelta.enable();
 
     PieceType pushedType;
-    int x = pushingPiece->getX();
-    int y = pushingPiece->getY();
+    int col = pushingPiece->getX();
+    int row = pushingPiece->getY();
     int angle = pushingPiece->getAngle();
 
     // scoping pushedPiece here so it falls out of scope after erased:
-    {   Piece* pushedPiece = mFutureBoard.getPieceManager()->pieceAt( x, y );
+    {   Piece* pushedPiece = mFutureBoard.getPieceManager()->pieceAt( col, row );
         if ( !pushedPiece ) {
             std::cout << "*** pushed piece not found!" << std::endl;
             return;
         }
         pushedType = pushedPiece->getType();
         if ( !mFutureBoard.getPieceManager()->erase( pushedPiece ) ) {
-            std::cout << "*** failed to erase future piece at " << x << "," << y << std::endl;
+            std::cout << "*** failed to erase future piece at " << col << "," << row << std::endl;
         }
     }
 
-    if ( !getAdjacentPosition( angle, &x, &y ) ) {
-        std::cout << "*** failed to get future push position for " << angle << "/" << x << "," << y << std::endl;
+    if ( !getAdjacentPosition( angle, &col, &row ) ) {
+        std::cout << "*** failed to get future push position for " << angle << "/" << col << "," << row << std::endl;
         return;
     }
-    mFutureBoard.applyPushResult( pushedType, x, y, angle );
+    mFutureBoard.applyPushResult( pushedType, col, row, angle );
 }
 
-void Game::findPath(int targetX, int targetY , int startingDirection )
+void Game::findPath(int targetCol, int targetRow, int startingDirection )
 {
     // the path finder doesn't support pushing, so cancel any future moves before using:
     mFutureDelta.enable( false );
 
-    mPathFinder.findPath( targetX, targetY, mTank.getCol(), mTank.getRow(), startingDirection );
+    mPathFinder.findPath( targetCol, targetRow, mTank.getCol(), mTank.getRow(), startingDirection );
 }
 
 const PieceSet* Game::getDeltaPieces()
@@ -502,10 +502,10 @@ const PieceSet* Game::getDeltaPieces()
 
 void Game::undoFuturePush( Piece* pusher )
 {
-    int x = pusher->getX();
-    int y = pusher->getY();
-    if ( getAdjacentPosition( pusher->getAngle(), &x, &y ) ) {
-        Piece* pushee = mFutureBoard.getPieceManager()->pieceAt( x, y );
+    int col = pusher->getX();
+    int row = pusher->getY();
+    if ( getAdjacentPosition( pusher->getAngle(), &col, &row ) ) {
+        Piece* pushee = mFutureBoard.getPieceManager()->pieceAt( col, row );
         if ( pushee ) {
             PieceType type = pushee->getType();
             int angle = pushee->getAngle();

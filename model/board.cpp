@@ -2,7 +2,7 @@
 #include <QFile>
 #include "board.h"
 
-Board::Board( QObject* parent )  : QObject(parent), mLevel(0), mWidth(16), mHeight(16), mFlagX(-1), mFlagY(-1)
+Board::Board( QObject* parent )  : QObject(parent), mLevel(0), mWidth(16), mHeight(16), mFlagCol(-1), mFlagRow(-1)
 {
     memset( mTiles, EMPTY, sizeof mTiles );
 }
@@ -23,30 +23,30 @@ PieceSetManager* Board::getPieceManager()
     return &mPieceManager;
 }
 
-void Board::initPiece( PieceType type, int x, int y, int angle )
+void Board::initPiece( PieceType type, int col, int row, int angle )
 {
-    mPieceManager.insert( type, x, y, angle );
-    mTiles[y*BOARD_MAX_HEIGHT + x] = DIRT;
+    mPieceManager.insert( type, col, row, angle );
+    mTiles[row*BOARD_MAX_HEIGHT + col] = DIRT;
 }
 
 int Board::getTankStartCol() const
 {
-    return mTankWayPointX;
+    return mTankWayPointCol;
 }
 
 int Board::getTankStartRow() const
 {
-    return mTankWayPointXY;
+    return mTankWayPointRow;
 }
 
-int Board::getFlagX() const
+int Board::getFlagCol() const
 {
-    return mFlagX;
+    return mFlagCol;
 }
 
-int Board::getFlagY() const
+int Board::getFlagRow() const
 {
-    return mFlagY;
+    return mFlagRow;
 }
 
 bool Board::load( QString& fileName )
@@ -57,19 +57,19 @@ bool Board::load( QString& fileName )
     }
 
     char line[BOARD_MAX_WIDTH];
-    int y = 0;
-    unsigned char* row = mTiles;
+    int row = 0;
+    unsigned char* rowp = mTiles;
     mWidth = 0;
-    mTankWayPointX = mTankWayPointXY = 0;
-    mFlagX = mFlagY = -1;
+    mTankWayPointCol = mTankWayPointRow = 0;
+    mFlagCol = mFlagRow = -1;
     mPieceManager.reset();
 
     do {
         int nRead = file.readLine(line, sizeof line);
-        memset( row, EMPTY, BOARD_MAX_WIDTH * (sizeof *row) );
+        memset( rowp, EMPTY, BOARD_MAX_WIDTH * (sizeof *rowp) );
 
-        int i = 0, x = 0;
-        while( i < nRead && x < BOARD_MAX_WIDTH ) {
+        int i = 0, col = 0;
+        while( i < nRead && col < BOARD_MAX_WIDTH ) {
             while( isspace(line[i]) ) {
                 ++i;
             }
@@ -78,36 +78,36 @@ bool Board::load( QString& fileName )
             case 0:
                 --i;
                 break;
-            case 'S': row[x++] = STONE;     break;
-            case 'W': row[x++] = WOOD;      break;
-            case 'w': row[x++] = WATER;     break;
-            case 'e': row[x++] = EMPTY;     break;
-            case 'm': row[x++] = TILE_SUNK; break;
+            case 'S': rowp[col++] = STONE;     break;
+            case 'W': rowp[col++] = WOOD;      break;
+            case 'w': rowp[col++] = WATER;     break;
+            case 'e': rowp[col++] = EMPTY;     break;
+            case 'm': rowp[col++] = TILE_SUNK; break;
             case 'F':
-                mFlagX = x;
-                mFlagY = y;
-                row[x++] = FLAG;
+                mFlagCol = col;
+                mFlagRow = row;
+                rowp[col++] = FLAG;
                 break;
 
-            case 'M': initPiece( TILE,   x++, y      ); break;
-            case '^': initPiece( CANNON, x++, y      ); break;
-            case '>': initPiece( CANNON, x++, y,  90 ); break;
-            case 'v': initPiece( CANNON, x++, y, 180 ); break;
-            case '<': initPiece( CANNON, x++, y, 270 ); break;
+            case 'M': initPiece( TILE,   col++, row      ); break;
+            case '^': initPiece( CANNON, col++, row      ); break;
+            case '>': initPiece( CANNON, col++, row,  90 ); break;
+            case 'v': initPiece( CANNON, col++, row, 180 ); break;
+            case '<': initPiece( CANNON, col++, row, 270 ); break;
             case '[':
                 if ( nRead-i >= 2 ) {
                     int c1 = line[i++];
                     switch( (c1 << 8) | line[i++] ) {
-                    case ('S' <<8)|'/':  row[x++] = STONE_MIRROR;     break;
-                    case ('\\'<<8)|'S':  row[x++] = STONE_MIRROR__90; break;
-                    case ('/' <<8)|'S':  row[x++] = STONE_MIRROR_180; break;
-                    case ('S' <<8)|'\\': row[x++] = STONE_MIRROR_270; break;
-                    case ('S' <<8)|'-':  row[x++] = STONE_SLIT;       break;
-                    case ('S' <<8)|'|':  row[x++] = STONE_SLIT_90;    break;
-                    case ('M' <<8)|'/':  initPiece( TILE_MIRROR, x++, y,   0 ); break;
-                    case ('\\'<<8)|'M':  initPiece( TILE_MIRROR, x++, y,  90 ); break;
-                    case ('/' <<8)|'M':  initPiece( TILE_MIRROR, x++, y, 180 ); break;
-                    case ('M' <<8)|'\\': initPiece( TILE_MIRROR, x++, y, 270 ); break;
+                    case ('S' <<8)|'/':  rowp[col++] = STONE_MIRROR;     break;
+                    case ('\\'<<8)|'S':  rowp[col++] = STONE_MIRROR__90; break;
+                    case ('/' <<8)|'S':  rowp[col++] = STONE_MIRROR_180; break;
+                    case ('S' <<8)|'\\': rowp[col++] = STONE_MIRROR_270; break;
+                    case ('S' <<8)|'-':  rowp[col++] = STONE_SLIT;       break;
+                    case ('S' <<8)|'|':  rowp[col++] = STONE_SLIT_90;    break;
+                    case ('M' <<8)|'/':  initPiece( TILE_MIRROR, col++, row,   0 ); break;
+                    case ('\\'<<8)|'M':  initPiece( TILE_MIRROR, col++, row,  90 ); break;
+                    case ('/' <<8)|'M':  initPiece( TILE_MIRROR, col++, row, 180 ); break;
+                    case ('M' <<8)|'\\': initPiece( TILE_MIRROR, col++, row, 270 ); break;
                     default:
                         ;
                     }
@@ -115,25 +115,25 @@ bool Board::load( QString& fileName )
                 break;
 
             case 'T':
-                mTankWayPointX = x;
-                mTankWayPointXY = y;
+                mTankWayPointCol = col;
+                mTankWayPointRow = row;
 
                 // fall through
 
-            default:  row[x++] = DIRT;  break;
+            default:  rowp[col++] = DIRT;  break;
             }
         }
-        if ( !x ) {
+        if ( !col ) {
             break;
         }
-        if ( x > mWidth ) {
-            mWidth = x;
+        if ( col > mWidth ) {
+            mWidth = col;
         }
-        row += BOARD_MAX_WIDTH;
-    } while( ++y < BOARD_MAX_HEIGHT );
+        rowp += BOARD_MAX_WIDTH;
+    } while( ++row < BOARD_MAX_HEIGHT );
     file.close();
 
-    mHeight = y;
+    mHeight = row;
     mLevel = -1;
 
     return true;
@@ -164,27 +164,27 @@ int Board::getLevel()
     return mLevel;
 }
 
-TileType Board::tileAt( int x, int y ) const {
-    return (x >= 0 && y >= 0 && x < mWidth && y < mHeight) ? ((TileType) mTiles[y*BOARD_MAX_WIDTH+x]) : STONE;
+TileType Board::tileAt( int col, int row ) const {
+    return (col >= 0 && row >= 0 && col < mWidth && row < mHeight) ? ((TileType) mTiles[row*BOARD_MAX_WIDTH+col]) : STONE;
 }
 
-void Board::setTileAt( TileType id, int x, int y )
+void Board::setTileAt( TileType id, int col, int row )
 {
-    if ( x >= 0 && y >= 0 && x < mWidth && y < mHeight ) {
-        mTiles[y*BOARD_MAX_WIDTH+x] = id;
-        emit tileChangedAt( x, y );
+    if ( col >= 0 && row >= 0 && col < mWidth && row < mHeight ) {
+        mTiles[row*BOARD_MAX_WIDTH+col] = id;
+        emit tileChangedAt( col, row );
     }
 }
 
-bool Board::applyPushResult( PieceType mType, int x, int y, int pieceAngle )
+bool Board::applyPushResult( PieceType mType, int col, int row, int pieceAngle )
 {
-    if ( tileAt(x,y) != WATER ) {
-        mPieceManager.insert( mType, x, y, pieceAngle );
+    if ( tileAt(col,row) != WATER ) {
+        mPieceManager.insert( mType, col, row, pieceAngle );
         return true;
     }
 
     if ( mType == TILE ) {
-        setTileAt( TILE_SUNK, x, y );
+        setTileAt( TILE_SUNK, col, row );
         return true;
     }
 
