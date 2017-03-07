@@ -27,7 +27,8 @@ HEADERS += \
     model/boarddelta.h \
     view/boardwindow.h \
     model/tank.h \
-    util/gameutils.h
+    util/gameutils.h \
+    view/tankview.h
 
 SOURCES += \
            model/board.cpp \
@@ -47,7 +48,8 @@ SOURCES += \
     model/boarddelta.cpp \
     view/boardwindow.cpp \
     model/tank.cpp \
-    util/gameutils.cpp
+    util/gameutils.cpp \
+    view/tankview.cpp
 
 RESOURCES += qml.qrc
 

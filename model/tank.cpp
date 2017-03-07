@@ -7,14 +7,8 @@
 #include "util/renderutils.h"
 #include "util/gameutils.h"
 
-Tank::Tank(QObject* parent) : Shooter(parent), mCol(0), mRow(0), mInReset(false)
+Tank::Tank(QObject* parent) : TankView(parent), mCol(0), mRow(0), mInReset(false)
 {
-    mRotateAnimation.setTargetObject(this);
-    mRotateAnimation.setPropertyName("rotation");
-    mHorizontalAnimation.setTargetObject(this);
-    mHorizontalAnimation.setPropertyName("x");
-    mVerticalAnimation.setTargetObject(this);
-    mVerticalAnimation.setPropertyName("y");
 }
 
 void Tank::init( Game* game )
@@ -30,114 +24,18 @@ void Tank::init( Game* game )
     mRotateAnimation.setController( controller );
     mHorizontalAnimation.setController( controller );
     mVerticalAnimation.setController( controller );
-    Shooter::init( game, QColor(0,255,33) );
-}
-
-void Tank::render( const QRect* rect, QPainter* painter )
-{
-    if ( rect->intersects( mBoundingRect ) ) {
-        int x = mBoundingRect.left();
-        int y = mBoundingRect.top();
-        if ( mRotation != 0 ) {
-            renderRotation( x, y, mRotation.toInt(), painter );
-        }
-        drawPixmap( x, y, TANK, painter );
-        if ( !painter->transform().isRotating() ) {
-            mPreviousPaintRect = mBoundingRect;
-        } else {
-            mPreviousPaintRect = painter->transform().mapRect( mBoundingRect );
-        }
-        painter->resetTransform();
-    }
-
-    getShot().render( painter );
-}
-
-void Tank::stop()
-{
-    mRotateAnimation.stop();
-    mHorizontalAnimation.stop();
-    mVerticalAnimation.stop();
-}
-
-void Tank::pause()
-{
-    mRotateAnimation.pause();
-    mHorizontalAnimation.pause();
-    mVerticalAnimation.pause();
-}
-
-void Tank::resume()
-{
-    mRotateAnimation.resume();
-    mHorizontalAnimation.resume();
-    mVerticalAnimation.resume();
+    TankView::init( game );
 }
 
 void Tank::reset( int col, int row )
 {
+mInReset = true;
     mCol = col;
     mRow = row;
+    mMoves.reset();
     QPoint p( col*24, row*24 );
-    reset( p );
-}
-
-void Tank::reset( QPoint& p )
-{
-    mInReset = true;
-        stop();
-        Shooter::reset( p );
-        mMoves.reset();
-        mRotation = 0;
-    mInReset = false;
-}
-
-void Tank::setX( const QVariant& x )
-{
-    if ( !mInReset ) {
-        int xv = x.toInt();
-        if ( xv != mBoundingRect.left() ) {
-            QRect dirty( mPreviousPaintRect );
-            mBoundingRect.moveLeft( xv );
-            dirty |= mBoundingRect;
-            emit changed( dirty );
-
-            if ( !(xv % 24) ) {
-                mCol = xv/24;
-                mRow = mBoundingRect.top()/24;
-                emit moved( mCol, mRow );
-            }
-        }
-    }
-}
-
-void Tank::setY( const QVariant& y )
-{
-    if ( !mInReset ) {
-        int yv = y.toInt();
-        if ( yv != mBoundingRect.top() ) {
-            QRect dirty( mPreviousPaintRect );
-            mBoundingRect.moveTop( yv );
-            dirty |= mBoundingRect;
-            emit changed( dirty );
-
-            if ( !(yv % 24) ) {
-                mCol = mBoundingRect.left()/24;
-                mRow = yv/24;
-                emit moved( mCol, mRow );
-            }
-        }
-    }
-}
-
-void Tank::setRotation( const QVariant& angle )
-{
-    if ( !mInReset ) {
-        if ( mRotation != angle ) {
-            mRotation = angle;
-            emit changed( mPreviousPaintRect );
-        }
-    }
+    TankView::reset( p );
+mInReset = false;
 }
 
 void Tank::move( int direction )
@@ -226,13 +124,20 @@ void Tank::onAnimationsFinished()
         if ( mMoves.size() ) {
             Piece* piece = mMoves.getList()->front();
             if ( piece->getAngle() == rotation
-              && piece->getX() == mBoundingRect.left()/24
-              && piece->getY() == mBoundingRect.top()/24 ) {
+              && piece->getX() == mCol
+              && piece->getY() == mRow ) {
                 mMoves.eraseFront();
             }
             followPath();
         }
     }
+}
+
+void Tank::onMoved(int col, int row)
+{
+    mCol = col;
+    mRow = row;
+    emit moved( mCol, mRow );
 }
 
 PieceListManager* Tank::getMoves()
