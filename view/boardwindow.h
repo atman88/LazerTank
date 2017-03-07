@@ -5,10 +5,12 @@ class BoardWindow;
 
 #include <QtGui>
 #include <QMouseEvent>
-#include "tank.h"
 #include "shotview.h"
 #include "controller/game.h"
 
+/**
+ * @brief The main window
+ */
 class BoardWindow : public QWindow
 {
     Q_OBJECT
@@ -18,13 +20,11 @@ public:
     explicit BoardWindow(QWindow *parent = 0);
     ~BoardWindow()
     {
-        delete mTank;
         delete mBackingStore;
     }
 
     GameHandle getGame() const;
     virtual void render(QRegion *region);
-    Tank* getTank();
     void onTankKilled();
 
 signals:
@@ -52,17 +52,14 @@ private:
       const PieceSet* deltas, QPainter* painter );
     void renderMove( int x, int y, int angle = 0 );
     void renderListIn(PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter );
-    QPen mPen;
-    Tank* mTank;
-    ShotModel* mShot;
 
     QBackingStore *mBackingStore;
+    QPen mPen;
+
     QRegion mDirtyRegion;
     QRegion mRenderRegion;
 
     Game* mGame;
-
-    int mActiveMoveDirection;
 };
 
 #endif // BOARDWINDOW_H

@@ -2,7 +2,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QMessageBox>
-#include "BoardWindow.h"
+#include "boardwindow.h"
 
 #include "util/renderutils.h"
 #include "util/imageutils.h"
@@ -16,21 +16,6 @@ BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
     create();
 
     mBackingStore = new QBackingStore(this);
-
-    mTank = new Tank();
-    mTank->setParent(this);
-    QObject::connect( mTank, &Tank::changed,    this, &BoardWindow::renderLater       );
-    QObject::connect( mTank->getMoves(), &PieceListManager::appended, this, &BoardWindow::renderSquareLater );
-    QObject::connect( mTank->getMoves(), &PieceListManager::erased,   this, &BoardWindow::renderSquareLater );
-    QObject::connect( mTank->getMoves(), &PieceListManager::replaced, this, &BoardWindow::renderSquareLater );
-
-    mShot = new ShotModel(mTank);
-    mShot->setColor( QColor(0,255,33) );
-    QObject::connect( mShot, &ShotModel::tankKilled, this, &BoardWindow::onTankKilled );
-    QObject::connect( mShot, &ShotView::rectDirty, this, &BoardWindow::renderLater );
-
-    mActiveMoveDirection = -1;
-
 }
 
 void BoardWindow::exposeEvent(QExposeEvent *)
@@ -56,21 +41,16 @@ void BoardWindow::setGame(const GameHandle handle )
 
     mGame = handle.game;
     if ( mGame ) {
-        QObject::connect( &mGame->getMovingPiece(),&Push::rectDirty,   this,  &BoardWindow::renderLater      );
-        QObject::connect( mTank,                   &Tank::movingInto,   mGame, &Game::onTankMovingInto        );
-        QObject::connect( mTank,                   &Tank::moved,        mGame, &Game::onTankMoved             );
-
         Board* board = mGame->getBoard();
         if ( board ) {
             onBoardLoaded();
             QObject::connect( board, &Board::boardLoaded,   this, &BoardWindow::onBoardLoaded     );
             QObject::connect( board, &Board::tileChangedAt, this, &BoardWindow::renderSquareLater );
+
             PieceSetManager* pm = board->getPieceManager();
             QObject::connect( pm, &PieceSetManager::erasedAt,  this, &BoardWindow::renderSquareLater );
             QObject::connect( pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
         }
-        mTank->init( mGame );
-        mShot->init( mGame->getShotAggregate() );
     }
 }
 
@@ -81,8 +61,6 @@ void BoardWindow::onBoardLoaded()
         QRect size( 0, 0, board->getWidth()*24, board->getHeight()*24 );
         setGeometry(size);
         mDirtyRegion += size;
-        mTank->reset( board->getTankWayPointX(), board->getTankWayPointY() );
-        mShot->reset();
 
         renderLater( size );
 
@@ -204,12 +182,9 @@ void BoardWindow::renderOneRect( const QRect* rect, Board* board, const PieceMul
     renderListIn( moveIterator, moves->end(), rect, painter );
 
     mGame->getMovingPiece().render( rect, painter );
-    if ( rect->intersects( mTank->getRect() ) ) {
-        mTank->render( painter );
-    }
+    mGame->getTank()->render( rect, painter );
 
     mGame->getCannonShot().render( painter );
-    mShot->render( painter );
 }
 
 void BoardWindow::render(QRegion* region)
@@ -222,7 +197,7 @@ void BoardWindow::render(QRegion* region)
         return;
     }
 
-    const PieceMultiSet* moves = mTank->getMoves()->toMultiSet();
+    const PieceMultiSet* moves = mGame->getTank()->getMoves()->toMultiSet();
     const PieceSet* tiles = board->getPieceManager()->getPieces();
     const PieceSet* deltas = mGame->getDeltaPieces();
 
@@ -284,11 +259,10 @@ int keyToAngle( int key )
 
 void BoardWindow::keyPressEvent(QKeyEvent *ev)
 {
-    if ( !ev->isAutoRepeat()
-      && mGame ) {
+    if ( !ev->isAutoRepeat() && mGame ) {
         switch( ev->key() ) {
         case Qt::Key_Space:
-            mShot->fire( mTank );
+            mGame->getTank()->fire();
             break;
 
         case Qt::Key_Shift:
@@ -298,16 +272,16 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
         case Qt::Key_C: // attempt to capture the flag
         {   Board* board = mGame->getBoard();
             if ( board ) {
-                mTank->stop();
-                mGame->findPath( board->getFlagX(), board->getFlagY(), mTank->getRotation().toInt() );
+                Tank* tank = mGame->getTank();
+                tank->stop();
+                mGame->findPath( board->getFlagX(), board->getFlagY(), tank->getRotation().toInt() );
             }
             break;
         }
         default:
             int rotation = keyToAngle(ev->key());
             if ( rotation >= 0 ) {
-                mTank->move( rotation );
-                mActiveMoveDirection = rotation;
+                mGame->getTank()->move( rotation );
             }
         }
     }
@@ -315,10 +289,10 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
 
 void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
 {
-    if ( !ev->isAutoRepeat() ) {
+    if ( !ev->isAutoRepeat() && mGame ) {
         switch( ev->key() ) {
         case Qt::Key_Space:
-            mShot->startShedding();
+            mGame->getTank()->ceaseFire();
             break;
 
         case Qt::Key_Shift:
@@ -326,24 +300,22 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
             break;
 
         case Qt::Key_C:
-                mTank->move();
+                mGame->getTank()->move();
                 break;
 
         case Qt::Key_Backspace:
-        {   PieceListManager* moveManager = mTank->getMoves();
+        {   PieceListManager* moveManager = mGame->getTank()->getMoves();
             Piece* piece = moveManager->getList()->back();
             if ( piece ) {
                 if ( piece->hasPush() && mGame ) {
                     mGame->undoFuturePush( piece );
                 }
-                mTank->getMoves()->eraseBack();
+                mGame->getTank()->getMoves()->eraseBack();
             }
             break;
         }
         default:
-            if ( keyToAngle(ev->key()) >= 0 ) {
-                mActiveMoveDirection = -1;
-            }
+            ;
         }
     }
 }
@@ -367,9 +339,11 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
         break;
     }
     case Qt::LeftButton:
-        mTank->stop();
-        mGame->findPath( event->pos().x()/24, event->pos().y()/24, mTank->getRotation().toInt() );
+    {   Tank* tank = mGame->getTank();
+        tank->stop();
+        mGame->findPath( event->pos().x()/24, event->pos().y()/24, tank->getRotation().toInt() );
         break;
+    }
     default:
         ;
     }
@@ -377,18 +351,15 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
 
 void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
 {
-    switch( event->button() ) {
-    case Qt::LeftButton:
-        mTank->move();
-        break;
-    default:
-        ;
+    if ( mGame ) {
+        switch( event->button() ) {
+        case Qt::LeftButton:
+            mGame->getTank()->move();
+            break;
+        default:
+            ;
+        }
     }
-}
-
-Tank* BoardWindow::getTank()
-{
-    return mTank;
 }
 
 void BoardWindow::onTankKilled()

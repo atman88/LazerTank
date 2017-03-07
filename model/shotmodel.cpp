@@ -35,6 +35,7 @@ void ShotModel::fire( Shooter* shooter )
 {
     int direction = shooter->getRotation().toInt();
     if ( !(direction % 90) ) {
+        mAnimation.stop();
         reset();
         mLeadingDirection = direction;
         mLeadingCol = shooter->getX().toInt()/24;

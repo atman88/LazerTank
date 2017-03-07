@@ -11,9 +11,10 @@ class Game;
 #include "model/boarddelta.h"
 #include "model/board.h"
 #include "model/shotmodel.h"
+#include "model/tank.h"
 #include "view/push.h"
 #include "view/shooter.h"
-#include "view/BoardWindow.h"
+#include "view/boardwindow.h"
 
 /**
  * @brief The Game handle
@@ -39,6 +40,7 @@ public:
     GameHandle getHandle();
     void init( BoardWindow* window );
     Board* getBoard();
+    Tank* getTank();
 
     /**
      * The single piece currently being pushed.
@@ -132,6 +134,11 @@ public:
      */
     const PieceSet* getDeltaPieces();
 
+    /**
+     * @brief Get this game's window
+     */
+    BoardWindow *getWindow() const;
+
 public slots:
     /**
      * @brief Recieves notification that the tank is now in the given square
@@ -208,11 +215,13 @@ private:
     AnimationStateAggregator mShotAggregate;
 
     GameHandle mHandle;
+    BoardWindow* mWindow;
+
     Board mBoard;
     PathFinder mPathFinder;
     Push mMovingPiece;
+    Tank mTank;
     Shooter mActiveCannon;
-    ShotModel mCannonShot;
     Board mFutureBoard;
     BoardDelta mFutureDelta;
 

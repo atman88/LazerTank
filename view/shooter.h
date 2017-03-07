@@ -5,6 +5,12 @@
 #include <QVariant>
 #include <QRect>
 
+class Game;
+class BoardWindow;
+class Shooter;
+
+#include "model/shotmodel.h"
+
 class Shooter : public QObject
 {
     Q_OBJECT
@@ -15,8 +21,15 @@ class Shooter : public QObject
 public:
     Shooter(QObject *parent = 0);
     virtual ~Shooter() {}
+    void init( Game* game, QColor color );
 
-    void reset( QPoint& p );
+    void reset( QPoint p );
+
+    void fire();
+    void ceaseFire();
+
+    ShotModel& getShot();
+
     QVariant getRotation();
     QVariant getX();
     QVariant getY();
@@ -30,6 +43,9 @@ public slots:
 protected:
     QVariant mRotation;
     QRect mBoundingRect;
+
+private:
+    ShotModel mShot;
 };
 
 #endif // SHOOTER_H

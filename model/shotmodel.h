@@ -3,8 +3,12 @@
 
 #include <QPropertyAnimation>
 
+class Game;
+
 #include "view/shotview.h"
-#include "view/shooter.h"
+
+class AnimationStateAggregator;
+class Shooter;
 
 class ShotModel : public ShotView
 {
@@ -52,8 +56,8 @@ signals:
 
 public slots:
     /**
-     * @brief Fires (shoots) the laser beam
-     * @param shooter Provides the active point of origin
+     * @brief Fire the laser beam (i.e. shoot)
+     * @param shooter Identifies the active point of origin
      */
     void fire( Shooter* shooter );
 

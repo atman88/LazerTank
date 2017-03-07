@@ -4,6 +4,9 @@
 #include <QPainter>
 #include "model/piece.h"
 
+// A null point value which is not used in the game's coordinate space
+extern const QPoint NullPoint;
+
 /**
  * @brief Apply the transformation for for rendering the given position with the given rotation
  * @param x Upperleft x window coordinate

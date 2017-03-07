@@ -10,10 +10,9 @@
 #include <QPainter>
 
 #include "piecelistmanager.h"
-#include "shooter.h"
-#include "controller/animationstateaggregator.h"
 
-class Game;
+class Shooter;
+
 
 class ShotView : public QObject
 {

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <QApplication>
-#include "view/BoardWindow.h"
+#include "view/boardwindow.h"
 #include "controller/game.h"
 
 int main(int argc, char *argv[])

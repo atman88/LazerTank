@@ -7,9 +7,6 @@
 
 using namespace std;
 
-// Define our own Null value because QPoint's isNull method keys on (0,0) which is a valid model point
-static const QPoint NullPoint(-1,-1);
-
 ShotView::ShotView(QObject *parent) : QObject(parent), mShooter(0), mTerminationAngle(-1), mKillTheTank(false)
 {
     mLeadPoint = mTailPoint = NullPoint;

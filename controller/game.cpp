@@ -5,8 +5,9 @@
 
 #include "game.h"
 #include "speedcontroller.h"
+#include "util/renderutils.h"
 
-Game::Game() : mTankBoardX(0), mTankBoardY(0)
+Game::Game() : mWindow(0), mTankBoardX(0), mTankBoardY(0)
 {
     mHandle.game = this;
     setProperty("GameHandle", QVariant::fromValue(mHandle));
@@ -14,22 +15,35 @@ Game::Game() : mTankBoardX(0), mTankBoardY(0)
 
 void Game::init( BoardWindow* window )
 {
+    mWindow = window;
     window->setGame( mHandle );
+
     mMovingPiece.setParent( this );
+    QObject::connect( &mMovingPiece, &Push::rectDirty, window, &BoardWindow::renderLater );
+
+    mTank.init( this );
+    QObject::connect( &mTank, &Tank::movingInto, this, &Game::onTankMovingInto );
+    QObject::connect( &mTank, &Tank::moved,      this, &Game::onTankMoved      );
+    QObject::connect( &mTank, &Tank::changed, window, &BoardWindow::renderLater );
 
     mActiveCannon.setParent(this);
+    mActiveCannon.init( this, QColor(255,50,83) );
+
+    PieceListManager* moveManager = mTank.getMoves();
+    QObject::connect( moveManager, &PieceListManager::appended, window, &BoardWindow::renderSquareLater );
+    QObject::connect( moveManager, &PieceListManager::erased,   window, &BoardWindow::renderSquareLater );
+    QObject::connect( moveManager, &PieceListManager::replaced, window, &BoardWindow::renderSquareLater );
+
     mPathFinder.setParent(this);
     mMoveAggregate.setObjectName("MoveAggregate");
     mShotAggregate.setObjectName("ShotAggregate");
 
     mMovingPiece.init( this );
-    mCannonShot.setColor( QColor(255,50,83) );
     mFutureDelta.init( &mBoard, &mFutureBoard );
 
     QObject::connect( &mBoard, &Board::tileChangedAt, this, &Game::onBoardTileChanged );
     QObject::connect( &mBoard, &Board::boardLoaded,   this, &Game::onBoardLoaded      );
 
-    QObject::connect( &mCannonShot, &ShotModel::rectDirty, window, &BoardWindow::renderLater );
     QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::erasedAt,   window, &BoardWindow::renderSquareLater );
     QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::insertedAt, window, &BoardWindow::renderSquareLater );
 
@@ -37,12 +51,10 @@ void Game::init( BoardWindow* window )
 
     QObject::connect( window, &BoardWindow::setSpeed, &mSpeedController, &SpeedController::setSpeed );
 
-    QObject::connect( window->getTank(), &Tank::idled,           this, &Game::endMoveDeltaTracking );
-    QObject::connect( &mPathFinder,      &PathFinder::pathFound, this, &Game::endMoveDeltaTracking );
+    QObject::connect( &mTank,       &Tank::idled,           this, &Game::endMoveDeltaTracking );
+    QObject::connect( &mPathFinder, &PathFinder::pathFound, this, &Game::endMoveDeltaTracking );
 
-    QObject::connect( &mPathFinder, &PathFinder::pathFound, window->getTank()->getMoves(), &PieceListManager::reset );
-
-    QObject::connect( &mCannonShot, &ShotModel::tankKilled, window, &BoardWindow::onTankKilled );
+    QObject::connect( &mPathFinder, &PathFinder::pathFound, mTank.getMoves(), &PieceListManager::reset );
 
     mBoard.load( 1 );
 }
@@ -52,7 +64,8 @@ void Game::onBoardLoaded()
     mTankBoardX = mBoard.getTankWayPointX();
     mTankBoardY = mBoard.getTankWayPointY();
     mFutureDelta.enable( false );
-    mCannonShot.reset();
+    mTank.reset( mTankBoardX, mTankBoardY );
+    mActiveCannon.reset( NullPoint );
     mSpeedController.setSpeed(LOW_SPEED);
 }
 
@@ -69,6 +82,11 @@ GameHandle Game::getHandle()
 Board* Game::getBoard()
 {
     return &mBoard;
+}
+
+Tank* Game::getTank()
+{
+    return &mTank;
 }
 
 Push& Game::getMovingPiece()
@@ -204,12 +222,12 @@ void Game::sightCannons()
             }
         }
     }
+
     if ( sighted ) {
-        mCannonShot.setParent( &mActiveCannon );
         mActiveCannon.setX( fireX*24 );
         mActiveCannon.setY( fireY*24 );
         mActiveCannon.setRotation( fireAngle );
-        mCannonShot.fire( &mActiveCannon );
+        mActiveCannon.fire();
     }
 }
 
@@ -255,6 +273,11 @@ bool Game::canPlaceAt(PieceType what, int x, int y, int fromAngle, Board* board,
         ;
     }
     return false;
+}
+
+BoardWindow *Game::getWindow() const
+{
+    return mWindow;
 }
 
 bool getShotReflection( int mirrorAngle, int *shotAngle )
@@ -422,7 +445,7 @@ AnimationStateAggregator* Game::getShotAggregate()
 
 ShotModel& Game::getCannonShot()
 {
-    return mCannonShot;
+    return mActiveCannon.getShot();
 }
 
 SpeedController *Game::getSpeedController()

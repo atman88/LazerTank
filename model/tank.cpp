@@ -18,6 +18,7 @@ Tank::Tank(QObject* parent) : Shooter(parent), mInReset(false)
 
 void Tank::init( Game* game )
 {
+    setParent(game);
     AnimationStateAggregator* aggregate = game->getMoveAggregate();
     QObject::connect( &mRotateAnimation,     &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
     QObject::connect( &mHorizontalAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
@@ -28,22 +29,27 @@ void Tank::init( Game* game )
     mRotateAnimation.setController( controller );
     mHorizontalAnimation.setController( controller );
     mVerticalAnimation.setController( controller );
+    Shooter::init( game, QColor(0,255,33) );
 }
 
-void Tank::render( QPainter* painter )
+void Tank::render( const QRect* rect, QPainter* painter )
 {
-    int x = mBoundingRect.left();
-    int y = mBoundingRect.top();
-    if ( mRotation != 0 ) {
-        renderRotation( x, y, mRotation.toInt(), painter );
+    if ( rect->intersects( mBoundingRect ) ) {
+        int x = mBoundingRect.left();
+        int y = mBoundingRect.top();
+        if ( mRotation != 0 ) {
+            renderRotation( x, y, mRotation.toInt(), painter );
+        }
+        drawPixmap( x, y, TANK, painter );
+        if ( !painter->transform().isRotating() ) {
+            mPreviousPaintRect = mBoundingRect;
+        } else {
+            mPreviousPaintRect = painter->transform().mapRect( mBoundingRect );
+        }
+        painter->resetTransform();
     }
-    drawPixmap( x, y, TANK, painter );
-    if ( !painter->transform().isRotating() ) {
-        mPreviousPaintRect = mBoundingRect;
-    } else {
-        mPreviousPaintRect = painter->transform().mapRect( mBoundingRect );
-    }
-    painter->resetTransform();
+
+    getShot().render( painter );
 }
 
 void Tank::stop()
@@ -71,40 +77,45 @@ void Tank::reset( QPoint& p )
 
 void Tank::setX( const QVariant& x )
 {
-    int xv = x.toInt();
-    if ( xv != mBoundingRect.left() ) {
-        QRect dirty( mPreviousPaintRect );
-        mBoundingRect.moveLeft( xv );
-        dirty |= mBoundingRect;
-        emit changed( dirty );
+    if ( !mInReset ) {
+        int xv = x.toInt();
+        if ( xv != mBoundingRect.left() ) {
+            QRect dirty( mPreviousPaintRect );
+            mBoundingRect.moveLeft( xv );
+            dirty |= mBoundingRect;
+            emit changed( dirty );
 
-        if ( !(xv % 24) ) {
-            emit moved( xv/24, mBoundingRect.top()/24 );
+            if ( !(xv % 24) ) {
+                emit moved( xv/24, mBoundingRect.top()/24 );
+            }
         }
     }
 }
 
 void Tank::setY( const QVariant& y )
 {
-    int yv = y.toInt();
-    if ( yv != mBoundingRect.top() ) {
-        QRect dirty( mPreviousPaintRect );
-        mBoundingRect.moveTop( yv );
-        dirty |= mBoundingRect;
-        emit changed( dirty );
+    if ( !mInReset ) {
+        int yv = y.toInt();
+        if ( yv != mBoundingRect.top() ) {
+            QRect dirty( mPreviousPaintRect );
+            mBoundingRect.moveTop( yv );
+            dirty |= mBoundingRect;
+            emit changed( dirty );
 
-        if ( !(yv % 24) ) {
-            emit moved( mBoundingRect.left()/24, yv/24 );
+            if ( !(yv % 24) ) {
+                emit moved( mBoundingRect.left()/24, yv/24 );
+            }
         }
     }
 }
 
-
 void Tank::setRotation( const QVariant& angle )
 {
-    if ( mRotation != angle ) {
-        mRotation = angle;
-        emit changed( mPreviousPaintRect );
+    if ( !mInReset ) {
+        if ( mRotation != angle ) {
+            mRotation = angle;
+            emit changed( mPreviousPaintRect );
+        }
     }
 }
 

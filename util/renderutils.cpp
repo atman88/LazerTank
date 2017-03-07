@@ -2,6 +2,9 @@
 #include "renderutils.h"
 #include "imageutils.h"
 
+// A null point value which is not used in the game's coordinate space
+const QPoint NullPoint(-1,-1);
+
 void renderRotation( int x, int y, int angle, QPainter* painter )
 {
     int centerX = x + 24/2;
