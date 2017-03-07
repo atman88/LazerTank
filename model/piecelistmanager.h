@@ -37,7 +37,7 @@ public:
     /**
      * @brief Adds a new piece to the end of this list from the given values
      */
-    void append( PieceType type, int x, int y, int angle = 0, bool hasPush = false );
+    void append( PieceType type, int col, int row, int angle = 0, bool hasPush = false );
 
     /**
      * @brief Adds a copy of the given piece to the end of this list
@@ -72,22 +72,22 @@ public:
 signals:
     /**
      * @brief Notifies that a new piece was added at the end of the list
-     * @param x The column of the new piece
-     * @param y The row of the new piece
+     * @param col The column of the new piece
+     * @param row The row of the new piece
      */
-    void appended( int x, int y );
+    void appended( int col, int row );
     /**
      * @brief Notifies that a piece was deleted from the list
-     * @param x The column of the deleted piece
-     * @param y The row of the deleted piece
+     * @param col The column of the deleted piece
+     * @param row The row of the deleted piece
      */
-    void erased( int x, int y );
+    void erased( int col, int row );
     /**
      * @brief Notifies that a piece in the list was modified
-     * @param x The column of the modified piece
-     * @param y The row of the modified piece
+     * @param col The column of the modified piece
+     * @param row The row of the modified piece
      */
-    void replaced( int x, int y );
+    void replaced( int col, int row );
 
 public slots:
     /**

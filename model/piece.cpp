@@ -7,14 +7,14 @@ PieceType Piece::getType() const
     return mType;
 }
 
-int Piece::getX() const
+int Piece::getCol() const
 {
-    return mX;
+    return mCol;
 }
 
-int Piece::getY() const
+int Piece::getRow() const
 {
-    return mY;
+    return mRow;
 }
 
 int Piece::getAngle() const
@@ -24,7 +24,7 @@ int Piece::getAngle() const
 
 void Piece::getBounds( QRect *rect ) const
 {
-    rect->setRect( mX*24, mY*24, 24, 24 );
+    rect->setRect( mCol*24, mRow*24, 24, 24 );
 }
 
 void Piece::setType( PieceType type )

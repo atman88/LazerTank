@@ -49,10 +49,10 @@ public:
 public slots:
     /**
      * @brief Receives changes from the two boards
-     * @param x The column associated with the change
-     * @param y The row associated with the change
+     * @param col The column associated with the change
+     * @param row The row associated with the change
      */
-    void onChangeAt( int x, int y );
+    void onChangeAt( int col, int row );
 
 private:
     PieceSetManager   mPieceManager;

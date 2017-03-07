@@ -182,8 +182,8 @@ void Game::sightCannons()
     for( auto it = pieces->cbegin(); !sighted && it != pieces->cend(); ++it ) {
         if ( (*it)->getType() == CANNON ) {
             fireAngle = (*it)->getAngle();
-            if ( tankCol == (*it)->getX() ) {
-                fireRow = (*it)->getY();
+            if ( tankCol == (*it)->getCol() ) {
+                fireRow = (*it)->getRow();
                 int dir;
                 if ( fireAngle == 0 && tankRow < fireRow ) {
                     dir = -1;
@@ -202,8 +202,8 @@ void Game::sightCannons()
                         break;
                     }
                 }
-            } else if ( tankRow == (*it)->getY() ) {
-                fireCol = (*it)->getX();
+            } else if ( tankRow == (*it)->getRow() ) {
+                fireCol = (*it)->getCol();
                 int dir;
                 if ( fireAngle == 270 && tankCol < fireCol ) {
                     dir = -1;
@@ -461,8 +461,8 @@ void Game::onFuturePush( Piece* pushingPiece )
     mFutureDelta.enable();
 
     PieceType pushedType;
-    int col = pushingPiece->getX();
-    int row = pushingPiece->getY();
+    int col = pushingPiece->getCol();
+    int row = pushingPiece->getRow();
     int angle = pushingPiece->getAngle();
 
     // scoping pushedPiece here so it falls out of scope after erased:
@@ -502,8 +502,8 @@ const PieceSet* Game::getDeltaPieces()
 
 void Game::undoFuturePush( Piece* pusher )
 {
-    int col = pusher->getX();
-    int row = pusher->getY();
+    int col = pusher->getCol();
+    int row = pusher->getRow();
     if ( getAdjacentPosition( pusher->getAngle(), &col, &row ) ) {
         Piece* pushee = mFutureBoard.getPieceManager()->pieceAt( col, row );
         if ( pushee ) {
@@ -511,7 +511,7 @@ void Game::undoFuturePush( Piece* pusher )
             int angle = pushee->getAngle();
             PieceSetManager* pieceManager = mFutureBoard.getPieceManager();
             pieceManager->erase( pushee );
-            pieceManager->insert( type, pusher->getX(), pusher->getY(), angle );
+            pieceManager->insert( type, pusher->getCol(), pusher->getRow(), angle );
         }
     }
 }

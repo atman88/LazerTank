@@ -27,7 +27,7 @@ typedef enum {
 class Piece
 {
 public:
-    Piece( PieceType type = NONE, int x = 0, int y = 0, int angle = 0 ) : mType(type), mX(x), mY(y), mAngle(angle)
+    Piece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 ) : mType(type), mCol(col), mRow(row), mAngle(angle)
     {
     }
 
@@ -37,8 +37,8 @@ public:
     Piece( Piece* source )
     {
         mType  = source->mType;
-        mX     = source->mX;
-        mY     = source->mY;
+        mCol     = source->mCol;
+        mRow     = source->mRow;
         mAngle = source->mAngle;
     }
 
@@ -48,19 +48,19 @@ public:
 
     /**
      * @brief Creates a search term used for searching piece sets
-     * @param x Column number
-     * @param y Row number
+     * @param col Column number
+     * @param row Row number
      * @return The encoded position value
      */
-    static int encodePos( int x, int y )
+    static int encodePos( int col, int row )
     {
-        return y * PIECE_MAX_ROWCOUNT + x;
+        return row * PIECE_MAX_ROWCOUNT + col;
     }
 
     PieceType getType() const;
     void setType( PieceType type );
-    int getX() const;
-    int getY() const;
+    int getCol() const;
+    int getRow() const;
 
 
     /**
@@ -85,14 +85,12 @@ public:
     virtual bool hasPush() const = 0;
 
     /**
-     * @brief Create a search term for this piece
-     * @param x Column number
-     * @param y Row number
+     * @brief Retrieve the search term for this piece
      * @return The encoded position value
      */
     int encodedPos() const
     {
-        return encodePos( mX, mY );
+        return encodePos( mCol, mRow );
     }
 
     friend bool operator<(const Piece& l, const Piece& r)
@@ -102,8 +100,8 @@ public:
 
 private:
     PieceType mType;
-    int mX;
-    int mY;
+    int mCol;
+    int mRow;
     int mAngle;
 };
 
@@ -113,7 +111,7 @@ private:
 class SimplePiece : public Piece
 {
 public:
-    SimplePiece( PieceType type = NONE, int x = 0, int y = 0, int angle = 0 ) : Piece(type,x,y,angle)
+    SimplePiece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 ) : Piece(type,col,row,angle)
     {
     }
     SimplePiece( Piece* source ) : Piece(source)
@@ -132,8 +130,8 @@ public:
 class PusherPiece : public SimplePiece
 {
 public:
-    PusherPiece( PieceType type = NONE, int x = 0, int y = 0, int angle = 0, bool hasPush = false )
-        : SimplePiece(type,x,y,angle), mHasPush(hasPush)
+    PusherPiece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0, bool hasPush = false )
+        : SimplePiece(type,col,row,angle), mHasPush(hasPush)
     {
     }
 

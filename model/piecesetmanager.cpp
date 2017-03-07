@@ -16,20 +16,20 @@ const PieceSet* PieceSetManager::getPieces() const
     return &mPieces;
 }
 
-void PieceSetManager::insert( PieceType type, int x, int y, int angle )
+void PieceSetManager::insert( PieceType type, int col, int row, int angle )
 {
-    mPieces.insert( new SimplePiece( type, x, y, angle ) );
-    emit insertedAt( x, y );
+    mPieces.insert( new SimplePiece( type, col, row, angle ) );
+    emit insertedAt( col, row );
 }
 
 void PieceSetManager::insert( Piece* piece )
 {
-    insert( piece->getType(), piece->getX(), piece->getY(), piece->getAngle() );
+    insert( piece->getType(), piece->getCol(), piece->getRow(), piece->getAngle() );
 }
 
-PieceType PieceSetManager::typeAt( int x, int y )
+PieceType PieceSetManager::typeAt( int col, int row )
 {
-    SimplePiece pos( NONE, x, y );
+    SimplePiece pos( NONE, col, row );
     PieceSet::iterator it = mPieces.find( &pos );
     if ( it != mPieces.end() ) {
         return (*it)->getType();
@@ -37,9 +37,9 @@ PieceType PieceSetManager::typeAt( int x, int y )
     return NONE;
 }
 
-Piece* PieceSetManager::pieceAt( int x, int y ) const
+Piece* PieceSetManager::pieceAt( int col, int row ) const
 {
-    SimplePiece pos( NONE, x, y );
+    SimplePiece pos( NONE, col, row );
     PieceSet::iterator it = mPieces.find( &pos );
     if ( it != mPieces.end() ) {
         return *it;
@@ -52,21 +52,21 @@ bool PieceSetManager::erase( Piece* key )
     PieceSet::iterator it = mPieces.find( key );
     if ( it != mPieces.end() ) {
         Piece* piece = *it;
-        int x = piece->getX();
-        int y = piece->getY();
+        int col = piece->getCol();
+        int row = piece->getRow();
 
         mPieces.erase( it );
         delete piece;
 
-        emit erasedAt( x, y );
+        emit erasedAt( col, row );
         return true;
     }
     return false;
 }
 
-bool PieceSetManager::eraseAt( int x, int y )
+bool PieceSetManager::eraseAt( int col, int row )
 {
-    SimplePiece pos( NONE, x, y );
+    SimplePiece pos( NONE, col, row );
     return erase( &pos );
 }
 
@@ -75,7 +75,7 @@ void PieceSetManager::reset(const PieceSetManager* source)
     while( !mPieces.empty() ) {
         PieceSet::iterator it = mPieces.end();
         Piece* piece = *--it;
-        emit erasedAt( piece->getX(), piece->getY() );
+        emit erasedAt( piece->getCol(), piece->getRow() );
         mPieces.erase( it );
         delete piece;
     }
@@ -83,7 +83,7 @@ void PieceSetManager::reset(const PieceSetManager* source)
     if ( source != 0 ) {
         const PieceSet* sourceSet = source->getPieces();
         for( auto it : *sourceSet ) {
-            insert( it->getType(), it->getX(), it->getY(), it->getAngle() );
+            insert( it->getType(), it->getCol(), it->getRow(), it->getAngle() );
         }
     }
 }

@@ -55,12 +55,12 @@ void PieceListManager::appendInternal( Piece* piece )
     if ( mMultiSet ) {
         mMultiSet->insert( piece );
     }
-    emit appended( piece->getX(), piece->getY() );
+    emit appended( piece->getCol(), piece->getRow() );
 }
 
-void PieceListManager::append( PieceType type, int x, int y, int angle, bool hasPush )
+void PieceListManager::append( PieceType type, int col, int row, int angle, bool hasPush )
 {
-    appendInternal( new PusherPiece( type, x, y, angle, hasPush ) );
+    appendInternal( new PusherPiece( type, col, row, angle, hasPush ) );
 }
 
 void PieceListManager::append( Piece* source )
@@ -81,8 +81,8 @@ bool PieceListManager::eraseInternal( PieceList::iterator it )
     Piece* piece = *it;
     mPieces.erase( it );
 
-    int x = piece->getX();
-    int y = piece->getY();
+    int col = piece->getCol();
+    int row = piece->getRow();
 
     if ( mSet ) {
         mSet->erase( piece );
@@ -99,7 +99,7 @@ bool PieceListManager::eraseInternal( PieceList::iterator it )
     }
 
     delete piece;
-    emit erased( x, y );
+    emit erased( col, row );
     return true;
 }
 
@@ -125,7 +125,7 @@ bool PieceListManager::replaceBack(PieceType type, int newAngle )
         if ( newAngle >= 0 ) {
             piece->setAngle( newAngle );
         }
-        emit replaced( piece->getX(), piece->getY() );
+        emit replaced( piece->getCol(), piece->getRow() );
         return true;
     }
     return false;

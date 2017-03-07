@@ -56,41 +56,41 @@ void BoardDelta::enable( bool newValue )
     }
 }
 
-void BoardDelta::onChangeAt( int x, int y )
+void BoardDelta::onChangeAt( int col, int row )
 {
-    const Piece* masterPiece = mMasterBoard->getPieceManager()->pieceAt( x, y );
-    const Piece* futurePiece = mFutureBoard->getPieceManager()->pieceAt( x, y );
+    const Piece* masterPiece = mMasterBoard->getPieceManager()->pieceAt( col, row );
+    const Piece* futurePiece = mFutureBoard->getPieceManager()->pieceAt( col, row );
 
     if ( !masterPiece ) {
         if ( !futurePiece ) {
-            if ( mMasterBoard->tileAt(x,y) != TILE_SUNK ) {
-                if ( mFutureBoard->tileAt(x,y) != TILE_SUNK ) {
-                    mPieceManager.eraseAt( x, y );
+            if ( mMasterBoard->tileAt(col,row) != TILE_SUNK ) {
+                if ( mFutureBoard->tileAt(col,row) != TILE_SUNK ) {
+                    mPieceManager.eraseAt( col, row );
                 } else {
-                    mPieceManager.insert( TILE_FUTURE_INSERT, x, y );
+                    mPieceManager.insert( TILE_FUTURE_INSERT, col, row );
                 }
-            } else if ( mFutureBoard->tileAt(x,y) == TILE_SUNK ) {
-                mPieceManager.eraseAt( x, y );
+            } else if ( mFutureBoard->tileAt(col,row) == TILE_SUNK ) {
+                mPieceManager.eraseAt( col, row );
             }
         } else {
-            Piece* curDeltaPiece = mPieceManager.pieceAt( x, y );
+            Piece* curDeltaPiece = mPieceManager.pieceAt( col, row );
             if ( curDeltaPiece ) {
                 if ( curDeltaPiece->getType() == TILE_FUTURE_INSERT ) {
                     return;
                 }
                 mPieceManager.erase( curDeltaPiece );
-                std::cout << "delta erasedAt " << x << "," << y << " (->INSERT)" << std::endl;
+                std::cout << "delta erasedAt " << col << "," << row << " (->INSERT)" << std::endl;
             }
-            mPieceManager.insert( TILE_FUTURE_INSERT, x, y, futurePiece->getAngle() );
-            std::cout << "delta future INSERT " << x << "," << y << std::endl;
+            mPieceManager.insert( TILE_FUTURE_INSERT, col, row, futurePiece->getAngle() );
+            std::cout << "delta future INSERT " << col << "," << row << std::endl;
         }
     } else {
         if ( !futurePiece ) {
-            mPieceManager.insert( TILE_FUTURE_ERASE, x, y, masterPiece->getAngle() );
-            std::cout << "delta future ERASE " << x << "," << y << std::endl;
+            mPieceManager.insert( TILE_FUTURE_ERASE, col, row, masterPiece->getAngle() );
+            std::cout << "delta future ERASE " << col << "," << row << std::endl;
         } else {
-            mPieceManager.eraseAt( x, y );
-            std::cout << "delta erasedAt " << x << "," << y << " (same)" << std::endl;
+            mPieceManager.eraseAt( col, row );
+            std::cout << "delta erasedAt " << col << "," << row << " (same)" << std::endl;
         }
     }
 }

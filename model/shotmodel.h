@@ -34,14 +34,14 @@ public:
     void reset();
 
     /**
-     * @brief Get the column (x) where the laser beam has extended to
+     * @brief Get the column where the laser beam has extended to
      * @return The column number or -1 if the shot is inactive
      */
     int getLeadingCol() const;
     void setLeadingCol(int leadingCol);
 
     /**
-     * @brief Get the column (x) where the laser beam has extended to
+     * @brief Get the row where the laser beam has extended to
      * @return The row number or -1 if the shot is inactive
      */
     int getLeadingRow() const;

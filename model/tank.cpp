@@ -67,8 +67,8 @@ void Tank::move( int direction )
             y = mBoundingRect.top()/24;
         } else {
             Piece* last = mMoves.getList()->back();
-            x = last->getX();
-            y = last->getY();
+            x = last->getCol();
+            y = last->getRow();
         }
 
         Game* game = getGame(this);
@@ -95,8 +95,8 @@ void Tank::followPath()
 
         Piece* move = mMoves.getList()->front();
         int curRotation = mRotation.toInt();
-        int x = move->getX();
-        int y = move->getY();
+        int x = move->getCol();
+        int y = move->getRow();
 
         mRotateAnimation.animateBetween( curRotation, move->getAngle() );
         mHorizontalAnimation.animateBetween( mBoundingRect.left(), x*24 );
@@ -124,8 +124,8 @@ void Tank::onAnimationsFinished()
         if ( mMoves.size() ) {
             Piece* piece = mMoves.getList()->front();
             if ( piece->getAngle() == rotation
-              && piece->getX() == mCol
-              && piece->getY() == mRow ) {
+              && piece->getCol() == mCol
+              && piece->getRow() == mRow ) {
                 mMoves.eraseFront();
             }
             followPath();
