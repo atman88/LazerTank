@@ -127,13 +127,13 @@ public:
      * @brief Get the column that the tank was loaded at for this board
      * @return The tank way point column. Column 0 is returned when not specified by the previous load.
      */
-    int getTankWayPointX() const;
+    int getTankStartCol() const;
 
     /**
      * @brief Get the row that the tank was loaded at for this board
      * @return The tank way point column. Column 0 is returned when not specified by the previous load.
      */
-    int getTankWayPointY() const;
+    int getTankStartRow() const;
 
 signals:
     /**

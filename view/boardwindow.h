@@ -1,12 +1,16 @@
 #ifndef BOARDWINDOW_H
 #define BOARDWINDOW_H
 
-class BoardWindow;
-
-#include <QtGui>
 #include <QMouseEvent>
+#include <QtGui>
+#include <QMenu>
+
+class Board;
+class BoardWindow;
+class Game;
+
+#include "util/gameutils.h"
 #include "shotview.h"
-#include "controller/game.h"
 
 /**
  * @brief The main window
@@ -14,7 +18,6 @@ class BoardWindow;
 class BoardWindow : public QWindow
 {
     Q_OBJECT
-    Q_PROPERTY(GameHandle game READ getGame WRITE setGame)
 
 public:
     explicit BoardWindow(QWindow *parent = 0);
@@ -23,15 +26,17 @@ public:
         delete mBackingStore;
     }
 
-    GameHandle getGame() const;
     virtual void render(QRegion *region);
+    void showMenu( QPoint* globalPos = 0 );
     void onTankKilled();
+
+    QMenu& getMenu();
 
 signals:
     void setSpeed( int speed );
 
 public slots:
-    void setGame( const GameHandle game );
+    void init( const GameHandle game );
     void renderLater(const QRect &rect);
     void renderNow();
     void renderSquareLater( int col, int row );
@@ -55,6 +60,9 @@ private:
 
     QBackingStore *mBackingStore;
     QPen mPen;
+    QMenu mMenu;
+    QAction* mReloadAction;
+    QMenu mLevelsMenu;
 
     QRegion mDirtyRegion;
     QRegion mRenderRegion;

@@ -5,8 +5,9 @@
 #include "controller/game.h"
 #include "util/imageutils.h"
 #include "util/renderutils.h"
+#include "util/gameutils.h"
 
-Tank::Tank(QObject* parent) : Shooter(parent), mInReset(false)
+Tank::Tank(QObject* parent) : Shooter(parent), mCol(0), mRow(0), mInReset(false)
 {
     mRotateAnimation.setTargetObject(this);
     mRotateAnimation.setPropertyName("rotation");
@@ -59,9 +60,25 @@ void Tank::stop()
     mVerticalAnimation.stop();
 }
 
-void Tank::reset( int boardX, int boardY )
+void Tank::pause()
 {
-    QPoint p( boardX*24, boardY*24 );
+    mRotateAnimation.pause();
+    mHorizontalAnimation.pause();
+    mVerticalAnimation.pause();
+}
+
+void Tank::resume()
+{
+    mRotateAnimation.resume();
+    mHorizontalAnimation.resume();
+    mVerticalAnimation.resume();
+}
+
+void Tank::reset( int col, int row )
+{
+    mCol = col;
+    mRow = row;
+    QPoint p( col*24, row*24 );
     reset( p );
 }
 
@@ -86,7 +103,9 @@ void Tank::setX( const QVariant& x )
             emit changed( dirty );
 
             if ( !(xv % 24) ) {
-                emit moved( xv/24, mBoundingRect.top()/24 );
+                mCol = xv/24;
+                mRow = mBoundingRect.top()/24;
+                emit moved( mCol, mRow );
             }
         }
     }
@@ -103,7 +122,9 @@ void Tank::setY( const QVariant& y )
             emit changed( dirty );
 
             if ( !(yv % 24) ) {
-                emit moved( mBoundingRect.left()/24, yv/24 );
+                mCol = mBoundingRect.left()/24;
+                mRow = yv/24;
+                emit moved( mCol, mRow );
             }
         }
     }
@@ -152,7 +173,7 @@ void Tank::move( int direction )
             y = last->getY();
         }
 
-        Game* game = getGame();
+        Game* game = getGame(this);
         bool hasPush = false;
         if ( game && game->canMoveFrom( TANK, direction, &x, &y, true, &hasPush ) ) {
             mMoves.append( MOVE, x, y, direction, hasPush );
@@ -167,7 +188,7 @@ void Tank::move( int direction )
 
 void Tank::followPath()
 {
-    Game* game = getGame();
+    Game* game = getGame(this);
     if ( game && !game->getMoveAggregate()->active() ) {
         if ( !mMoves.size() ) {
             emit idled();
@@ -185,6 +206,16 @@ void Tank::followPath()
 
         emit movingInto( x, y, curRotation % 360 );
     }
+}
+
+int Tank::getRow() const
+{
+    return mRow;
+}
+
+int Tank::getCol() const
+{
+    return mCol;
 }
 
 void Tank::onAnimationsFinished()
@@ -207,11 +238,4 @@ void Tank::onAnimationsFinished()
 PieceListManager* Tank::getMoves()
 {
     return &mMoves;
-}
-
-Game* Tank::getGame()
-{
-    QObject* p = parent();
-    QVariant hv = p->property("GameHandle");
-    return hv.value<GameHandle>().game;
 }

@@ -4,10 +4,11 @@
 #include <QMessageBox>
 
 #include "game.h"
+#include "boardwindow.h"
 #include "speedcontroller.h"
 #include "util/renderutils.h"
 
-Game::Game() : mWindow(0), mTankBoardX(0), mTankBoardY(0)
+Game::Game() : mWindow(0)
 {
     mHandle.game = this;
     setProperty("GameHandle", QVariant::fromValue(mHandle));
@@ -16,7 +17,7 @@ Game::Game() : mWindow(0), mTankBoardX(0), mTankBoardY(0)
 void Game::init( BoardWindow* window )
 {
     mWindow = window;
-    window->setGame( mHandle );
+    window->init( mHandle );
 
     mMovingPiece.setParent( this );
     QObject::connect( &mMovingPiece, &Push::rectDirty, window, &BoardWindow::renderLater );
@@ -25,6 +26,10 @@ void Game::init( BoardWindow* window )
     QObject::connect( &mTank, &Tank::movingInto, this, &Game::onTankMovingInto );
     QObject::connect( &mTank, &Tank::moved,      this, &Game::onTankMoved      );
     QObject::connect( &mTank, &Tank::changed, window, &BoardWindow::renderLater );
+
+    QMenu& menu = window->getMenu();
+    QObject::connect( &menu, &QMenu::aboutToShow, &mTank, &Tank::pause  );
+    QObject::connect( &menu, &QMenu::aboutToHide, &mTank, &Tank::resume );
 
     mActiveCannon.setParent(this);
     mActiveCannon.init( this, QColor(255,50,83) );
@@ -61,10 +66,8 @@ void Game::init( BoardWindow* window )
 
 void Game::onBoardLoaded()
 {
-    mTankBoardX = mBoard.getTankWayPointX();
-    mTankBoardY = mBoard.getTankWayPointY();
     mFutureDelta.enable( false );
-    mTank.reset( mTankBoardX, mTankBoardY );
+    mTank.reset( mBoard.getTankStartCol(), mBoard.getTankStartRow() );
     mActiveCannon.reset( NullPoint );
     mSpeedController.setSpeed(LOW_SPEED);
 }
@@ -136,12 +139,9 @@ bool Game::advanceShot(int *angle, int *x, int *y, int *endOffset, ShotModel* so
     return getAdjacentPosition(*angle, x, y) && canShootThru( *x, *y, angle, endOffset, source );
 }
 
-void Game::onTankMoved( int x, int y )
+void Game::onTankMoved( int col, int row )
 {
-    mTankBoardX = x;
-    mTankBoardY = y;
-
-    if ( mBoard.tileAt(x,y) == FLAG ) {
+    if ( mBoard.tileAt(col,row) == FLAG ) {
         QMessageBox msgBox;
         msgBox.setText("Level completed!");
         msgBox.exec();
@@ -175,47 +175,50 @@ void Game::sightCannons()
     // fire any cannon
     const PieceSet* pieces = mBoard.getPieceManager()->getPieces();
     bool sighted = false;
-    int fireAngle, fireX, fireY;
+    int tankCol = mTank.getCol();
+    int tankRow = mTank.getRow();
+    int fireAngle, fireCol, fireRow;
+
     for( auto it = pieces->cbegin(); !sighted && it != pieces->cend(); ++it ) {
         if ( (*it)->getType() == CANNON ) {
             fireAngle = (*it)->getAngle();
-            if ( mTankBoardX == (*it)->getX() ) {
-                fireY = (*it)->getY();
+            if ( tankCol == (*it)->getX() ) {
+                fireRow = (*it)->getY();
                 int dir;
-                if ( fireAngle == 0 && mTankBoardY < fireY ) {
+                if ( fireAngle == 0 && tankRow < fireRow ) {
                     dir = -1;
-                } else if ( fireAngle == 180 && mTankBoardY > fireY ) {
+                } else if ( fireAngle == 180 && tankRow > fireRow ) {
                     dir = 1;
                 } else {
                     continue;
                 }
-                for( int y = fireY+dir; ; y += dir ) {
-                    if ( y == mTankBoardY ) {
-                        fireX = mTankBoardX;
+                for( int row = fireRow+dir; ; row += dir ) {
+                    if ( row == tankRow ) {
+                        fireCol = tankCol;
                         sighted = true;
                         break;
                     }
-                    if ( !canSightThru( &mBoard, mTankBoardX, y ) ) {
+                    if ( !canSightThru( &mBoard, tankCol, row ) ) {
                         break;
                     }
                 }
-            } else if ( mTankBoardY == (*it)->getY() ) {
-                fireX = (*it)->getX();
+            } else if ( tankRow == (*it)->getY() ) {
+                fireCol = (*it)->getX();
                 int dir;
-                if ( fireAngle == 270 && mTankBoardX < fireX ) {
+                if ( fireAngle == 270 && tankCol < fireCol ) {
                     dir = -1;
-                } else if ( fireAngle == 90 && mTankBoardX > fireX ) {
+                } else if ( fireAngle == 90 && tankCol > fireCol ) {
                     dir = 1;
                 } else {
                     continue;
                 }
-                for( int x = fireX+dir; ; x += dir ) {
-                    if ( x == mTankBoardX ) {
-                        fireY = mTankBoardY;
+                for( int col = fireCol+dir; ; col += dir ) {
+                    if ( col == tankCol ) {
+                        fireRow = tankRow;
                         sighted = true;
                         break;
                     }
-                    if ( !canSightThru( &mBoard, x, mTankBoardY ) ) {
+                    if ( !canSightThru( &mBoard, col, tankRow ) ) {
                         break;
                     }
                 }
@@ -224,8 +227,8 @@ void Game::sightCannons()
     }
 
     if ( sighted ) {
-        mActiveCannon.setX( fireX*24 );
-        mActiveCannon.setY( fireY*24 );
+        mActiveCannon.setX( fireCol*24 );
+        mActiveCannon.setY( fireRow*24 );
         mActiveCannon.setRotation( fireAngle );
         mActiveCannon.fire();
     }
@@ -332,15 +335,15 @@ bool onShootThruMovingPiece( int offset, /*int angle,*/ int *endOffset )
     return false;
 }
 
-bool Game::canShootThru( int x, int y, int *angle, int *endOffset, ShotModel* source )
+bool Game::canShootThru( int col, int row, int *angle, int *endOffset, ShotModel* source )
 {
     *endOffset = 0;
 
-    switch( mBoard.tileAt(x,y) ) {
+    switch( mBoard.tileAt(col,row) ) {
     case DIRT:
     case TILE_SUNK:
     {   PieceSetManager* pm = mBoard.getPieceManager();
-        Piece* what = pm->pieceAt( x, y );
+        Piece* what = pm->pieceAt( col, row );
         if ( what ) {
             switch( what->getType() ) {
             case TILE_MIRROR:
@@ -350,7 +353,7 @@ bool Game::canShootThru( int x, int y, int *angle, int *endOffset, ShotModel* so
                 break;
             case CANNON:
                 if ( abs( what->getAngle() - *angle ) == 180 ) {
-                    pm->eraseAt( x, y );
+                    pm->eraseAt( col, row );
                     return false;
                 }
                 break;
@@ -359,11 +362,11 @@ bool Game::canShootThru( int x, int y, int *angle, int *endOffset, ShotModel* so
             }
 
             // push it:
-            int toX = x, toY = y;
+            int toX = col, toY = row;
             if ( canMoveFrom( what->getType(), *angle, &toX, &toY, false ) ) {
                 SimplePiece simple( what );
-                pm->eraseAt( x, y );
-                mMovingPiece.start( simple, x*24, y*24, toX*24, toY*24 );
+                pm->eraseAt( col, row );
+                mMovingPiece.start( simple, col*24, row*24, toX*24, toY*24 );
             }
             break;
         }
@@ -374,20 +377,20 @@ bool Game::canShootThru( int x, int y, int *angle, int *endOffset, ShotModel* so
             switch( *angle ) {
             case  90:
             case 270:
-                if ( y == movingPieceY/24 && onShootThruMovingPiece( movingPieceX - x*24, endOffset ) ) {
+                if ( row == movingPieceY/24 && onShootThruMovingPiece( movingPieceX - col*24, endOffset ) ) {
                     return false;
                 }
                 break;
             case   0:
             case 180:
-                if ( x == movingPieceX/24 && onShootThruMovingPiece( movingPieceY - y*24, endOffset ) ) {
+                if ( col == movingPieceX/24 && onShootThruMovingPiece( movingPieceY - row*24, endOffset ) ) {
                     return false;
                 }
                 break;
             }
         }
 
-        if ( x == mTankBoardX && y == mTankBoardY ) {
+        if ( col == mTank.getCol() && row == mTank.getRow() ) {
             source->setIsKill();
             return false;
         }
@@ -406,10 +409,10 @@ bool Game::canShootThru( int x, int y, int *angle, int *endOffset, ShotModel* so
     case STONE_MIRROR_180: return getShotReflection( 180, angle );
     case STONE_MIRROR_270: return getShotReflection( 270, angle );
     case WOOD:
-        mBoard.setTileAt( WOOD_DAMAGED, x, y );
+        mBoard.setTileAt( WOOD_DAMAGED, col, row );
         break;
     case WOOD_DAMAGED:
-        mBoard.setTileAt( DIRT, x, y );
+        mBoard.setTileAt( DIRT, col, row );
         break;
     default:
         ;
@@ -486,7 +489,7 @@ void Game::findPath(int targetX, int targetY , int startingDirection )
     // the path finder doesn't support pushing, so cancel any future moves before using:
     mFutureDelta.enable( false );
 
-    mPathFinder.findPath( targetX, targetY, mTankBoardX, mTankBoardY, startingDirection );
+    mPathFinder.findPath( targetX, targetY, mTank.getCol(), mTank.getRow(), startingDirection );
 }
 
 const PieceSet* Game::getDeltaPieces()

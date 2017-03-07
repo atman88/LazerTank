@@ -23,16 +23,21 @@ public:
     PieceListManager* getMoves();
     void render( const QRect* rect, QPainter* painter );
     void move( int direction = -1 );
+    void pause();
+    void resume();
     void stop();
+
+    int getCol() const;
+    int getRow() const;
 
 signals:
     void changed( const QRect& rect );
-    void moved( int boardX, int boardY );
-    void movingInto( int x, int y, int curRotation );
+    void moved( int col, int row );
+    void movingInto( int col, int row, int curRotation );
     void idled();
 
 public slots:
-    void reset( int boardX, int boardY );
+    void reset( int col, int row );
     void reset( QPoint& p );
     void onAnimationsFinished();
     void setX(const QVariant &x ) override;
@@ -41,7 +46,6 @@ public slots:
 
 private:
     void followPath();
-    Game* getGame();
 
     QRect mPreviousPaintRect;
     RotateSpeedControlledAnimation mRotateAnimation;
@@ -49,6 +53,9 @@ private:
     MoveSpeedControlledAnimation   mVerticalAnimation;
 
     PieceListManager mMoves;
+
+    int mCol;
+    int mRow;
 
     bool mInReset;
 };

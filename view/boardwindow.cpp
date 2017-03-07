@@ -2,10 +2,11 @@
 #include <QMenu>
 #include <QAction>
 #include <QMessageBox>
-#include "boardwindow.h"
 
+#include "boardwindow.h"
 #include "util/renderutils.h"
 #include "util/imageutils.h"
+#include "controller/game.h"
 
 using namespace std;
 
@@ -30,12 +31,7 @@ void BoardWindow::exposeEvent(QExposeEvent *)
     }
 }
 
-GameHandle BoardWindow::getGame() const
-{
-    return mGame->getHandle();
-}
-
-void BoardWindow::setGame(const GameHandle handle )
+void BoardWindow::init(const GameHandle handle )
 {
     setProperty("GameHandle", QVariant::fromValue(handle));
 
@@ -112,6 +108,11 @@ void BoardWindow::renderListIn(PieceSet::iterator iterator, PieceSet::iterator e
         }
         ++iterator;
     }
+}
+
+QMenu& BoardWindow::getMenu()
+{
+    return mMenu;
 }
 
 void BoardWindow::renderOneRect( const QRect* rect, Board* board, const PieceMultiSet* moves, const PieceSet* tiles,
@@ -257,10 +258,46 @@ int keyToAngle( int key )
     }
 }
 
+void BoardWindow::showMenu( QPoint* globalPos )
+{
+    if ( mGame ) {
+        if ( mMenu.isEmpty() ) {
+            QKeySequence seq(QString(" "));
+            mMenu.addAction( "shoot", mGame->getTank(), &Tank::fire, seq );
+
+            mReloadAction = mMenu.addAction( "Restart Level" );;
+
+            QAction* action = mMenu.addAction( QString("level..") );
+            action->setMenu( &mLevelsMenu );
+            QString text( "level %1" );
+            for( int level = 1; level <= BOARD_MAX_LEVEL; ++level ) {
+                action = mLevelsMenu.addAction( text.arg(level) );
+                action->setData( QVariant(level) );
+            }
+        }
+
+        mReloadAction->setData( QVariant(mGame->getBoard()->getLevel()) );
+
+        QAction* action = (globalPos ? mMenu.exec( *globalPos ) : mMenu.exec());
+        if ( action ) {
+            cout << "menu " << action->property("text").toString().toStdString() << " selected" << std::endl;
+            bool ok;
+            int level = action->data().toInt( &ok );
+            if ( ok && level > 0 ) {
+                mGame->getBoard()->load( action->data().toInt() );
+            }
+        }
+    }
+}
+
 void BoardWindow::keyPressEvent(QKeyEvent *ev)
 {
     if ( !ev->isAutoRepeat() && mGame ) {
         switch( ev->key() ) {
+        case Qt::Key_Escape:
+            showMenu();
+            break;
+
         case Qt::Key_Space:
             mGame->getTank()->fire();
             break;
@@ -324,18 +361,8 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
 {
     switch( event->button() ) {
     case Qt::RightButton:
-    {   QMenu menu;
-        QAction* action;
-        QString text( "level %1" );
-        for( int level = 1; level <= BOARD_MAX_LEVEL; ++level ) {
-            action = menu.addAction( text.arg(level) );
-            action->setData( QVariant(level) );
-        }
-        action = menu.exec( event->globalPos() );
-        if ( action ) {
-            cout << "menu " << action->property("text").toString().toStdString() << " selected" << std::endl;
-            mGame->getBoard()->load( action->data().toInt() );
-        }
+    {   QPoint globalPos = event->globalPos();
+        showMenu( &globalPos );
         break;
     }
     case Qt::LeftButton:

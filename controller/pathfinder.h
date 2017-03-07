@@ -42,7 +42,6 @@ private:
     int pass1( int nPoints );
     int pass2( int nPoints );
     void buildPath( int x, int y );
-    Game* getGame();
     void printSearchMap();
 
     int mTargetX,   mTargetY;

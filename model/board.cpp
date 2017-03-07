@@ -29,12 +29,12 @@ void Board::initPiece( PieceType type, int x, int y, int angle )
     mTiles[y*BOARD_MAX_HEIGHT + x] = DIRT;
 }
 
-int Board::getTankWayPointX() const
+int Board::getTankStartCol() const
 {
     return mTankWayPointX;
 }
 
-int Board::getTankWayPointY() const
+int Board::getTankStartRow() const
 {
     return mTankWayPointXY;
 }

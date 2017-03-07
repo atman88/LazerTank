@@ -4,28 +4,17 @@
 #include <QObject>
 
 struct GameHandle;
-class Game;
+class BoardWindow;
+class ShotModel;
 
 #include "animationstateaggregator.h"
 #include "pathfinder.h"
 #include "model/boarddelta.h"
 #include "model/board.h"
-#include "model/shotmodel.h"
 #include "model/tank.h"
 #include "view/push.h"
 #include "view/shooter.h"
-#include "view/boardwindow.h"
-
-/**
- * @brief The Game handle
- * The QObject property referencing this Game object
- */
-struct GameHandle
-{
-    class Game* game;
-};
-Q_DECLARE_METATYPE(GameHandle)
-
+#include "util/gameutils.h"
 
 /**
  * @brief The Game class
@@ -39,7 +28,21 @@ public:
     Game();
     GameHandle getHandle();
     void init( BoardWindow* window );
+
+    /**
+     * @brief Get the current board
+     */
     Board* getBoard();
+
+    /**
+     * @brief Get this game's main window
+     * @return The associated window, or 0 if not initialized
+     */
+    BoardWindow* getWindow() const;
+
+    /**
+     * @brief Access the game's tank object
+     */
     Tank* getTank();
 
     /**
@@ -50,7 +53,7 @@ public:
 
     /**
      * @brief the current lazer shot being fired.
-     * Only one cannon is fired at a time. This is the lazer path firing from a single selected cannon.
+     * Only one cannon is fired at a time. This is the single lazer path shot from any single selected cannon.
      */
     ShotModel& getCannonShot();
 
@@ -134,18 +137,13 @@ public:
      */
     const PieceSet* getDeltaPieces();
 
-    /**
-     * @brief Get this game's window
-     */
-    BoardWindow *getWindow() const;
-
 public slots:
     /**
      * @brief Recieves notification that the tank is now in the given square
      * @param x The column of the square
      * @param y The row of the square
      */
-    void onTankMoved( int x, int y );
+    void onTankMoved( int col, int row );
 
     /**
      * @brief Receives notification that the tank is about to move toward the identified square
@@ -224,9 +222,6 @@ private:
     Shooter mActiveCannon;
     Board mFutureBoard;
     BoardDelta mFutureDelta;
-
-    int mTankBoardX;
-    int mTankBoardY;
 };
 
 #endif // GAME_H

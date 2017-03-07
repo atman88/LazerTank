@@ -24,8 +24,8 @@ void TestMain::testMove()
     QCOMPARE( game.canPlaceAtNonFuturistic(TANK,-1, 0,270), false );
     QCOMPARE( game.canPlaceAtNonFuturistic(TANK, 0,-1,  0), false );
 
-    cout << "tank " << board->getTankWayPointX() << "," << board->getTankWayPointY() << std::endl;
-    QCOMPARE( game.canPlaceAtNonFuturistic(TANK,board->getTankWayPointX(),board->getTankWayPointY(),0), true );
+    cout << "tank " << board->getTankStartCol() << "," << board->getTankStartRow() << std::endl;
+    QCOMPARE( game.canPlaceAtNonFuturistic(TANK,board->getTankStartCol(),board->getTankStartRow(),0), true );
 }
 
 void TestMain::testCannon()

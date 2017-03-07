@@ -2,6 +2,7 @@
 
 #include <QVariant>
 
+#include "util/gameutils.h"
 #include "pathfinder.h"
 #include "game.h"
 
@@ -24,17 +25,6 @@ void PathFinder::findPath( int targetX, int targetY, int startingX, int starting
     mStartingY = startingY;
     mStartingRotation = startingRotation;
     start( LowPriority );
-}
-
-Game* PathFinder::getGame()
-{
-    // find the game from the object hierarchy:
-    QObject* p = parent();
-    QVariant v;
-    while( p && !(v = p->property("GameHandle")).isValid() ) {
-        p = p->parent();
-    }
-    return v.value<GameHandle>().game;
 }
 
 void PathFinder::printSearchMap()
@@ -149,7 +139,7 @@ void PathFinder::run()
     mMoves.reset();
     if ( !setjmp( mJmpBuf ) ) {
         // initialize the search map
-        Game* game = getGame();
+        Game* game = getGame(this);
         if ( game && game->canPlaceAtNonFuturistic( TANK, mTargetX, mTargetY, 0 )) {
             Board* board = game->getBoard();
             mMaxX  = board->getWidth()-1;

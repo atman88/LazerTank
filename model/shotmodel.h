@@ -73,8 +73,6 @@ public slots:
     void setIsKill();
 
 private:
-    Game* getGame();
-
     QVariant mSequence;
     QPropertyAnimation mAnimation;
     int mLeadingCol;

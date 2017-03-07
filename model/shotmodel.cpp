@@ -1,5 +1,6 @@
 #include "shotmodel.h"
 #include "controller/game.h"
+#include "util/gameutils.h"
 
 ShotModel::ShotModel(QObject *parent) : ShotView(parent), mLeadingCol(-1), mLeadingRow(-1), mDistance(0), mShedding(false),
   mKillSequence(0)
@@ -49,7 +50,7 @@ void ShotModel::setSequence( const QVariant &sequence )
 {
     mSequence = sequence;
 
-    Game* game = getGame();
+    Game* game = getGame(this);
     if ( !game ) {
         return;
     }
@@ -60,7 +61,7 @@ void ShotModel::setSequence( const QVariant &sequence )
             killTheTank();
             break;
         case 3:
-            mAnimation.pause();
+            mAnimation.pause(); // freeze the shot to show the kill
             emit tankKilled();
             break;
         default:
@@ -98,17 +99,6 @@ void ShotModel::startShedding()
 void ShotModel::setIsKill()
 {
     mKillSequence = 1;
-}
-
-Game* ShotModel::getGame()
-{
-    // find the game from the object hierarchy:
-    QObject* p = parent();
-    QVariant v;
-    while( p && !(v = p->property("GameHandle")).isValid() ) {
-        p = p->parent();
-    }
-    return v.value<GameHandle>().game;
 }
 
 int ShotModel::getLeadingRow() const
