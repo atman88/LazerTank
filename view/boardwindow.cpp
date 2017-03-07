@@ -31,29 +31,26 @@ void BoardWindow::exposeEvent(QExposeEvent *)
     }
 }
 
-void BoardWindow::init(const GameHandle handle )
+void BoardWindow::init( Game* game )
 {
-    setProperty("GameHandle", QVariant::fromValue(handle));
+    if ( game ) {
+        mGame = game;
 
-    mGame = handle.game;
-    if ( mGame ) {
-        Board* board = mGame->getBoard();
-        if ( board ) {
-            onBoardLoaded();
-            QObject::connect( board, &Board::boardLoaded,   this, &BoardWindow::onBoardLoaded     );
-            QObject::connect( board, &Board::tileChangedAt, this, &BoardWindow::renderSquareLater );
+        onBoardLoaded();
+        Board* board = game->getBoard();
+        QObject::connect( board, &Board::boardLoaded,   this, &BoardWindow::onBoardLoaded     );
+        QObject::connect( board, &Board::tileChangedAt, this, &BoardWindow::renderSquareLater );
 
-            PieceSetManager* pm = board->getPieceManager();
-            QObject::connect( pm, &PieceSetManager::erasedAt,  this, &BoardWindow::renderSquareLater );
-            QObject::connect( pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
-        }
+        PieceSetManager* pm = board->getPieceManager();
+        QObject::connect( pm, &PieceSetManager::erasedAt,   this, &BoardWindow::renderSquareLater );
+        QObject::connect( pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
     }
 }
 
 void BoardWindow::onBoardLoaded()
 {
-    Board* board = mGame->getBoard();
-    if ( board ) {
+    if ( mGame ) {
+        Board* board = mGame->getBoard();
         QRect size( 0, 0, board->getWidth()*24, board->getHeight()*24 );
         setGeometry(size);
         mDirtyRegion += size;
@@ -71,9 +68,10 @@ void BoardWindow::onBoardLoaded()
 void BoardWindow::resizeEvent(QResizeEvent *resizeEvent)
 {
     mBackingStore->resize(resizeEvent->size());
-    if (isExposed() && mGame) {
-        Board* board = mGame->getBoard();
-        if ( board ) {
+    if (isExposed()) {
+        Game* mGame = getGame(this);
+        if ( mGame ) {
+            Board* board = mGame->getBoard();
             QRect size( 0, 0, board->getWidth()*24, board->getHeight()*24 );
             mDirtyRegion += size;
             renderNow();
@@ -182,21 +180,16 @@ void BoardWindow::renderOneRect( const QRect* rect, Board* board, const PieceMul
     }
     renderListIn( moveIterator, moves->end(), rect, painter );
 
-    mGame->getMovingPiece().render( rect, painter );
-    mGame->getTank()->render( rect, painter );
-
-    mGame->getCannonShot().render( painter );
+    if ( mGame ) {
+        mGame->getMovingPiece().render( rect, painter );
+        mGame->getTank()->render( rect, painter );
+        mGame->getCannonShot().render( painter );
+    }
 }
 
 void BoardWindow::render(QRegion* region)
 {
-    if ( !mGame ) {
-        return;
-    }
     Board* board = mGame->getBoard();
-    if ( !board ) {
-        return;
-    }
 
     const PieceMultiSet* moves = mGame->getTank()->getMoves()->toMultiSet();
     const PieceSet* tiles = board->getPieceManager()->getPieces();
@@ -308,11 +301,9 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
 
         case Qt::Key_C: // attempt to capture the flag
         {   Board* board = mGame->getBoard();
-            if ( board ) {
-                Tank* tank = mGame->getTank();
-                tank->stop();
-                mGame->findPath( board->getFlagX(), board->getFlagY(), tank->getRotation().toInt() );
-            }
+            Tank* tank = mGame->getTank();
+            tank->stop();
+            mGame->findPath( board->getFlagX(), board->getFlagY(), tank->getRotation().toInt() );
             break;
         }
         default:
@@ -344,7 +335,7 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
         {   PieceListManager* moveManager = mGame->getTank()->getMoves();
             Piece* piece = moveManager->getList()->back();
             if ( piece ) {
-                if ( piece->hasPush() && mGame ) {
+                if ( piece->hasPush() ) {
                     mGame->undoFuturePush( piece );
                 }
                 mGame->getTank()->getMoves()->eraseBack();
@@ -359,6 +350,10 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
 
 void BoardWindow::mousePressEvent( QMouseEvent* event )
 {
+    if ( !mGame ) {
+        return;
+    }
+
     switch( event->button() ) {
     case Qt::RightButton:
     {   QPoint globalPos = event->globalPos();
@@ -378,21 +373,21 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
 
 void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
 {
-    if ( mGame ) {
-        switch( event->button() ) {
-        case Qt::LeftButton:
-            mGame->getTank()->move();
-            break;
-        default:
-            ;
-        }
+    if ( !mGame ) {
+        return;
+    }
+
+    switch( event->button() ) {
+    case Qt::LeftButton:
+        mGame->getTank()->move();
+        break;
+    default:
+        ;
     }
 }
 
 void BoardWindow::onTankKilled()
 {
-//    renderNow();
-
     QMessageBox msgBox;
     msgBox.setText("Level lost!");
     msgBox.exec();

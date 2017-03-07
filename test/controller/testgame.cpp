@@ -2,6 +2,8 @@
 #include "../testmain.h"
 #include "controller/game.h"
 
+#include "view/boardwindow.h"
+
 using namespace std;
 
 void TestMain::testMove()

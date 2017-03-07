@@ -11,6 +11,9 @@ class Shooter;
 
 #include "model/shotmodel.h"
 
+/**
+ * @brief An abstract class defining the source of of a lazer beam
+ */
 class Shooter : public QObject
 {
     Q_OBJECT
@@ -25,17 +28,26 @@ public:
 
     void reset( QPoint p );
 
+    /**
+     * @brief fire this shooters shot
+     */
     void fire();
+
+    /**
+     * @brief Release the trigger. Essentially a hint that its a good time to start shedding the shot's tail
+     */
     void ceaseFire();
 
     ShotModel& getShot();
-
     QVariant getRotation();
     QVariant getX();
     QVariant getY();
     const QRect& getRect();
 
 public slots:
+    /**
+     * @brief setRotation/setX/setY - These slots are solely for use by internal animations
+     */
     virtual void setRotation(const QVariant &angle );
     virtual void setX(const QVariant &x );
     virtual void setY(const QVariant &y );

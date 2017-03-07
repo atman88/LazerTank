@@ -100,30 +100,14 @@ void Push::setY( const QVariant& y )
     }
 }
 
-int Push::getEndX()
-{
-    if ( mType != NONE ) {
-        return mHorizontalAnimation.endValue().toInt();
-    }
-    return mBoundingRect.left();
-}
-
-int Push::getEndY()
-{
-    if ( mType != NONE ) {
-        return mVerticalAnimation.endValue().toInt();
-    }
-    return mBoundingRect.top();
-}
-
 void Push::onStopped()
 {
     if ( mType != NONE ) {
         int x = getX().toInt()/24;
         int y = getY().toInt()/24;
-        Board* board = getBoard();
-        if ( board ) {
-            board->applyPushResult( mType, x, y, mPieceAngle );
+        Game* game = getGame(this);
+        if ( game ) {
+            game->getBoard()->applyPushResult( mType, x, y, mPieceAngle );
         }
         mType = NONE;
         if ( !mRenderedBoundingRect.isNull() ) {
@@ -132,19 +116,4 @@ void Push::onStopped()
         }
         emit stateChanged(QAbstractAnimation::Stopped, QAbstractAnimation::Running);
     }
-}
-
-Board* Push::getBoard()
-{
-    // find the game from the object hierarchy:
-    QObject* p = parent();
-    QVariant v;
-    while( p && !(v = p->property("GameHandle")).isValid() ) {
-        p = p->parent();
-    }
-    Game* game = v.value<GameHandle>().game;
-    if ( game ) {
-        return game->getBoard();
-    }
-    return 0;
 }

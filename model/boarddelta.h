@@ -3,7 +3,8 @@
 
 #include <QObject>
 
-#include "board.h"
+class Board;
+
 #include "piecesetmanager.h"
 
 /**

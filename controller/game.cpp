@@ -17,7 +17,7 @@ Game::Game() : mWindow(0)
 void Game::init( BoardWindow* window )
 {
     mWindow = window;
-    window->init( mHandle );
+    window->init( this );
 
     mMovingPiece.setParent( this );
     QObject::connect( &mMovingPiece, &Push::rectDirty, window, &BoardWindow::renderLater );

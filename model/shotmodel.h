@@ -4,11 +4,10 @@
 #include <QPropertyAnimation>
 
 class Game;
-
-#include "view/shotview.h"
-
 class AnimationStateAggregator;
 class Shooter;
+
+#include "view/shotview.h"
 
 class ShotModel : public ShotView
 {

@@ -2,6 +2,7 @@
 #include <QVector>
 
 #include "boarddelta.h"
+#include "board.h"
 
 BoardDelta::BoardDelta(QObject *parent) : QObject(parent), mEnabled(false)
 {
