@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <Qt>
 #include <QVariant>
 #include <QMessageBox>
@@ -507,5 +507,17 @@ void Game::undoFuturePush( Piece* pusher )
             pieceManager->erase( pushee );
             pieceManager->insert( type, pusher->getCol(), pusher->getRow(), angle );
         }
+    }
+}
+
+void Game::undoLastMove()
+{
+    PieceListManager* moveManager = getTank()->getMoves();
+    Piece* piece = moveManager->getList()->back();
+    if ( piece ) {
+        if ( piece->hasPush() ) {
+            undoFuturePush( piece );
+        }
+        getTank()->getMoves()->eraseBack();
     }
 }

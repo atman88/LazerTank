@@ -39,13 +39,6 @@ void BoardWindow::init( Game* game )
         mGame = game;
         setProperty("GameHandle", game->property("GameHandle"));
 
-        QKeySequence speedSeq(   Qt::Key_S     );
-        QKeySequence captureSeq( Qt::Key_C     );
-
-        mSpeedAction.setShortcut( speedSeq );
-        mSpeedAction.setCheckable(true);
-        mCaptureAction->setShortcut( captureSeq );
-
         onBoardLoaded();
         Board* board = game->getBoard();
         QObject::connect( board, &Board::boardLoaded,   this, &BoardWindow::onBoardLoaded     );
@@ -56,6 +49,8 @@ void BoardWindow::init( Game* game )
         QObject::connect( pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
 
         QObject::connect( &mSpeedAction, &QAction::toggled, mGame->getSpeedController(), &SpeedController::setHighSpeed );
+        QObject::connect( &mUndoMoveAction,  &QAction::triggered, mGame, &Game::undoLastMove );
+        QObject::connect( &mClearMovesAction,&QAction::triggered, mGame->getTank(), &Tank::clearMoves );
     }
 }
 
@@ -125,7 +120,7 @@ QMenu& BoardWindow::getMenu()
     return mMenu;
 }
 
-void BoardWindow::renderOneRect( const QRect* rect, Board* board, const PieceMultiSet* moves, const PieceSet* tiles,
+void BoardWindow::render( const QRect* rect, Board* board, const PieceMultiSet* moves, const PieceSet* tiles,
   const PieceSet* deltas, QPainter* painter )
 {
     int minX = rect->left()/24;
@@ -207,33 +202,15 @@ void BoardWindow::render(QRegion* region)
     const PieceSet* tiles = board->getPieceManager()->getPieces();
     const PieceSet* deltas = mGame->getDeltaPieces();
 
-    QVector<QRect> rects = region->rects();
-    int i = rects.size();
-    if ( i <= 0 ) {
-        return;
-    }
-
-    int minX = rects[0].left();
-    int minY = rects[0].top();
-    int maxX = rects[0].right();
-    int maxY = rects[0].bottom();
-    while( --i > 0 ) {
-        minX = min( minX, rects[i].left()   );
-        minY = min( minY, rects[i].top()    );
-        maxX = max( maxX, rects[i].right()  );
-        maxY = max( maxY, rects[i].bottom() );
-    }
-
-    QRect rect( minX, minY, maxX-minX+1, maxY-minY+1 );
-    QRegion r( rect );
-    mBackingStore->beginPaint(r);
+    mBackingStore->beginPaint(*region);
     QPaintDevice *device = mBackingStore->paintDevice();
     QPainter painter(device);
+    QRect rect = region->boundingRect();
 
-    renderOneRect( &rect, board, moves, tiles, deltas, &painter );
+    render( &rect, board, moves, tiles, deltas, &painter );
 
     mBackingStore->endPaint();
-    mBackingStore->flush(r);
+    mBackingStore->flush(*region);
 }
 
 void BoardWindow::renderLater( const QRect& rect )
@@ -267,22 +244,38 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
 {
     if ( mGame ) {
 
-        // create the menu on first use:
+        //
+        // create the menu on first use
+        //
         if ( mMenu.isEmpty() ) {
-            QKeySequence shootSeq(   Qt::Key_Space );
-            mMenu.addAction( "shoot", mGame->getTank(), &Tank::fire, shootSeq );
+            QKeySequence shootSeq( Qt::Key_Space );
+            QKeySequence undoSeq( Qt::Key_Backspace );
+            QKeySequence clearSeq( Qt::CTRL|Qt::Key_Backspace );
+            QKeySequence speedSeq( Qt::Key_S );
+            QKeySequence captureSeq( Qt::Key_C );
 
+            mMenu.addAction( "shoot& ", mGame->getTank(), &Tank::fire, shootSeq );
+            mUndoMoveAction.setText("&Undo");
+            mClearMovesAction.setText("Clear Moves");
             mSpeedAction.setText( "&Speed Boost" );
             mPathToAction->setText( "Move &Here" );
             mCaptureAction->setText( "&Capture Flag" );
-            mReloadAction.setText( "Restart Level" );
+            mReloadAction.setText( "&Restart Level" );
 
-            mMenu.addAction( &mSpeedAction );
-            mMenu.addAction( &(*mPathToAction) );
+            mSpeedAction.setShortcut( speedSeq );
+            mSpeedAction.setCheckable(true);
+            mCaptureAction->setShortcut( captureSeq );
+            mUndoMoveAction.setShortcut( undoSeq );
+            mClearMovesAction.setShortcut(clearSeq);
+
+            mMenu.addAction( &mSpeedAction      );
+            mMenu.addAction( &mUndoMoveAction   );
+            mMenu.addAction( &mClearMovesAction );
+            mMenu.addAction( &(*mPathToAction)  );
             mMenu.addAction( &(*mCaptureAction) );
-            mMenu.addAction( &mReloadAction );
+            mMenu.addAction( &mReloadAction     );
 
-            QAction* action = mMenu.addAction( QString("level..") );
+            QAction* action = mMenu.addAction( QString("Select &Level..") );
             action->setMenu( &mLevelsMenu );
             QString text( "level %1" );
             for( int level = 1; level <= BOARD_MAX_LEVEL; ++level ) {
@@ -293,7 +286,9 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
             mMenu.addAction( "E&xit", this, &QWindow::close );
         }
 
-        // freshen the dynamic menu items:
+        //
+        // freshen dynamic menu item properties
+        //
         Board* board = mGame->getBoard();
         mSpeedAction.setChecked( mGame->getSpeedController()->getHighSpeed() );
         mReloadAction.setData( QVariant( board->getLevel()) );
@@ -311,6 +306,13 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
         }
         mGame->getPathFinderController()->testActions( actions, nActions );
 
+        bool movesPending = mGame->getTank()->getMoves()->size() > 0;
+        mUndoMoveAction.setEnabled( movesPending );
+        mClearMovesAction.setEnabled( movesPending );
+
+        //
+        // launch menu
+        //
         QAction* action = (globalPos ? mMenu.exec( *globalPos ) : mMenu.exec());
         if ( action == &(*mCaptureAction) ) {
             mGame->getPathFinderController()->doAction( mCaptureAction );
@@ -332,7 +334,9 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
     if ( !ev->isAutoRepeat() && mGame ) {
         switch( ev->key() ) {
         case Qt::Key_Escape:
-            showMenu();
+            if ( !ev->modifiers() ) {
+                showMenu();
+            }
             break;
 
         case Qt::Key_Space:
@@ -375,16 +379,12 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
                 break;
 
         case Qt::Key_Backspace:
-        {   PieceListManager* moveManager = mGame->getTank()->getMoves();
-            Piece* piece = moveManager->getList()->back();
-            if ( piece ) {
-                if ( piece->hasPush() ) {
-                    mGame->undoFuturePush( piece );
-                }
-                mGame->getTank()->getMoves()->eraseBack();
+            if ( ev->modifiers() == Qt::ControlModifier ) {
+                mGame->getTank()->clearMoves();
+            } else {
+                mGame->undoLastMove();
             }
             break;
-        }
         default:
             ;
         }
@@ -404,11 +404,9 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
         break;
     }
     case Qt::LeftButton:
-    {   Board* board = mGame->getBoard();
-        mPathToAction->setCriteria( board->getFlagCol(), board->getFlagRow(), false );
+        mPathToAction->setCriteria( event->pos().x()/24, event->pos().y()/24, false );
         mGame->getPathFinderController()->doAction( mPathToAction );
         break;
-    }
     default:
         ;
     }

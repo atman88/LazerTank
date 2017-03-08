@@ -33,6 +33,7 @@ signals:
 
 public slots:
     void reset( int col, int row );
+    void clearMoves();
     void onAnimationsFinished();
 
 protected:

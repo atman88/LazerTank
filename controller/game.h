@@ -121,6 +121,11 @@ public:
     void undoFuturePush( Piece* pusher );
 
     /**
+     * @brief undoes the last future move if one exists
+     */
+    void undoLastMove();
+
+    /**
      * @brief Obtain the set of pieces which represent any differences between the current board and
      * what the board will be when outstanding moves are applied.
      * @return set of future pieces

@@ -68,7 +68,7 @@ protected:
     void exposeEvent(QExposeEvent *event) override;
 
 private:
-    void renderOneRect( const QRect* rect, Board* board, const PieceMultiSet* moves, const PieceSet* tiles,
+    void render( const QRect* rect, Board* board, const PieceMultiSet* moves, const PieceSet* tiles,
       const PieceSet* deltas, QPainter* painter );
     void renderMove( int x, int y, int angle = 0 );
     void renderListIn(PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter );
@@ -78,6 +78,9 @@ private:
     QMenu mMenu;
     QAction mSpeedAction;
     QAction mReloadAction;
+    QAction mUndoMoveAction;
+    QAction mClearMovesAction;
+    // using shared pointers for these ui objects so they can be safely shared with the controller:
     std::shared_ptr<PathSearchAction> mCaptureAction;
     std::shared_ptr<PathSearchAction> mPathToAction;
     QMenu mLevelsMenu;
