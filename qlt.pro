@@ -28,7 +28,9 @@ HEADERS += \
     view/boardwindow.h \
     model/tank.h \
     util/gameutils.h \
-    view/tankview.h
+    view/tankview.h \
+    controller/pathsearchaction.h \
+    controller/pathfindercontroller.h
 
 SOURCES += \
            model/board.cpp \
@@ -49,7 +51,9 @@ SOURCES += \
     view/boardwindow.cpp \
     model/tank.cpp \
     util/gameutils.cpp \
-    view/tankview.cpp
+    view/tankview.cpp \
+    controller/pathsearchaction.cpp \
+    controller/pathfindercontroller.cpp
 
 RESOURCES += qml.qrc
 

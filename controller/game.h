@@ -6,9 +6,10 @@
 struct GameHandle;
 class BoardWindow;
 class ShotModel;
+class PathFinderController;
 
 #include "animationstateaggregator.h"
-#include "pathfinder.h"
+#include "pathfindercontroller.h"
 #include "model/boarddelta.h"
 #include "model/board.h"
 #include "model/tank.h"
@@ -120,22 +121,16 @@ public:
     void undoFuturePush( Piece* pusher );
 
     /**
-     * @brief Attempt to generate a move sequence between two points
-     * Any outstanding moves are cancelled in the event that a path is found.
-     * No future moves are considered. I.e. No pushes would be caused by any resultant path.
-     * No attempt is made to avoid sighting by cannons.
-     * @param targetCol Row of the square to path toward
-     * @param targetRow Column of the square to path toward
-     * @param startingDirection The direction to start the search from (should be the tank's current rotation)
-     */
-    void findPath(int targetCol, int targetRow, int startingDirection );
-
-    /**
      * @brief Obtain the set of pieces which represent any differences between the current board and
      * what the board will be when outstanding moves are applied.
      * @return set of future pieces
      */
     const PieceSet* getDeltaPieces();
+
+    /**
+     * @brief Access to the path finder
+     */
+    PathFinderController* getPathFinderController();
 
 public slots:
     /**
@@ -216,7 +211,7 @@ private:
     BoardWindow* mWindow;
 
     Board mBoard;
-    PathFinder mPathFinder;
+    PathFinderController mPathFinderController;
     Push mMovingPiece;
     Tank mTank;
     Shooter mActiveCannon;

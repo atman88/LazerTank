@@ -1,5 +1,9 @@
 #include "speedcontroller.h"
 
+// movement speed in milliseconds per square
+#define LOW_SPEED   800
+#define HIGH_SPEED  400
+
 SpeedController::SpeedController(QObject *parent) : QObject(parent), mSpeed(LOW_SPEED)
 {
 }
@@ -9,8 +13,14 @@ int SpeedController::getSpeed()
     return mSpeed;
 }
 
-void SpeedController::setSpeed(int speed)
+bool SpeedController::getHighSpeed()
 {
+    return mSpeed == HIGH_SPEED;
+}
+
+void SpeedController::setHighSpeed( bool on )
+{
+    int speed = on ? HIGH_SPEED : LOW_SPEED;
     if ( speed != mSpeed ) {
         mSpeed = speed;
         emit speedChanged( speed );

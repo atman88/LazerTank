@@ -41,23 +41,32 @@ void TankView::render( const QRect* rect, QPainter* painter )
 
 void TankView::stop()
 {
-    mRotateAnimation.stop();
-    mHorizontalAnimation.stop();
-    mVerticalAnimation.stop();
+    QPropertyAnimation* animations[3] = { &mRotateAnimation, &mHorizontalAnimation, &mVerticalAnimation };
+    for( auto it : animations ) {
+        if ( it->state() != QPropertyAnimation::Stopped ) {
+            it->stop();
+        }
+    }
 }
 
 void TankView::pause()
 {
-    mRotateAnimation.pause();
-    mHorizontalAnimation.pause();
-    mVerticalAnimation.pause();
+    QPropertyAnimation* animations[3] = { &mRotateAnimation, &mHorizontalAnimation, &mVerticalAnimation };
+    for( auto it : animations ) {
+        if ( it->state() == QPropertyAnimation::Running ) {
+            it->pause();
+        }
+    }
 }
 
 void TankView::resume()
 {
-    mRotateAnimation.resume();
-    mHorizontalAnimation.resume();
-    mVerticalAnimation.resume();
+    QPropertyAnimation* animations[3] = { &mRotateAnimation, &mHorizontalAnimation, &mVerticalAnimation };
+    for( auto it : animations ) {
+        if ( it->state() == QPropertyAnimation::Paused ) {
+            it->resume();
+        }
+    }
 }
 
 void TankView::reset( QPoint& p )

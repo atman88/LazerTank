@@ -15,15 +15,16 @@ PathFinder::PathFinder(QObject *parent) : QThread(parent)
 {
 }
 
-void PathFinder::findPath( int targetCol, int targetRow, int startingCol, int startingRow, int startingRotation )
+void PathFinder::findPath(int targetCol, int targetRow, int startCol, int startRow, int startRotation, bool testOnly )
 {
     mStopping = true;
 
     mTargetCol = targetCol;
     mTargetRow = targetRow;
-    mStartingCol = startingCol;
-    mStartingRow = startingRow;
-    mStartingRotation = startingRotation;
+    mStartCol = startCol;
+    mStartRow = startRow;
+    mStartRotation = startRotation;
+    mTestOnly = testOnly;
     start( LowPriority );
 }
 
@@ -64,7 +65,7 @@ void PathFinder::buildPath( int col, int row )
             break;
         }
 
-        if ( lastCol != mStartingCol || lastRow != mStartingRow || direction != mStartingRotation ) {
+        if ( lastCol != mStartCol || lastRow != mStartRow || direction != mStartRotation ) {
             mMoves.append( MOVE, lastCol, lastRow, direction );
         }
     }
@@ -86,9 +87,9 @@ void PathFinder::tryAt( int col, int row )
             break;
 
         case TARGET:
-//            printSearchMap();
-//
-            buildPath( col, row );
+            if ( !mTestOnly ) {
+                buildPath( col, row );
+            }
             std::longjmp( mJmpBuf, 1 );
 
         default:
@@ -135,11 +136,19 @@ int PathFinder::pass2( int nPoints )
 void PathFinder::run()
 {
     mStopping = false;
+    Game* game = getGame(this);
+
+    int startCol = mStartCol;
+    int startRow = mStartRow;
+    int startRotation = mStartRotation;
+    int targetCol = mTargetCol;
+    int targetRow = mTargetRow;
 
     mMoves.reset();
-    if ( !setjmp( mJmpBuf ) ) {
+    bool found = false;
+    switch( setjmp( mJmpBuf ) ) {
+    case 0:
         // initialize the search map
-        Game* game = getGame(this);
         if ( game && game->canPlaceAtNonFuturistic( TANK, mTargetCol, mTargetRow, 0 )) {
             Board* board = game->getBoard();
             mMaxCol  = board->getWidth()-1;
@@ -151,18 +160,27 @@ void PathFinder::run()
                 }
             }
 
-            mSearchMap[mStartingRow*BOARD_MAX_WIDTH+mStartingCol] = TARGET;
+            mSearchMap[mStartRow*BOARD_MAX_WIDTH+mStartCol] = TARGET;
             mPassValue = 0;
             mSearchMap[mTargetRow*BOARD_MAX_WIDTH+mTargetCol] = mPassValue;
 
-            mSearchCol[0] = mTargetCol;
-            mSearchRow[0] = mTargetRow;
+            mSearchCol[0] = targetCol;
+            mSearchRow[0] = targetRow;
             int nPoints = 1;
             while( nPoints > 0 && !mStopping ) {
                 nPoints = pass1( nPoints );
                 nPoints = pass2( nPoints );
             }
         }
+        break;
+
+    default:
+        found = true;
     }
-    emit pathFound( &mMoves );
+
+    if ( mTestOnly ) {
+        emit testResult( found, targetCol, targetRow, startCol, startRow, startRotation );
+    } else if ( found && mMoves.size() > 0 ) {
+        emit pathFound( targetCol, targetRow, startCol, startRow, startRotation, &mMoves );
+    }
 }

@@ -39,7 +39,9 @@ void Game::init( BoardWindow* window )
     QObject::connect( moveManager, &PieceListManager::erased,   window, &BoardWindow::renderSquareLater );
     QObject::connect( moveManager, &PieceListManager::replaced, window, &BoardWindow::renderSquareLater );
 
-    mPathFinder.setParent(this);
+    mPathFinderController.init(this);
+    QObject::connect( &mPathFinderController, &PathFinderController::pathFound, this, &Game::endMoveDeltaTracking );
+
     mMoveAggregate.setObjectName("MoveAggregate");
     mShotAggregate.setObjectName("ShotAggregate");
 
@@ -54,12 +56,7 @@ void Game::init( BoardWindow* window )
 
     QObject::connect( &mMovingPiece, &Push::stateChanged, this, &Game::onMovingPieceChanged );
 
-    QObject::connect( window, &BoardWindow::setSpeed, &mSpeedController, &SpeedController::setSpeed );
-
-    QObject::connect( &mTank,       &Tank::idled,           this, &Game::endMoveDeltaTracking );
-    QObject::connect( &mPathFinder, &PathFinder::pathFound, this, &Game::endMoveDeltaTracking );
-
-    QObject::connect( &mPathFinder, &PathFinder::pathFound, mTank.getMoves(), &PieceListManager::reset );
+    QObject::connect( &mTank, &Tank::idled, this, &Game::endMoveDeltaTracking );
 
     mBoard.load( 1 );
 }
@@ -69,7 +66,7 @@ void Game::onBoardLoaded()
     mFutureDelta.enable( false );
     mTank.reset( mBoard.getTankStartCol(), mBoard.getTankStartRow() );
     mActiveCannon.reset( NullPoint );
-    mSpeedController.setSpeed(LOW_SPEED);
+    mSpeedController.setHighSpeed(false);
 }
 
 void Game::endMoveDeltaTracking()
@@ -278,6 +275,11 @@ bool Game::canPlaceAt(PieceType what, int col, int row, int fromAngle, Board* bo
     return false;
 }
 
+PathFinderController* Game::getPathFinderController()
+{
+    return &mPathFinderController;
+}
+
 BoardWindow *Game::getWindow() const
 {
     return mWindow;
@@ -482,14 +484,6 @@ void Game::onFuturePush( Piece* pushingPiece )
         return;
     }
     mFutureBoard.applyPushResult( pushedType, col, row, angle );
-}
-
-void Game::findPath(int targetCol, int targetRow, int startingDirection )
-{
-    // the path finder doesn't support pushing, so cancel any future moves before using:
-    mFutureDelta.enable( false );
-
-    mPathFinder.findPath( targetCol, targetRow, mTank.getCol(), mTank.getRow(), startingDirection );
 }
 
 const PieceSet* Game::getDeltaPieces()

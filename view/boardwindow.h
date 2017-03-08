@@ -1,6 +1,7 @@
 #ifndef BOARDWINDOW_H
 #define BOARDWINDOW_H
 
+#include <memory>
 #include <QMouseEvent>
 #include <QtGui>
 #include <QMenu>
@@ -8,6 +9,7 @@
 class Board;
 class Game;
 
+#include "controller/pathsearchaction.h"
 #include "model/piece.h"
 
 /**
@@ -24,12 +26,13 @@ public:
         delete mBackingStore;
     }
     virtual void render(QRegion *region);
+    void init( Game* game );
 
     /**
      * @brief pop up the menu
      * @param globalPos - optional position argument intended for mouse-related events
      */
-    void showMenu( QPoint* globalPos = 0 );
+    void showMenu( QPoint* globalPos = 0, int col = -1, int row = -1 );
 
     /**
      * @brief Invoke the window's UI for when the tank is destroyed
@@ -49,7 +52,6 @@ signals:
     void setSpeed( int speed );
 
 public slots:
-    void init( Game* game );
     void renderLater(const QRect &rect);
     void renderNow();
     void renderSquareLater( int col, int row );
@@ -74,7 +76,10 @@ private:
     QBackingStore *mBackingStore;
     QPen mPen;
     QMenu mMenu;
-    QAction* mReloadAction;
+    QAction mSpeedAction;
+    QAction mReloadAction;
+    std::shared_ptr<PathSearchAction> mCaptureAction;
+    std::shared_ptr<PathSearchAction> mPathToAction;
     QMenu mLevelsMenu;
 
     QRegion mDirtyRegion;

@@ -4,10 +4,6 @@
 #include <QObject>
 #include <QPropertyAnimation>
 
-// movement speed in milliseconds per square
-#define LOW_SPEED   800
-#define HIGH_SPEED  400
-
 /**
  * @brief A game animation speed container
  */
@@ -18,17 +14,22 @@ public:
     explicit SpeedController(QObject *parent = 0);
 
     /**
-     * @brief Get the speed value
-     * @return current speed in milliseconds per square
+     * @brief get the current speed value in ms per square
      */
     int getSpeed();
+
+    /**
+     * @brief Get the high speed setting
+     * @return true if high speed is on otherwise false
+     */
+    bool getHighSpeed();
 
 public slots:
     /**
      * @brief Set the speed value
-     * @param speed The current speed in milliseconds per square
+     * @param on sets high speed on if true, otherwise normal speed
      */
-    void setSpeed( int speed );
+    void setHighSpeed( bool on );
 
 signals:
     void speedChanged( int speed );

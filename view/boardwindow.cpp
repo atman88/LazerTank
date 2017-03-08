@@ -16,6 +16,8 @@ BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
 
     create();
 
+    mCaptureAction = std::make_shared<PathSearchAction>(this);
+    mPathToAction  = std::make_shared<PathSearchAction>(this);
     mBackingStore = new QBackingStore(this);
 }
 
@@ -35,6 +37,14 @@ void BoardWindow::init( Game* game )
 {
     if ( game ) {
         mGame = game;
+        setProperty("GameHandle", game->property("GameHandle"));
+
+        QKeySequence speedSeq(   Qt::Key_S     );
+        QKeySequence captureSeq( Qt::Key_C     );
+
+        mSpeedAction.setShortcut( speedSeq );
+        mSpeedAction.setCheckable(true);
+        mCaptureAction->setShortcut( captureSeq );
 
         onBoardLoaded();
         Board* board = game->getBoard();
@@ -44,6 +54,8 @@ void BoardWindow::init( Game* game )
         PieceSetManager* pm = board->getPieceManager();
         QObject::connect( pm, &PieceSetManager::erasedAt,   this, &BoardWindow::renderSquareLater );
         QObject::connect( pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
+
+        QObject::connect( &mSpeedAction, &QAction::toggled, mGame->getSpeedController(), &SpeedController::setHighSpeed );
     }
 }
 
@@ -251,14 +263,24 @@ int keyToAngle( int key )
     }
 }
 
-void BoardWindow::showMenu( QPoint* globalPos )
+void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
 {
     if ( mGame ) {
-        if ( mMenu.isEmpty() ) {
-            QKeySequence seq(QString(" "));
-            mMenu.addAction( "shoot", mGame->getTank(), &Tank::fire, seq );
 
-            mReloadAction = mMenu.addAction( "Restart Level" );;
+        // create the menu on first use:
+        if ( mMenu.isEmpty() ) {
+            QKeySequence shootSeq(   Qt::Key_Space );
+            mMenu.addAction( "shoot", mGame->getTank(), &Tank::fire, shootSeq );
+
+            mSpeedAction.setText( "&Speed Boost" );
+            mPathToAction->setText( "Move &Here" );
+            mCaptureAction->setText( "&Capture Flag" );
+            mReloadAction.setText( "Restart Level" );
+
+            mMenu.addAction( &mSpeedAction );
+            mMenu.addAction( &(*mPathToAction) );
+            mMenu.addAction( &(*mCaptureAction) );
+            mMenu.addAction( &mReloadAction );
 
             QAction* action = mMenu.addAction( QString("level..") );
             action->setMenu( &mLevelsMenu );
@@ -267,12 +289,34 @@ void BoardWindow::showMenu( QPoint* globalPos )
                 action = mLevelsMenu.addAction( text.arg(level) );
                 action->setData( QVariant(level) );
             }
+
+            mMenu.addAction( "E&xit", this, &QWindow::close );
         }
 
-        mReloadAction->setData( QVariant(mGame->getBoard()->getLevel()) );
+        // freshen the dynamic menu items:
+        Board* board = mGame->getBoard();
+        mSpeedAction.setChecked( mGame->getSpeedController()->getHighSpeed() );
+        mReloadAction.setData( QVariant( board->getLevel()) );
+
+        std::shared_ptr<PathSearchAction> actions[2] = { mCaptureAction, mPathToAction };
+        mCaptureAction->setCriteria( board->getFlagCol(), board->getFlagRow(), true );
+        int nActions;
+        if ( col < 0 ) {
+            nActions = 1;
+            mPathToAction->setVisible( false );
+        } else {
+            nActions = 2;
+            mPathToAction->setVisible( true );
+            mPathToAction->setCriteria( col, row, true );
+        }
+        mGame->getPathFinderController()->testActions( actions, nActions );
 
         QAction* action = (globalPos ? mMenu.exec( *globalPos ) : mMenu.exec());
-        if ( action ) {
+        if ( action == &(*mCaptureAction) ) {
+            mGame->getPathFinderController()->doAction( mCaptureAction );
+        } else if ( action == &(*mPathToAction) ) {
+            mGame->getPathFinderController()->doAction( mPathToAction );
+        } else if ( action ) {
             cout << "menu " << action->property("text").toString().toStdString() << " selected" << std::endl;
             bool ok;
             int level = action->data().toInt( &ok );
@@ -295,15 +339,14 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
             mGame->getTank()->fire();
             break;
 
-        case Qt::Key_Shift:
-            emit setSpeed(HIGH_SPEED);
+        case Qt::Key_S:
+            mSpeedAction.setChecked( true );
             break;
 
         case Qt::Key_C: // attempt to capture the flag
         {   Board* board = mGame->getBoard();
-            Tank* tank = mGame->getTank();
-            tank->stop();
-            mGame->findPath( board->getFlagCol(), board->getFlagRow(), tank->getRotation().toInt() );
+            mCaptureAction->setCriteria( board->getFlagCol(), board->getFlagRow(), false );
+            mGame->getPathFinderController()->doAction( mCaptureAction );
             break;
         }
         default:
@@ -323,8 +366,8 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
             mGame->getTank()->ceaseFire();
             break;
 
-        case Qt::Key_Shift:
-            emit setSpeed(LOW_SPEED);
+        case Qt::Key_S:
+            mSpeedAction.setChecked( false );
             break;
 
         case Qt::Key_C:
@@ -357,13 +400,13 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
     switch( event->button() ) {
     case Qt::RightButton:
     {   QPoint globalPos = event->globalPos();
-        showMenu( &globalPos );
+        showMenu( &globalPos, event->pos().x()/24, event->pos().y()/24 );
         break;
     }
     case Qt::LeftButton:
-    {   Tank* tank = mGame->getTank();
-        tank->stop();
-        mGame->findPath( event->pos().x()/24, event->pos().y()/24, tank->getRotation().toInt() );
+    {   Board* board = mGame->getBoard();
+        mPathToAction->setCriteria( board->getFlagCol(), board->getFlagRow(), false );
+        mGame->getPathFinderController()->doAction( mPathToAction );
         break;
     }
     default:

@@ -24,18 +24,21 @@ public:
 
     /**
      * @brief Initiate a path search. If found, the resulting path is posted via the pathFound signal.
-     * @param targetCol The row of the starting square
-     * @param targetRow The column of the starting square
-     * @param startingCol The row of the destination square
-     * @param startingRow The column of the destination square
-     * @param startingRotation The starting direction of the search
+     * @param targetCol The row of the destination square
+     * @param targetRow The column of the destination square
+     * @param startCol The row of the starting square
+     * @param startRow The column of the starting square
+     * @param startRotation The starting direction of the search
+     * @param testOnly If true, only the pathTestResult signal is raised as a result otherwise a pathFound signal
+     * is raised if (and only if) the path is successful
      */
-    void findPath(int targetCol, int targetRow, int startingCol, int startingRow, int targetRotation );
+    void findPath(int targetCol, int targetRow, int startCol, int startRow, int startRotation, bool testOnly );
 
     void run() override;
 
 signals:
-    void pathFound( PieceListManager* path );
+    void pathFound( int targetCol, int targetRow, int startCol, int startRow, int startRotation, PieceListManager* path );
+    void testResult( bool reachable, int targetCol, int targetRow, int startCol, int startRow, int startRotation );
 
 private:
     void tryAt(int col, int row);
@@ -45,7 +48,7 @@ private:
     void printSearchMap();
 
     int mTargetCol,   mTargetRow;
-    int mStartingCol, mStartingRow, mStartingRotation;
+    int mStartCol, mStartRow, mStartRotation;
     bool mStopping;
     char mSearchMap[BOARD_MAX_HEIGHT*BOARD_MAX_WIDTH];
     int mMaxCol;
@@ -55,6 +58,7 @@ private:
     int mPassValue;
     int mPushIndex;
     int mPushDirection;
+    bool mTestOnly;
 
     PieceListManager mMoves;
 
