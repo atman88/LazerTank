@@ -37,7 +37,26 @@ public:
     void run() override;
 
 signals:
+    /**
+     * @brief Notification of successful computed path results
+     * @param targetCol the target column used in the search
+     * @param targetRow the target row used for the search
+     * @param startCol the starting column used for the search
+     * @param startRow the starting row used for the search
+     * @param startRotation the starting direction angle used for the search
+     * @param path The result of the find
+     */
     void pathFound( int targetCol, int targetRow, int startCol, int startRow, int startRotation, PieceListManager* path );
+
+    /**
+     * @brief Notification of a test result
+     * @param reachable true if a path between the two points is possible, otherwise false
+     * @param targetCol the target column used in the test
+     * @param targetRow the target row used for the test
+     * @param startCol the starting column used for the test
+     * @param startRow the starting row used for the test
+     * @param startRotation the starting direction angle used for the test
+     */
     void testResult( bool reachable, int targetCol, int targetRow, int startCol, int startRow, int startRotation );
 
 private:
@@ -45,9 +64,8 @@ private:
     int pass1( int nPoints );
     int pass2( int nPoints );
     void buildPath( int col, int row );
-    void printSearchMap();
 
-    int mTargetCol,   mTargetRow;
+    int mTargetCol, mTargetRow;
     int mStartCol, mStartRow, mStartRotation;
     bool mStopping;
     char mSearchMap[BOARD_MAX_HEIGHT*BOARD_MAX_WIDTH];

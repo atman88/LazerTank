@@ -28,6 +28,7 @@ void PathFinder::findPath(int targetCol, int targetRow, int startCol, int startR
     start( LowPriority );
 }
 
+/*
 void PathFinder::printSearchMap()
 {
     for( int row = 0; row <= mMaxRow; ++row ) {
@@ -45,6 +46,7 @@ void PathFinder::printSearchMap()
         std::cout << std::endl;
     }
 }
+*/
 
 void PathFinder::buildPath( int col, int row )
 {

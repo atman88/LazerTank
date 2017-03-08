@@ -18,8 +18,7 @@ class PathFinderController;
 #include "util/gameutils.h"
 
 /**
- * @brief The Game class
- * Implements game logic and state
+ * @brief The Game class responsible for controlling/implementing overall game logic
  */
 class Game : public QObject
 {
