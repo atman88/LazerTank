@@ -32,8 +32,6 @@ bool BoardDelta::enabled() const
 void BoardDelta::enable( bool newValue )
 {
     if ( newValue != mEnabled ) {
-        std::cout << "delta enable " << newValue << std::endl;
-
         if ( !newValue ) {
             QObject::disconnect( mMasterBoard->getPieceManager(), 0, this, 0 );
             QObject::disconnect( mFutureBoard->getPieceManager(), 0, this, 0 );
@@ -79,18 +77,14 @@ void BoardDelta::onChangeAt( int col, int row )
                     return;
                 }
                 mPieceManager.erase( curDeltaPiece );
-                std::cout << "delta erasedAt " << col << "," << row << " (->INSERT)" << std::endl;
             }
             mPieceManager.insert( TILE_FUTURE_INSERT, col, row, futurePiece->getAngle() );
-            std::cout << "delta future INSERT " << col << "," << row << std::endl;
         }
     } else {
         if ( !futurePiece ) {
             mPieceManager.insert( TILE_FUTURE_ERASE, col, row, masterPiece->getAngle() );
-            std::cout << "delta future ERASE " << col << "," << row << std::endl;
         } else {
             mPieceManager.eraseAt( col, row );
-            std::cout << "delta erasedAt " << col << "," << row << " (same)" << std::endl;
         }
     }
 }

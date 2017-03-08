@@ -55,7 +55,6 @@ const QPixmap* getPixmap( unsigned type )
     if ( !p ) {
         auto it = nameMap.find( type );
         if ( it == nameMap.end() ) {
-            std::cout << "didn't find pixmap " << type << std::endl;
             p = &NullPixmap;
         } else {
             p = &it->second;
@@ -75,6 +74,6 @@ void drawPixmap( int x, int y, unsigned type, QPainter* painter )
     if ( pixmap ) {
         painter->drawPixmap( x, y, *pixmap );
     } else {
-        std::cout << "*** attempt to paint undefined pixmap " << type << std::endl;
+        std::cout << "*** attempt to paint unlisted pixmap " << type << std::endl;
     }
 }

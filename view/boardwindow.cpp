@@ -319,7 +319,6 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
         } else if ( action == &(*mPathToAction) ) {
             mGame->getPathFinderController()->doAction( mPathToAction );
         } else if ( action ) {
-            cout << "menu " << action->property("text").toString().toStdString() << " selected" << std::endl;
             bool ok;
             int level = action->data().toInt( &ok );
             if ( ok && level > 0 ) {

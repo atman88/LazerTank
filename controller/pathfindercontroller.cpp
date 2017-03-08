@@ -63,23 +63,16 @@ void PathFinderController::testActions( std::shared_ptr<PathSearchAction> action
 
 void PathFinderController::onResult( bool ok, int targetCol, int targetRow, int startCol, int startRow, int startDirection )
 {
-    std::cout << "onResult: " << ok << " action size=" << mTestActions.size() << std::endl;
-    std::cout << targetCol << "," << targetRow << ":" << mTargetCol << "," << mTargetRow << " "
-              << startCol  << "," << startRow  << ":" << mStartCol << "," << mStartRow
-              << startDirection << ":" << mStartDirection << std::endl;
-
     if ( targetCol == mTargetCol && targetRow == mTargetRow
       && startCol  == mStartCol  && startRow  == mStartRow && startDirection == mStartDirection
       && mTestActions.size() > 0 ) {
-        std::cout << "locking" << std::endl;
         if ( auto action = mTestActions.front().lock() ) {
-            std::cout << "..ok" << std::endl;
             action->setEnabled( ok );
 
             mTestActions.pop_front();
             testNextAction();
         } else {
-            std::cout << "..failed" << std::endl;
+            std::cout << "*** weakref lost" << std::endl;
         }
     }
 }
