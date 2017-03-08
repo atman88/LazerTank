@@ -10,12 +10,17 @@ void TestMain::testMove()
 {
     Game game;
     BoardWindow window;
-
     game.init( &window );
 
-    QString fileName( ":/maps/testsimple.txt" );
     Board* board = game.getBoard();
-    board->load( fileName );
+    QString map(
+      "T..F......\n"
+      "..........\n"
+      ".M........\n"
+      "..........\n"
+      "..........\n" );
+    QTextStream s(&map);
+    board->load( s );
     cout << "board " << board->getWidth() << "x" << board->getHeight() << std::endl;
 
     const PieceSet* tiles = board->getPieceManager()->getPieces();
@@ -30,15 +35,31 @@ void TestMain::testMove()
     QCOMPARE( game.canPlaceAtNonFuturistic(TANK,board->getTankStartCol(),board->getTankStartRow(),0), true );
 }
 
+void testCannonAt( int tankCol, int tankRow, /*int expectedCol, int expectedRow,*/ Game* game )
+{
+    cout << "testCannonAt " << tankCol << "," << tankRow << endl;
+    game->getTank()->reset(tankCol,tankRow);
+    game->onTankMoved(tankCol,tankRow);
+    QCOMPARE( game->getCannonShot().getLeadingCol(), tankCol );
+    QCOMPARE( game->getCannonShot().getLeadingRow(), tankRow );
+}
+
 void TestMain::testCannon()
 {
     Game game;
     BoardWindow window;
     game.init( &window );
-    QString fileName( ":/maps/testcannon.txt" );
-    game.getBoard()->load( fileName );
+    QString map(
+    "v...<\n"
+    ".....\n"
+    "..T..\n"
+    ".....\n"
+    ">...^\n" );
+    QTextStream s(&map);
+    game.getBoard()->load( s );
 
-    Tank* tank = game.getTank();
-    tank->move(0);
-    tank->move(0);
+    testCannonAt( 2, 0, &game );
+    testCannonAt( 4, 2, &game );
+    testCannonAt( 2, 4, &game );
+    testCannonAt( 0, 2, &game );
 }

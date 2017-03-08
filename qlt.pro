@@ -76,5 +76,4 @@ else{
     SOURCES += main.cpp
 }
 
-DISTFILES += \
-    maps/testcannon.txt
+DISTFILES +=

@@ -35,7 +35,7 @@ mInReset = true;
     mMoves.reset();
     QPoint p( col*24, row*24 );
     TankView::reset( p );
-    mInReset = false;
+mInReset = false;
 }
 
 void Tank::clearMoves()

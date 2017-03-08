@@ -2,6 +2,7 @@
 #define BOARD_H
 
 #include <QObject>
+#include <QTextStream>
 
 #include "model/piecesetmanager.h"
 
@@ -104,6 +105,11 @@ public:
      * @return true if successful
      */
     bool load( QString& fileName );
+
+    /**
+     * @brief load from the given stream
+     */
+    void load( QTextStream& stream );
 
     /**
      * @brief load a copy of the given board

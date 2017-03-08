@@ -1,5 +1,6 @@
 #include <QVariant>
 #include <QFile>
+
 #include "board.h"
 
 Board::Board( QObject* parent )  : QObject(parent), mLevel(0), mWidth(16), mHeight(16), mFlagCol(-1), mFlagRow(-1)
@@ -55,8 +56,15 @@ bool Board::load( QString& fileName )
     if ( !file.open(QIODevice::ReadOnly|QIODevice::Text) ) {
         return false;
     }
+    QTextStream stream(&file);
+    load( stream );
 
-    char line[BOARD_MAX_WIDTH];
+    file.close();
+    return true;
+}
+
+void Board::load( QTextStream& stream )
+{
     int row = 0;
     unsigned char* rowp = mTiles;
     mWidth = 0;
@@ -65,19 +73,22 @@ bool Board::load( QString& fileName )
     mPieceManager.reset();
 
     do {
-        int nRead = file.readLine(line, sizeof line);
+        QString line = stream.readLine(BOARD_MAX_WIDTH);
+
+        // we don't know the board width yet, so initialize the max:
         memset( rowp, EMPTY, BOARD_MAX_WIDTH * (sizeof *rowp) );
 
         int i = 0, col = 0;
-        while( i < nRead && col < BOARD_MAX_WIDTH ) {
-            while( isspace(line[i]) ) {
+        while( i < line.size() ) {
+            while( line.at(i).isSpace() ) {
                 ++i;
             }
-
-            switch( line[i++] ) {
-            case 0:
-                --i;
+            if ( i >= line.size() ) {
                 break;
+            }
+
+
+            switch( line.at(i++).unicode() ) {
             case 'S': rowp[col++] = STONE;     break;
             case 'W': rowp[col++] = WOOD;      break;
             case 'w': rowp[col++] = WATER;     break;
@@ -95,9 +106,9 @@ bool Board::load( QString& fileName )
             case 'v': initPiece( CANNON, col++, row, 180 ); break;
             case '<': initPiece( CANNON, col++, row, 270 ); break;
             case '[':
-                if ( nRead-i >= 2 ) {
-                    int c1 = line[i++];
-                    switch( (c1 << 8) | line[i++] ) {
+                if ( line.size()-i >= 2 ) {
+                    int c1 = line.at(i++).unicode();
+                    switch( (c1 << 8) | line.at(i++).unicode() ) {
                     case ('S' <<8)|'/':  rowp[col++] = STONE_MIRROR;     break;
                     case ('\\'<<8)|'S':  rowp[col++] = STONE_MIRROR__90; break;
                     case ('/' <<8)|'S':  rowp[col++] = STONE_MIRROR_180; break;
@@ -131,12 +142,9 @@ bool Board::load( QString& fileName )
         }
         rowp += BOARD_MAX_WIDTH;
     } while( ++row < BOARD_MAX_HEIGHT );
-    file.close();
 
     mHeight = row;
     mLevel = -1;
-
-    return true;
 }
 
 void Board::load( const Board* source )
