@@ -36,7 +36,7 @@ QPoint toStartPoint( int x, int y, int angle )
 QPoint ShotView::getStartPoint()
 {
     if ( mShooter ) {
-        return toStartPoint( mShooter->getX().toInt(), mShooter->getY().toInt(), mShooter->getRotation().toInt() );
+        return toStartPoint( mShooter->getViewX().toInt(), mShooter->getViewY().toInt(), mShooter->getViewRotation().toInt() );
     }
     return mTailPoint;
 }
@@ -103,7 +103,7 @@ QPoint modelToViewPoint( int col, int row )
 void ShotView::commenceFire( Shooter* shooter )
 {
     mShooter = shooter;
-    mLeadPoint = toStartPoint( shooter->getX().toInt(), shooter->getY().toInt(), shooter->getRotation().toInt() );
+    mLeadPoint = toStartPoint( shooter->getViewX().toInt(), shooter->getViewY().toInt(), shooter->getViewRotation().toInt() );
 }
 
 void ShotView::emitDirtySegment( QPoint p1, QPoint p2 )
@@ -194,7 +194,7 @@ bool ShotView::trimToward( QPoint target )
 bool ShotView::shedTail()
 {
     if ( mShooter ) {
-        mTailPoint = toStartPoint( mShooter->getX().toInt(), mShooter->getY().toInt(), mShooter->getRotation().toInt() );
+        mTailPoint = toStartPoint( mShooter->getViewX().toInt(), mShooter->getViewY().toInt(), mShooter->getViewRotation().toInt() );
         mShooter = 0;
     }
 

@@ -20,9 +20,9 @@ signals:
     void changed( const QRect& rect );
 
 public slots:
-    void setX(const QVariant &x ) override;
-    void setY(const QVariant &y ) override;
-    void setRotation( const QVariant& angle ) override;
+    void setViewX(const QVariant &x ) override;
+    void setViewY(const QVariant &y ) override;
+    void setViewRotation( const QVariant& angle ) override;
 
 protected:
     void reset( QPoint& p );

@@ -2,7 +2,7 @@
 #include "boardwindow.h"
 #include "game.h"
 
-Shooter::Shooter(QObject *parent) : QObject(parent), mRotation(0), mBoundingRect( QRect(0,0,24,24) )
+Shooter::Shooter(QObject *parent) : QObject(parent), mViewRotation(0), mBoundingRect( QRect(0,0,24,24) )
 {
 }
 
@@ -20,7 +20,7 @@ void Shooter::init( Game* game, QColor color )
 
 void Shooter::reset( QPoint p )
 {
-    mRotation = 0;
+    mViewRotation = 0;
     mBoundingRect.moveTopLeft( p );
     mShot.reset();
 }
@@ -35,12 +35,12 @@ void Shooter::ceaseFire()
     mShot.startShedding();
 }
 
-QVariant Shooter::getX()
+QVariant Shooter::getViewX() const
 {
     return QVariant(mBoundingRect.left());
 }
 
-QVariant Shooter::getY()
+QVariant Shooter::getViewY() const
 {
     return QVariant(mBoundingRect.top());
 }
@@ -50,12 +50,12 @@ const QRect& Shooter::getRect()
     return mBoundingRect;
 }
 
-void Shooter::setX( const QVariant& x )
+void Shooter::setViewX( const QVariant& x )
 {
     mBoundingRect.moveLeft( x.toInt() );
 }
 
-void Shooter::setY( const QVariant& y )
+void Shooter::setViewY( const QVariant& y )
 {
     mBoundingRect.moveTop( y.toInt() );
 }
@@ -65,12 +65,12 @@ ShotModel& Shooter::getShot()
     return mShot;
 }
 
-QVariant Shooter::getRotation()
+QVariant Shooter::getViewRotation() const
 {
-    return mRotation;
+    return QVariant(mViewRotation);
 }
 
-void Shooter::setRotation( const QVariant& angle )
+void Shooter::setViewRotation( const QVariant& angle )
 {
-    mRotation = angle;
+    mViewRotation = angle.toInt();
 }

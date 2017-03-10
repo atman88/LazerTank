@@ -52,7 +52,7 @@ void Tank::move( int direction )
 
     int fromRotation;
     if ( !mMoves.size() ) {
-        fromRotation = mRotation.toInt();
+        fromRotation = mViewRotation;
     } else {
         fromRotation = mMoves.getList()->back()->getAngle();
     }
@@ -99,21 +99,25 @@ void Tank::followPath()
         }
 
         Piece* move = mMoves.getList()->front();
-        int curRotation = mRotation.toInt();
         int x = move->getCol();
         int y = move->getRow();
 
-        mRotateAnimation.animateBetween( curRotation, move->getAngle() );
+        mRotateAnimation.animateBetween( mViewRotation, move->getAngle() );
         mHorizontalAnimation.animateBetween( mBoundingRect.left(), x*24 );
         mVerticalAnimation.animateBetween(   mBoundingRect.top(),  y*24 );
 
-        emit movingInto( x, y, curRotation % 360 );
+        emit movingInto( x, y, mViewRotation % 360 );
     }
 }
 
 int Tank::getRow() const
 {
     return mRow;
+}
+
+int Tank::getRotation() const
+{
+    return Shooter::getViewRotation().toInt() % 360;
 }
 
 int Tank::getCol() const
@@ -124,8 +128,7 @@ int Tank::getCol() const
 void Tank::onAnimationsFinished()
 {
     if ( !mInReset ) {
-        int rotation = mRotation.toInt() % 360;
-        setRotation( QVariant( rotation ) );
+        int rotation = getRotation();
         if ( mMoves.size() ) {
             Piece* piece = mMoves.getList()->front();
             if ( piece->getAngle() == rotation

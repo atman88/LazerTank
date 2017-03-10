@@ -34,13 +34,13 @@ QVariant ShotModel::getSequence()
 
 void ShotModel::fire( Shooter* shooter )
 {
-    int direction = shooter->getRotation().toInt();
+    int direction = shooter->getViewRotation().toInt();
     if ( !(direction % 90) ) {
         mAnimation.stop();
         reset();
         mLeadingDirection = direction;
-        mLeadingCol = shooter->getX().toInt()/24;
-        mLeadingRow = shooter->getY().toInt()/24;
+        mLeadingCol = shooter->getViewX().toInt()/24;
+        mLeadingRow = shooter->getViewY().toInt()/24;
         commenceFire( shooter );
         mAnimation.start();
     }

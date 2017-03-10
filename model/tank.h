@@ -43,6 +43,13 @@ public:
      */
     int getRow() const;
 
+    /**
+     * @brief Get the direction the tank is facing
+     * If the tank is currently rotating, this is the starting angle which is always the last 90 degree facing
+     * @return The effective rotation. One of 0,90,180,270.
+     */
+    int getRotation() const;
+
 signals:
     /**
      * @brief Notifies the tank has moved to a new square.

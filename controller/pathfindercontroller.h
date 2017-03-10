@@ -67,7 +67,7 @@ private:
     int mTargetCol, mTargetRow;
     int mStartCol, mStartRow, mStartDirection;
 
-    std::list<std::weak_ptr<PathSearchAction>> mTestActions;
+    std::list<std::shared_ptr<PathSearchAction>> mTestActions;
 };
 
 #endif // PATHFINDERCONTROLLER_H

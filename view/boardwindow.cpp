@@ -12,13 +12,13 @@ using namespace std;
 
 BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
 {
-    mPen.setWidth(2);
-
+    setFlags( Qt::Dialog );
     create();
 
     mCaptureAction = std::make_shared<PathSearchAction>(this);
     mPathToAction  = std::make_shared<PathSearchAction>(this);
     mBackingStore = new QBackingStore(this);
+    mPen.setWidth(2);
 }
 
 void BoardWindow::exposeEvent(QExposeEvent *)

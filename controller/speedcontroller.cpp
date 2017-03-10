@@ -1,3 +1,4 @@
+#include <iostream>
 #include "speedcontroller.h"
 
 // movement speed in milliseconds per square
@@ -59,6 +60,7 @@ void SpeedControlledAnimation::animateBetween( int from, int to )
         stop();
         setStartValue( from );
         setEndValue( to );
+        std::cout << "duration=" << (abs( to-from ) * mController->getSpeed() / getDivisor()) << std::endl;
         setDuration( abs( to-from ) * mController->getSpeed() / getDivisor() );
         start();
     }

@@ -224,9 +224,9 @@ void Game::sightCannons()
     }
 
     if ( sighted ) {
-        mActiveCannon.setX( fireCol*24 );
-        mActiveCannon.setY( fireRow*24 );
-        mActiveCannon.setRotation( fireAngle );
+        mActiveCannon.setViewX( fireCol*24 );
+        mActiveCannon.setViewY( fireRow*24 );
+        mActiveCannon.setViewRotation( fireAngle );
         mActiveCannon.fire();
     }
 }

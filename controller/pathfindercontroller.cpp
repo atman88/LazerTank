@@ -24,7 +24,7 @@ void PathFinderController::doAction( std::shared_ptr<PathSearchAction> action, b
         Tank* tank = game->getTank();
         mStartCol = tank->getCol();
         mStartRow = tank->getRow();
-        mStartDirection = tank->getRotation().toInt();
+        mStartDirection = tank->getRotation();
 
         mTargetCol = action->getTargetCol();
         mTargetRow = action->getTargetRow();
@@ -42,9 +42,7 @@ void PathFinderController::doAction( std::shared_ptr<PathSearchAction> action )
 void PathFinderController::testNextAction()
 {
     if ( mTestActions.size() > 0 ) {
-        if ( std::shared_ptr<PathSearchAction> action = mTestActions.front().lock() ) {
-            doAction( action, true );
-        }
+        doAction( mTestActions.front(), true );
     }
 }
 
@@ -54,8 +52,7 @@ void PathFinderController::testActions( std::shared_ptr<PathSearchAction> action
     while( count > 0 ) {
         std::shared_ptr<PathSearchAction> action = actions[--count];
         action->setEnabled( false ); // default to disabled until tested
-        std::weak_ptr<PathSearchAction> wref = action;
-        mTestActions.push_front( wref );
+        mTestActions.push_front( action );
     }
 
     testNextAction();
@@ -66,14 +63,9 @@ void PathFinderController::onResult( bool ok, int targetCol, int targetRow, int 
     if ( targetCol == mTargetCol && targetRow == mTargetRow
       && startCol  == mStartCol  && startRow  == mStartRow && startDirection == mStartDirection
       && mTestActions.size() > 0 ) {
-        if ( auto action = mTestActions.front().lock() ) {
-            action->setEnabled( ok );
-
-            mTestActions.pop_front();
-            testNextAction();
-        } else {
-            std::cout << "*** weakref lost" << std::endl;
-        }
+        mTestActions.front()->setEnabled( ok );
+        mTestActions.pop_front();
+        testNextAction();
     }
 }
 

@@ -1,3 +1,4 @@
+#include <iostream>
 #include "tankview.h"
 #include "model/piece.h"
 #include "util/imageutils.h"
@@ -24,15 +25,13 @@ void TankView::render( const QRect* rect, QPainter* painter )
     if ( rect->intersects( mBoundingRect ) ) {
         int x = mBoundingRect.left();
         int y = mBoundingRect.top();
-        if ( mRotation != 0 ) {
-            renderRotation( x, y, mRotation.toInt(), painter );
-        }
-        drawPixmap( x, y, TANK, painter );
-        if ( !painter->transform().isRotating() ) {
+        if ( !(mViewRotation % 360) ) {
             mPreviousPaintRect = mBoundingRect;
         } else {
+            renderRotation( x, y, mViewRotation, painter );
             mPreviousPaintRect = painter->transform().mapRect( mBoundingRect );
         }
+        drawPixmap( x, y, TANK, painter );
         painter->resetTransform();
     }
 
@@ -71,12 +70,11 @@ void TankView::resume()
 
 void TankView::reset( QPoint& p )
 {
-        stop();
-        Shooter::reset( p );
-        mRotation = 0;
+    stop();
+    Shooter::reset( p );
 }
 
-void TankView::setX( const QVariant& x )
+void TankView::setViewX( const QVariant& x )
 {
     int xv = x.toInt();
     if ( xv != mBoundingRect.left() ) {
@@ -91,7 +89,7 @@ void TankView::setX( const QVariant& x )
     }
 }
 
-void TankView::setY( const QVariant& y )
+void TankView::setViewY( const QVariant& y )
 {
     int yv = y.toInt();
     if ( yv != mBoundingRect.top() ) {
@@ -106,11 +104,11 @@ void TankView::setY( const QVariant& y )
     }
 }
 
-void TankView::setRotation( const QVariant& angle )
+void TankView::setViewRotation( const QVariant& angle )
 {
-    if ( mRotation != angle ) {
-        mRotation = angle;
+    if ( mViewRotation != angle ) {
+        std::cout << "setViewRotation " << mViewRotation << "->" << angle.toInt() << std::endl;
+        mViewRotation = angle.toInt();
         emit changed( mPreviousPaintRect );
     }
 }
-

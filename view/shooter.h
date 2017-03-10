@@ -12,14 +12,14 @@ class Shooter;
 #include "model/shotmodel.h"
 
 /**
- * @brief An abstract class defining the source of of a lazer beam
+ * @brief An abstract class defining the source view point of of a lazer beam
  */
 class Shooter : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QVariant rotation READ getRotation WRITE setRotation)
-    Q_PROPERTY(QVariant x READ getX WRITE setX)
-    Q_PROPERTY(QVariant y READ getY WRITE setY)
+    Q_PROPERTY(QVariant rotation READ getViewRotation WRITE setViewRotation)
+    Q_PROPERTY(QVariant x READ getViewX WRITE setViewX)
+    Q_PROPERTY(QVariant y READ getViewY WRITE setViewY)
 
 public:
     Shooter(QObject *parent = 0);
@@ -39,21 +39,21 @@ public:
     void ceaseFire();
 
     ShotModel& getShot();
-    QVariant getRotation();
-    QVariant getX();
-    QVariant getY();
+    QVariant getViewRotation() const;
+    QVariant getViewX() const;
+    QVariant getViewY() const;
     const QRect& getRect();
 
 public slots:
     /**
-     * @brief setRotation/setX/setY - These slots are solely for use by internal animations
+     * @brief setRotation/setX/setY - These slots are for use by internal animations
      */
-    virtual void setRotation(const QVariant &angle );
-    virtual void setX(const QVariant &x );
-    virtual void setY(const QVariant &y );
+    virtual void setViewRotation(const QVariant &angle );
+    virtual void setViewX(const QVariant &x );
+    virtual void setViewY(const QVariant &y );
 
 protected:
-    QVariant mRotation;
+    int mViewRotation;
     QRect mBoundingRect;
 
 private:
