@@ -198,3 +198,16 @@ bool Board::applyPushResult( PieceType mType, int col, int row, int pieceAngle )
 
     return false;
 }
+
+bool getAdjacentPosition( int angle, int *col, int *row )
+{
+    switch( angle ) {
+    case   0: *row -= 1; return true;
+    case  90: *col += 1; return true;
+    case 180: *row += 1; return true;
+    case 270: *col -= 1; return true;
+    default:
+        ;
+    }
+    return false;
+}

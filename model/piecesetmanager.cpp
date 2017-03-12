@@ -75,9 +75,11 @@ void PieceSetManager::reset(const PieceSetManager* source)
     while( !mPieces.empty() ) {
         PieceSet::iterator it = mPieces.end();
         Piece* piece = *--it;
-        emit erasedAt( piece->getCol(), piece->getRow() );
+        int col = piece->getCol();
+        int row = piece->getRow();
         mPieces.erase( it );
         delete piece;
+        emit erasedAt( col, row );
     }
 
     if ( source != 0 ) {

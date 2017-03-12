@@ -74,7 +74,6 @@ private:
     void renderListIn(PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter );
 
     QBackingStore *mBackingStore;
-    QPen mPen;
     QMenu mMenu;
     QAction mSpeedAction;
     QAction mReloadAction;

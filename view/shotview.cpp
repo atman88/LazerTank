@@ -35,10 +35,20 @@ QPoint toStartPoint( int x, int y, int angle )
 
 QPoint ShotView::getStartPoint()
 {
-    if ( mShooter ) {
-        return toStartPoint( mShooter->getViewX().toInt(), mShooter->getViewY().toInt(), mShooter->getViewRotation().toInt() );
+    if ( mShooter && mTailPoint == NullPoint ) {
+        return toStartPoint( mShooter->getViewX().toInt(), mShooter->getViewY().toInt(), mShooter->getViewRotation().toInt() % 360 );
     }
     return mTailPoint;
+}
+
+Shooter* ShotView::getShooter() const
+{
+    return mShooter;
+}
+
+QPoint ShotView::getLeadPoint() const
+{
+    return mLeadPoint;
 }
 
 void ShotView::render( QPainter* painter )
@@ -95,15 +105,12 @@ bool ShotView::hasTerminationPoint()
     return mTerminationAngle >= 0;
 }
 
-QPoint modelToViewPoint( int col, int row )
-{
-    return QPoint( col*24+24/2, row*24+24/2 );
-}
-
 void ShotView::commenceFire( Shooter* shooter )
 {
     mShooter = shooter;
-    mLeadPoint = toStartPoint( shooter->getViewX().toInt(), shooter->getViewY().toInt(), shooter->getViewRotation().toInt() );
+    mTailPoint = NullPoint;
+    mLeadAngle = shooter->getViewRotation().toInt() % 360;
+    mLeadPoint = toStartPoint( shooter->getViewX().toInt(), shooter->getViewY().toInt(), mLeadAngle );
 }
 
 void ShotView::emitDirtySegment( QPoint p1, QPoint p2 )
@@ -116,22 +123,14 @@ void ShotView::emitDirtySegment( QPoint p1, QPoint p2 )
     emit rectDirty( rect );
 }
 
-void ShotView::grow( int col, int row, int startAngle, int endAngle )
+void ShotView::grow( QPoint squareCenterPoint, int direction )
 {
-    QPoint startPoint( mLeadPoint );
-    mLeadPoint = modelToViewPoint( col, row );
-
-    if ( startAngle != endAngle ) {
-        switch( startAngle ) {
-        case   0:
-        case 180: mBendPoints.push_back( QPoint( startPoint.x(), mLeadPoint.y()  ) ); break;
-        case  90:
-        case 270: mBendPoints.push_back( QPoint( mLeadPoint.x(),  startPoint.y() ) ); break;
-        default:
-            break;
-        }
+    QPoint startPoint = mLeadPoint;
+    if ( direction != mLeadAngle ) {
+        mBendPoints.push_back( startPoint );
+        mLeadAngle = direction;
     }
-
+    mLeadPoint = squareCenterPoint;
     emitDirtySegment( startPoint, mLeadPoint );
 }
 
@@ -142,25 +141,18 @@ void ShotView::emitSplatDirty()
     emit rectDirty( rect );
 }
 
-void ShotView::addTermination( int endAngle, int endOffset )
+void ShotView::addTermination( int endAngle, QPoint& hitPoint )
 {
     mTerminationAngle = endAngle;
 
-    int x = mLeadPoint.x();
-    int y = mLeadPoint.y();
-
-    int centerAdjust = (mLeadPoint != getStartPoint() ? 24/2 : 0);
-    switch( endAngle ) {
-    case   0: y += endOffset - centerAdjust; break;
-    case  90: x += endOffset + centerAdjust; break;
-    case 180: y += endOffset + centerAdjust; break;
-    case 270: x += endOffset - centerAdjust; break;
+    if ( hitPoint != mLeadPoint ) {
+        if ( mLeadAngle != endAngle ) {
+            mBendPoints.push_back( mLeadPoint );
+            mLeadAngle = endAngle;
+        }
+        emitDirtySegment( mLeadPoint, hitPoint );
+        mLeadPoint = hitPoint;
     }
-
-    emitDirtySegment( mLeadPoint, QPoint(x,y) );
-
-    mLeadPoint.setX( x );
-    mLeadPoint.setY( y );
     emitSplatDirty();
 }
 
@@ -193,9 +185,8 @@ bool ShotView::trimToward( QPoint target )
 
 bool ShotView::shedTail()
 {
-    if ( mShooter ) {
-        mTailPoint = toStartPoint( mShooter->getViewX().toInt(), mShooter->getViewY().toInt(), mShooter->getViewRotation().toInt() );
-        mShooter = 0;
+    if ( mTailPoint == NullPoint ) {
+        mTailPoint = toStartPoint( mShooter->getViewX().toInt(), mShooter->getViewY().toInt(), mShooter->getViewRotation().toInt() % 360 );
     }
 
     if ( mTailPoint == mLeadPoint ) {

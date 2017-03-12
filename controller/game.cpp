@@ -17,27 +17,35 @@ Game::Game() : mWindow(0)
 void Game::init( BoardWindow* window )
 {
     mWindow = window;
-    window->init( this );
 
-    mMovingPiece.setParent( this );
-    QObject::connect( &mMovingPiece, &Push::rectDirty, window, &BoardWindow::renderLater );
+    mTankPush.setParent( this );
+    mShotPush.setParent( this );
+
+    if ( window ) {
+        window->init( this );
+
+        QObject::connect( &mTankPush, &Push::rectDirty, window, &BoardWindow::renderLater );
+        QObject::connect( &mShotPush, &Push::rectDirty, window, &BoardWindow::renderLater );
+
+        QObject::connect( &mTank, &Tank::changed, window, &BoardWindow::renderLater );
+
+        QMenu& menu = window->getMenu();
+        QObject::connect( &menu, &QMenu::aboutToShow, &mTank, &Tank::pause  );
+        QObject::connect( &menu, &QMenu::aboutToHide, &mTank, &Tank::resume );
+
+        PieceListManager* moveManager = mTank.getMoves();
+        QObject::connect( moveManager, &PieceListManager::appended, window, &BoardWindow::renderSquareLater );
+        QObject::connect( moveManager, &PieceListManager::erased,   window, &BoardWindow::renderSquareLater );
+        QObject::connect( moveManager, &PieceListManager::replaced, window, &BoardWindow::renderSquareLater );
+
+        QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::erasedAt,   window, &BoardWindow::renderSquareLater );
+        QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::insertedAt, window, &BoardWindow::renderSquareLater );
+    }
 
     mTank.init( this );
     QObject::connect( &mTank, &Tank::movingInto, this, &Game::onTankMovingInto );
-    QObject::connect( &mTank, &Tank::moved,      this, &Game::onTankMoved      );
-    QObject::connect( &mTank, &Tank::changed, window, &BoardWindow::renderLater );
 
-    QMenu& menu = window->getMenu();
-    QObject::connect( &menu, &QMenu::aboutToShow, &mTank, &Tank::pause  );
-    QObject::connect( &menu, &QMenu::aboutToHide, &mTank, &Tank::resume );
-
-    mActiveCannon.setParent(this);
-    mActiveCannon.init( this, QColor(255,50,83) );
-
-    PieceListManager* moveManager = mTank.getMoves();
-    QObject::connect( moveManager, &PieceListManager::appended, window, &BoardWindow::renderSquareLater );
-    QObject::connect( moveManager, &PieceListManager::erased,   window, &BoardWindow::renderSquareLater );
-    QObject::connect( moveManager, &PieceListManager::replaced, window, &BoardWindow::renderSquareLater );
+    mActiveCannon.init( this, CANNON, QColor(255,50,83) );
 
     mPathFinderController.init(this);
     QObject::connect( &mPathFinderController, &PathFinderController::pathFound, this, &Game::endMoveDeltaTracking );
@@ -45,18 +53,17 @@ void Game::init( BoardWindow* window )
     mMoveAggregate.setObjectName("MoveAggregate");
     mShotAggregate.setObjectName("ShotAggregate");
 
-    mMovingPiece.init( this );
+    mTankPush.init( this );
+    mShotPush.init( this );
+    QObject::connect( &mTankPush, &Push::stateChanged, &mMoveAggregate, &AnimationStateAggregator::onStateChanged );
+    QObject::connect( &mShotPush, &Push::stateChanged, &mShotAggregate, &AnimationStateAggregator::onStateChanged );
+    QObject::connect( &mMoveAggregate, &AnimationStateAggregator::finished, this, &Game::onMoveAggregatorFinished, Qt::QueuedConnection );
+    QObject::connect( &mShotAggregate, &AnimationStateAggregator::finished, this, &Game::sightCannons );
+
     mFutureDelta.init( &mBoard, &mFutureBoard );
 
     QObject::connect( &mBoard, &Board::tileChangedAt, this, &Game::onBoardTileChanged );
     QObject::connect( &mBoard, &Board::boardLoaded,   this, &Game::onBoardLoaded      );
-
-    QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::erasedAt,   window, &BoardWindow::renderSquareLater );
-    QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::insertedAt, window, &BoardWindow::renderSquareLater );
-
-    QObject::connect( &mMovingPiece, &Push::stateChanged, this, &Game::onMovingPieceChanged );
-
-    QObject::connect( &mTank, &Tank::idled, this, &Game::endMoveDeltaTracking );
 
     mBoard.load( 1 );
 }
@@ -89,29 +96,14 @@ Tank* Game::getTank()
     return &mTank;
 }
 
-Push& Game::getMovingPiece()
+Push& Game::getTankPush()
 {
-    return mMovingPiece;
+    return mTankPush;
 }
 
-/**
- * @brief Helper method to determine the neighbor square for the given direction
- * @param angle The direction. Legal values are 0, 90, 180, 270.
- * @param col Input starting column. Returns the resultant column
- * @param row Input starting row. Returns the resultant row
- * @return true if the angle is legal
- */
-bool getAdjacentPosition( int angle, int *col, int *row )
+Push& Game::getShotPush()
 {
-    switch( angle ) {
-    case   0: *row -= 1; return true;
-    case  90: *col += 1; return true;
-    case 180: *row += 1; return true;
-    case 270: *col -= 1; return true;
-    default:
-        ;
-    }
-    return false;
+    return mShotPush;
 }
 
 bool Game::canMoveFrom(PieceType what, int angle, int *col, int *row, Board* board, bool *pushResult ) {
@@ -131,29 +123,6 @@ bool Game::canMoveFrom(PieceType what, int angle, int *col, int *row, bool futur
     return false;
 }
 
-
-bool Game::advanceShot(int *angle, int *col, int *row, int *endOffset, ShotModel* source ) {
-    return getAdjacentPosition(*angle, col, row) && canShootThru( *col, *row, angle, endOffset, source );
-}
-
-void Game::onTankMoved( int col, int row )
-{
-    if ( mBoard.tileAt(col,row) == FLAG ) {
-        QMessageBox msgBox;
-        msgBox.setText("Level completed!");
-        msgBox.exec();
-
-        int nextLevel = mBoard.getLevel() + 1;
-        if ( nextLevel <= BOARD_MAX_LEVEL ) {
-            mBoard.load( nextLevel );
-        }
-    }
-
-    if ( mMovingPiece.getType() == NONE ) {
-        sightCannons();
-    }
-}
-
 bool canSightThru( Board* board, int col, int row )
 {
     switch( board->tileAt( col, row ) ) {
@@ -161,6 +130,7 @@ bool canSightThru( Board* board, int col, int row )
     case TILE_SUNK:
         return board->getPieceManager()->typeAt( col, row ) == NONE;
     case WATER:
+    case FLAG:
         return true;
     default:
         return false;
@@ -231,11 +201,31 @@ void Game::sightCannons()
     }
 }
 
-void Game::onMovingPieceChanged(QAbstractAnimation::State newState, QAbstractAnimation::State oldState  __attribute__((unused)) )
+void Game::onPushed(PieceType type, int col, int row, int pieceAngle )
 {
-    if ( newState == QAbstractAnimation::Stopped ) {
-        sightCannons();
+    mBoard.applyPushResult( type, col, row, pieceAngle );
+}
+
+void Game::onMoveAggregatorFinished()
+{
+    if ( !mFutureDelta.getPieceManager()->size() ) {
+        mFutureDelta.enable( false );
     }
+
+    if ( mBoard.tileAt(mTank.getCol(),mTank.getRow()) == FLAG ) {
+        QMessageBox msgBox;
+        msgBox.setText("Level completed!");
+        msgBox.exec();
+
+        int nextLevel = mBoard.getLevel() + 1;
+        if ( nextLevel <= BOARD_MAX_LEVEL ) {
+            mBoard.load( nextLevel );
+        }
+        return;
+    }
+
+    sightCannons();
+    mTank.wakeup();
 }
 
 void Game::onBoardTileChanged( int col, int row )
@@ -337,10 +327,29 @@ bool onShootThruMovingPiece( int offset, /*int angle,*/ int *endOffset )
     return false;
 }
 
-bool Game::canShootThru( int col, int row, int *angle, int *endOffset, ShotModel* source )
+bool canShootThruPush( QPoint& centerOfSquare, int angle, Push& push, QPoint *hitPoint )
 {
-    *endOffset = 0;
+    if ( push.getType() != NONE ) {
+        if ( push.getBounds()->contains(centerOfSquare) ) {
+            switch( angle ) {
+            case  90:
+            case 270:
+                hitPoint->setX( push.getX().toInt()+24/2 );
+                centerToEntryPoint( angle, hitPoint );
+                return false;
+            case   0:
+            case 180:
+                hitPoint->setY( push.getY().toInt()+24/2 );
+                centerToEntryPoint( angle, hitPoint );
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
+bool Game::canShootThru( int col, int row, int *angle, Shooter* source, QPoint *hitPoint )
+{
     switch( mBoard.tileAt(col,row) ) {
     case DIRT:
     case TILE_SUNK:
@@ -356,6 +365,7 @@ bool Game::canShootThru( int col, int row, int *angle, int *endOffset, ShotModel
             case CANNON:
                 if ( abs( what->getAngle() - *angle ) == 180 ) {
                     pm->eraseAt( col, row );
+                    centerToEntryPoint( *angle, hitPoint );
                     return false;
                 }
                 break;
@@ -368,57 +378,58 @@ bool Game::canShootThru( int col, int row, int *angle, int *endOffset, ShotModel
             if ( canMoveFrom( what->getType(), *angle, &toCol, &toRow, false ) ) {
                 SimplePiece simple( what );
                 pm->eraseAt( col, row );
-                mMovingPiece.start( simple, col*24, row*24, toCol*24, toRow*24 );
+                mShotPush.start( simple, col*24, row*24, toCol*24, toRow*24 );
             }
             break;
         }
 
-        if ( mMovingPiece.getType() != NONE ) {
-            int movingPieceX = mMovingPiece.getX().toInt();
-            int movingPieceY = mMovingPiece.getY().toInt();
-            switch( *angle ) {
-            case  90:
-            case 270:
-                if ( row == movingPieceY/24 && onShootThruMovingPiece( movingPieceX - col*24, endOffset ) ) {
-                    return false;
-                }
-                break;
-            case   0:
-            case 180:
-                if ( col == movingPieceX/24 && onShootThruMovingPiece( movingPieceY - row*24, endOffset ) ) {
-                    return false;
-                }
-                break;
-            }
+        QPoint centerOfSquare = modelToViewCenterSquare( col, row );
+        if ( !canShootThruPush( centerOfSquare, *angle, mTankPush, hitPoint ) ) {
+            return false;
         }
-
-        if ( col == mTank.getCol() && row == mTank.getRow() ) {
-            source->setIsKill();
+        if ( !canShootThruPush( centerOfSquare, *angle, mShotPush, hitPoint ) ) {
             return false;
         }
 
+        // for the tank, vet that the distance is greater than zero to avoid undesireable self-inflicted wounds:
+        if ( (source->getType() != TANK || source->getShot().getDistance()) && mTank.getRect().contains(centerOfSquare) ) {
+            switch( *angle ) {
+            case  90:
+            case 270:
+                hitPoint->setX( mTank.getViewX().toInt()+24/2 );
+                centerToEntryPoint( *angle, hitPoint );
+                break;
+            case   0:
+            case 180:
+                hitPoint->setY( mTank.getViewY().toInt()+24/2 );
+                centerToEntryPoint( *angle, hitPoint );
+                break;
+            }
+            source->getShot().setIsKill();
+            return false;
+        }
         return true;
     }
     case WATER:
     case FLAG:
         return true;
-    case STONE_SLIT:
-        return *angle == 90 || *angle == 270;
-    case STONE_SLIT_90:
-        return *angle == 0 || *angle == 180;
-    case STONE_MIRROR:     return getShotReflection(   0, angle );
-    case STONE_MIRROR__90: return getShotReflection(  90, angle );
-    case STONE_MIRROR_180: return getShotReflection( 180, angle );
-    case STONE_MIRROR_270: return getShotReflection( 270, angle );
-    case WOOD:
-        mBoard.setTileAt( WOOD_DAMAGED, col, row );
-        break;
-    case WOOD_DAMAGED:
-        mBoard.setTileAt( DIRT, col, row );
-        break;
+
+    case STONE_SLIT:    if ( *angle == 90 || *angle == 270 ) return true; break;
+    case STONE_SLIT_90: if ( *angle ==  0 || *angle == 180 ) return true; break;
+
+    case STONE_MIRROR:     if ( getShotReflection(   0, angle ) ) return true; break;
+    case STONE_MIRROR__90: if ( getShotReflection(  90, angle ) ) return true; break;
+    case STONE_MIRROR_180: if ( getShotReflection( 180, angle ) ) return true; break;
+    case STONE_MIRROR_270: if ( getShotReflection( 270, angle ) ) return true; break;
+
+    case WOOD:         mBoard.setTileAt( WOOD_DAMAGED, col, row ); break;
+    case WOOD_DAMAGED: mBoard.setTileAt( DIRT,         col, row ); break;
+
     default:
         ;
     }
+
+    centerToEntryPoint( *angle, hitPoint );
     return false;
 }
 
@@ -431,7 +442,7 @@ void Game::onTankMovingInto( int col, int row, int fromAngle )
         if ( getAdjacentPosition(fromAngle, &toCol, &toRow) ) {
             SimplePiece simple( what );
             pm->eraseAt( col, row );
-            mMovingPiece.start( simple, col*24, row*24, toCol*24, toRow*24 );
+            mTankPush.start( simple, col*24, row*24, toCol*24, toRow*24 );
         } else {
             std::cout << "no adjacent for angle " << fromAngle << std::endl;
         }
@@ -458,14 +469,12 @@ SpeedController *Game::getSpeedController()
     return &mSpeedController;
 }
 
-void Game::onFuturePush( Piece* pushingPiece )
+void Game::onFuturePush( int col, int row, int direction )
 {
     mFutureDelta.enable();
 
     PieceType pushedType;
-    int col = pushingPiece->getCol();
-    int row = pushingPiece->getRow();
-    int angle = pushingPiece->getAngle();
+    int pieceAngle;
 
     // scoping pushedPiece here so it falls out of scope after erased:
     {   Piece* pushedPiece = mFutureBoard.getPieceManager()->pieceAt( col, row );
@@ -474,16 +483,17 @@ void Game::onFuturePush( Piece* pushingPiece )
             return;
         }
         pushedType = pushedPiece->getType();
+        pieceAngle = pushedPiece->getAngle();
         if ( !mFutureBoard.getPieceManager()->erase( pushedPiece ) ) {
             std::cout << "*** failed to erase future piece at " << col << "," << row << std::endl;
         }
     }
 
-    if ( !getAdjacentPosition( angle, &col, &row ) ) {
-        std::cout << "*** failed to get future push position for " << angle << "/" << col << "," << row << std::endl;
+    if ( !getAdjacentPosition( direction, &col, &row ) ) {
+        std::cout << "*** failed to get future push position for " << direction << "/" << col << "," << row << std::endl;
         return;
     }
-    mFutureBoard.applyPushResult( pushedType, col, row, angle );
+    mFutureBoard.applyPushResult( pushedType, col, row, pieceAngle );
 }
 
 const PieceSet* Game::getDeltaPieces()
@@ -513,6 +523,15 @@ void Game::undoFuturePush( Piece* pusher )
 void Game::undoLastMove()
 {
     PieceListManager* moveManager = getTank()->getMoves();
+    switch( moveManager->size() ) {
+    case 0: // empty
+        return;
+    case 1: // allow if not doing this move
+        if ( mMoveAggregate.active() ) {
+            return;
+        }
+    }
+
     Piece* piece = moveManager->getList()->back();
     if ( piece ) {
         if ( piece->hasPush() ) {

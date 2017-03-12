@@ -34,6 +34,12 @@ public:
     void reset();
 
     /**
+     * @brief Get the number of squares the shot has travelled thus far
+     * @return distance in terms of squares
+     */
+    int getDistance() const;
+
+    /**
      * @brief Get the column where the laser beam has extended to
      * @return The column number or -1 if the shot is inactive
      */
@@ -49,7 +55,7 @@ public:
 
 signals:
     /**
-     * @brief Notifies that the lazer beam hit the tank
+     * @brief Notifies that the laser beam hit the tank
      */
     void tankKilled();
 

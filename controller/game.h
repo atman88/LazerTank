@@ -46,104 +46,105 @@ public:
     Tank* getTank();
 
     /**
-     * The single piece currently being pushed.
-     * It's type is NONE when no piece is being pushed.
+     * Container for the piece currently being pushed by the tank
+     * It's type is NONE when the tank isn't pushing a piece
      */
-    Push& getMovingPiece();
+    Push& getTankPush();
 
     /**
-     * @brief the current lazer shot being fired.
-     * Only one cannon is fired at a time. This is the single lazer path shot from any single selected cannon.
+     * Container for the piece currently being pushed by a shot
+     * It's type is NONE when no piece is being shot
+     */
+    Push& getShotPush();
+
+    /**
+     * @brief the current laser shot being fired
+     * Only one cannon is fired at a time. This is the single lazer path shot from any single selected cannon
      */
     ShotModel& getCannonShot();
 
     /**
-     * @brief Manages the current speed used by all animations.
+     * @brief Access to the controller that manages the game speed used by animations
      */
     SpeedController* getSpeedController();
 
     /**
-     * @brief Holds the aggregate state of the current tank move including any piece the move is pushing.
+     * @brief Holds the aggregate state of the current tank move including any push the move is doing
      */
     AnimationStateAggregator* getMoveAggregate();
 
     /**
-     * @brief Holds the aggregate state of active shots including any piece the shot is pushing.
+     * @brief Holds the aggregate state of active shots including any pushes the shot are doing
      * @return
      */
     AnimationStateAggregator* getShotAggregate();
 
     /**
-     * @brief Determines whether the given single move is legal
+     * @brief Determine whether the given single move is legal
      * @param what The type of peice being moved
-     * @param angle The direction to move in. Must be one of 0, 90, 180 or 270.
-     * @param col The Piece's originating column as input. Returns the resultant column.
-     * @param row The Piece's originating row as input. Returns the resultant row.
-     * @param futuristic If true, all outstanding moves are considered, otherwise they are ignored.
-     * @param pushResult Set to true if a piece would get pushed by the move
-     * @return true if allowed, otherwise false
+     * @param angle The direction to move in. Must be one of 0, 90, 180 or 270
+     * @param col The Piece's originating column as input. Returns the resultant column
+     * @param row The Piece's originating row as input. Returns the resultant row
+     * @param futuristic If true, all outstanding moves are considered, otherwise only the current board state is considered
+     * @param pushResult If nonzero, this returns a boolean indicating whether a piece would be pushed by the move
+     * @return true if the move is allowed, otherwise false
      */
     bool canMoveFrom(PieceType what, int angle, int *col, int *row, bool futuristic, bool* pushResult = 0 );
 
     /**
-     * @brief Determines the outcome of a lazer shot advancing one square
-     * @param angle The direction the lazer is travelling
-     * @param col The column the lazer is advancing from. Returns the resultant column.
-     * @param row The row the lazer is advancing from. Returns the resultant row.
-     * @param endOffset Returns he offset (in pixels) within the target square where the lazer path terminated
-     * @param source The shot being advanced
-     * @return true if the the shot is continuing to advance or false if the shot hit something
+     * @brief Determines the outcome of a laser shot through the given square
+     * @param col The column of the lazer end point
+     * @param row The row of the lazer end point
+     * @param angle Inputs the laser direction as it enters the square; outputs the direction the laser exits the square
+     * @param source The laser beam being produced
+     * @param hit Input as the square's center view coordinate. Returns the hit coordinate when something hit
+     * @return true if the the shot is continuing to advance past the square or false if the shot hit something
      */
-    bool advanceShot(int *angle, int *col, int *row, int *endOffset, ShotModel* source );
+    bool canShootThru( int col, int row, int *angle, Shooter* source, QPoint *hitPoint );
 
     /**
-     * @brief Determines whether the given piece can enter the given square. Pending moves are not considered.
-     * @param what The type of peice.
+     * @brief Determines whether the given piece can move to the given square. Pending moves are not considered.
+     * @param what The type of piece
      * @param col The column of the square to consider
      * @param row The row of the square to consider
      * @param fromAngle The entry direction
      * @param pushResult true if the entry would result in pushing a piece
-     * @return true if the entry is legal
+     * @return true if the placement is a legal move
      */
     bool canPlaceAtNonFuturistic(PieceType what, int col, int row, int fromAngle, bool *pushResult = 0);
 
     /**
      * @brief Records a push of piece that will be pushed as a result of some future change
-     * @param pushingPiece The piece being pushed
+     * @param col The starting column of the future piece
+     * @param row The starting row of the future piece
+     * @param direction the direction of the push
      */
-    void onFuturePush( Piece* pushingPiece );
+    void onFuturePush( int col , int row, int direction );
 
     /**
-     * @brief Reverts a future push (recorded by onFuturePush).
+     * @brief Reverts a future push (recorded by onFuturePush)
      * @param pusher Identifies the push to revert based on its originating square and direction (angle)
      */
     void undoFuturePush( Piece* pusher );
 
     /**
-     * @brief undoes the last future move if one exists
+     * @brief undoes the last future move if safe to do so
      */
     void undoLastMove();
 
     /**
-     * @brief Obtain the set of pieces which represent any differences between the current board and
-     * what the board will be when outstanding moves are applied.
+     * @brief Obtain the set of pieces representing differences between the current board and
+     * what the board will be as a result of applying outstanding moves
      * @return set of future pieces
      */
     const PieceSet* getDeltaPieces();
 
     /**
-     * @brief Access to the path finder
+     * @brief Get controlled access to the path finder
      */
     PathFinderController* getPathFinderController();
 
 public slots:
-    /**
-     * @brief Recieves notification that the tank is now in the given square
-     * @param col The column of the square
-     * @param row The row of the square
-     */
-    void onTankMoved( int col, int row );
-
     /**
      * @brief Receives notification that the tank is about to move toward the identified square
      * @param col The column of the target square
@@ -165,24 +166,30 @@ public slots:
     void onBoardTileChanged( int col, int row );
 
     /**
-     * @brief Receives aggregate changes of moving state
+     * @brief Recieves notification that a push has completed
+     * @param type The type of piece being pushed
+     * @param col The column pushed into
+     * @param row The row pushed into
+     * @param pieceAngle The orientation of the piece
      */
-    void onMovingPieceChanged(QAbstractAnimation::State newState, QAbstractAnimation::State oldState);
-    void sightCannons();
+    void onPushed( PieceType type, int col, int row, int pieceAngle );
+
+    /**
+     * @brief Internal slot for disabling future deltas
+     */
     void endMoveDeltaTracking();
 
-private:
     /**
-     * @brief Determines the outcome of a lazer shot in the given square
-     * @param col The column of the lazer end point
-     * @param row The row of the lazer end point
-     * @param angle the direction of the lazer
-     * @param endOffset Returns he offset (in pixels) within the target square where the lazer path terminated
-     * @param source The lazer beam being produced
-     * @return true if the the shot is continuing to advance past the square or false if the shot hit something
+     * @brief Notifies that the current move has completed
      */
-    bool canShootThru( int col, int row, int *angle, int *endOffset, ShotModel* source );
+    void onMoveAggregatorFinished();
 
+    /**
+     * @brief Looks for a cannon that can shoot the tank. Fires the first one it finds.
+     */
+    void sightCannons();
+
+private:
     /**
      * @brief Determines whether the given single move is legal
      * @param what The type of peice being moved
@@ -216,7 +223,8 @@ private:
 
     Board mBoard;
     PathFinderController mPathFinderController;
-    Push mMovingPiece;
+    Push mTankPush;
+    Push mShotPush;
     Tank mTank;
     Shooter mActiveCannon;
     Board mFutureBoard;

@@ -18,7 +18,6 @@ BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
     mCaptureAction = std::make_shared<PathSearchAction>(this);
     mPathToAction  = std::make_shared<PathSearchAction>(this);
     mBackingStore = new QBackingStore(this);
-    mPen.setWidth(2);
 }
 
 void BoardWindow::exposeEvent(QExposeEvent *)
@@ -188,7 +187,8 @@ void BoardWindow::render( const QRect* rect, Board* board, const PieceMultiSet* 
     renderListIn( moveIterator, moves->end(), rect, painter );
 
     if ( mGame ) {
-        mGame->getMovingPiece().render( rect, painter );
+        mGame->getTankPush().render( rect, painter );
+        mGame->getShotPush().render( rect, painter );
         mGame->getTank()->render( rect, painter );
         mGame->getCannonShot().render( painter );
     }
@@ -374,7 +374,7 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
             break;
 
         case Qt::Key_C:
-                mGame->getTank()->move();
+                mGame->getTank()->wakeup();
                 break;
 
         case Qt::Key_Backspace:
@@ -419,7 +419,7 @@ void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
 
     switch( event->button() ) {
     case Qt::LeftButton:
-        mGame->getTank()->move();
+        mGame->getTank()->wakeup();
         break;
     default:
         ;

@@ -14,7 +14,7 @@ void PathFinderController::init( Game* game )
     setParent( game );
     mPathFinder.setParent(this);
     QObject::connect( &mPathFinder, &PathFinder::testResult, this, &PathFinderController::onResult );
-    QObject::connect( &mPathFinder, &PathFinder::pathFound,      this, &PathFinderController::onPath   );
+    QObject::connect( &mPathFinder, &PathFinder::pathFound,  this, &PathFinderController::onPath   );
 }
 
 void PathFinderController::doAction( std::shared_ptr<PathSearchAction> action, bool testOnly )
@@ -84,7 +84,7 @@ void PathFinderController::onPath( int targetCol, int targetRow, int startCol, i
 
             tank->getMoves()->reset( path );
             if ( mMoveWhenFound ) {
-                tank->move();
+                tank->wakeup();
             }
         }
     }

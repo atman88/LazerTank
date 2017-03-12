@@ -17,7 +17,7 @@ void TankView::init(Game *game)
     mVerticalAnimation.setTargetObject(this);
     mVerticalAnimation.setPropertyName("y");
 
-    Shooter::init( game, QColor(0,255,33) );
+    Shooter::init( game, TANK, QColor(0,255,33) );
 }
 
 void TankView::render( const QRect* rect, QPainter* painter )
@@ -83,8 +83,8 @@ void TankView::setViewX( const QVariant& x )
         dirty |= mBoundingRect;
         emit changed( dirty );
 
-        if ( !(xv % 24) ) {
-            onMoved( xv/24, mBoundingRect.top()/24 );
+        if ( !(xv % 24) && !(mViewRotation % 90)) {
+            onMoved( xv/24, mBoundingRect.top()/24, mViewRotation % 360 );
         }
     }
 }
@@ -98,8 +98,8 @@ void TankView::setViewY( const QVariant& y )
         dirty |= mBoundingRect;
         emit changed( dirty );
 
-        if ( !(yv % 24) ) {
-            onMoved( mBoundingRect.left()/24, yv/24 );
+        if ( !(yv % 24) && !(mViewRotation % 90) ) {
+            onMoved( mBoundingRect.left()/24, yv/24, mViewRotation % 360 );
         }
     }
 }
@@ -107,8 +107,11 @@ void TankView::setViewY( const QVariant& y )
 void TankView::setViewRotation( const QVariant& angle )
 {
     if ( mViewRotation != angle ) {
-        std::cout << "setViewRotation " << mViewRotation << "->" << angle.toInt() << std::endl;
         mViewRotation = angle.toInt();
         emit changed( mPreviousPaintRect );
+
+        if ( !(mBoundingRect.left() % 24) && !(mBoundingRect.top() % 24) && !(mViewRotation % 90) ) {
+            onMoved( mBoundingRect.left()/24, mBoundingRect.top()/24, mViewRotation % 360 );
+        }
     }
 }

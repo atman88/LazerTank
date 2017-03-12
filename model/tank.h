@@ -27,9 +27,9 @@ public:
 
     /**
      * @brief move the tank one square
-     * @param direction A rotation angle. One of 0, 90, 180, 270.
+     * @param direction A rotation angle (one of 0, 90, 180, 270) or -1 to do the next pending move
      */
-    void move( int direction = -1 );
+    void move( int direction );
 
     /**
      * @brief Get the column the tank currently resides on.
@@ -52,20 +52,12 @@ public:
 
 signals:
     /**
-     * @brief Notifies the tank has moved to a new square.
-     * @param col Column of the new square.
-     * @param row Row of the new square.
-     */
-    void moved( int col, int row );
-
-    /**
-     * @brief Notifies the thank is about to move to a new square
+     * @brief Notifies the tank is about to move to a new square
      * @param col The column of the new square
      * @param row The row of the new square
      * @param curRotation The direction of the move
      */
     void movingInto( int col, int row, int curRotation );
-    void idled();
 
 public slots:
     /**
@@ -76,7 +68,12 @@ public slots:
     void reset( int col, int row );
 
     /**
-     * @brief Cancels any pending (future) moves
+     * @brief start the next pending move (if any)
+     */
+    void wakeup();
+
+    /**
+     * @brief Cancel any pending (future) moves
      */
     void clearMoves();
 
@@ -89,18 +86,21 @@ protected:
     /**
      * @brief internal move notification from the underlying view
      */
-    void onMoved( int col, int row ) override;
+    void onMoved( int col, int row, int rotation ) override;
 
 private:
     /**
-     * @brief Instructs the tank to start the next pending move
+     * @brief start a move
+     * @param col The destination column
+     * @param row The destination row
+     * @param direction The direction to face the tank
      */
-    void followPath();
+    void doMove( int col, int row, int direction );
 
     int mCol;
     int mRow;
+    int mRotation;
     PieceListManager mMoves;
-    bool mInReset;
 };
 
 #endif // TANK_H

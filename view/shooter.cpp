@@ -2,18 +2,22 @@
 #include "boardwindow.h"
 #include "game.h"
 
-Shooter::Shooter(QObject *parent) : QObject(parent), mViewRotation(0), mBoundingRect( QRect(0,0,24,24) )
+Shooter::Shooter(QObject *parent) : QObject(parent), mViewRotation(0), mBoundingRect( QRect(0,0,24,24) ), mType(NONE)
 {
 }
 
-void Shooter::init( Game* game, QColor color )
+void Shooter::init( Game* game, PieceType type, QColor color )
 {
+    setParent(game);
+    mType = type;
     mShot.setParent(this);
     mShot.setColor( color );
 
     BoardWindow* window = game->getWindow();
-    QObject::connect( &mShot, &ShotModel::tankKilled, window, &BoardWindow::onTankKilled );
-    QObject::connect( &mShot, &ShotView::rectDirty,   window, &BoardWindow::renderLater );
+    if ( window ) {
+        QObject::connect( &mShot, &ShotModel::tankKilled, window, &BoardWindow::onTankKilled );
+        QObject::connect( &mShot, &ShotView::rectDirty,   window, &BoardWindow::renderLater  );
+    }
 
     mShot.init( game->getShotAggregate() );
 }
@@ -73,4 +77,10 @@ QVariant Shooter::getViewRotation() const
 void Shooter::setViewRotation( const QVariant& angle )
 {
     mViewRotation = angle.toInt();
+}
+
+
+PieceType Shooter::getType() const
+{
+    return mType;
 }

@@ -68,6 +68,7 @@ void SpeedControlledAnimation::animateBetween( int from, int to )
 
 void RotateSpeedControlledAnimation::animateBetween( int fromAngle, int toAngle )
 {
+    fromAngle %= 360;
     if ( fromAngle == 0 && toAngle > 180 ) {
         fromAngle = 360;
     } else if ( toAngle == 0 && fromAngle > 180 ) {

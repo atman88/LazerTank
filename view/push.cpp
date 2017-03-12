@@ -20,9 +20,6 @@ Push::Push(QObject *parent) : QObject(parent)
 
 void Push::init( Game* game )
 {
-    QObject::connect( this, &Push::stateChanged, game->getMoveAggregate(), &AnimationStateAggregator::onStateChanged );
-    QObject::connect( this, &Push::stateChanged, game->getShotAggregate(), &AnimationStateAggregator::onStateChanged );
-
     SpeedController* SpeedController = game->getSpeedController();
     mHorizontalAnimation.setController( SpeedController );
     mVerticalAnimation.setController( SpeedController );
@@ -103,11 +100,11 @@ void Push::setY( const QVariant& y )
 void Push::onStopped()
 {
     if ( mType != NONE ) {
-        int x = getX().toInt()/24;
-        int y = getY().toInt()/24;
+        int col = getX().toInt()/24;
+        int row = getY().toInt()/24;
         Game* game = getGame(this);
         if ( game ) {
-            game->getBoard()->applyPushResult( mType, x, y, mPieceAngle );
+            game->onPushed( mType, col, row, mPieceAngle );
         }
         mType = NONE;
         if ( !mRenderedBoundingRect.isNull() ) {

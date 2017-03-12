@@ -62,7 +62,6 @@ public:
     int getCol() const;
     int getRow() const;
 
-
     /**
      * @brief Gets the current rotation of this peice
      */

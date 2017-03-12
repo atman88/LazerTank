@@ -7,7 +7,7 @@
 #include "model/piecesetmanager.h"
 
 // The last /maps/level%1.txt file we wish to reach. Increase this as new levels are added.
-#define BOARD_MAX_LEVEL 35
+#define BOARD_MAX_LEVEL 36
 
 // The largest board dimensions we care to support
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
@@ -31,6 +31,15 @@ typedef enum {
     WOOD_DAMAGED,
     TileTypeUpperBound
 } TileType;
+
+/**
+ * @brief Helper method to determine the neighbor square for the given direction
+ * @param angle The direction. Legal values are 0, 90, 180, 270.
+ * @param col Input starting column. Returns the resultant column
+ * @param row Input starting row. Returns the resultant row
+ * @return true if the angle is legal
+ */
+bool getAdjacentPosition( int angle, int *col, int *row );
 
 /**
  * @brief The Board class
@@ -77,7 +86,7 @@ public:
     void setTileAt( TileType, int col, int row );
 
     /**
-     * @brief Get managed access to the peices on this board
+     * @brief Get managed access to the pieces on this board
      * @return The manager for the pieces on this board
      */
     PieceSetManager* getPieceManager();

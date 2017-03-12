@@ -22,6 +22,11 @@ void ShotModel::reset()
     ShotView::reset();
 }
 
+int ShotModel::getDistance() const
+{
+    return mDistance;
+}
+
 void ShotModel::init( AnimationStateAggregator* aggregate )
 {
     QObject::connect( &mAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
@@ -34,7 +39,7 @@ QVariant ShotModel::getSequence()
 
 void ShotModel::fire( Shooter* shooter )
 {
-    int direction = shooter->getViewRotation().toInt();
+    int direction = shooter->getViewRotation().toInt() % 360;
     if ( !(direction % 90) ) {
         mAnimation.stop();
         reset();
@@ -71,13 +76,15 @@ void ShotModel::setSequence( const QVariant &sequence )
     }
 
     if ( !hasTerminationPoint() ) {
-        int startDirection = mLeadingDirection;
-        int endOffset;
-        if ( game->advanceShot( &mLeadingDirection, &mLeadingCol, &mLeadingRow, &endOffset, this ) ) {
-            grow( mLeadingCol, mLeadingRow, startDirection, mLeadingDirection );
-        } else {
-            addTermination( startDirection, endOffset );
-            mShedding = true;
+        if ( getAdjacentPosition( mLeadingDirection, &mLeadingCol, &mLeadingRow ) ) {
+            QPoint hitPoint( modelToViewCenterSquare(mLeadingCol,mLeadingRow) );
+            int entryDirection = mLeadingDirection;
+            if ( game->canShootThru( mLeadingCol, mLeadingRow, &mLeadingDirection, getShooter(), &hitPoint ) ) {
+                grow( modelToViewCenterSquare(mLeadingCol,mLeadingRow), entryDirection );
+            } else {
+                addTermination( entryDirection, hitPoint );
+                mShedding = true;
+            }
         }
     }
 

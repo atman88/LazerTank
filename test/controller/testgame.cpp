@@ -2,6 +2,7 @@
 #include "../testmain.h"
 #include "controller/game.h"
 
+#include "model/shotmodel.h"
 #include "view/boardwindow.h"
 
 using namespace std;
@@ -35,20 +36,29 @@ void TestMain::testMove()
     QCOMPARE( game.canPlaceAtNonFuturistic(TANK,board->getTankStartCol(),board->getTankStartRow(),0), true );
 }
 
-void testCannonAt( int tankCol, int tankRow, /*int expectedCol, int expectedRow,*/ Game* game )
+void testCannonAt( int tankCol, int tankRow, Game* game )
 {
     cout << "testCannonAt " << tankCol << "," << tankRow << endl;
     game->getTank()->reset(tankCol,tankRow);
-    game->onTankMoved(tankCol,tankRow);
-    QCOMPARE( game->getCannonShot().getLeadingCol(), tankCol );
-    QCOMPARE( game->getCannonShot().getLeadingRow(), tankRow );
+    game->getCannonShot().reset();
+
+    game->sightCannons();
+
+    SignalReceptor killedReceptor;
+    ShotModel& shot = game->getCannonShot();
+    QObject::connect( &shot, &ShotModel::tankKilled, &killedReceptor, &SignalReceptor::receive );
+    for( int seq = shot.getSequence().toInt(); seq < 5 && !killedReceptor.mReceived; ++seq ) {
+        shot.setSequence( QVariant(seq) );
+    }
+    QObject::disconnect( &shot, 0, &killedReceptor, 0 );
+
+    QCOMPARE( killedReceptor.mReceived, true );
 }
 
 void TestMain::testCannon()
 {
     Game game;
-    BoardWindow window;
-    game.init( &window );
+    game.init( 0 );
     QString map(
     "v...<\n"
     ".....\n"

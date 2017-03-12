@@ -46,19 +46,22 @@ protected:
 
     /**
      * @brief extend the shot to the given point
-     * @param col The column to extend into
-     * @param row The row to extend into
+     * @param squareCenterPoint The point to extend to
      * @param startAngle The angle of entry into the new position
      * @param endAngle The angle of exit out of the new position
      */
-    void grow( int col, int row, int startAngle, int endAngle );
+    void grow( QPoint squareCenterPoint, int direction );
 
     /**
      * @brief Updates this shot so that it renders the splat
      * @param endAngle The final directional heading of the lazer beam
      * @param endOffset Offset (in pixels) to the point of termination
      */
-    void addTermination( int endAngle, int endOffset );
+    void addTermination(int endAngle, QPoint& hitPoint );
+
+    QPoint getLeadPoint() const;
+    Shooter* getShooter() const;
+
     bool shedTail();
     void killTheTank();
 
@@ -94,6 +97,7 @@ private:
     Shooter* mShooter;
     QPoint mLeadPoint;
     QPoint mTailPoint;
+    int mLeadAngle;
     int mTerminationAngle;
     bool mKillTheTank;
 };

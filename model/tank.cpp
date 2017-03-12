@@ -7,7 +7,7 @@
 #include "util/renderutils.h"
 #include "util/gameutils.h"
 
-Tank::Tank(QObject* parent) : TankView(parent), mCol(0), mRow(0), mInReset(false)
+Tank::Tank(QObject* parent) : TankView(parent), mCol(0), mRow(0)
 {
 }
 
@@ -18,7 +18,7 @@ void Tank::init( Game* game )
     QObject::connect( &mRotateAnimation,     &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
     QObject::connect( &mHorizontalAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
     QObject::connect( &mVerticalAnimation,   &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
-    QObject::connect( aggregate, &AnimationStateAggregator::finished, this, &Tank::onAnimationsFinished );
+    QObject::connect( aggregate, &AnimationStateAggregator::finished, this, &Tank::onAnimationsFinished, Qt::QueuedConnection );
 
     SpeedController* controller = game->getSpeedController();
     mRotateAnimation.setController( controller );
@@ -29,13 +29,12 @@ void Tank::init( Game* game )
 
 void Tank::reset( int col, int row )
 {
-mInReset = true;
     mCol = col;
     mRow = row;
+    mRotation = 0;
     mMoves.reset();
     QPoint p( col*24, row*24 );
     TankView::reset( p );
-mInReset = false;
 }
 
 void Tank::clearMoves()
@@ -43,71 +42,81 @@ void Tank::clearMoves()
     mMoves.reset();
 }
 
+void Tank::wakeup()
+{
+    move(-1);
+}
+
 void Tank::move( int direction )
 {
-    if ( direction < 0 ) {
-        followPath();
+    Game* game = getGame(this);
+    if ( !game ) {
         return;
     }
 
-    int fromRotation;
-    if ( !mMoves.size() ) {
-        fromRotation = mViewRotation;
-    } else {
-        fromRotation = mMoves.getList()->back()->getAngle();
-    }
-    if ( direction != fromRotation ) {
+    if ( direction >= 0 ) {
+        int fromRotation;
         if ( !mMoves.size() ) {
-            mMoves.append( MOVE, mBoundingRect.left()/24, mBoundingRect.top()/24, direction );
+            fromRotation = mRotation;
         } else {
-            mMoves.replaceBack( MOVE, direction );
+            fromRotation = mMoves.getList()->back()->getAngle();
         }
-        if ( mMoves.size() == 1 ) {
-            followPath();
-        }
-    } else {
-        int x, y;
-        if ( !mMoves.size() ) {
-            x = mBoundingRect.left()/24;
-            y = mBoundingRect.top()/24;
-        } else {
-            Piece* last = mMoves.getList()->back();
-            x = last->getCol();
-            y = last->getRow();
-        }
-
-        Game* game = getGame(this);
-        bool hasPush = false;
-        if ( game && game->canMoveFrom( TANK, direction, &x, &y, true, &hasPush ) ) {
-            mMoves.append( MOVE, x, y, direction, hasPush );
-
-            if ( hasPush ) {
-                game->onFuturePush( mMoves.getList()->back() );
+        if ( direction != fromRotation ) {
+            if ( !mMoves.size() ) {
+                mMoves.append( MOVE, mCol, mRow, direction );
+                // changing direction only so do without delay
+                doMove( mCol, mRow, direction );
+                return;
             }
-            followPath();
+
+            Piece* move = mMoves.getList()->back();
+            if ( move->hasPush() ) {
+                mMoves.append( MOVE, move->getCol(), move->getRow(), direction );
+            } else {
+                mMoves.replaceBack( MOVE, direction );
+                if ( mMoves.size() == 1 ) {
+                    // changing only direction of current move so do without delay
+                    doMove( move->getCol(), move->getRow(), direction );
+                    return;
+                }
+            }
+        } else {
+            int col, row;
+            if ( !mMoves.size() ) {
+                col = mCol;
+                row = mRow;
+            } else {
+                Piece* last = mMoves.getList()->back();
+                col = last->getCol();
+                row = last->getRow();
+            }
+
+            bool hasPush = false;
+            if ( game && game->canMoveFrom( TANK, direction, &col, &row, true, &hasPush ) ) {
+                mMoves.append( MOVE, col, row, direction, hasPush );
+                if ( hasPush ) {
+                    game->onFuturePush( col, row, direction );
+                }
+            }
+        }
+    }
+
+    // wake it up if not active
+    std::cout << "move size=" << mMoves.size() << " aggregate:" << game->getMoveAggregate()->active() << std::endl;
+    if ( mMoves.size() && !game->getMoveAggregate()->active() ) {
+        Piece* move = mMoves.getList()->front();
+        doMove( move->getCol(), move->getRow(), move->getAngle() );
+        if ( move->hasPush() ) {
+            emit movingInto( move->getCol(), move->getRow(), move->getAngle() );
         }
     }
 }
 
-void Tank::followPath()
+void Tank::doMove( int col, int row, int direction )
 {
-    Game* game = getGame(this);
-    if ( game && !game->getMoveAggregate()->active() ) {
-        if ( !mMoves.size() ) {
-            emit idled();
-            return;
-        }
-
-        Piece* move = mMoves.getList()->front();
-        int x = move->getCol();
-        int y = move->getRow();
-
-        mRotateAnimation.animateBetween( mViewRotation, move->getAngle() );
-        mHorizontalAnimation.animateBetween( mBoundingRect.left(), x*24 );
-        mVerticalAnimation.animateBetween(   mBoundingRect.top(),  y*24 );
-
-        emit movingInto( x, y, mViewRotation % 360 );
-    }
+    mRotateAnimation.animateBetween( mViewRotation, direction );
+    mHorizontalAnimation.animateBetween( getViewX().toInt(), col*24 );
+    mVerticalAnimation.animateBetween(   getViewY().toInt(), row*24 );
 }
 
 int Tank::getRow() const
@@ -117,7 +126,7 @@ int Tank::getRow() const
 
 int Tank::getRotation() const
 {
-    return Shooter::getViewRotation().toInt() % 360;
+    return mRotation;
 }
 
 int Tank::getCol() const
@@ -127,25 +136,23 @@ int Tank::getCol() const
 
 void Tank::onAnimationsFinished()
 {
-    if ( !mInReset ) {
-        int rotation = getRotation();
-        if ( mMoves.size() ) {
-            Piece* piece = mMoves.getList()->front();
-            if ( piece->getAngle() == rotation
-              && piece->getCol() == mCol
-              && piece->getRow() == mRow ) {
-                mMoves.eraseFront();
-            }
-            followPath();
+    if ( mMoves.size() ) {
+        Piece* piece = mMoves.getList()->front();
+        if ( piece->getAngle() == mRotation && piece->getCol() == mCol && piece->getRow() == mRow ) {
+            mMoves.eraseFront();
         }
     }
 }
 
-void Tank::onMoved(int col, int row)
+void Tank::onMoved(int col, int row, int rotation)
 {
     mCol = col;
     mRow = row;
-    emit moved( mCol, mRow );
+    mRotation = rotation;
+    Piece* move = mMoves.getList()->front();
+    if ( move && col == move->getCol() && row == move->getRow() && rotation == move->getAngle() ) {
+        mMoves.eraseFront();
+    }
 }
 
 PieceListManager* Tank::getMoves()

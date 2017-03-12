@@ -9,6 +9,7 @@ class Game;
 class BoardWindow;
 class Shooter;
 
+#include "model/piece.h"
 #include "model/shotmodel.h"
 
 /**
@@ -24,7 +25,7 @@ class Shooter : public QObject
 public:
     Shooter(QObject *parent = 0);
     virtual ~Shooter() {}
-    void init( Game* game, QColor color );
+    void init( Game* game, PieceType type, QColor color );
 
     void reset( QPoint p );
 
@@ -37,6 +38,11 @@ public:
      * @brief Release the trigger. Essentially a hint that its a good time to start shedding the shot's tail
      */
     void ceaseFire();
+
+    /**
+     * @brief Query the type of piece represented
+     */
+    PieceType getType() const;
 
     ShotModel& getShot();
     QVariant getViewRotation() const;
@@ -58,6 +64,7 @@ protected:
 
 private:
     ShotModel mShot;
+    PieceType mType;
 };
 
 #endif // SHOOTER_H

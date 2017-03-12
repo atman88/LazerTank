@@ -26,7 +26,7 @@ public slots:
 
 protected:
     void reset( QPoint& p );
-    virtual void onMoved( int col, int row ) = 0;
+    virtual void onMoved( int col, int row, int angle ) = 0;
 
     RotateSpeedControlledAnimation mRotateAnimation;
     MoveSpeedControlledAnimation   mHorizontalAnimation;
