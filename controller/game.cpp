@@ -116,6 +116,9 @@ bool Game::canMoveFrom(PieceType what, int angle, int *col, int *row, bool futur
         if ( futuristic && mFutureDelta.enabled() ) {
             board = mFutureDelta.getFutureBoard();
         } else {
+            if ( what != TANK && *col == mTank.getCol() && *row == mTank.getRow() ) {
+                return false;
+            }
             board = &mBoard;
         }
         return canPlaceAt( what, *col, *row, angle, board, pushResult );

@@ -1,12 +1,12 @@
 S.. . . ww  . [\Mw w . .  . .S
 .ww . M Mw  M  M w M M .  w w.
 ..S w M .w  w  w w . M w  S ww
-... S w .M  M  M M . w S  w ww
+... S w .M  M  M M . w S [S/ww
 wMM . S ww  w  w w w S w  w ww
 wM. . . S.  .  . . S[S/.  M wM
 ww. M w .S [S\[/SS . w w  w ww
 wMw M w .[\SS  S[S/. . M  w Mw
-wMw M w .[/SS  S[S\. . M  w Mw
+wMw M w .[/SS  S[S\. . M  w .w
 ww. M w . S[S/[\SS . w w  w ww
 wM. . . S . w  M w S[S\.  M .w
 .MM . S . . w  . w . S w  w ww
