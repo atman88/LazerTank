@@ -15,6 +15,22 @@ ShotView::ShotView(QObject *parent) : QObject(parent), mShooter(0), mTermination
 
 void ShotView::reset()
 {
+    // dirty it if visible to erase
+    QPoint curPoint = getStartPoint();
+    if ( curPoint != NullPoint ) {
+        if ( mLeadPoint != NullPoint ) {
+            for( auto it : mBendPoints ) {
+                emitDirtySegment( curPoint, it );
+                curPoint = it;
+            }
+            emitDirtySegment( curPoint, mLeadPoint );
+        }
+
+        if ( mTerminationAngle >= 0 ) {
+            emitSplatDirty();
+        }
+    }
+
     mKillTheTank = false;
     mTerminationAngle = -1;
     mLeadPoint = mTailPoint = NullPoint;
@@ -55,6 +71,8 @@ void ShotView::render( QPainter* painter )
 {
     QPoint startPoint = getStartPoint();
     if ( startPoint != NullPoint ) {
+        painter->setPen( mPen );
+
         if ( mLeadPoint != NullPoint ) {
             QPainterPath painterPath;
             painterPath.moveTo( startPoint );
@@ -65,7 +83,6 @@ void ShotView::render( QPainter* painter )
 
             painterPath.lineTo( mLeadPoint );
 
-            painter->setPen( mPen );
             painter->drawPath( painterPath );
         }
 

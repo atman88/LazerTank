@@ -14,6 +14,7 @@ ShotModel::ShotModel(QObject *parent) : ShotView(parent), mLeadingCol(-1), mLead
 
 void ShotModel::reset()
 {
+    mAnimation.stop();
     mLeadingCol = mLeadingRow = -1;
     mSequence = QVariant(-1);
     mDistance = 0;
@@ -41,7 +42,6 @@ void ShotModel::fire( Shooter* shooter )
 {
     int direction = shooter->getViewRotation().toInt() % 360;
     if ( !(direction % 90) ) {
-        mAnimation.stop();
         reset();
         mLeadingDirection = direction;
         mLeadingCol = shooter->getViewX().toInt()/24;

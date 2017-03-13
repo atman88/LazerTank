@@ -102,7 +102,6 @@ void Tank::move( int direction )
     }
 
     // wake it up if not active
-    std::cout << "move size=" << mMoves.size() << " aggregate:" << game->getMoveAggregate()->active() << std::endl;
     if ( mMoves.size() && !game->getMoveAggregate()->active() ) {
         Piece* move = mMoves.getList()->front();
         doMove( move->getCol(), move->getRow(), move->getAngle() );

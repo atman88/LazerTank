@@ -7,7 +7,7 @@
 #include "model/piecesetmanager.h"
 
 // The last /maps/level%1.txt file we wish to reach. Increase this as new levels are added.
-#define BOARD_MAX_LEVEL 37
+#define BOARD_MAX_LEVEL 38
 
 // The largest board dimensions we care to support
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
