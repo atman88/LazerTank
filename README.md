@@ -2,3 +2,9 @@ A Qt implementation of the lazer tank game inspired from http://habrahabr.ru/pos
 
 This implementation offers a structured code base and an experimental move input UI.
 
+Abstract:
+Traditional input methods for this genre tend to favor entertaining the user at the
+expense of the user's thought process.  This implementation explores an alternative
+method where moves are displayed as 'bread crumbs' as they are entered, and the game
+then animates the moves at its own pace. My theory is that this approach ought to feel
+more comfortable to the user without compromising any traditional entertainment value.

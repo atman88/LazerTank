@@ -12,12 +12,6 @@ using namespace std;
 
 BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
 {
-    setFlags( Qt::Dialog );
-    create();
-
-    mCaptureAction = std::make_shared<PathSearchAction>(this);
-    mPathToAction  = std::make_shared<PathSearchAction>(this);
-    mBackingStore = new QBackingStore(this);
 }
 
 void BoardWindow::exposeEvent(QExposeEvent *)
@@ -34,6 +28,13 @@ void BoardWindow::exposeEvent(QExposeEvent *)
 
 void BoardWindow::init( Game* game )
 {
+    setFlags( Qt::Dialog );
+    create();
+
+    mCaptureAction = std::make_shared<PathSearchAction>(this);
+    mPathToAction  = std::make_shared<PathSearchAction>(this);
+    mBackingStore = new QBackingStore(this);
+
     if ( game ) {
         mGame = game;
         setProperty("GameHandle", game->property("GameHandle"));
@@ -58,7 +59,20 @@ void BoardWindow::onBoardLoaded()
     if ( mGame ) {
         Board* board = mGame->getBoard();
         QRect size( 0, 0, board->getWidth()*24, board->getHeight()*24 );
-        setGeometry(size);
+
+        QRect myGeometry = geometry();
+        myGeometry.setSize( size.size() );
+
+        // center it roughly if it's position isn't initialized, :
+        if ( !isExposed() && !myGeometry.x() && !myGeometry.y() ) {
+            if ( QScreen* myScreen = screen() ) {
+                QRect available = myScreen->availableGeometry();
+                myGeometry.moveTo( (available.width() -myGeometry.width() )/2,
+                                   (available.height()-myGeometry.height())/2  );
+            }
+        }
+        setGeometry(myGeometry);
+
         mDirtyRegion += size;
 
         renderLater( size );
@@ -243,6 +257,7 @@ int keyToAngle( int key )
 void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
 {
     if ( mGame ) {
+        QPoint pos;
 
         //
         // create the menu on first use
@@ -313,7 +328,15 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
         //
         // launch menu
         //
-        QAction* action = (globalPos ? mMenu.exec( *globalPos ) : mMenu.exec());
+
+        if ( globalPos ) {
+            pos = *globalPos;
+        } else {
+            // choose a reasonable position:
+            pos.setX( geometry().right() );
+            pos.setY( geometry().top()   );
+        }
+        QAction* action = mMenu.exec( pos );
         if ( action == &(*mCaptureAction) ) {
             mGame->getPathFinderController()->doAction( mCaptureAction );
         } else if ( action == &(*mPathToAction) ) {
