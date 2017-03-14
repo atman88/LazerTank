@@ -64,8 +64,6 @@ void Game::init( BoardWindow* window )
 
     QObject::connect( &mBoard, &Board::tileChangedAt, this, &Game::onBoardTileChanged );
     QObject::connect( &mBoard, &Board::boardLoaded,   this, &Game::onBoardLoaded      );
-
-    mBoard.load( 1 );
 }
 
 void Game::onBoardLoaded()
@@ -106,11 +104,11 @@ Push& Game::getShotPush()
     return mShotPush;
 }
 
-bool Game::canMoveFrom(PieceType what, int angle, int *col, int *row, Board* board, bool *pushResult ) {
-    return getAdjacentPosition(angle, col, row) && canPlaceAt( what, *col, *row, angle, board, pushResult );
+bool Game::canMoveFrom( PieceType what, int angle, int *col, int *row, Board* board, Piece** pushPiece ) {
+    return getAdjacentPosition(angle, col, row) && canPlaceAt( what, *col, *row, angle, board, pushPiece );
 }
 
-bool Game::canMoveFrom(PieceType what, int angle, int *col, int *row, bool futuristic, bool *pushResult ) {
+bool Game::canMoveFrom( PieceType what, int angle, int *col, int *row, bool futuristic, Piece** pushPiece ) {
     if ( getAdjacentPosition(angle, col, row) ) {
         Board* board;
         if ( futuristic && mFutureDelta.enabled() ) {
@@ -121,7 +119,7 @@ bool Game::canMoveFrom(PieceType what, int angle, int *col, int *row, bool futur
             }
             board = &mBoard;
         }
-        return canPlaceAt( what, *col, *row, angle, board, pushResult );
+        return canPlaceAt( what, *col, *row, angle, board, pushPiece );
     }
     return false;
 }
@@ -238,21 +236,21 @@ void Game::onBoardTileChanged( int col, int row )
     }
 }
 
-bool Game::canPlaceAtNonFuturistic(PieceType what, int col, int row, int fromAngle, bool *pushResult )
+bool Game::canPlaceAtNonFuturistic(PieceType what, int col, int row, int fromAngle, Piece** pushPiece )
 {
-    return canPlaceAt( what, col, row, fromAngle, &mBoard, pushResult );
+    return canPlaceAt( what, col, row, fromAngle, &mBoard, pushPiece );
 }
 
-bool Game::canPlaceAt(PieceType what, int col, int row, int fromAngle, Board* board, bool *pushResult )
+bool Game::canPlaceAt(PieceType what, int col, int row, int fromAngle, Board* board, Piece** pushPiece )
 {
     switch( board->tileAt(col,row) ) {
     case DIRT:
     case TILE_SUNK:
-    {   PieceType hit = board->getPieceManager()->typeAt( col, row );
-        if ( hit != NONE ) {
-            if ( what == TANK && pushResult ) {
-                *pushResult = true;
-                return canMoveFrom( hit, fromAngle, &col, &row, board );
+    {   Piece* hit = board->getPieceManager()->pieceAt( col, row );
+        if ( hit ) {
+            if ( what == TANK && pushPiece ) {
+                *pushPiece = hit;
+                return canMoveFrom( hit->getType(), fromAngle, &col, &row, board );
             }
             return false;
         }
@@ -447,7 +445,7 @@ void Game::onTankMovingInto( int col, int row, int fromAngle )
             pm->eraseAt( col, row );
             mTankPush.start( simple, col*24, row*24, toCol*24, toRow*24 );
         } else {
-            std::cout << "no adjacent for angle " << fromAngle << std::endl;
+            std::cout << "*** no adjacent for angle " << fromAngle << std::endl;
         }
     }
 }
@@ -472,31 +470,25 @@ SpeedController *Game::getSpeedController()
     return &mSpeedController;
 }
 
-void Game::onFuturePush( int col, int row, int direction )
+void Game::onFuturePush( Piece* pushPiece, int direction )
 {
     mFutureDelta.enable();
 
-    PieceType pushedType;
-    int pieceAngle;
+    // copy values before pushPiece likely deleted:
+    int col        = pushPiece->getCol();
+    int row        = pushPiece->getRow();
+    PieceType type = pushPiece->getType();
+    int pieceAngle = pushPiece->getAngle();
 
-    // scoping pushedPiece here so it falls out of scope after erased:
-    {   Piece* pushedPiece = mFutureBoard.getPieceManager()->pieceAt( col, row );
-        if ( !pushedPiece ) {
-            std::cout << "*** pushed piece not found!" << std::endl;
-            return;
-        }
-        pushedType = pushedPiece->getType();
-        pieceAngle = pushedPiece->getAngle();
-        if ( !mFutureBoard.getPieceManager()->erase( pushedPiece ) ) {
-            std::cout << "*** failed to erase future piece at " << col << "," << row << std::endl;
-        }
+    if ( !mFutureBoard.getPieceManager()->erase( pushPiece ) ) {
+        std::cout << "*** failed to erase future pushPiece at " << col << "," << row << std::endl;
     }
 
     if ( !getAdjacentPosition( direction, &col, &row ) ) {
-        std::cout << "*** failed to get future push position for " << direction << "/" << col << "," << row << std::endl;
+        std::cout << "*** failed to get future pushPiece position for " << direction << "/" << col << "," << row << std::endl;
         return;
     }
-    mFutureBoard.applyPushResult( pushedType, col, row, pieceAngle );
+    mFutureBoard.applyPushResult( type, col, row, pieceAngle );
 }
 
 const PieceSet* Game::getDeltaPieces()
@@ -507,19 +499,19 @@ const PieceSet* Game::getDeltaPieces()
     return 0;
 }
 
-void Game::undoFuturePush( Piece* pusher )
+void Game::undoFuturePush( PusherPiece* pusher )
 {
     int col = pusher->getCol();
     int row = pusher->getRow();
     if ( getAdjacentPosition( pusher->getAngle(), &col, &row ) ) {
-        Piece* pushee = mFutureBoard.getPieceManager()->pieceAt( col, row );
+        PieceSetManager* pieceManager = mFutureBoard.getPieceManager();
+        Piece* pushee = pieceManager->pieceAt( col, row );
         if ( pushee ) {
-            PieceType type = pushee->getType();
-            int angle = pushee->getAngle();
-            PieceSetManager* pieceManager = mFutureBoard.getPieceManager();
             pieceManager->erase( pushee );
-            pieceManager->insert( type, pusher->getCol(), pusher->getRow(), angle );
+        } else if ( pusher->getPushPieceType() == TILE && mFutureBoard.tileAt(col, row ) == TILE_SUNK ) {
+            mFutureBoard.setTileAt( WATER, col, row );
         }
+        pieceManager->insert( pusher->getPushPieceType(), pusher->getCol(), pusher->getRow(), pusher->getPushPieceAngle() );
     }
 }
 
@@ -538,7 +530,7 @@ void Game::undoLastMove()
     Piece* piece = moveManager->getList()->back();
     if ( piece ) {
         if ( piece->hasPush() ) {
-            undoFuturePush( piece );
+            undoFuturePush( dynamic_cast<PusherPiece*>(piece) );
         }
         getTank()->getMoves()->eraseBack();
     }

@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
     BoardWindow window;
     Game game;
     game.init( &window );
+    game.getBoard()->load( 1 );
     window.show();
 
     return app.exec();

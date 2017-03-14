@@ -11,12 +11,7 @@ Board::Board( QObject* parent )  : QObject(parent), mLevel(0), mWidth(16), mHeig
 bool Board::load( int level ) {
     QString namePattern( ":/maps/level%1.txt" );
     QString name = namePattern.arg(level);
-    bool rc = load( name );\
-    if ( rc ) {
-        mLevel = level;
-        emit boardLoaded();
-    }
-    return rc;
+    return load( name, level );\
 }
 
 PieceSetManager* Board::getPieceManager()
@@ -50,20 +45,20 @@ int Board::getFlagRow() const
     return mFlagRow;
 }
 
-bool Board::load( QString& fileName )
+bool Board::load( QString& fileName, int level )
 {
     QFile file( fileName );
     if ( !file.open(QIODevice::ReadOnly|QIODevice::Text) ) {
         return false;
     }
     QTextStream stream(&file);
-    load( stream );
+    load( stream, level );
 
     file.close();
     return true;
 }
 
-void Board::load( QTextStream& stream )
+void Board::load( QTextStream& stream, int level )
 {
     int row = 0;
     unsigned char* rowp = mTiles;
@@ -144,7 +139,9 @@ void Board::load( QTextStream& stream )
     } while( ++row < BOARD_MAX_HEIGHT );
 
     mHeight = row;
-    mLevel = -1;
+    mLevel = level;
+
+    emit boardLoaded();
 }
 
 void Board::load( const Board* source )

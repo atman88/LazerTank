@@ -86,10 +86,10 @@ public:
      * @param col The Piece's originating column as input. Returns the resultant column
      * @param row The Piece's originating row as input. Returns the resultant row
      * @param futuristic If true, all outstanding moves are considered, otherwise only the current board state is considered
-     * @param pushResult If nonzero, this returns a boolean indicating whether a piece would be pushed by the move
+     * @param pushPiece if non-null, returns a reference to any piece that this move would push
      * @return true if the move is allowed, otherwise false
      */
-    bool canMoveFrom(PieceType what, int angle, int *col, int *row, bool futuristic, bool* pushResult = 0 );
+    bool canMoveFrom( PieceType what, int angle, int *col, int *row, bool futuristic, Piece** pushPiece = 0 );
 
     /**
      * @brief Determines the outcome of a laser shot through the given square
@@ -108,24 +108,23 @@ public:
      * @param col The column of the square to consider
      * @param row The row of the square to consider
      * @param fromAngle The entry direction
-     * @param pushResult true if the entry would result in pushing a piece
+     * @param pushPiece if non-null, returns a reference to any piece that this placement would result in pushing
      * @return true if the placement is a legal move
      */
-    bool canPlaceAtNonFuturistic(PieceType what, int col, int row, int fromAngle, bool *pushResult = 0);
+    bool canPlaceAtNonFuturistic( PieceType what, int col, int row, int fromAngle, Piece** pushPiece = 0 );
 
     /**
      * @brief Records a push of piece that will be pushed as a result of some future change
-     * @param col The starting column of the future piece
-     * @param row The starting row of the future piece
+     * @param pushPiece The piece that is to be pushed
      * @param direction the direction of the push
      */
-    void onFuturePush( int col , int row, int direction );
+    void onFuturePush( Piece* pushPiece, int direction );
 
     /**
      * @brief Reverts a future push (recorded by onFuturePush)
      * @param pusher Identifies the push to revert based on its originating square and direction (angle)
      */
-    void undoFuturePush( Piece* pusher );
+    void undoFuturePush( PusherPiece* pusher );
 
     /**
      * @brief undoes the last future move if safe to do so
@@ -200,7 +199,7 @@ private:
      * @param pushResult Set to true if a piece would get pushed by the move
      * @return true if allowed, otherwise false
      */
-    bool canMoveFrom(PieceType what, int angle, int *col, int *row, Board* board, bool *pushResult = 0 );
+    bool canMoveFrom( PieceType what, int angle, int *col, int *row, Board* board, Piece **pushPiece = 0 );
 
     /**
      * @brief Determines whether the given piece can enter the given square.
@@ -209,10 +208,10 @@ private:
      * @param row The row of the square to consider
      * @param fromAngle The entry direction
      * @param board The board to consider
-     * @param pushResult true if the entry would result in pushing a piece
+     * @param pushPiece if non-null, returns a reference to any piece that that this placement would result in pushing
      * @return true if the entry is legal
      */
-    bool canPlaceAt( PieceType what, int col, int row, int fromAngle, Board* board, bool *pushResult = 0 );
+    bool canPlaceAt( PieceType what, int col, int row, int fromAngle, Board* board, Piece** pushPiece = 0 );
 
     SpeedController mSpeedController;
     AnimationStateAggregator mMoveAggregate;

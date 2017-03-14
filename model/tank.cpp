@@ -91,11 +91,11 @@ void Tank::move( int direction )
                 row = last->getRow();
             }
 
-            bool hasPush = false;
-            if ( game && game->canMoveFrom( TANK, direction, &col, &row, true, &hasPush ) ) {
-                mMoves.append( MOVE, col, row, direction, hasPush );
-                if ( hasPush ) {
-                    game->onFuturePush( col, row, direction );
+            Piece* pushPiece = 0;
+            if ( game && game->canMoveFrom( TANK, direction, &col, &row, true, &pushPiece ) ) {
+                mMoves.append( MOVE, col, row, direction, pushPiece );
+                if ( pushPiece ) {
+                    game->onFuturePush( pushPiece, direction );
                 }
             }
         }

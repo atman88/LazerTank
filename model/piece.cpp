@@ -36,3 +36,13 @@ void Piece::setAngle(int angle)
 {
     mAngle = angle;
 }
+
+PieceType PusherPiece::getPushPieceType() const
+{
+    return mPushPieceType;
+}
+
+int PusherPiece::getPushPieceAngle() const
+{
+    return mPushPieceAngle;
+}

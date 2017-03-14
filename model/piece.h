@@ -102,6 +102,8 @@ private:
     int mCol;
     int mRow;
     int mAngle;
+
+    friend class PusherPiece;
 };
 
 /**
@@ -129,27 +131,31 @@ public:
 class PusherPiece : public SimplePiece
 {
 public:
-    PusherPiece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0, bool hasPush = false )
-        : SimplePiece(type,col,row,angle), mHasPush(hasPush)
+    PusherPiece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0, Piece* pushPiece = 0 )
+        : SimplePiece(type,col,row,angle),
+          mPushPieceType( pushPiece ? pushPiece->mType  : NONE),
+          mPushPieceAngle(pushPiece ? pushPiece->mAngle : 0)
     {
     }
 
-    PusherPiece( Piece* source ) : SimplePiece(source), mHasPush(source->hasPush())
+    PusherPiece( Piece* source ) : SimplePiece(source),
+      mPushPieceType( source->hasPush() ? dynamic_cast<PusherPiece*>(source)->mPushPieceType  : NONE),
+      mPushPieceAngle(source->hasPush() ? dynamic_cast<PusherPiece*>(source)->mPushPieceAngle : 0)
     {
-    }
-
-    void setHasPush( bool hasPush )
-    {
-        mHasPush = hasPush;
     }
 
     bool hasPush() const override
     {
-        return mHasPush;
+        return mPushPieceType != NONE;
     }
 
+    PieceType getPushPieceType() const;
+
+    int getPushPieceAngle() const;
+
 private:
-    bool mHasPush;
+    PieceType mPushPieceType;
+    int mPushPieceAngle;
 };
 
 // comparator used by the stl

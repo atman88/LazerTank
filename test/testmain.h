@@ -15,6 +15,7 @@ private slots:
     void testMove();
     void testCannon();
     void testPieceListManager();
+    void testPush();
 };
 
 class SignalReceptor : public QObject

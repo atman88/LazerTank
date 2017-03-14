@@ -58,9 +58,9 @@ void PieceListManager::appendInternal( Piece* piece )
     emit appended( piece->getCol(), piece->getRow() );
 }
 
-void PieceListManager::append( PieceType type, int col, int row, int angle, bool hasPush )
+void PieceListManager::append( PieceType type, int col, int row, int angle, Piece* pushPiece )
 {
-    appendInternal( new PusherPiece( type, col, row, angle, hasPush ) );
+    appendInternal( new PusherPiece( type, col, row, angle, pushPiece ) );
 }
 
 void PieceListManager::append( Piece* source )

@@ -37,7 +37,7 @@ public:
     /**
      * @brief Adds a new piece to the end of this list from the given values
      */
-    void append( PieceType type, int col, int row, int angle = 0, bool hasPush = false );
+    void append( PieceType type, int col, int row, int angle = 0, Piece* pushPiece = 0 );
 
     /**
      * @brief Adds a copy of the given piece to the end of this list

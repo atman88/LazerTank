@@ -7,7 +7,7 @@
 #include "model/piecesetmanager.h"
 
 // The last /maps/level%1.txt file we wish to reach. Increase this as new levels are added.
-#define BOARD_MAX_LEVEL 38
+#define BOARD_MAX_LEVEL 39
 
 // The largest board dimensions we care to support
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
@@ -111,14 +111,16 @@ public:
     /**
      * @brief load the given file
      * @param fileName
+     * @param level optional level number to associate with the instance or -1 if the file does not correspond to a level
      * @return true if successful
      */
-    bool load( QString& fileName );
+    bool load( QString& fileName, int level = -1 );
 
     /**
      * @brief load from the given stream
+     * @param level optional level number to associate with the instance or -1 if the stream does not correspond to a level
      */
-    void load( QTextStream& stream );
+    void load( QTextStream& stream, int level = -1 );
 
     /**
      * @brief load a copy of the given board

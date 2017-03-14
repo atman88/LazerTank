@@ -22,7 +22,7 @@ void TestMain::testMove()
       "..........\n" );
     QTextStream s(&map);
     board->load( s );
-    cout << "board " << board->getWidth() << "x" << board->getHeight() << std::endl;
+    cout << "board " << board->getWidth() << "x" << board->getHeight() << endl;
 
     const PieceSet* tiles = board->getPieceManager()->getPieces();
     QCOMPARE( tiles->size(), 1UL );
@@ -32,7 +32,7 @@ void TestMain::testMove()
     QCOMPARE( game.canPlaceAtNonFuturistic(TANK,-1, 0,270), false );
     QCOMPARE( game.canPlaceAtNonFuturistic(TANK, 0,-1,  0), false );
 
-    cout << "tank " << board->getTankStartCol() << "," << board->getTankStartRow() << std::endl;
+    cout << "tank " << board->getTankStartCol() << "," << board->getTankStartRow() << endl;
     QCOMPARE( game.canPlaceAtNonFuturistic(TANK,board->getTankStartCol(),board->getTankStartRow(),0), true );
 }
 
@@ -72,4 +72,39 @@ void TestMain::testCannon()
     testCannonAt( 4, 2, &game );
     testCannonAt( 2, 4, &game );
     testCannonAt( 0, 2, &game );
+}
+
+void testFuturePushToward( int direction, Game* game )
+{
+    cout << "testFuturePushToward " << direction << endl;
+
+    Tank* tank = game->getTank();
+    // move twice; first merely rotates the tank but more importantly primes the move list:
+    tank->move( direction );
+    tank->move( direction );
+    QVERIFY( game->getDeltaPieces()->size() > 0 );
+    game->undoLastMove();
+    QCOMPARE( game->getDeltaPieces()->size(), 0UL );
+}
+
+void TestMain::testPush()
+{
+    Game game;
+    game.init( 0 );
+    QString map(
+        ".. m ..\n"
+        ".. M ..\n"
+        "w< T >.\n"
+        "..[M/..\n"
+        ".. w ..\n" );
+    QTextStream s(&map);
+    game.getBoard()->load( s );
+
+    // force the move aggregate active so the tank won't be woken up:
+    game.getMoveAggregate()->onStateChanged( QAbstractAnimation::Running, QAbstractAnimation::Stopped );
+
+    testFuturePushToward(  90, &game );
+    testFuturePushToward( 180, &game );
+    testFuturePushToward( 270, &game );
+    testFuturePushToward(   0, &game );
 }
