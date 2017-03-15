@@ -8,6 +8,7 @@
 class TankView : public Shooter
 {
     Q_OBJECT
+
 public:
     explicit TankView(QObject *parent = 0);
     void init( Game* game );

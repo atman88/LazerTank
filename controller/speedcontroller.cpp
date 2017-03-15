@@ -1,37 +1,67 @@
 #include <iostream>
+#include <algorithm>
+
 #include "speedcontroller.h"
+#include "game.h"
 
 // movement speed in milliseconds per square
-#define LOW_SPEED   800
-#define HIGH_SPEED  400
+const int NORMAL_SPEED = 800;
+const int HIGH_SPEED   = 300;
+const int NSPEED_STEPS  = (NORMAL_SPEED- HIGH_SPEED)/100;
 
-SpeedController::SpeedController(QObject *parent) : QObject(parent), mSpeed(LOW_SPEED)
+SpeedController::SpeedController(QObject *parent) : QObject(parent), mHighSpeed(false), mStepPending(false), mSpeed(NORMAL_SPEED)
 {
+}
+
+void SpeedController::stepSpeed()
+{
+    mStepPending = true;
+}
+
+int SpeedController::desiredSpeed()
+{
+    if ( mHighSpeed ) {
+        return HIGH_SPEED;
+    }
+
+    if ( Game* game = getGame(this) ) {
+        int distance = game->getTank()->getMoves()->getList()->size();
+        return (distance < 3) ? NORMAL_SPEED : NORMAL_SPEED - std::min( distance-3, NSPEED_STEPS ) * 100;
+    }
+
+    return NORMAL_SPEED;
 }
 
 int SpeedController::getSpeed()
 {
+    if ( mStepPending ) {
+        int desired = desiredSpeed();
+        if      ( mSpeed < desired ) { mSpeed += 100; }
+        else if ( mSpeed > desired ) { mSpeed -= 100; }
+        mStepPending = false;
+    }
     return mSpeed;
 }
 
-bool SpeedController::getHighSpeed()
+bool SpeedController::getHighSpeed() const
 {
-    return mSpeed == HIGH_SPEED;
+    return mHighSpeed;
 }
 
 void SpeedController::setHighSpeed( bool on )
 {
-    int speed = on ? HIGH_SPEED : LOW_SPEED;
-    if ( speed != mSpeed ) {
-        mSpeed = speed;
-        emit speedChanged( speed );
+    if ( on != mHighSpeed ) {
+        mHighSpeed = on;
+        mSpeed = on ? HIGH_SPEED : NORMAL_SPEED;
+
+        emit highSpeedChanged( getSpeed() );
     }
 }
 
 void SpeedControlledAnimation::setController(SpeedController *controller)
 {
     mController = controller;
-    QObject::connect( controller, &SpeedController::speedChanged, this, &SpeedControlledAnimation::setSpeed );
+    QObject::connect( controller, &SpeedController::highSpeedChanged, this, &SpeedControlledAnimation::setSpeed );
 }
 
 void SpeedControlledAnimation::setSpeed(int speed)

@@ -2,6 +2,14 @@
 
 #include "piece.h"
 
+Piece::Piece(Piece *source)
+{
+    mType  = source->mType;
+    mCol   = source->mCol;
+    mRow   = source->mRow;
+    mAngle = source->mAngle;
+}
+
 PieceType Piece::getType() const
 {
     return mType;

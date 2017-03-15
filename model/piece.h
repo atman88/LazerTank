@@ -34,13 +34,7 @@ public:
     /**
      * @brief Copy constructor
      */
-    Piece( Piece* source )
-    {
-        mType  = source->mType;
-        mCol     = source->mCol;
-        mRow     = source->mRow;
-        mAngle = source->mAngle;
-    }
+    Piece( Piece* source );
 
     virtual ~Piece()
     {

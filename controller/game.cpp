@@ -20,6 +20,7 @@ void Game::init( BoardWindow* window )
 
     mTankPush.setParent( this );
     mShotPush.setParent( this );
+    mSpeedController.setParent( this );
 
     if ( window ) {
         window->init( this );
@@ -212,6 +213,7 @@ void Game::onMoveAggregatorFinished()
     if ( !mFutureDelta.getPieceManager()->size() ) {
         mFutureDelta.enable( false );
     }
+    mSpeedController.stepSpeed();
 
     if ( mBoard.tileAt(mTank.getCol(),mTank.getRow()) == FLAG ) {
         QMessageBox msgBox;

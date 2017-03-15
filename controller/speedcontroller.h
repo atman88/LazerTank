@@ -4,12 +4,17 @@
 #include <QObject>
 #include <QPropertyAnimation>
 
+class Game;
+
+#include "model/piece.h"
+
 /**
  * @brief A game animation speed container
  */
 class SpeedController : public QObject
 {
     Q_OBJECT
+
 public:
     explicit SpeedController(QObject *parent = 0);
 
@@ -22,20 +27,30 @@ public:
      * @brief Get the high speed setting
      * @return true if high speed is on otherwise false
      */
-    bool getHighSpeed();
+    bool getHighSpeed() const;
+
+    /**
+     * @brief Instruct this controller to subsequently re-evaluate the game speed
+     */
+    void stepSpeed();
 
 public slots:
     /**
-     * @brief Set the speed value
+     * @brief Set the high speed override value
      * @param on sets high speed on if true, otherwise normal speed
      */
     void setHighSpeed( bool on );
 
 signals:
-    void speedChanged( int speed );
+    void highSpeedChanged( int speed );
 
 private:
+    int desiredSpeed();
+
+    bool mHighSpeed;
+    bool mStepPending;
     int mSpeed;
+    const PieceList* mMovesListRef; // a reference to the tank's move list to avoid multiple lookups
 };
 
 /**

@@ -365,10 +365,6 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
             mGame->getTank()->fire();
             break;
 
-        case Qt::Key_S:
-            mSpeedAction.setChecked( true );
-            break;
-
         case Qt::Key_C: // attempt to capture the flag
         {   Board* board = mGame->getBoard();
             mCaptureAction->setCriteria( board->getFlagCol(), board->getFlagRow(), false );
@@ -393,7 +389,7 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
             break;
 
         case Qt::Key_S:
-            mSpeedAction.setChecked( false );
+            mSpeedAction.toggle();
             break;
 
         case Qt::Key_C:
