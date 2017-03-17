@@ -80,12 +80,7 @@ void PathFinderController::onPath( int targetCol, int targetRow, int startCol, i
         // vet the original criteria to guard against a stale result
         if ( targetCol == mTargetCol && targetRow == mTargetRow
           && startCol == tank->getCol() && startRow == tank->getRow() && targetRotation == tank->getRotation() ) {
-            emit pathFound( path );
-
-            tank->getMoves()->reset( path );
-            if ( mMoveWhenFound ) {
-                tank->wakeup();
-            }
+            emit pathFound( path, mMoveWhenFound );
         }
     }
 }

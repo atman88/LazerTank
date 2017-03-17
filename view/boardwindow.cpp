@@ -10,7 +10,7 @@
 
 using namespace std;
 
-BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent)
+BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mFocusType(MOVE), mGame(0)
 {
 }
 
@@ -133,9 +133,13 @@ QMenu& BoardWindow::getMenu()
     return mMenu;
 }
 
-void BoardWindow::render( const QRect* rect, Board* board, const PieceMultiSet* moves, const PieceSet* tiles,
-  const PieceSet* deltas, QPainter* painter )
+void BoardWindow::render( const QRect* rect, QPainter* painter )
 {
+    Board* board = mGame->getBoard();
+    const PieceMultiSet* moves = mGame->getTank()->getMoves()->toMultiSet();
+    const PieceSet* tiles = board->getPieceManager()->getPieces();
+    const PieceSet* deltas = mGame->getDeltaPieces();
+
     int minX = rect->left()/24;
     int minY = rect->top() /24;
     int maxX = (rect->right() -1)/24;
@@ -198,30 +202,34 @@ void BoardWindow::render( const QRect* rect, Board* board, const PieceMultiSet* 
     if ( deltas ) {
         renderListIn( deltasIterator, deltas->end(), rect, painter );
     }
-    renderListIn( moveIterator, moves->end(), rect, painter );
+
+    if ( mFocusType != TANK ) {
+        // render the moves beneath (i.e. before) the tank and it's pushes when not focused on
+        // the tank:
+        renderListIn( moveIterator, moves->end(), rect, painter );
+    }
 
     if ( mGame ) {
         mGame->getTankPush().render( rect, painter );
         mGame->getShotPush().render( rect, painter );
         mGame->getTank()->render( rect, painter );
+        if ( mFocusType == TANK ) {
+            // render the moves ontop of (i.e. after) the tank and it's pushes when focus is at
+            // the tank:
+            renderListIn( moveIterator, moves->end(), rect, painter );
+        }
         mGame->getCannonShot().render( painter );
     }
 }
 
 void BoardWindow::render(QRegion* region)
 {
-    Board* board = mGame->getBoard();
-
-    const PieceMultiSet* moves = mGame->getTank()->getMoves()->toMultiSet();
-    const PieceSet* tiles = board->getPieceManager()->getPieces();
-    const PieceSet* deltas = mGame->getDeltaPieces();
-
     mBackingStore->beginPaint(*region);
     QPaintDevice *device = mBackingStore->paintDevice();
     QPainter painter(device);
     QRect rect = region->boundingRect();
 
-    render( &rect, board, moves, tiles, deltas, &painter );
+    render( &rect, &painter );
 
     mBackingStore->endPaint();
     mBackingStore->flush(*region);
@@ -328,7 +336,6 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
         //
         // launch menu
         //
-
         if ( globalPos ) {
             pos = *globalPos;
         } else {
@@ -361,6 +368,10 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
             }
             break;
 
+        case Qt::Key_Control:
+            moveFocus( TANK );
+            break;
+
         case Qt::Key_Space:
             mGame->getTank()->fire();
             break;
@@ -386,6 +397,10 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
         switch( ev->key() ) {
         case Qt::Key_Space:
             mGame->getTank()->ceaseFire();
+            break;
+
+        case Qt::Key_Control:
+            moveFocus( MOVE );
             break;
 
         case Qt::Key_S:
@@ -457,4 +472,10 @@ void BoardWindow::onTankKilled()
             board->load( board->getLevel() );
         }
     }
+}
+
+void BoardWindow::moveFocus( PieceType what )
+{
+    mFocusType = what;
+    emit focusChanged( what );
 }

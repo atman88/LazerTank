@@ -32,6 +32,7 @@ const QPixmap* getPixmap( unsigned type )
         { FLAG,              { "flag"               } },
         { TILE,              { "tile-metal"         } },
         { MOVE,              { "move-indicator"     } },
+        { MOVE_HIGHLIGHT,    { "move-highlight"     } },
         { STONE_MIRROR,      { "wall-mirror"        } },
         { STONE_SLIT,        { "stone-slit"         } },
         { WOOD,              { "wood"               } },

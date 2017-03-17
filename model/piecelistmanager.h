@@ -46,6 +46,18 @@ public:
     void append(Piece* source );
 
     /**
+     * @brief get the first element
+     * @return the last element in the list, or 0 if empty
+     */
+    Piece* getFront() const;
+
+    /**
+     * @brief get the last element
+     * @return the last element in the list, or 0 if empty
+     */
+    Piece* getBack() const;
+
+    /**
      * @brief removes the first element
      * @return true if the element was removed
      */
@@ -56,6 +68,12 @@ public:
      * @return true if the element was removed
      */
     bool eraseBack();
+
+    /**
+     * @brief Modifies the first element in the list with the given values
+     * @return true if the piece was changed
+     */
+    bool replaceFront( PieceType type, int newAngle = -1 );
 
     /**
      * @brief Modifies the last element in the list with the given values
@@ -99,6 +117,7 @@ public slots:
 private:
     void appendInternal( Piece* piece );
     bool eraseInternal(PieceList::iterator it );
+    void replaceInternal( Piece* piece, PieceType type, int newAngle );
 
     PieceList mPieces;
     PieceSet* mSet;

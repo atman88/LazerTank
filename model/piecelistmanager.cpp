@@ -108,6 +108,22 @@ bool PieceListManager::eraseFront()
     return eraseInternal( mPieces.begin() );
 }
 
+Piece *PieceListManager::getBack() const
+{
+    if ( mPieces.empty() ) {
+        return 0;
+    }
+    return mPieces.back();
+}
+
+Piece *PieceListManager::getFront() const
+{
+    if ( mPieces.empty() ) {
+        return 0;
+    }
+    return mPieces.front();
+}
+
 bool PieceListManager::eraseBack()
 {
     if ( !mPieces.empty() ) {
@@ -117,15 +133,28 @@ bool PieceListManager::eraseBack()
     return false;
 }
 
+void PieceListManager::replaceInternal( Piece* piece, PieceType type, int newAngle )
+{
+    piece->setType( type );
+    if ( newAngle >= 0 ) {
+        piece->setAngle( newAngle );
+    }
+    emit replaced( piece->getCol(), piece->getRow() );
+}
+
+bool PieceListManager::replaceFront( PieceType type, int newAngle )
+{
+    if ( !mPieces.empty() ) {
+        replaceInternal( mPieces.front(), type, newAngle );
+        return true;
+    }
+    return false;
+}
+
 bool PieceListManager::replaceBack(PieceType type, int newAngle )
 {
     if ( !mPieces.empty() ) {
-        Piece* piece = mPieces.back();
-        piece->setType( type );
-        if ( newAngle >= 0 ) {
-            piece->setAngle( newAngle );
-        }
-        emit replaced( piece->getCol(), piece->getRow() );
+        replaceInternal( mPieces.back(), type, newAngle );
         return true;
     }
     return false;

@@ -11,6 +11,7 @@ typedef enum {
     NONE,
     TANK,
     MOVE,
+    MOVE_HIGHLIGHT,
     TILE,
     TILE_MIRROR,
     CANNON,

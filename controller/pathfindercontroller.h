@@ -37,8 +37,10 @@ signals:
     /**
      * @brief Notification of an action result
      * @param path
+     * @param wakeup hints whether move animations should resume when applying this result.
+     * If false, move animations are intended to resume on a subsequent trigger.
      */
-    void pathFound( PieceListManager* path );
+    void pathFound( PieceListManager* path, bool wakeup );
 
 public slots:
     /**

@@ -47,6 +47,12 @@ void Tank::wakeup()
     move(-1);
 }
 
+void Tank::appendMove( int col, int row, int direction, Piece* pushPiece )
+{
+    mMoves.replaceBack( MOVE ); // erase highlight
+    mMoves.append( MOVE_HIGHLIGHT, col, row, direction, pushPiece );
+}
+
 void Tank::move( int direction )
 {
     Game* game = getGame(this);
@@ -63,7 +69,7 @@ void Tank::move( int direction )
         }
         if ( direction != fromRotation ) {
             if ( !mMoves.size() ) {
-                mMoves.append( MOVE, mCol, mRow, direction );
+                appendMove( mCol, mRow, direction );
                 // changing direction only so do without delay
                 doMove( mCol, mRow, direction );
                 return;
@@ -71,9 +77,9 @@ void Tank::move( int direction )
 
             Piece* move = mMoves.getList()->back();
             if ( move->hasPush() ) {
-                mMoves.append( MOVE, move->getCol(), move->getRow(), direction );
+                appendMove( move->getCol(), move->getRow(), direction );
             } else {
-                mMoves.replaceBack( MOVE, direction );
+                mMoves.replaceBack( MOVE_HIGHLIGHT, direction );
                 if ( mMoves.size() == 1 ) {
                     // changing only direction of current move so do without delay
                     doMove( move->getCol(), move->getRow(), direction );
@@ -93,7 +99,7 @@ void Tank::move( int direction )
 
             Piece* pushPiece = 0;
             if ( game && game->canMoveFrom( TANK, direction, &col, &row, true, &pushPiece ) ) {
-                mMoves.append( MOVE, col, row, direction, pushPiece );
+                appendMove( col, row, direction, pushPiece );
                 if ( pushPiece ) {
                     game->onFuturePush( pushPiece, direction );
                 }
@@ -128,6 +134,12 @@ int Tank::getRotation() const
     return mRotation;
 }
 
+void Tank::eraseLastMove()
+{
+    mMoves.eraseBack();
+    mMoves.replaceBack( MOVE_HIGHLIGHT );
+}
+
 int Tank::getCol() const
 {
     return mCol;
@@ -157,4 +169,27 @@ void Tank::onMoved(int col, int row, int rotation)
 PieceListManager* Tank::getMoves()
 {
     return &mMoves;
+}
+
+void Tank::setFocus( PieceType what )
+{
+    if ( mMoves.size() > 1 ) {
+        mMoves.replaceBack( what == TANK ? MOVE : MOVE_HIGHLIGHT );
+        mMoves.replaceFront(what == TANK ? MOVE_HIGHLIGHT : MOVE );
+    }
+
+    if ( what == TANK ) {
+        pause();
+    } else {
+        resume();
+    }
+}
+
+void Tank::onPathFound( PieceListManager* path, bool doWakeup )
+{
+    mMoves.reset( path );
+    mMoves.replaceBack( MOVE_HIGHLIGHT );
+    if ( doWakeup ) {
+        wakeup();
+    }
 }

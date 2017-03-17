@@ -45,11 +45,11 @@ void Game::init( BoardWindow* window )
 
     mTank.init( this );
     QObject::connect( &mTank, &Tank::movingInto, this, &Game::onTankMovingInto );
+    QObject::connect( &mPathFinderController, &PathFinderController::pathFound, &mTank, &Tank::onPathFound );
 
     mActiveCannon.init( this, CANNON, QColor(255,50,83) );
 
     mPathFinderController.init(this);
-    QObject::connect( &mPathFinderController, &PathFinderController::pathFound, this, &Game::endMoveDeltaTracking );
 
     mMoveAggregate.setObjectName("MoveAggregate");
     mShotAggregate.setObjectName("ShotAggregate");
@@ -534,6 +534,6 @@ void Game::undoLastMove()
         if ( piece->hasPush() ) {
             undoFuturePush( dynamic_cast<PusherPiece*>(piece) );
         }
-        getTank()->getMoves()->eraseBack();
+        getTank()->eraseLastMove();
     }
 }

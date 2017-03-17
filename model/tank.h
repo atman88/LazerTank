@@ -50,6 +50,11 @@ public:
      */
     int getRotation() const;
 
+    /**
+     * @brief Helper method to erase (undo) the last move with highlight-awareness
+     */
+    void eraseLastMove();
+
 signals:
     /**
      * @brief Notifies the tank is about to move to a new square
@@ -78,9 +83,22 @@ public slots:
     void clearMoves();
 
     /**
+     * @brief move the focus between the moves (future) and the tank (present)
+     * @param what Either TANK to set the focus to the tank, otherwise focus is set to the moves
+     */
+    void setFocus( PieceType what );
+
+    /**
      * @brief Aggregated animation slot handler
      */
     void onAnimationsFinished();
+
+    /**
+     * @brief adds the given path to the tank's moves as appropriate
+     * @param path The path to add
+     * @param doWakeup wake up movement animation if true
+     */
+    void onPathFound( PieceListManager* path, bool doWakeup );
 
 protected:
     /**
@@ -96,6 +114,15 @@ private:
      * @param direction The direction to face the tank
      */
     void doMove( int col, int row, int direction );
+
+    /**
+     * @brief helper method to add a move to the list of moves that is highlight-aware
+     * @param col The column of the new move to append
+     * @param row The row of the new move to append
+     * @param direction The direction of the new move to append
+     * @param pushPiece The piece that this move pushes or 0 if it doesn't cause a push
+     */
+    void appendMove( int col, int row, int direction, Piece* pushPiece = 0 );
 
     int mCol;
     int mRow;

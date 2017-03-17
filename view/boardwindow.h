@@ -52,26 +52,71 @@ signals:
     void setSpeed( int speed );
 
 public slots:
+    /**
+     * @brief mark a rectangular area as dirty
+     * @param rect The rectangular area
+     */
     void renderLater(const QRect &rect);
+
+    /**
+     * @brief trigger a repaint without delay
+     */
     void renderNow();
+
+    /**
+     * @brief mark a given square as dirty
+     * @param col The square's column
+     * @param row The square's row
+     */
     void renderSquareLater( int col, int row );
+
+    /**
+     * @brief React to the game board being loaded
+     */
     void onBoardLoaded();
 
+signals:
+    /**
+     * @brief Notifies that the user has moved the focus
+     * @param what MOVE if the focus is on the future moves or TANK if the focus is on the present
+     */
+    void focusChanged( PieceType what );
+
 protected:
+    /**
+     * @brief Window event handlers
+     */
     bool event(QEvent *event) override;
     void keyPressEvent(QKeyEvent *ev) override;
     void keyReleaseEvent(QKeyEvent *ev) override;
     void mousePressEvent( QMouseEvent* event ) override;
     void mouseReleaseEvent( QMouseEvent* event ) override;
-
     void resizeEvent(QResizeEvent *event) override;
     void exposeEvent(QExposeEvent *event) override;
 
 private:
-    void render( const QRect* rect, Board* board, const PieceMultiSet* moves, const PieceSet* tiles,
-      const PieceSet* deltas, QPainter* painter );
-    void renderMove( int x, int y, int angle = 0 );
-    void renderListIn(PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter );
+    /**
+     * @brief Repaint a rectangular area
+     * @param rect The area to repaint
+     * @param painter The painter associated with this render operation
+     */
+    void render( const QRect* rect, QPainter* painter );
+
+    /**
+     * @brief Helper method to render the given set within the given rectangular area
+     * @param iterator The starting position within the set
+     * @param end The end of set position
+     * @param dirty The rectangular area being rendered
+     * @param painter The painter associated with this render operation
+     */
+    void renderListIn( PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter );
+
+    /**
+     * @brief Move the focus between focal points of interest
+     * @param what Either MOVE to focus on the last move (future perspective) or TANK to focus on the first move
+     * (present perspective)
+     */
+    void moveFocus( PieceType what );
 
     QBackingStore *mBackingStore;
     QMenu mMenu;
@@ -86,6 +131,8 @@ private:
 
     QRegion mDirtyRegion;
     QRegion mRenderRegion;
+
+    PieceType mFocusType;
 
     Game* mGame;
 };
