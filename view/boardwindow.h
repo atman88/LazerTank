@@ -132,7 +132,7 @@ private:
     QRegion mDirtyRegion;
     QRegion mRenderRegion;
 
-    PieceType mFocusType;
+    PieceType mFocus;
 
     Game* mGame;
 };

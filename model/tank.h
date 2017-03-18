@@ -6,6 +6,7 @@
 #include <QPropertyAnimation>
 
 #include "controller/speedcontroller.h"
+#include "controller/pathsearchaction.h"
 #include "view/tankview.h"
 #include "model/piecelistmanager.h"
 
@@ -96,9 +97,9 @@ public slots:
     /**
      * @brief adds the given path to the tank's moves as appropriate
      * @param path The path to add
-     * @param doWakeup wake up movement animation if true
+     * @param action The action which started the search
      */
-    void onPathFound( PieceListManager* path, bool doWakeup );
+    void onPathFound( PieceListManager* path, PathSearchAction* action );
 
 protected:
     /**

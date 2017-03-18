@@ -10,7 +10,7 @@
 
 using namespace std;
 
-BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mFocusType(MOVE), mGame(0)
+BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mFocus(MOVE), mGame(0)
 {
 }
 
@@ -203,7 +203,7 @@ void BoardWindow::render( const QRect* rect, QPainter* painter )
         renderListIn( deltasIterator, deltas->end(), rect, painter );
     }
 
-    if ( mFocusType != TANK ) {
+    if ( mFocus != TANK ) {
         // render the moves beneath (i.e. before) the tank and it's pushes when not focused on
         // the tank:
         renderListIn( moveIterator, moves->end(), rect, painter );
@@ -213,7 +213,7 @@ void BoardWindow::render( const QRect* rect, QPainter* painter )
         mGame->getTankPush().render( rect, painter );
         mGame->getShotPush().render( rect, painter );
         mGame->getTank()->render( rect, painter );
-        if ( mFocusType == TANK ) {
+        if ( mFocus == TANK ) {
             // render the moves ontop of (i.e. after) the tank and it's pushes when focus is at
             // the tank:
             renderListIn( moveIterator, moves->end(), rect, painter );
@@ -317,7 +317,7 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
         mReloadAction.setData( QVariant( board->getLevel()) );
 
         std::shared_ptr<PathSearchAction> actions[2] = { mCaptureAction, mPathToAction };
-        mCaptureAction->setCriteria( board->getFlagCol(), board->getFlagRow(), true );
+        mCaptureAction->setCriteria( mFocus, board->getFlagCol(), board->getFlagRow(), true );
         int nActions;
         if ( col < 0 ) {
             nActions = 1;
@@ -325,7 +325,7 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
         } else {
             nActions = 2;
             mPathToAction->setVisible( true );
-            mPathToAction->setCriteria( col, row, true );
+            mPathToAction->setCriteria( mFocus, col, row, true );
         }
         mGame->getPathFinderController()->testActions( actions, nActions );
 
@@ -378,14 +378,16 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
 
         case Qt::Key_C: // attempt to capture the flag
         {   Board* board = mGame->getBoard();
-            mCaptureAction->setCriteria( board->getFlagCol(), board->getFlagRow(), false );
+            mCaptureAction->setCriteria( mFocus, board->getFlagCol(), board->getFlagRow(), false );
             mGame->getPathFinderController()->doAction( mCaptureAction );
             break;
         }
         default:
-            int rotation = keyToAngle(ev->key());
-            if ( rotation >= 0 ) {
-                mGame->getTank()->move( rotation );
+            if ( !ev->modifiers() ) {
+                int rotation = keyToAngle(ev->key());
+                if ( rotation >= 0 ) {
+                    mGame->getTank()->move( rotation );
+                }
             }
         }
     }
@@ -437,7 +439,7 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
         break;
     }
     case Qt::LeftButton:
-        mPathToAction->setCriteria( event->pos().x()/24, event->pos().y()/24, false );
+        mPathToAction->setCriteria( mFocus, event->pos().x()/24, event->pos().y()/24, false );
         mGame->getPathFinderController()->doAction( mPathToAction );
         break;
     default:
@@ -476,6 +478,6 @@ void BoardWindow::onTankKilled()
 
 void BoardWindow::moveFocus( PieceType what )
 {
-    mFocusType = what;
+    mFocus = what;
     emit focusChanged( what );
 }

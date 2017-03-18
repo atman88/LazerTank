@@ -63,12 +63,19 @@ void PieceListManager::append( PieceType type, int col, int row, int angle, Piec
     appendInternal( new PusherPiece( type, col, row, angle, pushPiece ) );
 }
 
-void PieceListManager::append( Piece* source )
+void PieceListManager::append( const Piece* source )
 {
     if ( source->hasPush() ) {
         appendInternal( new PusherPiece(source) );
     } else {
         appendInternal( new SimplePiece(source) );
+    }
+}
+
+void PieceListManager::append( const PieceList& source )
+{
+    for( auto it : source ) {
+        append( it );
     }
 }
 

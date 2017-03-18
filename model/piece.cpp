@@ -2,7 +2,7 @@
 
 #include "piece.h"
 
-Piece::Piece(Piece *source)
+Piece::Piece( const Piece *source )
 {
     mType  = source->mType;
     mCol   = source->mCol;
@@ -43,6 +43,18 @@ void Piece::setType( PieceType type )
 void Piece::setAngle(int angle)
 {
     mAngle = angle;
+}
+
+PusherPiece::PusherPiece(const Piece *source) : SimplePiece(source)
+{
+    if ( source->hasPush() ) {
+        const PusherPiece* pusherSource = dynamic_cast<const PusherPiece*>(source);
+        mPushPieceType  = pusherSource->mPushPieceType;
+        mPushPieceAngle = pusherSource->mPushPieceAngle;
+    } else {
+        mPushPieceType  = NONE;
+        mPushPieceAngle = 0;
+    }
 }
 
 PieceType PusherPiece::getPushPieceType() const

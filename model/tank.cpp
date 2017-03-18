@@ -3,6 +3,7 @@
 #include <QCoreApplication>
 #include "tank.h"
 #include "controller/game.h"
+#include "controller/pathsearchaction.h"
 #include "util/imageutils.h"
 #include "util/renderutils.h"
 #include "util/gameutils.h"
@@ -185,11 +186,17 @@ void Tank::setFocus( PieceType what )
     }
 }
 
-void Tank::onPathFound( PieceListManager* path, bool doWakeup )
+void Tank::onPathFound( PieceListManager* path, PathSearchAction* action )
 {
-    mMoves.reset( path );
+    if ( action->getFocus() == TANK ) {
+        mMoves.reset( path );
+    } else {
+        mMoves.replaceBack( MOVE );
+        mMoves.append( *path->getList() );
+    }
     mMoves.replaceBack( MOVE_HIGHLIGHT );
-    if ( doWakeup ) {
+
+    if ( action->getMoveWhenFound() ) {
         wakeup();
     }
 }
