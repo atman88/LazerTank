@@ -45,18 +45,8 @@ void PathFinderController::testActions( std::shared_ptr<PathSearchAction> action
     testNextAction();
 }
 
-void printCriteria( PathSearchCriteria criteria )
-{
-    std::cout << "(" << criteria.getStartCol() << "," << criteria.getStartRow() << ")/" << criteria.getStartDirection()
-              << " (" << criteria.getTargetCol() << "," << criteria.getTargetRow()
-              << ((criteria.getFocus()==TANK) ? ") TANK " : ") MOVE ") << criteria.getMoveWhenFound()  << std::endl;
-}
-
 void PathFinderController::onResult( bool ok, PathSearchCriteria criteria )
 {
-    std::cout << "result: "; printCriteria( criteria );
-    std::cout << "action: "; printCriteria( *mCurAction->getCriteria() );
-
     // filter any stale results
     if ( criteria == *mCurAction->getCriteria() ) {
         mCurAction->setEnabled( ok );

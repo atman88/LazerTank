@@ -40,12 +40,12 @@ void Piece::setType( PieceType type )
     mType = type;
 }
 
-void Piece::setAngle(int angle)
+void Piece::setAngle( int angle )
 {
     mAngle = angle;
 }
 
-PusherPiece::PusherPiece(const Piece *source) : SimplePiece(source)
+PusherPiece::PusherPiece( const Piece* source ) : SimplePiece(source)
 {
     if ( source->hasPush() ) {
         const PusherPiece* pusherSource = dynamic_cast<const PusherPiece*>(source);

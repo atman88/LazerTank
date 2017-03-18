@@ -145,7 +145,7 @@ void PathFinder::run()
     case 0:
         if ( Game* game = getGame(this) ) {
             // initialize the search map
-            if ( game->canPlaceAtNonFuturistic( TANK, mRunCriteria.getTargetCol(), mRunCriteria.getTargetRow(), 0 )) {
+            if ( game->canPlaceAt( TANK, mRunCriteria.getTargetCol(), mRunCriteria.getTargetRow(), 0, mRunCriteria.getFocus() != TANK )) {
                 Board* board = game->getBoard();
                 mMaxCol = board->getWidth()-1;
                 mMaxRow = board->getHeight()-1;
@@ -153,7 +153,7 @@ void PathFinder::run()
                 for( int row = mMaxRow; !mStopping && row >= 0; --row ) {
                     for( int col = mMaxCol; !mStopping && col >= 0; --col ) {
                         mSearchMap[row*BOARD_MAX_WIDTH+col] =
-                          game->canPlaceAtNonFuturistic( TANK, col, row, 0 ) ? TRAVERSIBLE : BLOCKED;
+                          game->canPlaceAt( TANK, col, row, 0, mRunCriteria.getFocus() != TANK ) ? TRAVERSIBLE : BLOCKED;
                     }
                 }
 

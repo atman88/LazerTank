@@ -32,7 +32,7 @@ public:
     /**
      * @brief Get the current board
      */
-    Board* getBoard();
+    Board* getBoard( bool futuristic = false );
 
     /**
      * @brief Get this game's main window
@@ -89,7 +89,7 @@ public:
      * @param pushPiece if non-null, returns a reference to any piece that this move would push
      * @return true if the move is allowed, otherwise false
      */
-    bool canMoveFrom( PieceType what, int angle, int *col, int *row, bool futuristic, Piece** pushPiece = 0 );
+    bool canMoveFrom( PieceType what, int angle, int *col, int *row, bool futuristic, Piece **pushPiece = 0 );
 
     /**
      * @brief Determines the outcome of a laser shot through the given square
@@ -109,9 +109,10 @@ public:
      * @param row The row of the square to consider
      * @param fromAngle The entry direction
      * @param pushPiece if non-null, returns a reference to any piece that this placement would result in pushing
+     * @param futuristic If true, all outstanding moves are considered, otherwise only the current board state is considered
      * @return true if the placement is a legal move
      */
-    bool canPlaceAtNonFuturistic( PieceType what, int col, int row, int fromAngle, Piece** pushPiece = 0 );
+    bool canPlaceAt( PieceType what, int col, int row, int fromAngle, bool futuristic = false, Piece **pushPiece = 0 );
 
     /**
      * @brief Records a push of piece that will be pushed as a result of some future change
@@ -211,7 +212,7 @@ private:
      * @param pushPiece if non-null, returns a reference to any piece that that this placement would result in pushing
      * @return true if the entry is legal
      */
-    bool canPlaceAt( PieceType what, int col, int row, int fromAngle, Board* board, Piece** pushPiece = 0 );
+    bool canPlaceAt( PieceType what, int col, int row, int fromAngle, Board* board, Piece **pushPiece = 0 );
 
     SpeedController mSpeedController;
     AnimationStateAggregator mMoveAggregate;

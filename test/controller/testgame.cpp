@@ -29,11 +29,11 @@ void TestMain::testMove()
     QCOMPARE( (*tiles->begin())->encodedPos(), Piece::encodePos(1,2));
 
     // check off-board values;
-    QCOMPARE( game.canPlaceAtNonFuturistic(TANK,-1, 0,270), false );
-    QCOMPARE( game.canPlaceAtNonFuturistic(TANK, 0,-1,  0), false );
+    QCOMPARE( game.canPlaceAt(TANK,-1, 0,270), false );
+    QCOMPARE( game.canPlaceAt(TANK, 0,-1,  0), false );
 
     cout << "tank " << board->getTankStartCol() << "," << board->getTankStartRow() << endl;
-    QCOMPARE( game.canPlaceAtNonFuturistic(TANK,board->getTankStartCol(),board->getTankStartRow(),0), true );
+    QCOMPARE( game.canPlaceAt(TANK,board->getTankStartCol(),board->getTankStartRow(),0), true );
 }
 
 void testCannonAt( int tankCol, int tankRow, Game* game )

@@ -85,8 +85,11 @@ GameHandle Game::getHandle()
     return mHandle;
 }
 
-Board* Game::getBoard()
+Board* Game::getBoard( bool futuristic )
 {
+    if ( futuristic && mFutureDelta.enabled() ) {
+        return mFutureDelta.getFutureBoard();
+    }
     return &mBoard;
 }
 
@@ -105,22 +108,18 @@ Push& Game::getShotPush()
     return mShotPush;
 }
 
-bool Game::canMoveFrom( PieceType what, int angle, int *col, int *row, Board* board, Piece** pushPiece ) {
+bool Game::canMoveFrom( PieceType what, int angle, int *col, int *row, Board* board, Piece **pushPiece ) {
     return getAdjacentPosition(angle, col, row) && canPlaceAt( what, *col, *row, angle, board, pushPiece );
 }
 
-bool Game::canMoveFrom( PieceType what, int angle, int *col, int *row, bool futuristic, Piece** pushPiece ) {
+bool Game::canMoveFrom( PieceType what, int angle, int *col, int *row, bool futuristic, Piece **pushPiece )
+{
+    if ( what != TANK && *col == mTank.getCol() && *row == mTank.getRow() ) {
+        return false;
+    }
+
     if ( getAdjacentPosition(angle, col, row) ) {
-        Board* board;
-        if ( futuristic && mFutureDelta.enabled() ) {
-            board = mFutureDelta.getFutureBoard();
-        } else {
-            if ( what != TANK && *col == mTank.getCol() && *row == mTank.getRow() ) {
-                return false;
-            }
-            board = &mBoard;
-        }
-        return canPlaceAt( what, *col, *row, angle, board, pushPiece );
+        return canPlaceAt( what, *col, *row, angle, getBoard(futuristic), pushPiece );
     }
     return false;
 }
@@ -238,12 +237,12 @@ void Game::onBoardTileChanged( int col, int row )
     }
 }
 
-bool Game::canPlaceAtNonFuturistic(PieceType what, int col, int row, int fromAngle, Piece** pushPiece )
+bool Game::canPlaceAt(PieceType what, int col, int row, int fromAngle, bool futuristic, Piece **pushPiece )
 {
-    return canPlaceAt( what, col, row, fromAngle, &mBoard, pushPiece );
+    return canPlaceAt( what, col, row, fromAngle, getBoard(futuristic), pushPiece );
 }
 
-bool Game::canPlaceAt(PieceType what, int col, int row, int fromAngle, Board* board, Piece** pushPiece )
+bool Game::canPlaceAt(PieceType what, int col, int row, int fromAngle, Board* board, Piece **pushPiece )
 {
     switch( board->tileAt(col,row) ) {
     case DIRT:
