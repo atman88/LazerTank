@@ -22,8 +22,10 @@ public:
     /**
      * @brief Perform a search
      * @param action A search term container shared between the path finder and the ui
+     * @param testOnly if true, the action is merely tested, otherwise the action is
+     * performed and if successful, notifies the result via the pathFound signal.
      */
-    void doAction( std::shared_ptr<PathSearchAction> action );
+    void doAction( std::shared_ptr<PathSearchAction> action, bool testOnly = false );
 
     /**
      * @brief test multiple actions.
@@ -38,35 +40,23 @@ signals:
      * @brief Notification of an action result
      * @param path
      */
-    void pathFound( PieceListManager* path );
+    void pathFound( PieceListManager* path, bool wakeup );
 
-public slots:
+protected slots:
     /**
      * @brief Slots interfacing this controller with its underlying path finder
      */
-    void onResult( bool succeeded, int targetCol, int targetRow, int startingCol, int startingRow, int targetRotation );
-    void onPath( int targetCol, int targetRow, int startCol, int startRow, int targetRotation, PieceListManager* path );
+    void onResult( bool succeeded, PathSearchCriteria criteria );
+    void onPath( PathSearchCriteria criteria, PieceListManager* path );
 
 private:
-    /**
-     * @brief Helper method to perform either an action or a test
-     * @param action
-     * @param testOnly true if the action should simply be tested, otherwise the action is performed
-     */
-    void doAction( std::shared_ptr<PathSearchAction> action, bool testOnly );
-
     /**
      * @brief test the next pending action if any
      */
     void testNextAction();
 
     PathFinder mPathFinder;
-    bool mTestOnly;
-    bool mMoveWhenFound;
-
-    int mTargetCol, mTargetRow;
-    int mStartCol, mStartRow, mStartDirection;
-
+    std::shared_ptr<PathSearchAction> mCurAction;
     std::list<std::shared_ptr<PathSearchAction>> mTestActions;
 };
 

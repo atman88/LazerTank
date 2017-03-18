@@ -30,7 +30,8 @@ HEADERS += \
     util/gameutils.h \
     view/tankview.h \
     controller/pathsearchaction.h \
-    controller/pathfindercontroller.h
+    controller/pathfindercontroller.h \
+    controller/pathsearchcriteria.h
 
 SOURCES += \
            model/board.cpp \
@@ -53,7 +54,8 @@ SOURCES += \
     util/gameutils.cpp \
     view/tankview.cpp \
     controller/pathsearchaction.cpp \
-    controller/pathfindercontroller.cpp
+    controller/pathfindercontroller.cpp \
+    controller/pathsearchcriteria.cpp
 
 RESOURCES += qml.qrc
 

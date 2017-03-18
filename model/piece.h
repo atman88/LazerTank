@@ -34,7 +34,7 @@ public:
     /**
      * @brief Copy constructor
      */
-    Piece( Piece* source );
+    Piece( const Piece* source );
 
     virtual ~Piece()
     {
@@ -109,7 +109,7 @@ public:
     SimplePiece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 ) : Piece(type,col,row,angle)
     {
     }
-    SimplePiece( Piece* source ) : Piece(source)
+    SimplePiece( const Piece* source ) : Piece(source)
     {
     }
 
@@ -132,11 +132,7 @@ public:
     {
     }
 
-    PusherPiece( Piece* source ) : SimplePiece(source),
-      mPushPieceType( source->hasPush() ? dynamic_cast<PusherPiece*>(source)->mPushPieceType  : NONE),
-      mPushPieceAngle(source->hasPush() ? dynamic_cast<PusherPiece*>(source)->mPushPieceAngle : 0)
-    {
-    }
+    PusherPiece( const Piece* source );
 
     bool hasPush() const override
     {

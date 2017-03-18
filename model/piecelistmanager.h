@@ -41,9 +41,15 @@ public:
 
     /**
      * @brief Adds a copy of the given piece to the end of this list
-     * @param source
+     * @param source The piece to append
      */
-    void append(Piece* source );
+    void append( const Piece* source );
+
+    /**
+     * @brief Copy elements from source into the end of this list
+     * @param source The pieces to append
+     */
+    void append( const PieceList& source );
 
     /**
      * @brief removes the first element

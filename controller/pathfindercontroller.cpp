@@ -3,7 +3,7 @@
 #include "pathfinder.h"
 #include "pathsearchaction.h"
 #include "game.h"
-#include "model/tank.h"
+
 
 PathFinderController::PathFinderController(QObject *parent) : QObject(parent)
 {
@@ -13,36 +13,23 @@ void PathFinderController::init( Game* game )
 {
     setParent( game );
     mPathFinder.setParent(this);
-    QObject::connect( &mPathFinder, &PathFinder::testResult, this, &PathFinderController::onResult );
-    QObject::connect( &mPathFinder, &PathFinder::pathFound,  this, &PathFinderController::onPath   );
+    qRegisterMetaType<PathSearchCriteria>("PathSearchCriteria");
+    QObject::connect( &mPathFinder, &PathFinder::testResult, this, &PathFinderController::onResult, Qt::QueuedConnection );
+    QObject::connect( &mPathFinder, &PathFinder::pathFound,  this, &PathFinderController::onPath,   Qt::QueuedConnection );
 }
 
 void PathFinderController::doAction( std::shared_ptr<PathSearchAction> action, bool testOnly )
 {
-    Game* game = getGame(this);
-    if ( game ) {
-        Tank* tank = game->getTank();
-        mStartCol = tank->getCol();
-        mStartRow = tank->getRow();
-        mStartDirection = tank->getRotation();
-
-        mTargetCol = action->getTargetCol();
-        mTargetRow = action->getTargetRow();
-        mMoveWhenFound = action->getMoveWhenFound();
-
-        mPathFinder.findPath( mTargetCol, mTargetRow, mStartCol, mStartRow, mStartDirection, testOnly );
-    }
-}
-
-void PathFinderController::doAction( std::shared_ptr<PathSearchAction> action )
-{
-    doAction( action, false );
+    mCurAction = action;
+    mPathFinder.findPath( action->getCriteria(), testOnly );
 }
 
 void PathFinderController::testNextAction()
 {
     if ( mTestActions.size() > 0 ) {
-        doAction( mTestActions.front(), true );
+        mCurAction = mTestActions.front();
+        mTestActions.pop_front();
+        doAction( mCurAction, true );
     }
 }
 
@@ -58,34 +45,37 @@ void PathFinderController::testActions( std::shared_ptr<PathSearchAction> action
     testNextAction();
 }
 
-void PathFinderController::onResult( bool ok, int targetCol, int targetRow, int startCol, int startRow, int startDirection )
+void printCriteria( PathSearchCriteria criteria )
 {
-    if ( targetCol == mTargetCol && targetRow == mTargetRow
-      && startCol  == mStartCol  && startRow  == mStartRow && startDirection == mStartDirection
-      && mTestActions.size() > 0 ) {
-        mTestActions.front()->setEnabled( ok );
-        mTestActions.pop_front();
-        testNextAction();
-    }
+    std::cout << "(" << criteria.getStartCol() << "," << criteria.getStartRow() << ")/" << criteria.getStartDirection()
+              << " (" << criteria.getTargetCol() << "," << criteria.getTargetRow()
+              << ((criteria.getFocus()==TANK) ? ") TANK " : ") MOVE ") << criteria.getMoveWhenFound()  << std::endl;
 }
 
-void PathFinderController::onPath( int targetCol, int targetRow, int startCol, int startRow, int targetRotation,
-             PieceListManager* path )
+void PathFinderController::onResult( bool ok, PathSearchCriteria criteria )
 {
-    Game* game = getGame(this);
+    std::cout << "result: "; printCriteria( criteria );
+    std::cout << "action: "; printCriteria( *mCurAction->getCriteria() );
 
-    if ( game ) {
-        Tank* tank = game->getTank();
+    // filter any stale results
+    if ( criteria == *mCurAction->getCriteria() ) {
+        mCurAction->setEnabled( ok );
 
-        // vet the original criteria to guard against a stale result
-        if ( targetCol == mTargetCol && targetRow == mTargetRow
-          && startCol == tank->getCol() && startRow == tank->getRow() && targetRotation == tank->getRotation() ) {
-            emit pathFound( path );
+        // only test next if this result is unchanged given any remaining ones won't be valid if this one isn't
+        testNextAction();
+    }
+            emit pathFound( path, mMoveWhenFound );
 
             tank->getMoves()->reset( path );
             if ( mMoveWhenFound ) {
                 tank->wakeup();
             }
-        }
+}
+
+void PathFinderController::onPath( PathSearchCriteria criteria, PieceListManager* path )
+{
+    // filter any stale results
+    if ( criteria == *mCurAction->getCriteria() ) {
+        emit pathFound( path, &(*mCurAction) );
     }
 }

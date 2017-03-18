@@ -1,13 +1,16 @@
 #ifndef PATHFINDER_H
 #define PATHFINDER_H
 
+#include <memory>
+#include <csetjmp>
+#include <QThread>
+
 class Game;
 class PathFinder;
 
-#include <csetjmp>
-#include <QThread>
 #include "model/board.h"
 #include "model/piecelistmanager.h"
+#include "pathsearchcriteria.h"
 
 // The maximum number of points to track for a given search pass. (A pass can consider nearly two rows worth)
 #define MAX_POINTS (((BOARD_MAX_HEIGHT>BOARD_MAX_WIDTH) ? BOARD_MAX_HEIGHT : BOARD_MAX_WIDTH) * 2)
@@ -24,40 +27,28 @@ public:
 
     /**
      * @brief Initiate a path search. If found, the resulting path is posted via the pathFound signal.
-     * @param targetCol The row of the destination square
-     * @param targetRow The column of the destination square
-     * @param startCol The row of the starting square
-     * @param startRow The column of the starting square
-     * @param startRotation The starting direction of the search
+     * @param action The search criteria
      * @param testOnly If true, only the pathTestResult signal is raised as a result otherwise a pathFound signal
      * is raised if (and only if) the path is successful
      */
-    void findPath(int targetCol, int targetRow, int startCol, int startRow, int startRotation, bool testOnly );
+    void findPath( PathSearchCriteria* criteria, bool testOnly );
 
     void run() override;
 
 signals:
     /**
      * @brief Notification of successful computed path results
-     * @param targetCol the target column used in the search
-     * @param targetRow the target row used for the search
-     * @param startCol the starting column used for the search
-     * @param startRow the starting row used for the search
-     * @param startRotation the starting direction angle used for the search
-     * @param path The result of the find
+     * @param criteria The search parameters used for the search
+     * @param path The result of the search
      */
-    void pathFound( int targetCol, int targetRow, int startCol, int startRow, int startRotation, PieceListManager* path );
+    void pathFound( PathSearchCriteria criteria, PieceListManager* path );
 
     /**
      * @brief Notification of a test result
      * @param reachable true if a path between the two points is possible, otherwise false
-     * @param targetCol the target column used in the test
-     * @param targetRow the target row used for the test
-     * @param startCol the starting column used for the test
-     * @param startRow the starting row used for the test
-     * @param startRotation the starting direction angle used for the test
+     * @param criteria The search parameters that were tested
      */
-    void testResult( bool reachable, int targetCol, int targetRow, int startCol, int startRow, int startRotation );
+    void testResult( bool reachable, PathSearchCriteria criteria );
 
 private:
     void tryAt(int col, int row);
@@ -65,8 +56,8 @@ private:
     int pass2( int nPoints );
     void buildPath( int col, int row );
 
-    int mTargetCol, mTargetRow;
-    int mStartCol, mStartRow, mStartRotation;
+    PathSearchCriteria mCriteria;
+    PathSearchCriteria mRunCriteria; // copy used by the background which won't be impacted by a parallel call to findPath
     bool mStopping;
     char mSearchMap[BOARD_MAX_HEIGHT*BOARD_MAX_WIDTH];
     int mMaxCol;

@@ -6,6 +6,7 @@
 #include <QPropertyAnimation>
 
 #include "controller/speedcontroller.h"
+#include "controller/pathsearchaction.h"
 #include "view/tankview.h"
 #include "model/piecelistmanager.h"
 
@@ -82,6 +83,8 @@ public slots:
      */
     void onAnimationsFinished();
 
+     * @param doWakeup wake up movement animation if true
+    void onPathFound( PieceListManager* path, bool doWakeup );
 protected:
     /**
      * @brief internal move notification from the underlying view

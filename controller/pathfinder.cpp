@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include <QVariant>
 
 #include "util/gameutils.h"
@@ -15,15 +14,11 @@ PathFinder::PathFinder(QObject *parent) : QThread(parent)
 {
 }
 
-void PathFinder::findPath(int targetCol, int targetRow, int startCol, int startRow, int startRotation, bool testOnly )
+void PathFinder::findPath( PathSearchCriteria* criteria, bool testOnly )
 {
     mStopping = true;
 
-    mTargetCol = targetCol;
-    mTargetRow = targetRow;
-    mStartCol = startCol;
-    mStartRow = startRow;
-    mStartRotation = startRotation;
+    mCriteria = *criteria;
     mTestOnly = testOnly;
     start( LowPriority );
 }
@@ -52,7 +47,7 @@ void PathFinder::buildPath( int col, int row )
 {
     int direction = 0;
 
-    while( row != mTargetRow || col != mTargetCol ) {
+    while( col != mRunCriteria.getTargetCol() || row != mRunCriteria.getTargetRow() ) {
         int lastCol = col;
         int lastRow = row;
 
@@ -67,7 +62,9 @@ void PathFinder::buildPath( int col, int row )
             break;
         }
 
-        if ( lastCol != mStartCol || lastRow != mStartRow || direction != mStartRotation ) {
+        if ( lastCol   != mRunCriteria.getStartCol()
+          || lastRow   != mRunCriteria.getStartRow()
+          || direction != mRunCriteria.getStartDirection() ) {
             mMoves.append( MOVE, lastCol, lastRow, direction );
         }
     }
@@ -138,40 +135,39 @@ int PathFinder::pass2( int nPoints )
 void PathFinder::run()
 {
     mStopping = false;
-    Game* game = getGame(this);
 
-    int startCol = mStartCol;
-    int startRow = mStartRow;
-    int startRotation = mStartRotation;
-    int targetCol = mTargetCol;
-    int targetRow = mTargetRow;
+    // copy the action for background thread use:
+    mRunCriteria = mCriteria;
 
     mMoves.reset();
     bool found = false;
     switch( setjmp( mJmpBuf ) ) {
     case 0:
-        // initialize the search map
-        if ( game && game->canPlaceAtNonFuturistic( TANK, mTargetCol, mTargetRow, 0 )) {
-            Board* board = game->getBoard();
-            mMaxCol  = board->getWidth()-1;
-            mMaxRow = board->getHeight()-1;
+        if ( Game* game = getGame(this) ) {
+            // initialize the search map
+            if ( game->canPlaceAtNonFuturistic( TANK, mRunCriteria.getTargetCol(), mRunCriteria.getTargetRow(), 0 )) {
+                Board* board = game->getBoard();
+                mMaxCol = board->getWidth()-1;
+                mMaxRow = board->getHeight()-1;
 
-            for( int row = mMaxRow; !mStopping && row >= 0; --row ) {
-                for( int col = mMaxCol; !mStopping && col >= 0; --col ) {
-                    mSearchMap[row*BOARD_MAX_WIDTH+col] = game->canPlaceAtNonFuturistic( TANK, col, row, 0 ) ? TRAVERSIBLE : BLOCKED;
+                for( int row = mMaxRow; !mStopping && row >= 0; --row ) {
+                    for( int col = mMaxCol; !mStopping && col >= 0; --col ) {
+                        mSearchMap[row*BOARD_MAX_WIDTH+col] =
+                          game->canPlaceAtNonFuturistic( TANK, col, row, 0 ) ? TRAVERSIBLE : BLOCKED;
+                    }
                 }
-            }
 
-            mSearchMap[mStartRow*BOARD_MAX_WIDTH+mStartCol] = TARGET;
-            mPassValue = 0;
-            mSearchMap[mTargetRow*BOARD_MAX_WIDTH+mTargetCol] = mPassValue;
+                mSearchMap[mRunCriteria.getStartRow()*BOARD_MAX_WIDTH+mRunCriteria.getStartCol()] = TARGET;
+                mPassValue = 0;
+                mSearchMap[mRunCriteria.getTargetRow()*BOARD_MAX_WIDTH+mRunCriteria.getTargetCol()] = mPassValue;
 
-            mSearchCol[0] = targetCol;
-            mSearchRow[0] = targetRow;
-            int nPoints = 1;
-            while( nPoints > 0 && !mStopping ) {
-                nPoints = pass1( nPoints );
-                nPoints = pass2( nPoints );
+                mSearchCol[0] = mRunCriteria.getTargetCol();
+                mSearchRow[0] = mRunCriteria.getTargetRow();
+                int nPoints = 1;
+                while( nPoints > 0 && !mStopping ) {
+                    nPoints = pass1( nPoints );
+                    nPoints = pass2( nPoints );
+                }
             }
         }
         break;
@@ -181,8 +177,8 @@ void PathFinder::run()
     }
 
     if ( mTestOnly ) {
-        emit testResult( found, targetCol, targetRow, startCol, startRow, startRotation );
+        emit testResult( found, mRunCriteria );
     } else if ( found && mMoves.size() > 0 ) {
-        emit pathFound( targetCol, targetRow, startCol, startRow, startRotation, &mMoves );
+        emit pathFound( mRunCriteria, &mMoves );
     }
 }

@@ -5,10 +5,12 @@
 #include <QAction>
 #include <QObject>
 
+#include "pathsearchcriteria.h"
+
 /**
  * @brief A path search term container object
  */
-class PathSearchAction : public QAction
+class PathSearchAction : public QAction, public PathSearchCriteria
 {
     Q_OBJECT
 public:
@@ -21,19 +23,9 @@ public:
      * @param targetRow
      * @param moveWhenFound
      */
-    void setCriteria( int targetCol, int targetRow, bool moveWhenFound );
+    void setCriteria( PieceType focus, int targetCol, int targetRow, bool moveWhenFound );
 
-    /**
-     * @brief Getter methods
-     */
-    int getTargetCol() const;
-    int getTargetRow() const;
-    bool getMoveWhenFound() const;
-
-private:
-    int mTargetCol;
-    int mTargetRow;
-    bool mMoveWhenFound;
+    PathSearchCriteria* getCriteria();
 };
 
 #endif // PATHSEARCHACTION_H
