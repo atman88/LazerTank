@@ -116,12 +116,8 @@ void BoardWindow::renderSquareLater( int col, int row )
 
 void BoardWindow::renderListIn(PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter )
 {
-    QRect bounds;
     while( iterator != end ) {
-        (*iterator)->getBounds( &bounds );
-        if ( dirty->intersects( bounds ) ) {
-            renderPiece( (*iterator)->getType(), bounds.left(), bounds.top(), (*iterator)->getAngle(), painter );
-        } else if ( bounds.top() >= dirty->bottom() ) {
+        if ( !(*iterator)->render( dirty, painter ) ) {
             break;
         }
         ++iterator;

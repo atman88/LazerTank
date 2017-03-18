@@ -88,6 +88,11 @@ public:
     bool replaceBack( PieceType type, int newAngle = -1 );
 
     /**
+     * @brief Increment the count of future shots for the last move point
+     */
+    bool incrementShotsBack();
+
+    /**
      * @brief Query the number of pieces in the list
      * @return the number of pieces
      */
@@ -111,7 +116,7 @@ signals:
      * @param col The column of the modified piece
      * @param row The row of the modified piece
      */
-    void replaced( int col, int row );
+    void changed( int col, int row );
 
 public slots:
     /**

@@ -5,37 +5,27 @@
 #include <list>
 #include <set>
 
-#define PIECE_MAX_ROWCOUNT 256
+#include "pieceview.h"
 
-typedef enum {
-    NONE,
-    TANK,
-    MOVE,
-    MOVE_HIGHLIGHT,
-    TILE,
-    TILE_MIRROR,
-    CANNON,
-    TILE_FUTURE_ERASE,
-    TILE_FUTURE_INSERT,
-    DAMAGE,
-    PieceTypeUpperBound   // must be last
-} PieceType;
+#define PIECE_MAX_ROWCOUNT 256
 
 /**
  * @brief The Piece interface
  * This is an abstract class so that peices can vary in make up.
  */
-class Piece
+class Piece : public PieceView
 {
 public:
-    Piece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 ) : mType(type), mCol(col), mRow(row), mAngle(angle)
+    Piece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 ) : PieceView(type,col,row,angle)
     {
     }
 
     /**
      * @brief Copy constructor
      */
-    Piece( const Piece* source );
+    Piece( const Piece* source ) : PieceView(source)
+    {
+    }
 
     virtual ~Piece()
     {
@@ -51,27 +41,6 @@ public:
     {
         return row * PIECE_MAX_ROWCOUNT + col;
     }
-
-    PieceType getType() const;
-    void setType( PieceType type );
-    int getCol() const;
-    int getRow() const;
-
-    /**
-     * @brief Gets the current rotation of this peice
-     */
-    int getAngle() const;
-
-    /**
-     * @brief Changes the current rotation for this piece
-     */
-    void setAngle( int angle );
-
-    /**
-     * @brief Gets the rectangular screen area currently occupied by this piece
-     * @param rect The rect to return the result in
-     */
-    void getBounds( QRect *rect ) const;
 
     /**
      * @brief Query if this piece is associated with a push operation
@@ -91,12 +60,6 @@ public:
     {
         return l.encodedPos() < r.encodedPos();
     }
-
-private:
-    PieceType mType;
-    int mCol;
-    int mRow;
-    int mAngle;
 
     friend class PusherPiece;
 };

@@ -146,7 +146,7 @@ void PieceListManager::replaceInternal( Piece* piece, PieceType type, int newAng
     if ( newAngle >= 0 ) {
         piece->setAngle( newAngle );
     }
-    emit replaced( piece->getCol(), piece->getRow() );
+    emit changed( piece->getCol(), piece->getRow() );
 }
 
 bool PieceListManager::replaceFront( PieceType type, int newAngle )
@@ -162,6 +162,16 @@ bool PieceListManager::replaceBack(PieceType type, int newAngle )
 {
     if ( !mPieces.empty() ) {
         replaceInternal( mPieces.back(), type, newAngle );
+        return true;
+    }
+    return false;
+}
+
+bool PieceListManager::incrementShotsBack()
+{
+    if ( Piece* piece = mPieces.back() ) {
+        piece->incrementShots();
+        emit changed( piece->getCol(), piece->getRow() );
         return true;
     }
     return false;

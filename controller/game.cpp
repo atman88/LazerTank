@@ -38,7 +38,7 @@ void Game::init( BoardWindow* window )
         PieceListManager* moveManager = mTank.getMoves();
         QObject::connect( moveManager, &PieceListManager::appended, window, &BoardWindow::renderSquareLater );
         QObject::connect( moveManager, &PieceListManager::erased,   window, &BoardWindow::renderSquareLater );
-        QObject::connect( moveManager, &PieceListManager::replaced, window, &BoardWindow::renderSquareLater );
+        QObject::connect( moveManager, &PieceListManager::changed, window, &BoardWindow::renderSquareLater );
 
         QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::erasedAt,   window, &BoardWindow::renderSquareLater );
         QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::insertedAt, window, &BoardWindow::renderSquareLater );

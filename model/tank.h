@@ -33,6 +33,11 @@ public:
     void move( int direction );
 
     /**
+     * @brief Fire the tank's laser
+     */
+    void fire();
+
+    /**
      * @brief Get the column the tank currently resides on.
      * In the case where the tank is moving to a new column, this is the column it is moving away from.
      */

@@ -38,6 +38,15 @@ void Tank::reset( int col, int row )
     TankView::reset( p );
 }
 
+void Tank::fire()
+{
+    if ( !mMoves.size() ) {
+        Shooter::fire();
+    } else {
+        mMoves.incrementShotsBack();
+    }
+}
+
 void Tank::clearMoves()
 {
     mMoves.reset();
