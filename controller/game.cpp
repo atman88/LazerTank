@@ -25,6 +25,7 @@ void Game::init( BoardWindow* window )
     if ( window ) {
         window->init( this );
 
+        QObject::connect( window, &BoardWindow::focusChanged, &mTank, &Tank::setFocus );
         QObject::connect( &mTankPush, &Push::rectDirty, window, &BoardWindow::renderLater );
         QObject::connect( &mShotPush, &Push::rectDirty, window, &BoardWindow::renderLater );
 
