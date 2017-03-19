@@ -40,18 +40,23 @@ void PieceView::setAngle( int angle )
     mAngle = angle;
 }
 
+int PieceView::getShotCount() const
+{
+    return mShotCount;
+}
+
 int PieceView::incrementShots()
 {
     return ++mShotCount;
 }
 
-bool PieceView::decrementShots()
+int PieceView::decrementShots()
 {
     if ( --mShotCount < 0 ) {
         mShotCount = 0;
-        return false;
+        return -1;
     }
-    return true;
+    return mShotCount;
 }
 
 void PieceView::getBounds( QRect *rect ) const

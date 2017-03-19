@@ -62,6 +62,12 @@ public:
     void setAngle( int angle );
 
     /**
+     * @brief Get the number of shots for this move
+     * @return The number of shots
+     */
+    int getShotCount() const;
+
+    /**
      * @brief Increment the count of future shots for this move point
      * @return The number of shots
      */
@@ -69,9 +75,9 @@ public:
 
     /**
      * @brief Decrement the count of future shots for this move point
-     * @return
+     * @return The resultant shot count or -1 if the shot count was already 0
      */
-    bool decrementShots();
+    int decrementShots();
 
 protected:
     PieceType mType;

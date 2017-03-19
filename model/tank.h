@@ -121,6 +121,8 @@ private:
      */
     void doMove( int col, int row, int direction );
 
+    void resumeMove();
+
     /**
      * @brief helper method to add a move to the list of moves that is highlight-aware
      * @param col The column of the new move to append
@@ -134,6 +136,7 @@ private:
     int mRow;
     int mRotation;
     PieceListManager mMoves;
+    bool mBusyFiring;
 };
 
 #endif // TANK_H

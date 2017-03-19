@@ -8,7 +8,7 @@
 #include "util/renderutils.h"
 #include "util/gameutils.h"
 
-Tank::Tank(QObject* parent) : TankView(parent), mCol(0), mRow(0)
+Tank::Tank(QObject* parent) : TankView(parent), mCol(0), mRow(0), mBusyFiring(false)
 {
 }
 
@@ -34,6 +34,8 @@ void Tank::reset( int col, int row )
     mRow = row;
     mRotation = 0;
     mMoves.reset();
+    mBusyFiring = false;
+    QObject::disconnect( getGame(this)->getShotAggregate(), &AnimationStateAggregator::finished, this, &Tank::resumeMove );
     QPoint p( col*24, row*24 );
     TankView::reset( p );
 }
@@ -86,7 +88,7 @@ void Tank::move( int direction )
             }
 
             Piece* move = mMoves.getList()->back();
-            if ( move->hasPush() ) {
+            if ( move->hasPush() || move->getShotCount() ) {
                 appendMove( move->getCol(), move->getRow(), direction );
             } else {
                 mMoves.replaceBack( MOVE_HIGHLIGHT, direction );
@@ -118,7 +120,7 @@ void Tank::move( int direction )
     }
 
     // wake it up if not active
-    if ( mMoves.size() && !game->getMoveAggregate()->active() ) {
+    if ( mMoves.size() && !game->getMoveAggregate()->active() && !mBusyFiring ) {
         Piece* move = mMoves.getList()->front();
         doMove( move->getCol(), move->getRow(), move->getAngle() );
         if ( move->hasPush() ) {
@@ -157,11 +159,8 @@ int Tank::getCol() const
 
 void Tank::onAnimationsFinished()
 {
-    if ( mMoves.size() ) {
-        Piece* piece = mMoves.getList()->front();
-        if ( piece->getAngle() == mRotation && piece->getCol() == mCol && piece->getRow() == mRow ) {
-            mMoves.eraseFront();
-        }
+    if ( mMoves.size() && !mBusyFiring ) {
+        resumeMove();
     }
 }
 
@@ -170,9 +169,27 @@ void Tank::onMoved(int col, int row, int rotation)
     mCol = col;
     mRow = row;
     mRotation = rotation;
+    resumeMove();
+}
+
+void Tank::resumeMove()
+{
     Piece* move = mMoves.getList()->front();
-    if ( move && col == move->getCol() && row == move->getRow() && rotation == move->getAngle() ) {
-        mMoves.eraseFront();
+    if ( move && mCol == move->getCol() && mRow == move->getRow() && mRotation == move->getAngle() ) {
+        int shotCount = move->decrementShots();
+        if ( shotCount >= 0 ) {
+            Shooter::fire();
+            if ( shotCount > 0 && !mBusyFiring ) {
+                mBusyFiring = true;
+                QObject::connect( getGame(this)->getShotAggregate(), &AnimationStateAggregator::finished, this, &Tank::resumeMove );
+            }
+        }
+        if ( shotCount <= 0 ) {
+            mMoves.eraseFront();
+            QObject::disconnect( getGame(this)->getShotAggregate(), &AnimationStateAggregator::finished, this, &Tank::resumeMove );
+            mBusyFiring = false;
+            wakeup();
+        }
     }
 }
 
