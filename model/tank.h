@@ -107,6 +107,11 @@ public slots:
      */
     void onPathFound( PieceListManager* path, PathSearchAction* action );
 
+    /**
+     * @brief Continue execution of the current move as appropriate
+     */
+    void resumeMove();
+
 protected:
     /**
      * @brief internal move notification from the underlying view
@@ -122,8 +127,6 @@ private:
      */
     void doMove( int col, int row, int direction );
 
-    void resumeMove();
-
     /**
      * @brief helper method to add a move to the list of moves that is highlight-aware
      * @param col The column of the new move to append
@@ -132,6 +135,11 @@ private:
      * @param pushPiece The piece that this move pushes or 0 if it doesn't cause a push
      */
     void appendMove( int col, int row, int direction, Piece* pushPiece = 0 );
+
+    /**
+     * @brief Query if shot(s) need to complete before any next move can start
+     */
+    bool waitingOnShots();
 
     int mCol;
     int mRow;

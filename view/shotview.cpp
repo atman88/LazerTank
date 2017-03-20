@@ -34,7 +34,7 @@ void ShotView::reset()
     mKillTheTank = false;
     mTerminationAngle = -1;
     mLeadPoint = mTailPoint = NullPoint;
-    mShooter = 0;
+    releaseShooter();
     mBendPoints.clear();
 }
 
@@ -204,6 +204,7 @@ bool ShotView::shedTail()
 {
     if ( mTailPoint == NullPoint ) {
         mTailPoint = toStartPoint( mShooter->getViewX().toInt(), mShooter->getViewY().toInt(), mShooter->getViewRotation().toInt() % 360 );
+        releaseShooter();
     }
 
     if ( mTailPoint == mLeadPoint ) {
@@ -226,6 +227,14 @@ bool ShotView::shedTail()
     }
 
     return false;
+}
+
+void ShotView::releaseShooter()
+{
+    if ( mShooter ) {
+        mShooter = 0;
+        emit shooterReleased();
+    }
 }
 
 void ShotView::killTheTank()

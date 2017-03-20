@@ -34,8 +34,19 @@ public:
      */
     bool hasTerminationPoint();
 
+    /**
+     * @brief Get the shooter. The shooter is set from time the shot commences until the shot's tail established.
+     * I.e. The shooter is known as long as the trigger is pressed.
+     * @return The current shooter or 0 if not attached.
+     */
+    Shooter* getShooter() const;
+
 signals:
     void rectDirty( QRect& rect );
+    /**
+     * @brief emitted when the shooter is no longer used to define it's start point
+     */
+    void shooterReleased();
 
 protected:
     /**
@@ -60,7 +71,6 @@ protected:
     void addTermination(int endAngle, QPoint& hitPoint );
 
     QPoint getLeadPoint() const;
-    Shooter* getShooter() const;
 
     bool shedTail();
     void killTheTank();
@@ -91,6 +101,11 @@ private:
      * @brief Get the trailing point (I.e. the tip of the tail)
      */
     QPoint getStartPoint();
+
+    /**
+     * @brief detach the shooter from this shot
+     */
+    void releaseShooter();
 
     QPen mPen;
     std::list<QPoint> mBendPoints;

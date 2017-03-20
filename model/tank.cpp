@@ -20,6 +20,7 @@ void Tank::init( Game* game )
     QObject::connect( &mHorizontalAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
     QObject::connect( &mVerticalAnimation,   &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
     QObject::connect( aggregate, &AnimationStateAggregator::finished, this, &Tank::onAnimationsFinished, Qt::QueuedConnection );
+    QObject::connect( &getShot(), &ShotModel::shooterReleased, this, &Tank::wakeup );
 
     SpeedController* controller = game->getSpeedController();
     mRotateAnimation.setController( controller );
@@ -129,7 +130,7 @@ void Tank::move( int direction )
     }
 
     // wake it up if not active
-    if ( !game->getMoveAggregate()->active() && !mBusyFiring ) {
+    if ( !game->getMoveAggregate()->active() && !waitingOnShots() ) {
         if ( Piece* move = mMoves.getFront() ) {
             doMove( move->getCol(), move->getRow(), move->getAngle() );
             if ( move->hasPush() ) {
@@ -183,6 +184,21 @@ void Tank::onMoved(int col, int row, int rotation)
     mRow = row;
     mRotation = rotation;
     resumeMove();
+}
+
+bool Tank::waitingOnShots()
+{
+    if ( mBusyFiring ) {
+        return true;
+    }
+    if ( getShot().getShooter() ) {
+        // delay until the shot detaches from us for the case where the subsequent move is changing direction
+        // so that we remain trained on the current target to avoid our shot from displaying bent:
+        if ( Piece* nextMove = mMoves.getFront() ) {
+            return nextMove->getAngle() != mRotation;
+        }
+    }
+    return false;
 }
 
 void Tank::resumeMove()
