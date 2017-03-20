@@ -45,9 +45,13 @@ int PieceView::getShotCount() const
     return mShotCount;
 }
 
-int PieceView::incrementShots()
+bool PieceView::setShotCount( int count )
 {
-    return ++mShotCount;
+    if ( count != mShotCount ) {
+        mShotCount = count;
+        return true;
+    }
+    return false;
 }
 
 int PieceView::decrementShots()

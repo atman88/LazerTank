@@ -383,6 +383,8 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
                 int rotation = keyToAngle(ev->key());
                 if ( rotation >= 0 ) {
                     mGame->getTank()->move( rotation );
+                } else if ( ev->key() >= Qt::Key_0 && ev->key() <= Qt::Key_9 ) {
+                    mGame->getTank()->fire( ev->key() - Qt::Key_0 );
                 }
             }
         }

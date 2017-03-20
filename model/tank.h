@@ -34,8 +34,9 @@ public:
 
     /**
      * @brief Fire the tank's laser
+     * @param count The number of times to shoot or -1 to increment the shot count
      */
-    void fire();
+    void fire( int count = -1 );
 
     /**
      * @brief Get the column the tank currently resides on.

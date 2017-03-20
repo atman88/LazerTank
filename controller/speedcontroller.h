@@ -75,8 +75,9 @@ public:
      * @brief Helper method to start an animation between a given range
      * @param from The starting value
      * @param to The ending value
+     * @return true if the animation is started
      */
-    void animateBetween( int from, int to );
+    bool animateBetween( int from, int to );
 
     /**
      * @brief Get the divisor. A divisor is the distance to travel in one second.
@@ -114,7 +115,7 @@ public:
     }
 
     virtual int getDivisor();
-    void animateBetween( int fromAngle, int toAngle );
+    bool animateBetween( int fromAngle, int toAngle );
 };
 
 #endif // SPEEDCONTROLLER_H

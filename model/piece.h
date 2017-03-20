@@ -16,7 +16,8 @@
 class Piece : public PieceView
 {
 public:
-    Piece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 ) : PieceView(type,col,row,angle)
+    Piece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0, int shotCount = 0 )
+      : PieceView(type,col,row,angle,shotCount)
     {
     }
 
@@ -70,7 +71,8 @@ public:
 class SimplePiece : public Piece
 {
 public:
-    SimplePiece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 ) : Piece(type,col,row,angle)
+    SimplePiece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0, int shotCount = 0 )
+      : Piece(type,col,row,angle,shotCount)
     {
     }
     SimplePiece( const Piece* source ) : Piece(source)

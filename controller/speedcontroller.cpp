@@ -84,7 +84,7 @@ int RotateSpeedControlledAnimation::getDivisor()
     return 90;
 }
 
-void SpeedControlledAnimation::animateBetween( int from, int to )
+bool SpeedControlledAnimation::animateBetween( int from, int to )
 {
     if ( from != to && mController ) {
         stop();
@@ -92,10 +92,12 @@ void SpeedControlledAnimation::animateBetween( int from, int to )
         setEndValue( to );
         setDuration( abs( to-from ) * mController->getSpeed() / getDivisor() );
         start();
+        return true;
     }
+    return false;
 }
 
-void RotateSpeedControlledAnimation::animateBetween( int fromAngle, int toAngle )
+bool RotateSpeedControlledAnimation::animateBetween( int fromAngle, int toAngle )
 {
     fromAngle %= 360;
     if ( fromAngle == 0 && toAngle > 180 ) {
@@ -103,5 +105,5 @@ void RotateSpeedControlledAnimation::animateBetween( int fromAngle, int toAngle 
     } else if ( toAngle == 0 && fromAngle > 180 ) {
         toAngle = 360;
     }
-    SpeedControlledAnimation::animateBetween( fromAngle, toAngle );
+    return SpeedControlledAnimation::animateBetween( fromAngle, toAngle );
 }

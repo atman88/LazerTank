@@ -21,8 +21,8 @@ typedef enum {
 class PieceView
 {
 public:
-    PieceView( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 ) : mType(type), mCol(col), mRow(row),
-      mAngle(angle), mShotCount(0)
+    PieceView( PieceType type = NONE, int col = 0, int row = 0, int angle = 0, int shotCount = 0 )
+      : mType(type), mCol(col), mRow(row), mAngle(angle), mShotCount(shotCount)
     {
     }
 
@@ -68,10 +68,9 @@ public:
     int getShotCount() const;
 
     /**
-     * @brief Increment the count of future shots for this move point
-     * @return The number of shots
+     * @brief Set the count of future shots for this move point
      */
-    int incrementShots();
+    bool setShotCount( int count );
 
     /**
      * @brief Decrement the count of future shots for this move point

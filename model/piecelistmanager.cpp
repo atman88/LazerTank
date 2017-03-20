@@ -58,6 +58,11 @@ void PieceListManager::appendInternal( Piece* piece )
     emit appended( piece->getCol(), piece->getRow() );
 }
 
+void PieceListManager::append( PieceType type, int col, int row, int angle, int shotCount )
+{
+    appendInternal( new SimplePiece( type, col, row, angle, shotCount ) );
+}
+
 void PieceListManager::append( PieceType type, int col, int row, int angle, Piece* pushPiece )
 {
     appendInternal( new PusherPiece( type, col, row, angle, pushPiece ) );
@@ -167,11 +172,12 @@ bool PieceListManager::replaceBack(PieceType type, int newAngle )
     return false;
 }
 
-bool PieceListManager::incrementShotsBack()
+bool PieceListManager::setShotCountBack( int count )
 {
     if ( Piece* piece = mPieces.back() ) {
-        piece->incrementShots();
-        emit changed( piece->getCol(), piece->getRow() );
+        if ( piece->setShotCount( count ) ) {
+            emit changed( piece->getCol(), piece->getRow() );
+        }
         return true;
     }
     return false;

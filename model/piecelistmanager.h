@@ -37,7 +37,12 @@ public:
     /**
      * @brief Adds a new piece to the end of this list from the given values
      */
-    void append( PieceType type, int col, int row, int angle = 0, Piece* pushPiece = 0 );
+    void append( PieceType type, int col, int row, int angle = 0, int shotCount = 0 );
+
+    /**
+     * @brief Adds a new piece to the end of this list from the given values
+     */
+    void append( PieceType type, int col, int row, int angle, Piece* pushPiece );
 
     /**
      * @brief Adds a copy of the given piece to the end of this list
@@ -88,9 +93,10 @@ public:
     bool replaceBack( PieceType type, int newAngle = -1 );
 
     /**
-     * @brief Increment the count of future shots for the last move point
+     * @brief Set the number of future shots on the last element
+     * @return true if successful
      */
-    bool incrementShotsBack();
+    bool setShotCountBack( int count );
 
     /**
      * @brief Query the number of pieces in the list
