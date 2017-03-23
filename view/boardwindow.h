@@ -3,8 +3,10 @@
 
 #include <memory>
 #include <QMouseEvent>
+#include <Qt>
 #include <QtGui>
 #include <QMenu>
+#include <QtGlobal>
 
 class Board;
 class Game;
@@ -12,6 +14,37 @@ class Game;
 #include "controller/pathsearchaction.h"
 #include "model/piece.h"
 
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 7, 0))
+#define ACTION QAction
+#define TO_QACTION(a) a
+#else
+class ActionProxy
+{
+public:
+    ActionProxy() : mAction(0)
+    {
+    }
+    ~ActionProxy()
+    {
+        if ( mAction ) {
+            delete mAction;
+        }
+    }
+
+    QAction* getAction()
+    {
+        if ( !mAction ) {
+            mAction = new QAction(0);
+        }
+        return mAction;
+    }
+
+private:
+    QAction* mAction;
+};
+#define ACTION ActionProxy
+#define TO_QACTION(a) (*(a).getAction())
+#endif
 /**
  * @brief The main window
  */
@@ -75,10 +108,10 @@ private:
 
     QBackingStore *mBackingStore;
     QMenu mMenu;
-    QAction mSpeedAction;
-    QAction mReloadAction;
-    QAction mUndoMoveAction;
-    QAction mClearMovesAction;
+    ACTION mSpeedAction;
+    ACTION mReloadAction;
+    ACTION mUndoMoveAction;
+    ACTION mClearMovesAction;
     // using shared pointers for these ui objects so they can be safely shared with the controller:
     std::shared_ptr<PathSearchAction> mCaptureAction;
     std::shared_ptr<PathSearchAction> mPathToAction;
@@ -88,6 +121,11 @@ private:
     QRegion mRenderRegion;
 
     Game* mGame;
+
+#if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
+    void requestUpdate();
+    bool mUpdatePending;
+#endif
 };
 
 #endif // BOARDWINDOW_H
