@@ -96,11 +96,12 @@ public:
      * @param col The column of the lazer end point
      * @param row The row of the lazer end point
      * @param angle Inputs the laser direction as it enters the square; outputs the direction the laser exits the square
-     * @param source The producer of laser beam or 0 if futuristic
+     * @param futuristic Apply to the future board if true, otherwise the master board is used
+     * @param source The producer of laser beam or 0
      * @param hit Input as the square's center view coordinate. Returns the hit coordinate when something hit
      * @return true if the the shot is continuing to advance past the square or false if the shot hit something
      */
-    bool canShootThru( int col, int row, int *angle, Shooter* source, QPoint *hitPoint );
+    bool canShootThru( int col, int row, int *angle, bool futuristic, Shooter* source, QPoint *hitPoint );
 
     /**
      * @brief Determines whether the given piece can move to the given square. Pending moves are not considered.

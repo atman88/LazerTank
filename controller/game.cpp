@@ -354,9 +354,8 @@ bool canShootThruPush( QPoint& centerOfSquare, int angle, Push& push, QPoint *hi
     return true;
 }
 
-bool Game::canShootThru( int col, int row, int *angle, Shooter* source, QPoint *hitPoint )
+bool Game::canShootThru( int col, int row, int *angle, bool futuristic, Shooter* source, QPoint *hitPoint )
 {
-    bool futuristic = source == 0;
     Board* board = getBoard(futuristic);
 
     switch( board->tileAt(col,row) ) {

@@ -50,7 +50,7 @@ const FutureShotPath* FutureShotPathManager::addPath( MovePiece* move )
 
         while( getAdjacentPosition( leadingDirection, &leadingCol, &leadingRow ) ) {
             leadingPoint = modelToViewCenterSquare(leadingCol,leadingRow);
-            if ( !game->canShootThru( leadingCol, leadingRow, &leadingDirection, 0, &leadingPoint ) ) {
+            if ( !game->canShootThru( leadingCol, leadingRow, &leadingDirection, true, 0, &leadingPoint ) ) {
                 break;
             }
             if ( leadingDirection != path.mLeadingDirection ) {
