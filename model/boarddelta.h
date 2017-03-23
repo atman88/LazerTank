@@ -56,10 +56,8 @@ public slots:
 
 private:
     PieceSetManager   mPieceManager;
-
     Board*  mMasterBoard;
     Board*  mFutureBoard;
-
     bool mEnabled;
 };
 

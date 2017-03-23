@@ -24,9 +24,14 @@ public:
     void render( QPainter* painter );
 
     /**
-     * @brief setColor
+     * @brief set this shot's color
      */
     void setColor( QColor color );
+
+    /**
+     * @brief Get the pen used to render this shot
+     */
+    const QPen& getPen() const;
 
     /**
      * @brief Query whether this shot is rendering a splat yet

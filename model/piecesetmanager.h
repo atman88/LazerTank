@@ -60,6 +60,16 @@ public:
     bool eraseAt( int col, int row );
 
     /**
+     * @brief Add or change the piece at the given square
+     * Any existing piece at the given square is changed, otherwise a piece is added.
+     * @param col The target column
+     * @param row The target row
+     * @param type The type to set or add
+     * @param angle The piece rotation to set or add
+     */
+    void setAt( PieceType type, int col, int row, int angle = 0 );
+
+    /**
      * @brief Re-initialize the set
      * @param source If non-zero, initialize with a copy of the given source, otherwise the set is cleared
      */
@@ -85,6 +95,13 @@ signals:
      * @param row The row of the deleted piece
      */
     void erasedAt( int col, int row );
+
+    /**
+     * @brief Notifies that a piece was deleted from the set
+     * @param col The column of the deleted piece
+     * @param row The row of the deleted piece
+     */
+    void changedAt( int col, int row );
 
 private:
     PieceSet mPieces;

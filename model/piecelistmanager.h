@@ -37,12 +37,12 @@ public:
     /**
      * @brief Adds a new piece to the end of this list from the given values
      */
-    void append( PieceType type, int col, int row, int angle = 0, int shotCount = 0 );
+    void append( PieceType type, int col, int row, int angle = 0 );
 
     /**
      * @brief Adds a new piece to the end of this list from the given values
      */
-    void append( PieceType type, int col, int row, int angle, Piece* pushPiece );
+    void append( PieceType type, int col, int row, int angle, int shotCount, Piece* pushPiece = 0 );
 
     /**
      * @brief Adds a copy of the given piece to the end of this list
@@ -94,9 +94,9 @@ public:
 
     /**
      * @brief Set the number of future shots on the last element
-     * @return true if successful
+     * @return the updated element or 0 if not updated
      */
-    bool setShotCountBack( int count );
+    MovePiece* setShotCountBack( int count );
 
     /**
      * @brief Query the number of pieces in the list

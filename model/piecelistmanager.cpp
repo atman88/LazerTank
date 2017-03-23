@@ -58,20 +58,20 @@ void PieceListManager::appendInternal( Piece* piece )
     emit appended( piece->getCol(), piece->getRow() );
 }
 
-void PieceListManager::append( PieceType type, int col, int row, int angle, int shotCount )
+void PieceListManager::append( PieceType type, int col, int row, int angle )
 {
-    appendInternal( new SimplePiece( type, col, row, angle, shotCount ) );
+    appendInternal( new SimplePiece( type, col, row, angle ) );
 }
 
-void PieceListManager::append( PieceType type, int col, int row, int angle, Piece* pushPiece )
+void PieceListManager::append( PieceType type, int col, int row, int angle, int shotCount, Piece* pushPiece )
 {
-    appendInternal( new PusherPiece( type, col, row, angle, pushPiece ) );
+    appendInternal( new MovePiece( type, col, row, angle, shotCount, pushPiece ) );
 }
 
 void PieceListManager::append( const Piece* source )
 {
-    if ( source->hasPush() ) {
-        appendInternal( new PusherPiece(source) );
+    if ( const MovePiece* move = dynamic_cast<const MovePiece*>(source) ) {
+        appendInternal( new MovePiece(move) );
     } else {
         appendInternal( new SimplePiece(source) );
     }
@@ -172,21 +172,46 @@ bool PieceListManager::replaceBack(PieceType type, int newAngle )
     return false;
 }
 
-bool PieceListManager::setShotCountBack( int count )
+MovePiece* PieceListManager::setShotCountBack( int count )
 {
-    if ( Piece* piece = mPieces.back() ) {
-        if ( piece->setShotCount( count ) ) {
-            emit changed( piece->getCol(), piece->getRow() );
+    if ( !mPieces.empty() ) {
+        if ( Piece* piece = mPieces.back() ) {
+            MovePiece* move = dynamic_cast<MovePiece*>(piece);
+            if ( !move ) {
+                move = new MovePiece( piece );
+                mPieces.remove( piece );
+                mPieces.push_back( move );
+
+                // purge any cached sets given they are now stale:
+                if ( mSet ) {
+                    delete mSet;
+                    mSet = 0;
+                }
+                if ( mMultiSet ) {
+                    delete mMultiSet;
+                    mMultiSet = 0;
+                }
+            }
+            if ( move->setShotCount( count ) ) {
+                emit changed( piece->getCol(), piece->getRow() );
+            }
+            return move;
         }
-        return true;
     }
-    return false;
+    return 0;
 }
 
 void PieceListManager::reset( PieceListManager* source )
 {
     while( eraseBack() ) {
         // continue
+    }
+    // clear any sets for safety (shouldn't be necessary):
+    if ( mSet ) {
+        mSet->clear();
+    }
+    if ( mMultiSet ) {
+        mMultiSet->clear();
     }
 
     if ( source ) {

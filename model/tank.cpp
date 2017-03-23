@@ -15,13 +15,13 @@ Tank::Tank(QObject* parent) : TankView(parent), mCol(0), mRow(0), mBusyFiring(fa
 void Tank::init( Game* game )
 {
     setParent(game);
+    mFutureShots.setParent(game);
     AnimationStateAggregator* aggregate = game->getMoveAggregate();
     QObject::connect( &mRotateAnimation,     &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
     QObject::connect( &mHorizontalAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
     QObject::connect( &mVerticalAnimation,   &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
     QObject::connect( aggregate, &AnimationStateAggregator::finished, this, &Tank::onAnimationsFinished, Qt::QueuedConnection );
     QObject::connect( &getShot(), &ShotModel::shooterReleased, this, &Tank::wakeup );
-
     SpeedController* controller = game->getSpeedController();
     mRotateAnimation.setController( controller );
     mHorizontalAnimation.setController( controller );
@@ -34,6 +34,7 @@ void Tank::reset( int col, int row )
     mCol = col;
     mRow = row;
     mRotation = 0;
+    mFutureShots.reset();
     mMoves.reset();
     mBusyFiring = false;
     QObject::disconnect( getGame(this)->getShotAggregate(), &AnimationStateAggregator::finished, this, &Tank::resumeMove );
@@ -43,20 +44,20 @@ void Tank::reset( int col, int row )
 
 void Tank::fire( int count )
 {
-    if ( !mMoves.size() ) {
-        if ( count < 0 ) {
-            Shooter::fire();
-        } else if ( count > 0 ) {
-            mMoves.append( MOVE, mCol, mRow, mRotation, count );
-            resumeMove();
-        }
-    } else {
+    if ( int nMoves = mMoves.size() ) {
+        // -1 signifies an increment
         if ( count < 0 ) {
             count = mMoves.getBack()->getShotCount() + 1;
         }
-        mMoves.setShotCountBack( count );
-        wakeup();
+        if ( nMoves > 1 ) {
+            MovePiece* move = mMoves.setShotCountBack( count );
+            if ( !move->getShotPathUID() ) {
+                mFutureShots.addPath( move );
+            }
+            return;
+        }
     }
+    continueMove( count );
 }
 
 void Tank::clearMoves()
@@ -69,10 +70,10 @@ void Tank::wakeup()
     move(-1);
 }
 
-void Tank::appendMove( int col, int row, int direction, Piece* pushPiece )
+void Tank::appendMove( int col, int row, int direction, int shotCount, Piece* pushPiece )
 {
     mMoves.replaceBack( MOVE ); // erase highlight
-    mMoves.append( MOVE_HIGHLIGHT, col, row, direction, pushPiece );
+    mMoves.append( MOVE_HIGHLIGHT, col, row, direction, shotCount, pushPiece );
 }
 
 void Tank::move( int direction )
@@ -121,7 +122,7 @@ void Tank::move( int direction )
 
             Piece* pushPiece = 0;
             if ( game && game->canMoveFrom( TANK, direction, &col, &row, true, &pushPiece ) ) {
-                appendMove( col, row, direction, pushPiece );
+                appendMove( col, row, direction, 0, pushPiece );
                 if ( pushPiece ) {
                     game->onFuturePush( pushPiece, direction );
                 }
@@ -132,10 +133,12 @@ void Tank::move( int direction )
     // wake it up if not active
     if ( !game->getMoveAggregate()->active() && !waitingOnShots() ) {
         if ( Piece* move = mMoves.getFront() ) {
-            doMove( move->getCol(), move->getRow(), move->getAngle() );
             if ( move->hasPush() ) {
                 emit movingInto( move->getCol(), move->getRow(), move->getAngle() );
             }
+            doMove( move->getCol(), move->getRow(), move->getAngle() );
+        } else {
+            emit idle();
         }
     }
 }
@@ -162,8 +165,11 @@ int Tank::getRotation() const
 
 void Tank::eraseLastMove()
 {
-    mMoves.eraseBack();
-    mMoves.replaceBack( MOVE_HIGHLIGHT );
+    if ( Piece* piece = mMoves.getBack() ) {
+        mFutureShots.removePath( piece );
+        mMoves.eraseBack();
+        mMoves.replaceBack( MOVE_HIGHLIGHT );
+    }
 }
 
 int Tank::getCol() const
@@ -201,34 +207,65 @@ bool Tank::waitingOnShots()
     return false;
 }
 
+FutureShotPathManager* Tank::getFutureShots()
+{
+    return &mFutureShots;
+}
+
 void Tank::resumeMove()
 {
-    Piece* move = mMoves.getList()->front();
-    if ( move && mCol == move->getCol() && mRow == move->getRow() && mRotation == move->getAngle() ) {
-        if ( move->getShotCount() ) {
-            // ensure we're not already busing shooting
-            if ( Game* game = getGame(this) ) {
-                if ( game->getShotAggregate()->active() ) {
-                    return;
-                }
+    if ( Piece* move = mMoves.getFront() ) {
+        // continue now if the tank's direction isn't changing or the tank isn't currently moving
+        if ( mRotation != move->getAngle() ) {
+            return;
+        }
+        if ( Game* game = getGame(this) ) {
+            if ( game->getMoveAggregate()->active() ) {
+                return;
             }
         }
-        int shotCount = move->decrementShots();
-        if ( shotCount >= 0 ) {
+        continueMove( move->getShotCount(), move );
+    }
+}
+
+void Tank::continueMove( int shotCount, Piece* move )
+{
+    if ( shotCount ) {
+        // determine if presently shooting
+        bool busy = false;
+        if ( Game* game = getGame(this) ) {
+            busy = game->getShotAggregate()->active();
+        }
+
+        if ( !busy ) {
             Shooter::fire();
-            if ( shotCount > 0 && !mBusyFiring ) {
+            if ( !move ) {
+                --shotCount;
+            } else {
+                shotCount = dynamic_cast<MovePiece*>(move)->decrementShots();
+            }
+        }
+        if ( shotCount > 0 ) {
+            if ( !move ) {
+                mMoves.append( MOVE, mCol, mRow, mRotation, shotCount );
+            }
+            if ( !mBusyFiring ) {
                 mBusyFiring = true;
                 QObject::connect( getGame(this)->getShotAggregate(), &AnimationStateAggregator::finished, this, &Tank::resumeMove );
             }
         }
-        if ( shotCount <= 0 ) {
+    }
+
+    if ( shotCount <= 0 ) {
+        if ( move ) {
+            mFutureShots.removePath( move );
             mMoves.eraseFront();
-            if ( mBusyFiring ) {
-                QObject::disconnect( getGame(this)->getShotAggregate(), &AnimationStateAggregator::finished, this, &Tank::resumeMove );
-                mBusyFiring = false;
-            }
-            wakeup();
         }
+        if ( mBusyFiring ) {
+            QObject::disconnect( getGame(this)->getShotAggregate(), &AnimationStateAggregator::finished, this, &Tank::resumeMove );
+            mBusyFiring = false;
+        }
+        wakeup();
     }
 }
 

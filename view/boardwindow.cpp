@@ -131,8 +131,12 @@ QMenu& BoardWindow::getMenu()
 
 void BoardWindow::render( const QRect* rect, QPainter* painter )
 {
+    if ( !mGame ) {
+        return;
+    }
     Board* board = mGame->getBoard();
-    const PieceMultiSet* moves = mGame->getTank()->getMoves()->toMultiSet();
+    Tank* tank = mGame->getTank();
+    const PieceMultiSet* moves = tank->getMoves()->toMultiSet();
     const PieceSet* tiles = board->getPieceManager()->getPieces();
     const PieceSet* deltas = mGame->getDeltaPieces();
 
@@ -199,23 +203,33 @@ void BoardWindow::render( const QRect* rect, QPainter* painter )
         renderListIn( deltasIterator, deltas->end(), rect, painter );
     }
 
+    bool usingFutureShotPen = false;
+    for( auto it : *tank->getFutureShots()->getPaths() ) {
+        if ( rect->intersects( it.getBounds() ) ) {
+            if ( !usingFutureShotPen ) {
+                QPen pen( tank->getShot().getPen() );
+                pen.setStyle( Qt::DashLine );
+                painter->setPen( pen );
+            }
+            painter->drawPath( it );
+        }
+    }
+
     if ( mFocus != TANK ) {
         // render the moves beneath (i.e. before) the tank and it's pushes when not focused on
         // the tank:
         renderListIn( moveIterator, moves->end(), rect, painter );
     }
 
-    if ( mGame ) {
-        mGame->getTankPush().render( rect, painter );
-        mGame->getShotPush().render( rect, painter );
-        mGame->getTank()->render( rect, painter );
-        if ( mFocus == TANK ) {
-            // render the moves ontop of (i.e. after) the tank and it's pushes when focus is at
-            // the tank:
-            renderListIn( moveIterator, moves->end(), rect, painter );
-        }
-        mGame->getCannonShot().render( painter );
+    mGame->getTankPush().render( rect, painter );
+    mGame->getShotPush().render( rect, painter );
+    tank->render( rect, painter );
+    if ( mFocus == TANK ) {
+        // render the moves ontop of (i.e. after) the tank and it's pushes when focus is at
+        // the tank:
+        renderListIn( moveIterator, moves->end(), rect, painter );
     }
+    mGame->getCannonShot().render( painter );
 }
 
 void BoardWindow::render(QRegion* region)

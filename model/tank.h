@@ -9,6 +9,7 @@
 #include "controller/pathsearchaction.h"
 #include "view/tankview.h"
 #include "model/piecelistmanager.h"
+#include "futureshotpath.h"
 
 class Game;
 
@@ -25,6 +26,11 @@ public:
      * @brief Access the pending tank moves
      */
     PieceListManager* getMoves();
+
+    /**
+     * @brief Access the pending tank shots
+     */
+    FutureShotPathManager* getFutureShots();
 
     /**
      * @brief move the tank one square
@@ -70,6 +76,11 @@ signals:
      * @param curRotation The direction of the move
      */
     void movingInto( int col, int row, int curRotation );
+
+    /**
+     * @brief Notifies that the tank has completed all it's outstanding moves
+     */
+    void idle();
 
 public slots:
     /**
@@ -128,13 +139,21 @@ private:
     void doMove( int col, int row, int direction );
 
     /**
+     * @brief continue the current move
+     * @param shotCount
+     * @param move if created or 0 if adding shots for the current move state
+     */
+    void continueMove( int shotCount, Piece* move = 0 );
+
+    /**
      * @brief helper method to add a move to the list of moves that is highlight-aware
      * @param col The column of the new move to append
      * @param row The row of the new move to append
      * @param direction The direction of the new move to append
+     * @param shotCount The number of shots attributed to this move
      * @param pushPiece The piece that this move pushes or 0 if it doesn't cause a push
      */
-    void appendMove( int col, int row, int direction, Piece* pushPiece = 0 );
+    void appendMove( int col, int row, int direction, int shotCount = 0, Piece* pushPiece = 0 );
 
     /**
      * @brief Query if shot(s) need to complete before any next move can start
@@ -145,6 +164,7 @@ private:
     int mRow;
     int mRotation;
     PieceListManager mMoves;
+    FutureShotPathManager mFutureShots;
     bool mBusyFiring;
 };
 

@@ -79,7 +79,9 @@ void testFuturePushToward( int direction, Game* game )
     cout << "testFuturePushToward " << direction << endl;
 
     Tank* tank = game->getTank();
-    // move twice; first merely rotates the tank but more importantly primes the move list:
+    tank->getMoves()->reset();
+
+    // move twice; first may merel rotate the tank but more importantly primes the move list:
     tank->move( direction );
     tank->move( direction );
     QVERIFY( game->getDeltaPieces()->size() > 0 );
@@ -94,6 +96,7 @@ void TestMain::testPush()
     QString map(
         ".. m ..\n"
         ".. M ..\n"
+        ".. . ..\n"
         "w< T >.\n"
         "..[M/..\n"
         ".. w ..\n" );

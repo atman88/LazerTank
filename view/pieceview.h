@@ -21,8 +21,8 @@ typedef enum {
 class PieceView
 {
 public:
-    PieceView( PieceType type = NONE, int col = 0, int row = 0, int angle = 0, int shotCount = 0 )
-      : mType(type), mCol(col), mRow(row), mAngle(angle), mShotCount(shotCount)
+    PieceView( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 )
+      : mType(type), mCol(col), mRow(row), mAngle(angle)
     {
     }
 
@@ -62,28 +62,28 @@ public:
     void setAngle( int angle );
 
     /**
-     * @brief Get the number of shots for this move
-     * @return The number of shots
+     * @brief Query whether this piece contains an associated push
+     * @return true if this piece causes a push
      */
-    int getShotCount() const;
+    virtual bool hasPush() const = 0;
 
     /**
-     * @brief Set the count of future shots for this move point
+     * @brief Get the number of shots associated with this piece
+     * @return The number of associated shots
      */
-    bool setShotCount( int count );
+    virtual int getShotCount() const = 0;
 
     /**
-     * @brief Decrement the count of future shots for this move point
-     * @return The resultant shot count or -1 if the shot count was already 0
+     * @brief Get the unique identifier which relates this move to its associated shot path
+     * @return The unique identifier or 0 if this move does not have an associated shot path
      */
-    int decrementShots();
+    virtual int getShotPathUID() const = 0;
 
 protected:
     PieceType mType;
     int mCol;
     int mRow;
     int mAngle;
-    int mShotCount;
 };
 
 #endif // PIECEVIEW_H

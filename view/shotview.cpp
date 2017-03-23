@@ -250,3 +250,8 @@ void ShotView::setColor(QColor color)
 {
     mPen.setColor( color );
 }
+
+const QPen& ShotView::getPen() const
+{
+    return mPen;
+}

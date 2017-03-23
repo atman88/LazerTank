@@ -61,30 +61,27 @@ void BoardDelta::onChangeAt( int col, int row )
 
     if ( !masterPiece ) {
         if ( !futurePiece ) {
-            if ( mMasterBoard->tileAt(col,row) != TILE_SUNK ) {
-                if ( mFutureBoard->tileAt(col,row) != TILE_SUNK ) {
-                    mPieceManager.eraseAt( col, row );
-                } else {
-                    mPieceManager.insert( TILE_FUTURE_INSERT, col, row );
-                }
-            } else if ( mFutureBoard->tileAt(col,row) == TILE_SUNK ) {
+            if ( mMasterBoard->tileAt(col,row) == mFutureBoard->tileAt(col,row) ) {
+                // No discerned differences; Remove any existing delta:
                 mPieceManager.eraseAt( col, row );
+            } else {
+                // No pieces, but tiles differ; indicate an erase:
+                mPieceManager.setAt( TILE_FUTURE_ERASE, col, row );
             }
         } else {
-            Piece* curDeltaPiece = mPieceManager.pieceAt( col, row );
-            if ( curDeltaPiece ) {
-                if ( curDeltaPiece->getType() == TILE_FUTURE_INSERT ) {
-                    return;
-                }
-                mPieceManager.erase( curDeltaPiece );
-            }
-            mPieceManager.insert( TILE_FUTURE_INSERT, col, row, futurePiece->getAngle() );
+            // master=no future=yes; indicate an insert:
+            mPieceManager.setAt( TILE_FUTURE_INSERT, col, row);
         }
+    } else if ( !futurePiece ) {
+        // master=yes future=no; indicate an erase:
+        mPieceManager.setAt( TILE_FUTURE_ERASE, col, row );
     } else {
-        if ( !futurePiece ) {
-            mPieceManager.insert( TILE_FUTURE_ERASE, col, row, masterPiece->getAngle() );
-        } else {
+        if ( mMasterBoard->tileAt(col,row) == mFutureBoard->tileAt(col,row) ) {
+            // No notable differences; Remove any existing delta:
             mPieceManager.eraseAt( col, row );
+        } else {
+            // tiles differ; indicate an erase:
+            mPieceManager.setAt( TILE_FUTURE_ERASE, col, row);
         }
     }
 }

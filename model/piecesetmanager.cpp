@@ -70,6 +70,29 @@ bool PieceSetManager::eraseAt( int col, int row )
     return erase( &pos );
 }
 
+void PieceSetManager::setAt( PieceType type, int col, int row, int angle )
+{
+    bool changed = false;
+
+    if ( Piece* piece = pieceAt( col, row ) ) {
+        if ( piece->getType() != type ) {
+            piece->setType( type );
+            changed = true;
+        }
+        if ( piece->getAngle() != angle ) {
+            piece->setAngle( angle );
+            changed = true;
+        }
+    } else {
+        insert( type, col, row, angle );
+        changed = true;
+    }
+
+    if ( changed ) {
+        emit changedAt( col, row );
+    }
+}
+
 void PieceSetManager::reset(const PieceSetManager* source)
 {
     while( !mPieces.empty() ) {

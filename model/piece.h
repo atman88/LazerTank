@@ -16,8 +16,8 @@
 class Piece : public PieceView
 {
 public:
-    Piece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0, int shotCount = 0 )
-      : PieceView(type,col,row,angle,shotCount)
+    Piece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 )
+      : PieceView(type,col,row,angle)
     {
     }
 
@@ -44,11 +44,6 @@ public:
     }
 
     /**
-     * @brief Query if this piece is associated with a push operation
-     */
-    virtual bool hasPush() const = 0;
-
-    /**
      * @brief Retrieve the search term for this piece
      * @return The encoded position value
      */
@@ -57,22 +52,26 @@ public:
         return encodePos( mCol, mRow );
     }
 
+    virtual bool hasPush() const override = 0;
+    virtual int getShotCount() const override = 0;
+    virtual int getShotPathUID() const override = 0;
+
     friend bool operator<(const Piece& l, const Piece& r)
     {
         return l.encodedPos() < r.encodedPos();
     }
 
-    friend class PusherPiece;
+    friend class MovePiece;
 };
 
 /**
- * @brief A basic piece that has no extended capabilities
+ * @brief A basic piece having no extended attributes
  */
 class SimplePiece : public Piece
 {
 public:
-    SimplePiece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0, int shotCount = 0 )
-      : Piece(type,col,row,angle,shotCount)
+    SimplePiece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 )
+      : Piece(type,col,row,angle)
     {
     }
     SimplePiece( const Piece* source ) : Piece(source)
@@ -83,35 +82,70 @@ public:
     {
         return false;
     }
+
+    int getShotCount() const override
+    {
+        return 0;
+    }
+
+    int getShotPathUID() const override
+    {
+        return 0;
+    }
 };
 
 /**
- * @brief A peice that hints whether it has an associated push
+ * @brief A piece that can hold additional attributes associated with a move
  */
-class PusherPiece : public SimplePiece
+class MovePiece : public SimplePiece
 {
 public:
-    PusherPiece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0, Piece* pushPiece = 0 )
+    MovePiece( PieceType type = MOVE, int col = 0, int row = 0, int angle = 0, int shotCount = 0, Piece* pushPiece = 0 )
         : SimplePiece(type,col,row,angle),
           mPushPieceType( pushPiece ? pushPiece->mType  : NONE),
-          mPushPieceAngle(pushPiece ? pushPiece->mAngle : 0)
+          mPushPieceAngle(pushPiece ? pushPiece->mAngle : 0),
+          mShotCount(shotCount), mShotPathUID(0)
     {
     }
 
-    PusherPiece( const Piece* source );
+    MovePiece( const Piece* source );
 
-    bool hasPush() const override
-    {
-        return mPushPieceType != NONE;
-    }
+    bool hasPush() const override;
 
     PieceType getPushPieceType() const;
 
     int getPushPieceAngle() const;
 
+    int getShotCount() const override;
+
+    /**
+     * @brief Set the count of future shots for this move point
+     */
+    bool setShotCount( int count );
+
+    /**
+     * @brief Decrement the count of future shots for this move point
+     * @return The resultant shot count or -1 if the shot count was already 0
+     */
+    int decrementShots();
+
+    /**
+     * @brief Get the unique identifier which relates this move to its associated shot path
+     * @return The unique identifier or 0 if this move does not have an associated shot path
+     */
+    int getShotPathUID() const override;
+
+    /**
+     * @brief Set the unique identifier which relates this move to its associated shot path
+     * @param shotPathUID The identifier of the associated FutureShotPath or 0 if none exists
+     */
+    void setShotPathUID( int shotPathUID );
+
 private:
     PieceType mPushPieceType;
     int mPushPieceAngle;
+    int mShotCount;
+    int mShotPathUID;
 };
 
 // comparator used by the stl

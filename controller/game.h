@@ -96,7 +96,7 @@ public:
      * @param col The column of the lazer end point
      * @param row The row of the lazer end point
      * @param angle Inputs the laser direction as it enters the square; outputs the direction the laser exits the square
-     * @param source The laser beam being produced
+     * @param source The producer of laser beam or 0 if futuristic
      * @param hit Input as the square's center view coordinate. Returns the hit coordinate when something hit
      * @return true if the the shot is continuing to advance past the square or false if the shot hit something
      */
@@ -125,7 +125,7 @@ public:
      * @brief Reverts a future push (recorded by onFuturePush)
      * @param pusher Identifies the push to revert based on its originating square and direction (angle)
      */
-    void undoFuturePush( PusherPiece* pusher );
+    void undoFuturePush( MovePiece* pusher );
 
     /**
      * @brief undoes the last future move if safe to do so

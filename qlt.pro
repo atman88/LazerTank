@@ -32,7 +32,8 @@ HEADERS += \
     controller/pathsearchaction.h \
     controller/pathfindercontroller.h \
     controller/pathsearchcriteria.h \
-    view/pieceview.h
+    view/pieceview.h \
+    model/futureshotpath.h
 
 SOURCES += \
            model/board.cpp \
@@ -57,7 +58,8 @@ SOURCES += \
     controller/pathsearchaction.cpp \
     controller/pathfindercontroller.cpp \
     controller/pathsearchcriteria.cpp \
-    view/pieceview.cpp
+    view/pieceview.cpp \
+    model/futureshotpath.cpp
 
 RESOURCES += qml.qrc
 

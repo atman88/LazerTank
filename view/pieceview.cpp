@@ -7,7 +7,6 @@ PieceView::PieceView( const PieceView *source )
     mCol       = source->mCol;
     mRow       = source->mRow;
     mAngle     = source->mAngle;
-    mShotCount = source->mShotCount;
 }
 
 PieceType PieceView::getType() const
@@ -40,29 +39,6 @@ void PieceView::setAngle( int angle )
     mAngle = angle;
 }
 
-int PieceView::getShotCount() const
-{
-    return mShotCount;
-}
-
-bool PieceView::setShotCount( int count )
-{
-    if ( count != mShotCount ) {
-        mShotCount = count;
-        return true;
-    }
-    return false;
-}
-
-int PieceView::decrementShots()
-{
-    if ( --mShotCount < 0 ) {
-        mShotCount = 0;
-        return -1;
-    }
-    return mShotCount;
-}
-
 void PieceView::getBounds( QRect *rect ) const
 {
     rect->setRect( mCol*24, mRow*24, 24, 24 );
@@ -74,8 +50,12 @@ bool PieceView::render( const QRect *dirty, QPainter *painter )
     getBounds( &bounds );
     if ( dirty->intersects( bounds ) ) {
         renderPiece( mType, bounds.left(), bounds.top(), mAngle, painter );
-        if ( mShotCount ) {
-            painter->drawText( bounds, Qt::AlignCenter, QString::number(mShotCount) );
+        int shotCount = getShotCount();
+        if ( shotCount > 1 ) {
+            QPen pen;
+            pen.setColor( QColor(Qt::darkBlue) );
+            painter->setPen( pen );
+            painter->drawText( bounds, Qt::AlignCenter, QString::number(shotCount) );
         }
         return true;
     }
