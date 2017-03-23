@@ -45,6 +45,7 @@ void Game::init( BoardWindow* window )
 
     mTank.init( this );
     QObject::connect( &mTank, &Tank::movingInto, this, &Game::onTankMovingInto );
+    QObject::connect( &mPathFinderController, &PathFinderController::pathFound, &mTank, &Tank::onPathFound );
 
     mActiveCannon.init( this, CANNON, QColor(255,50,83) );
 

@@ -64,12 +64,6 @@ void PathFinderController::onResult( bool ok, PathSearchCriteria criteria )
         // only test next if this result is unchanged given any remaining ones won't be valid if this one isn't
         testNextAction();
     }
-            emit pathFound( path, mMoveWhenFound );
-
-            tank->getMoves()->reset( path );
-            if ( mMoveWhenFound ) {
-                tank->wakeup();
-            }
 }
 
 void PathFinderController::onPath( PathSearchCriteria criteria, PieceListManager* path )

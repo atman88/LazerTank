@@ -39,8 +39,9 @@ signals:
     /**
      * @brief Notification of an action result
      * @param path
+     * @param action The search action that started the search
      */
-    void pathFound( PieceListManager* path, bool wakeup );
+    void pathFound( PieceListManager* path, PathSearchAction* action );
 
 protected slots:
     /**

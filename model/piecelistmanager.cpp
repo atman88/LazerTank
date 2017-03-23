@@ -115,6 +115,14 @@ bool PieceListManager::eraseFront()
     return eraseInternal( mPieces.begin() );
 }
 
+Piece *PieceListManager::getBack() const
+{
+    if ( mPieces.empty() ) {
+        return 0;
+    }
+    return mPieces.back();
+}
+
 bool PieceListManager::eraseBack()
 {
     if ( !mPieces.empty() ) {

@@ -83,8 +83,13 @@ public slots:
      */
     void onAnimationsFinished();
 
-     * @param doWakeup wake up movement animation if true
-    void onPathFound( PieceListManager* path, bool doWakeup );
+   /**
+    * @brief adds the given path to the tank's moves as appropriate
+    * @param path The path to add
+    * @param action The action which started the search
+    */
+    void onPathFound( PieceListManager* path, PathSearchAction* action );
+
 protected:
     /**
      * @brief internal move notification from the underlying view

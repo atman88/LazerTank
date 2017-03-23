@@ -160,12 +160,15 @@ PieceListManager* Tank::getMoves()
     return &mMoves;
 }
 
-void Tank::onPathFound( PieceListManager* path, bool doWakeup )
+void Tank::onPathFound( PieceListManager* path, PathSearchAction* action )
+{
     if ( action->getFocus() == TANK ) {
-    mMoves.reset( path );
+        mMoves.reset( path );
     } else {
         mMoves.replaceBack( MOVE );
         mMoves.append( *path->getList() );
     }
-    if ( doWakeup ) {
     if ( action->getMoveWhenFound() ) {
+        wakeup();
+    }
+}

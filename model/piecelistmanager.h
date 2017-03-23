@@ -52,6 +52,12 @@ public:
     void append( const PieceList& source );
 
     /**
+     * @brief get the last element
+     * @return the last element in the list, or 0 if empty
+     */
+    Piece* getBack() const;
+
+    /**
      * @brief removes the first element
      * @return true if the element was removed
      */
