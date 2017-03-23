@@ -47,7 +47,6 @@ const FutureShotPath* FutureShotPathManager::addPath( MovePiece* move )
         int leadingDirection = path.mLeadingDirection;
         QPoint leadingPoint( modelToViewCenterSquare(leadingCol,leadingRow) );
         path.moveTo( leadingPoint );
-//        QRect bounds(leadingPoint,QSize(1,1));
 
         while( getAdjacentPosition( leadingDirection, &leadingCol, &leadingRow ) ) {
             leadingPoint = modelToViewCenterSquare(leadingCol,leadingRow);
@@ -57,13 +56,11 @@ const FutureShotPath* FutureShotPathManager::addPath( MovePiece* move )
             if ( leadingDirection != path.mLeadingDirection ) {
                 path.mLeadingDirection = leadingDirection;
                 path.lineTo( leadingPoint );
-//                bounds |= QRect( leadingPoint, QSize(1,1) );
             }
         }
         path.mLeadingCol = leadingCol;
         path.mLeadingRow = leadingRow;
         path.lineTo( leadingPoint );
-//        bounds |= QRect( leadingPoint, QSize(1,1) );
 
         auto ret = mPaths.insert( path );
         if ( ret.second ) {

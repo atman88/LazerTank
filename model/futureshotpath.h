@@ -8,15 +8,35 @@
 
 #include "piece.h"
 
-
+/**
+ * @brief Models a pending shot sequence for a specific square and direction
+ */
 class FutureShotPath : public QPainterPath
 {
 public:
+    /**
+     * @brief Constructs a new instance and associates it with the given MovePiece via the unique identifier
+     * @param move The MovePiece to associate
+     * If the move is already associated with an existing instance, then a copy is constructed (which is
+     * suitable for use as a search key).
+     */
     FutureShotPath( MovePiece* move );
+
+    /**
+     * @brief Copy constructor
+     * @param source The instance to copy
+     */
     FutureShotPath( const FutureShotPath& source );
 
+    /**
+     * @brief Retrieves the unique identifier for this shot sequence
+     * @return The unique non-zero identifier for the given instance
+     */
     int getUID() const;
 
+    /**
+     * @brief Query the rectangular paint area that this object occupies
+     */
     const QRect& getBounds();
 
 private:
