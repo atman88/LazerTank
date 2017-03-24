@@ -30,8 +30,9 @@ public:
      * @param action The search criteria
      * @param testOnly If true, only the pathTestResult signal is raised as a result otherwise a pathFound signal
      * is raised if (and only if) the path is successful
+     * @return true if the search is successfully started
      */
-    void findPath( PathSearchCriteria* criteria, bool testOnly );
+    bool findPath( PathSearchCriteria* criteria, bool testOnly );
 
     void run() override;
 

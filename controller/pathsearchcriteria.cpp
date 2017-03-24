@@ -70,3 +70,8 @@ PieceType PathSearchCriteria::getFocus() const
 {
     return mFocus;
 }
+
+bool PathSearchCriteria::isFuturistic() const
+{
+    return mFocus != TANK;
+}

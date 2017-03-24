@@ -24,8 +24,9 @@ public:
      * @param action A search term container shared between the path finder and the ui
      * @param testOnly if true, the action is merely tested, otherwise the action is
      * performed and if successful, notifies the result via the pathFound signal.
+     * @return true if the action is successfully started
      */
-    void doAction( std::shared_ptr<PathSearchAction> action, bool testOnly = false );
+    bool doAction( std::shared_ptr<PathSearchAction> action, bool testOnly = false );
 
     /**
      * @brief test multiple actions.

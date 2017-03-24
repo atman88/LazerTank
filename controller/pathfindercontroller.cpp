@@ -15,13 +15,15 @@ void PathFinderController::init( Game* game )
     mPathFinder.setParent(this);
     qRegisterMetaType<PathSearchCriteria>("PathSearchCriteria");
     QObject::connect( &mPathFinder, &PathFinder::testResult, this, &PathFinderController::onResult, Qt::QueuedConnection );
-    QObject::connect( &mPathFinder, &PathFinder::pathFound,  this, &PathFinderController::onPath,   Qt::QueuedConnection );
+    if ( !((bool) QObject::connect( &mPathFinder, &PathFinder::pathFound,  this, &PathFinderController::onPath,   Qt::QueuedConnection )) ) {
+        std::cout << "*** connection failed" << std::endl;
+    }
 }
 
-void PathFinderController::doAction( std::shared_ptr<PathSearchAction> action, bool testOnly )
+bool PathFinderController::doAction( std::shared_ptr<PathSearchAction> action, bool testOnly )
 {
     mCurAction = action;
-    mPathFinder.findPath( action->getCriteria(), testOnly );
+    return mPathFinder.findPath( action->getCriteria(), testOnly );
 }
 
 void PathFinderController::testNextAction()

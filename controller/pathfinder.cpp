@@ -14,13 +14,32 @@ PathFinder::PathFinder(QObject *parent) : QThread(parent)
 {
 }
 
-void PathFinder::findPath( PathSearchCriteria* criteria, bool testOnly )
+bool PathFinder::findPath( PathSearchCriteria* criteria, bool testOnly )
 {
     mStopping = true;
 
-    mCriteria = *criteria;
-    mTestOnly = testOnly;
-    start( LowPriority );
+    // initialize the search map
+    // Note: Done here (in the app thread) to ensure the board doesn't change while reading it.
+    if ( Game* game = getGame(this) ) {
+        if ( game->canPlaceAt( TANK, criteria->getTargetCol(), criteria->getTargetRow(), 0, criteria->isFuturistic() )) {
+            Board* board = game->getBoard( criteria->isFuturistic() );
+            mMaxCol = board->getWidth()-1;
+            mMaxRow = board->getHeight()-1;
+
+            for( int row = mMaxRow; row >= 0; --row ) {
+                for( int col = mMaxCol; col >= 0; --col ) {
+                    mSearchMap[row*BOARD_MAX_WIDTH+col] =
+                      game->canPlaceAt( TANK, col, row, 0, criteria->getFocus() != TANK ) ? TRAVERSIBLE : BLOCKED;
+                }
+            }
+
+            mCriteria = *criteria;
+            mTestOnly = testOnly;
+            start( LowPriority );
+            return true;
+        }
+    }
+    return false;
 }
 
 /*
@@ -143,33 +162,18 @@ void PathFinder::run()
     bool found = false;
     switch( setjmp( mJmpBuf ) ) {
     case 0:
-        if ( Game* game = getGame(this) ) {
-            // initialize the search map
-            if ( game->canPlaceAt( TANK, mRunCriteria.getTargetCol(), mRunCriteria.getTargetRow(), 0, mRunCriteria.getFocus() != TANK )) {
-                Board* board = game->getBoard();
-                mMaxCol = board->getWidth()-1;
-                mMaxRow = board->getHeight()-1;
+        mSearchMap[mRunCriteria.getStartRow()*BOARD_MAX_WIDTH+mRunCriteria.getStartCol()] = TARGET;
+        mPassValue = 0;
+        mSearchMap[mRunCriteria.getTargetRow()*BOARD_MAX_WIDTH+mRunCriteria.getTargetCol()] = mPassValue;
 
-                for( int row = mMaxRow; !mStopping && row >= 0; --row ) {
-                    for( int col = mMaxCol; !mStopping && col >= 0; --col ) {
-                        mSearchMap[row*BOARD_MAX_WIDTH+col] =
-                          game->canPlaceAt( TANK, col, row, 0, mRunCriteria.getFocus() != TANK ) ? TRAVERSIBLE : BLOCKED;
-                    }
-                }
-
-                mSearchMap[mRunCriteria.getStartRow()*BOARD_MAX_WIDTH+mRunCriteria.getStartCol()] = TARGET;
-                mPassValue = 0;
-                mSearchMap[mRunCriteria.getTargetRow()*BOARD_MAX_WIDTH+mRunCriteria.getTargetCol()] = mPassValue;
-
-                mSearchCol[0] = mRunCriteria.getTargetCol();
-                mSearchRow[0] = mRunCriteria.getTargetRow();
-                int nPoints = 1;
-                while( nPoints > 0 && !mStopping ) {
-                    nPoints = pass1( nPoints );
-                    nPoints = pass2( nPoints );
-                }
-            }
+        mSearchCol[0] = mRunCriteria.getTargetCol();
+        mSearchRow[0] = mRunCriteria.getTargetRow();
+    {   int nPoints = 1;
+        while( nPoints > 0 && !mStopping ) {
+            nPoints = pass1( nPoints );
+            nPoints = pass2( nPoints );
         }
+    }
         break;
 
     default:

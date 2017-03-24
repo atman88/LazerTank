@@ -11,7 +11,7 @@ public:
     ~PathSearchCriteria() {}
 
     PathSearchCriteria& operator = ( const PathSearchCriteria other );
-    bool operator ==( const PathSearchCriteria other );
+    bool operator == ( const PathSearchCriteria other );
 
     /**
      * @brief Getter methods
@@ -23,6 +23,12 @@ public:
     int getTargetRow() const;
     PieceType getFocus() const;
     bool getMoveWhenFound() const;
+
+    /**
+     * @brief query whether this applies to the future
+     * @return true if this applies to the future or false if it applies to the present
+     */
+    bool isFuturistic() const;
 
 protected:
     int mStartCol;
