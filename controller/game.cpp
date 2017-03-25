@@ -97,6 +97,11 @@ Board* Game::getBoard( bool futuristic )
     return &mBoard;
 }
 
+bool Game::isMasterBoard( Board* board )
+{
+    return board == &mBoard;
+}
+
 Tank* Game::getTank()
 {
     return &mTank;

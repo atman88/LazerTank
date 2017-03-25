@@ -33,8 +33,12 @@ bool PathFinder::findPath( PathSearchCriteria* criteria, bool testOnly )
                       game->canPlaceAt( TANK, col, row, 0, criteria->getFocus() != TANK ) ? TRAVERSIBLE : BLOCKED;
                 }
             }
-            addPush( game->getTankPush() );
-            addPush( game->getShotPush() );
+
+            // account for any outstanding pushes if this is on the master board
+            if ( game->isMasterBoard(board) ) {
+                addPush( game->getTankPush() );
+                addPush( game->getShotPush() );
+            }
 
             mCriteria = *criteria;
             mTestOnly = testOnly;

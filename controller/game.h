@@ -35,6 +35,13 @@ public:
     Board* getBoard( bool futuristic = false );
 
     /**
+     * @brief Query whether the current board is the master game board
+     * @param board
+     * @return true if the board is the master otherwise false
+     */
+    bool isMasterBoard( Board* board );
+
+    /**
      * @brief Get this game's main window
      * @return The associated window, or 0 if not initialized
      */
