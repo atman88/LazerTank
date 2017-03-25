@@ -13,7 +13,7 @@ class PathFinderController;
 #include "model/boarddelta.h"
 #include "model/board.h"
 #include "model/tank.h"
-#include "view/push.h"
+#include "model/push.h"
 #include "view/shooter.h"
 #include "util/gameutils.h"
 

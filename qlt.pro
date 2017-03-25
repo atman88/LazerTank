@@ -12,7 +12,6 @@ QMAKE_CXXFLAGS += -std=gnu++11
 HEADERS += \
            model/board.h \
            model/piece.h \
-    view/push.h \
     view/shooter.h \
     controller/pathfinder.h \
     util/imageutils.h \
@@ -33,12 +32,13 @@ HEADERS += \
     controller/pathfindercontroller.h \
     controller/pathsearchcriteria.h \
     view/pieceview.h \
-    model/futureshotpath.h
+    model/futureshotpath.h \
+    view/pushview.h \
+    model/push.h
 
 SOURCES += \
            model/board.cpp \
            model/piece.cpp \
-    view/push.cpp \
     view/shooter.cpp \
     controller/pathfinder.cpp \
     util/imageutils.cpp \
@@ -59,7 +59,9 @@ SOURCES += \
     controller/pathfindercontroller.cpp \
     controller/pathsearchcriteria.cpp \
     view/pieceview.cpp \
-    model/futureshotpath.cpp
+    model/futureshotpath.cpp \
+    view/pushview.cpp \
+    model/push.cpp
 
 RESOURCES += qml.qrc
 

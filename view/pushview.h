@@ -1,5 +1,5 @@
-#ifndef PUSH_H
-#define PUSH_H
+#ifndef PUSHVIEW_H
+#define PUSHVIEW_H
 
 #include <QObject>
 #include <QPropertyAnimation>
@@ -14,14 +14,15 @@ class Game;
 /**
  * @brief implements pushing a piece on the board
  */
-class Push : public QObject
+class PushView : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QVariant pieceX READ getX WRITE setX)
     Q_PROPERTY(QVariant pieceY READ getY WRITE setY)
 
 public:
-    explicit Push(QObject *parent = 0);
+    PushView( QObject* parent = 0 );
+
     void init( Game* game );
     void render( const QRect* rect, QPainter* painter );
 
@@ -55,6 +56,7 @@ public:
      */
     QRect* getBounds();
 
+protected:
     /**
      * @brief start a push sequence between two squares
      * @param what The type of piece to show being pushed
@@ -64,6 +66,8 @@ public:
      * @param toY destination upper left Y window coordinate
      */
     void start(Piece& what, int fromX, int fromY, int toX, int toY);
+
+    virtual void stopping() = 0;
 
 signals:
     void rectDirty( const QRect& );
@@ -93,4 +97,4 @@ private:
     QRect mRenderedBoundingRect;
 };
 
-#endif // PUSH_H
+#endif // PUSHVIEW_H

@@ -392,7 +392,7 @@ bool Game::canShootThru( int col, int row, int *angle, bool futuristic, Shooter*
                 } else {
                     SimplePiece simple( hitPiece );
                     board->getPieceManager()->eraseAt( col, row );
-                    mShotPush.start( simple, col*24, row*24, toCol*24, toRow*24 );
+                    mShotPush.start( simple, col, row, toCol, toRow );
                 }
             }
             break;
@@ -471,7 +471,7 @@ void Game::onTankMovingInto( int col, int row, int fromAngle )
         if ( getAdjacentPosition(fromAngle, &toCol, &toRow) ) {
             SimplePiece simple( what );
             pm->eraseAt( col, row );
-            mTankPush.start( simple, col*24, row*24, toCol*24, toRow*24 );
+            mTankPush.start( simple, col, row, toCol, toRow );
         } else {
             std::cout << "*** no adjacent for angle " << fromAngle << std::endl;
         }

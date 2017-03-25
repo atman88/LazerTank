@@ -3,14 +3,14 @@
 #include "controller/game.h"
 #include "util/renderutils.h"
 
-Push::Push(QObject *parent) : QObject(parent)
+PushView::PushView( QObject* parent ) : QObject(parent)
 {
     mHorizontalAnimation.setTargetObject(this);
     mHorizontalAnimation.setPropertyName("pieceX");
     mVerticalAnimation.setTargetObject(this);
     mVerticalAnimation.setPropertyName("pieceY");
-    QObject::connect( &mHorizontalAnimation, &QVariantAnimation::finished, this, &Push::onStopped );
-    QObject::connect( &mVerticalAnimation,   &QVariantAnimation::finished, this, &Push::onStopped );
+    QObject::connect( &mHorizontalAnimation, &QVariantAnimation::finished, this, &PushView::onStopped );
+    QObject::connect( &mVerticalAnimation,   &QVariantAnimation::finished, this, &PushView::onStopped );
     mHorizontalAnimation.setDuration( 1000 );
     mVerticalAnimation.setDuration( 1000 );
 
@@ -18,14 +18,14 @@ Push::Push(QObject *parent) : QObject(parent)
     mBoundingRect.setRect(0,0,24,24);
 }
 
-void Push::init( Game* game )
+void PushView::init( Game* game )
 {
     SpeedController* SpeedController = game->getSpeedController();
     mHorizontalAnimation.setController( SpeedController );
     mVerticalAnimation.setController( SpeedController );
 }
 
-void Push::start( Piece& what, int fromX, int fromY, int toX, int toY )
+void PushView::start( Piece& what, int fromX, int fromY, int toX, int toY )
 {
     if ( mType != NONE ) {
         return;
@@ -42,7 +42,7 @@ void Push::start( Piece& what, int fromX, int fromY, int toX, int toY )
     emit stateChanged(QAbstractAnimation::Running, QAbstractAnimation::Stopped);
 }
 
-void Push::render( const QRect* rect, QPainter* painter )
+void PushView::render( const QRect* rect, QPainter* painter )
 {
     if ( mType != NONE && mBoundingRect.intersects( *rect ) ) {
         renderPiece( mType, mBoundingRect.left(), mBoundingRect.top(), mPieceAngle, painter );
@@ -50,32 +50,32 @@ void Push::render( const QRect* rect, QPainter* painter )
     }
 }
 
-PieceType Push::getType()
+PieceType PushView::getType()
 {
     return mType;
 }
 
-int Push::getPieceAngle()
+int PushView::getPieceAngle()
 {
     return mPieceAngle;
 }
 
-QRect* Push::getBounds()
+QRect* PushView::getBounds()
 {
     return &mBoundingRect;
 }
 
-QVariant Push::getX()
+QVariant PushView::getX()
 {
     return QVariant( mBoundingRect.left() );
 }
 
-QVariant Push::getY()
+QVariant PushView::getY()
 {
     return QVariant( mBoundingRect.top() );
 }
 
-void Push::setX( const QVariant& x )
+void PushView::setX( const QVariant& x )
 {
     int xv = x.toInt();
     if ( xv != mBoundingRect.left() ) {
@@ -86,7 +86,7 @@ void Push::setX( const QVariant& x )
     }
 }
 
-void Push::setY( const QVariant& y )
+void PushView::setY( const QVariant& y )
 {
     int yv = y.toInt();
     if ( yv != mBoundingRect.top() ) {
@@ -97,15 +97,10 @@ void Push::setY( const QVariant& y )
     }
 }
 
-void Push::onStopped()
+void PushView::onStopped()
 {
     if ( mType != NONE ) {
-        int col = getX().toInt()/24;
-        int row = getY().toInt()/24;
-        Game* game = getGame(this);
-        if ( game ) {
-            game->onPushed( mType, col, row, mPieceAngle );
-        }
+        stopping();
         mType = NONE;
         if ( !mRenderedBoundingRect.isNull() ) {
             emit rectDirty( mRenderedBoundingRect );

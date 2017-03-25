@@ -4,6 +4,7 @@
 #include "util/gameutils.h"
 #include "pathfinder.h"
 #include "game.h"
+#include "model/push.h"
 
 // search map values:
 #define TRAVERSIBLE 3
@@ -32,6 +33,8 @@ bool PathFinder::findPath( PathSearchCriteria* criteria, bool testOnly )
                       game->canPlaceAt( TANK, col, row, 0, criteria->getFocus() != TANK ) ? TRAVERSIBLE : BLOCKED;
                 }
             }
+            addPush( game->getTankPush() );
+            addPush( game->getShotPush() );
 
             mCriteria = *criteria;
             mTestOnly = testOnly;
@@ -40,6 +43,13 @@ bool PathFinder::findPath( PathSearchCriteria* criteria, bool testOnly )
         }
     }
     return false;
+}
+
+void PathFinder::addPush( Push& push )
+{
+    if ( push.getType() != NONE ) {
+        mSearchMap[ push.getTargetRow()*BOARD_MAX_WIDTH + push.getTargetCol() ] = BLOCKED;
+    }
 }
 
 /*

@@ -6,6 +6,7 @@
 #include <QThread>
 
 class Game;
+class Push;
 class PathFinder;
 
 #include "model/board.h"
@@ -52,6 +53,7 @@ signals:
     void testResult( bool reachable, PathSearchCriteria criteria );
 
 private:
+    void addPush( Push& push );
     void tryAt(int col, int row);
     int pass1( int nPoints );
     int pass2( int nPoints );
