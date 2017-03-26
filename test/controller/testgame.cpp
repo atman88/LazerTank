@@ -3,15 +3,13 @@
 #include "controller/game.h"
 
 #include "model/shotmodel.h"
-#include "view/boardwindow.h"
 
 using namespace std;
 
 void TestMain::testMove()
 {
     Game game;
-    BoardWindow window;
-    game.init( &window );
+    game.init( 0 );
 
     Board* board = game.getBoard();
     QString map(

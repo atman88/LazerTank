@@ -2,20 +2,28 @@
 #include "controller/game.h"
 #include "util/gameutils.h"
 
-FutureShotPath::FutureShotPath( MovePiece* move ) : mMove(move), mLeadingCol(move->getCol()),
-  mLeadingRow(move->getRow()), mLeadingDirection(move->getAngle())
+FutureShotPath::FutureShotPath( MovePiece* move ) : mMove(move), mTailPoint(move->getCol(),move->getRow()),
+  mLeadPoint(move->getCol(),move->getRow()), mLeadingDirection(move->getAngle()), mUID(move->getShotPathUID()),
+  mPainterPath(0)
 {
-    if ( !(mUID = move->getShotPathUID()) ) {
+    if ( !mUID ) {
         static int lastUID = 0;
         move->setShotPathUID(++lastUID);
         mUID = lastUID;
     }
 }
 
-FutureShotPath::FutureShotPath( const FutureShotPath& source ) : QPainterPath(source), mMove(source.mMove),
-  mLeadingCol(source.mLeadingCol), mLeadingRow(source.mLeadingRow), mLeadingDirection(source.mLeadingDirection),
-  mUID(source.mUID)
+FutureShotPath::FutureShotPath( const FutureShotPath& source ) : mMove(source.mMove), mTailPoint(source.mTailPoint),
+  mBendPoints(source.mBendPoints), mLeadPoint(source.mLeadPoint), mLeadingDirection(source.mLeadingDirection),
+  mUID(source.mUID), mBounds(source.mBounds), mPainterPath(0)
 {
+}
+
+FutureShotPath::~FutureShotPath()
+{
+    if ( mPainterPath ) {
+        delete mPainterPath;
+    }
 }
 
 int FutureShotPath::getUID() const
@@ -26,9 +34,31 @@ int FutureShotPath::getUID() const
 const QRect& FutureShotPath::getBounds()
 {
     if ( mBounds.isNull() ) {
-        mBounds = boundingRect().toRect() + QMargins(1,1,1,1);
+        ModelPoint min = mTailPoint;
+        ModelPoint max = mTailPoint;
+        for( auto it : mBendPoints ) {
+            it.minMax( min, max );
+        }
+        mLeadPoint.minMax( min, max );
+        mBounds.setTopLeft( min.toViewCenterSquare() );
+        mBounds.setBottomRight( max.toViewCenterSquare() );
+        mBounds += QMargins(1,1,1,1);
     }
     return mBounds;
+}
+
+const QPainterPath* FutureShotPath::toQPath()
+{
+    if ( !mPainterPath ) {
+        mPainterPath = new QPainterPath();
+        QPoint leadingPoint;
+        mPainterPath->moveTo( mTailPoint.toViewCenterSquare() );
+        for( auto it : mBendPoints ) {
+            mPainterPath->lineTo( it.toViewCenterSquare() );
+        }
+        mPainterPath->moveTo( mLeadPoint.toViewCenterSquare() );
+    }
+    return mPainterPath;
 }
 
 void FutureShotPathManager::reset()
@@ -40,29 +70,49 @@ const FutureShotPath* FutureShotPathManager::addPath( MovePiece* move )
 {
     if ( Game* game = getGame(this) ) {
         FutureShotPath path(move);
-        move->setShotPathUID( path.getUID() );
+        FutureChange *previousChange = 0;
 
-        int leadingCol = path.mLeadingCol;
-        int leadingRow = path.mLeadingRow;
+        ModelPoint leadPoint( path.mLeadPoint );
         int leadingDirection = path.mLeadingDirection;
-        QPoint leadingPoint( modelToViewCenterSquare(leadingCol,leadingRow) );
-        path.moveTo( leadingPoint );
 
-        while( getAdjacentPosition( leadingDirection, &leadingCol, &leadingRow ) ) {
-            leadingPoint = modelToViewCenterSquare(leadingCol,leadingRow);
-            if ( !game->canShootThru( leadingCol, leadingRow, &leadingDirection, true, 0, &leadingPoint ) ) {
+        int shotsRemaining = move->getShotCount();
+        while( shotsRemaining > 0 ) {
+            path.mLeadPoint = leadPoint;
+            if ( !getAdjacentPosition( leadingDirection, &leadPoint.mCol, &leadPoint.mRow ) ) {
                 break;
             }
+
+            FutureChange curChange;
+            curChange.changeType = NO_CHANGE;
+            if ( !game->canShootThru( leadPoint.mCol, leadPoint.mRow, &leadingDirection, &curChange ) ) {
+                if ( curChange.changeType == NO_CHANGE ) {
+                    break;
+                }
+                if ( previousChange
+                  && previousChange->changeType == PIECE_PUSHED
+                  && curChange.changeType == PIECE_PUSHED
+                  && previousChange->endCoord.equals( path.mLeadPoint ) ) {
+                    ++previousChange->u.multiPush.count;
+                } else {
+                    std::vector<FutureChange>::iterator ret = path.mChanges.insert( path.mChanges.end(), curChange );
+                    previousChange = &(*ret);
+
+                    // need to resume without advancing the lead point in the case of a tile decay:
+                    if ( curChange.changeType == TILE_CHANGE && curChange.u.tileType == WOOD ) {
+                        leadPoint = path.mLeadPoint;
+                    }
+                }
+                --shotsRemaining;
+            }
+
             if ( leadingDirection != path.mLeadingDirection ) {
                 path.mLeadingDirection = leadingDirection;
-                path.lineTo( leadingPoint );
+                path.mBendPoints.push_back( leadPoint );
             }
         }
-        path.mLeadingCol = leadingCol;
-        path.mLeadingRow = leadingRow;
-        path.lineTo( leadingPoint );
+        path.mLeadPoint = leadPoint;
 
-        auto ret = mPaths.insert( path );
+        std::pair<std::set<FutureShotPath>::iterator,bool> ret = mPaths.insert( path );
         if ( ret.second ) {
             emit dirtyRect( path.getBounds() );
             return &(*ret.first);

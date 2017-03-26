@@ -345,13 +345,17 @@ bool canShootThruPush( QPoint& centerOfSquare, int angle, Push& push, QPoint *hi
             switch( angle ) {
             case  90:
             case 270:
-                hitPoint->setX( push.getX().toInt()+24/2 );
-                centerToEntryPoint( angle, hitPoint );
+                if ( hitPoint ) {
+                    hitPoint->setX( push.getX().toInt()+24/2 );
+                    centerToEntryPoint( angle, hitPoint );
+                }
                 return false;
             case   0:
             case 180:
-                hitPoint->setY( push.getY().toInt()+24/2 );
-                centerToEntryPoint( angle, hitPoint );
+                if ( hitPoint ) {
+                    hitPoint->setY( push.getY().toInt()+24/2 );
+                    centerToEntryPoint( angle, hitPoint );
+                }
                 return false;
             }
         }
@@ -359,8 +363,9 @@ bool canShootThruPush( QPoint& centerOfSquare, int angle, Push& push, QPoint *hi
     return true;
 }
 
-bool Game::canShootThru( int col, int row, int *angle, bool futuristic, Shooter* source, QPoint *hitPoint )
+bool Game::canShootThru( int col, int row, int *angle, FutureChange *change, Shooter* source, QPoint *hitPoint )
 {
+    bool futuristic = (change != 0);
     Board* board = getBoard(futuristic);
 
     switch( board->tileAt(col,row) ) {
@@ -381,7 +386,14 @@ bool Game::canShootThru( int col, int row, int *angle, bool futuristic, Shooter*
                         board = &mFutureBoard;
                     }
                     board->getPieceManager()->eraseAt( col, row );
-                    centerToEntryPoint( *angle, hitPoint );
+                    if ( change ) {
+                        change->changeType = PIECE_DESTROYED;
+                        change->endCoord = ModelPoint( col, row );
+                        change->u.pieceType = CANNON;
+                    }
+                    if ( hitPoint ) {
+                        centerToEntryPoint( *angle, hitPoint );
+                    }
                     return false;
                 }
                 break;
@@ -394,6 +406,12 @@ bool Game::canShootThru( int col, int row, int *angle, bool futuristic, Shooter*
             if ( canMoveFrom( hitPiece->getType(), *angle, &toCol, &toRow, futuristic ) ) {
                 if ( futuristic ) {
                     onFuturePush( hitPiece, *angle );
+                    change->changeType = PIECE_PUSHED;
+                    change->endCoord = ModelPoint( toCol, toRow );
+                    change->u.multiPush.pieceType = hitPiece->getType();
+                    change->u.multiPush.pieceAngle = hitPiece->getAngle();
+                    change->u.multiPush.direction = *angle;
+                    change->u.multiPush.count = 1;
                 } else {
                     SimplePiece simple( hitPiece );
                     board->getPieceManager()->eraseAt( col, row );
@@ -403,31 +421,38 @@ bool Game::canShootThru( int col, int row, int *angle, bool futuristic, Shooter*
             break;
         }
 
-        QPoint centerOfSquare = modelToViewCenterSquare( col, row );
-        if ( !canShootThruPush( centerOfSquare, *angle, mTankPush, hitPoint ) ) {
-            return false;
-        }
-        if ( !canShootThruPush( centerOfSquare, *angle, mShotPush, hitPoint ) ) {
-            return false;
-        }
-
-        // for the tank, vet that the distance is greater than zero to avoid undesireable self-inflicted wounds:
-        if ( source ) {
-            if ( (source->getType() != TANK || source->getShot().getDistance()) && mTank.getRect().contains(centerOfSquare) ) {
-                switch( *angle ) {
-                case  90:
-                case 270:
-                    hitPoint->setX( mTank.getViewX().toInt()+24/2 );
-                    centerToEntryPoint( *angle, hitPoint );
-                    break;
-                case   0:
-                case 180:
-                    hitPoint->setY( mTank.getViewY().toInt()+24/2 );
-                    centerToEntryPoint( *angle, hitPoint );
-                    break;
-                }
-                source->getShot().setIsKill();
+        if ( isMasterBoard(board) ) {
+            QPoint centerOfSquare = modelToViewCenterSquare( col, row );
+            if ( !canShootThruPush( centerOfSquare, *angle, mTankPush, hitPoint ) ) {
                 return false;
+            }
+            if ( !canShootThruPush( centerOfSquare, *angle, mShotPush, hitPoint ) ) {
+                return false;
+            }
+
+            // for the tank, vet that the distance is greater than zero to avoid undesireable self-inflicted wounds:
+            if ( source ) {
+                if ( (source->getType() != TANK || source->getShot().getDistance())
+                   && mTank.getRect().contains(centerOfSquare) ) {
+                    switch( *angle ) {
+                    case  90:
+                    case 270:
+                        if ( hitPoint ) {
+                            hitPoint->setX( mTank.getViewX().toInt()+24/2 );
+                            centerToEntryPoint( *angle, hitPoint );
+                        }
+                        break;
+                    case   0:
+                    case 180:
+                        if ( hitPoint ) {
+                            hitPoint->setY( mTank.getViewY().toInt()+24/2 );
+                            centerToEntryPoint( *angle, hitPoint );
+                        }
+                        break;
+                    }
+                    source->getShot().setIsKill();
+                    return false;
+                }
             }
         }
         return true;
@@ -450,6 +475,11 @@ bool Game::canShootThru( int col, int row, int *angle, bool futuristic, Shooter*
             board = &mFutureBoard;
         }
         board->setTileAt( WOOD_DAMAGED, col, row );
+        if ( change ) {
+            change->changeType = TILE_CHANGE;
+            change->endCoord = ModelPoint( col, row );
+            change->u.tileType = WOOD;
+        }
         break;
     case WOOD_DAMAGED:
         if ( futuristic ) {
@@ -457,13 +487,20 @@ bool Game::canShootThru( int col, int row, int *angle, bool futuristic, Shooter*
             board = &mFutureBoard;
         }
         board->setTileAt( DIRT, col, row );
+        if ( change ) {
+            change->changeType = TILE_CHANGE;
+            change->endCoord = ModelPoint( col, row );
+            change->u.tileType = WOOD_DAMAGED;
+        }
         break;
 
     default:
         ;
     }
 
-    centerToEntryPoint( *angle, hitPoint );
+    if ( hitPoint ) {
+        centerToEntryPoint( *angle, hitPoint );
+    }
     return false;
 }
 

@@ -211,7 +211,7 @@ void BoardWindow::render( const QRect* rect, QPainter* painter )
                 pen.setStyle( Qt::DashLine );
                 painter->setPen( pen );
             }
-            painter->drawPath( it );
+            painter->drawPath( *it.toQPath() );
         }
     }
 

@@ -79,7 +79,7 @@ void ShotModel::setSequence( const QVariant &sequence )
         if ( getAdjacentPosition( mLeadingDirection, &mLeadingCol, &mLeadingRow ) ) {
             QPoint hitPoint( modelToViewCenterSquare(mLeadingCol,mLeadingRow) );
             int entryDirection = mLeadingDirection;
-            if ( game->canShootThru( mLeadingCol, mLeadingRow, &mLeadingDirection, false, getShooter(), &hitPoint ) ) {
+            if ( game->canShootThru( mLeadingCol, mLeadingRow, &mLeadingDirection, 0, getShooter(), &hitPoint ) ) {
                 grow( modelToViewCenterSquare(mLeadingCol,mLeadingRow), entryDirection );
             } else {
                 addTermination( entryDirection, hitPoint );

@@ -2,16 +2,20 @@
 #define FUTURESHOTPATH_H
 
 #include <set>
+#include <vector>
 #include <QObject>
 #include <QRect>
 #include <QPainterPath>
 
+#include "util/gameutils.h"
+#include "modelpoint.h"
 #include "piece.h"
+#include "controller/futurechange.h"
 
 /**
- * @brief Models a pending shot sequence for a specific square and direction
+ * @brief A class that models a pending shot sequence for a specific square and direction
  */
-class FutureShotPath : public QPainterPath
+class FutureShotPath
 {
 public:
     /**
@@ -28,11 +32,19 @@ public:
      */
     FutureShotPath( const FutureShotPath& source );
 
+    ~FutureShotPath();
+
     /**
      * @brief Retrieves the unique identifier for this shot sequence
      * @return The unique non-zero identifier for the given instance
      */
     int getUID() const;
+
+    /**
+     * @brief toQPath
+     * @return A QPainterPath depicting this shot
+     */
+    const QPainterPath* toQPath();
 
     /**
      * @brief Query the rectangular paint area that this object occupies
@@ -41,11 +53,14 @@ public:
 
 private:
     const MovePiece* mMove;
-    int mLeadingCol;
-    int mLeadingRow;
+    ModelPoint mTailPoint;
+    std::vector<ModelPoint> mBendPoints;
+    ModelPoint mLeadPoint;
     int mLeadingDirection;
     int mUID;
+    std::vector<FutureChange> mChanges;
     QRect mBounds;
+    QPainterPath* mPainterPath;
 
     friend struct FutureShotPathComparator;
     friend class FutureShotPathManager;
