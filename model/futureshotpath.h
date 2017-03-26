@@ -47,12 +47,20 @@ public:
     const QPainterPath* toQPath();
 
     /**
-     * @brief Query the rectangular paint area that this object occupies
+     * @brief Get the rectangle that indicates the paint region that this instance occupies
      */
-    const QRect& getBounds();
+    const QRect& getBounds() const;
+
+    FutureShotPath& operator = ( const FutureShotPath& other );
 
 private:
+    /**
+     * @brief initialize this instance's paint area rectangle
+     */
+    const QRect& initBounds();
+
     const MovePiece* mMove;
+    int mShotCount;
     ModelPoint mTailPoint;
     std::vector<ModelPoint> mBendPoints;
     ModelPoint mLeadPoint;
@@ -87,7 +95,7 @@ public:
 
     void reset();
 
-    const FutureShotPath* addPath( MovePiece* move );
+    const FutureShotPath* updatePath( MovePiece* move );
     void removePath( Piece* piece );
 
     const FutureShotPathSet* getPaths() const;

@@ -51,9 +51,7 @@ void Tank::fire( int count )
         }
         if ( nMoves > 1 ) {
             MovePiece* move = mMoves.setShotCountBack( count );
-            if ( !move->getShotPathUID() ) {
-                mFutureShots.addPath( move );
-            }
+            mFutureShots.updatePath( move );
             return;
         }
     }
