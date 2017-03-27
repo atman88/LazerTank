@@ -34,6 +34,11 @@ public:
     bool isNull() const;
 
     /**
+     * @brief Nullify this point
+     */
+    void setNull();
+
+    /**
      * @brief compare equality
      */
     bool equals( ModelPoint& other );

@@ -21,26 +21,26 @@ void Game::init( BoardWindow* window )
     mTankPush.setParent( this );
     mShotPush.setParent( this );
     mSpeedController.setParent( this );
+    mMoveController.setParent( this );
 
     if ( window ) {
         window->init( this );
 
-        QObject::connect( window, &BoardWindow::focusChanged, &mTank, &Tank::setFocus );
+        QObject::connect( window, &BoardWindow::focusChanged, &mMoveController, &MoveController::setFocus );
         QObject::connect( &mTankPush, &Push::rectDirty, window, &BoardWindow::renderLater );
         QObject::connect( &mShotPush, &Push::rectDirty, window, &BoardWindow::renderLater );
 
-        QObject::connect( &mTank, &Tank::idle, this, &Game::endMoveDeltaTracking );
         QObject::connect( &mTank, &Tank::changed, window, &BoardWindow::renderLater );
-        QObject::connect( mTank.getFutureShots(), &FutureShotPathManager::dirtyRect, window, &BoardWindow::renderLater );
+        QObject::connect( mMoveController.getFutureShots(), &FutureShotPathManager::dirtyRect, window, &BoardWindow::renderLater );
 
         QMenu& menu = window->getMenu();
         QObject::connect( &menu, &QMenu::aboutToShow, &mTank, &Tank::pause  );
         QObject::connect( &menu, &QMenu::aboutToHide, &mTank, &Tank::resume );
 
-        PieceListManager* moveManager = mTank.getMoves();
+        PieceListManager* moveManager = mMoveController.getMoves();
         QObject::connect( moveManager, &PieceListManager::appended, window, &BoardWindow::renderSquareLater );
         QObject::connect( moveManager, &PieceListManager::erased,   window, &BoardWindow::renderSquareLater );
-        QObject::connect( moveManager, &PieceListManager::changed, window, &BoardWindow::renderSquareLater );
+        QObject::connect( moveManager, &PieceListManager::changed,  window, &BoardWindow::renderSquareLater );
 
         QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::erasedAt,   window, &BoardWindow::renderSquareLater );
         QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::insertedAt, window, &BoardWindow::renderSquareLater );
@@ -48,8 +48,11 @@ void Game::init( BoardWindow* window )
     }
 
     mTank.init( this );
-    QObject::connect( &mTank, &Tank::movingInto, this, &Game::onTankMovingInto );
-    QObject::connect( &mPathFinderController, &PathFinderController::pathFound, &mTank, &Tank::onPathFound );
+
+    mMoveController.init( this );
+    QObject::connect( &mMoveController, &MoveController::pushingInto, this, &Game::onTankPushingInto );
+    QObject::connect( &mMoveController, &MoveController::idle, this, &Game::endMoveDeltaTracking );
+    QObject::connect( &mPathFinderController, &PathFinderController::pathFound, &mMoveController, &MoveController::onPathFound );
 
     mActiveCannon.init( this, CANNON, QColor(255,50,83) );
 
@@ -74,6 +77,7 @@ void Game::init( BoardWindow* window )
 void Game::onBoardLoaded()
 {
     mFutureDelta.enable( false );
+    mMoveController.reset();
     mTank.reset( mBoard.getTankStartCol(), mBoard.getTankStartRow() );
     mActiveCannon.reset( NullPoint );
     mSpeedController.setHighSpeed(false);
@@ -236,7 +240,7 @@ void Game::onMoveAggregatorFinished()
     }
 
     sightCannons();
-    mTank.wakeup();
+    mMoveController.wakeup();
 }
 
 void Game::onBoardTileChanged( int col, int row )
@@ -276,12 +280,17 @@ bool Game::canPlaceAt(PieceType what, int col, int row, int fromAngle, Board* bo
     return false;
 }
 
+MoveController* Game::getMoveController()
+{
+    return &mMoveController;
+}
+
 PathFinderController* Game::getPathFinderController()
 {
     return &mPathFinderController;
 }
 
-BoardWindow *Game::getWindow() const
+BoardWindow* Game::getWindow() const
 {
     return mWindow;
 }
@@ -510,7 +519,7 @@ bool Game::canShootThru( int col, int row, int *angle, FutureChange *change, Sho
     return false;
 }
 
-void Game::onTankMovingInto( int col, int row, int fromAngle )
+void Game::onTankPushingInto( int col, int row, int fromAngle )
 {
     PieceSetManager* pm = mBoard.getPieceManager();
     Piece* what = pm->pieceAt( col, row );
@@ -593,7 +602,7 @@ void Game::undoFuturePush( MovePiece* pusher )
 
 void Game::undoLastMove()
 {
-    PieceListManager* moveManager = getTank()->getMoves();
+    PieceListManager* moveManager = mMoveController.getMoves();
     switch( moveManager->size() ) {
     case 0: // empty
         return;
@@ -608,6 +617,6 @@ void Game::undoLastMove()
         if ( piece->hasPush() ) {
             undoFuturePush( dynamic_cast<MovePiece*>(piece) );
         }
-        getTank()->eraseLastMove();
+        mMoveController.eraseLastMove();
     }
 }

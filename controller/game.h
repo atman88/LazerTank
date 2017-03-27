@@ -10,6 +10,7 @@ class PathFinderController;
 
 #include "animationstateaggregator.h"
 #include "pathfindercontroller.h"
+#include "movecontroller.h"
 #include "model/boarddelta.h"
 #include "model/board.h"
 #include "model/tank.h"
@@ -152,6 +153,8 @@ public:
      */
     PathFinderController* getPathFinderController();
 
+    MoveController* getMoveController();
+
 public slots:
     /**
      * @brief Receives notification that the tank is about to move toward the identified square
@@ -159,7 +162,7 @@ public slots:
      * @param row The column of the target square
      * @param fromAngle The direction the tank will move in
      */
-    void onTankMovingInto( int col, int row, int fromAngle );
+    void onTankPushingInto( int col, int row, int fromAngle );
 
     /**
      * @brief Receives notification that the board's map changed
@@ -230,6 +233,7 @@ private:
     BoardWindow* mWindow;
 
     Board mBoard;
+    MoveController mMoveController;
     PathFinderController mPathFinderController;
     Push mTankPush;
     Push mShotPush;

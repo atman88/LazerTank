@@ -6,6 +6,11 @@ bool ModelPoint::isNull() const
     return mCol < 0 || mRow < 0;
 }
 
+void ModelPoint::setNull()
+{
+    mCol = mRow = -1;
+}
+
 bool ModelPoint::equals(ModelPoint &other)
 {
     return mCol == other.mCol

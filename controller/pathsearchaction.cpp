@@ -9,12 +9,12 @@ PathSearchAction::PathSearchAction(QObject *parent) : QAction(parent)
 void PathSearchAction::setCriteria( PieceType focus, int targetCol, int targetRow, bool moveWhenFound )
 {
     if ( Game* game = getGame(this) ) {
-        Tank* tank = game->getTank();
+        MoveController* moveController = game->getMoveController();
 
         if ( focus == TANK ) {
             mFocus = TANK;
         } else {
-            Piece* move = tank->getMoves()->getBack();
+            Piece* move = moveController->getMoves()->getBack();
             if ( !move ) {
                 mFocus = TANK;
             } else {
@@ -26,6 +26,7 @@ void PathSearchAction::setCriteria( PieceType focus, int targetCol, int targetRo
         }
 
         if ( mFocus == TANK ) {
+            Tank* tank = game->getTank();
             mStartCol = tank->getCol();
             mStartRow = tank->getRow();
             mStartDirection = tank->getRotation();

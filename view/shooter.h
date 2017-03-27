@@ -31,8 +31,9 @@ public:
 
     /**
      * @brief fire this shooters shot
+     * @return true if the shot was successfully started
      */
-    void fire();
+    bool fire();
 
     /**
      * @brief Release the trigger. Essentially a hint that its a good time to start shedding the shot's tail

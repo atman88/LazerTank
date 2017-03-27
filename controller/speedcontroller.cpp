@@ -25,7 +25,7 @@ int SpeedController::desiredSpeed()
     }
 
     if ( Game* game = getGame(this) ) {
-        int distance = game->getTank()->getMoves()->getList()->size();
+        int distance = game->getMoveController()->getMoves()->getList()->size();
         return (distance < 3) ? NORMAL_SPEED : NORMAL_SPEED - std::min( distance-3, NSPEED_STEPS ) * 100;
     }
 

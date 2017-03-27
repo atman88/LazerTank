@@ -29,9 +29,9 @@ void Shooter::reset( QPoint p )
     mShot.reset();
 }
 
-void Shooter::fire()
+bool Shooter::fire()
 {
-    mShot.fire( this );
+    return mShot.fire( this );
 }
 
 void Shooter::ceaseFire()

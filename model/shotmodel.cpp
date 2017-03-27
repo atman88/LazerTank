@@ -38,7 +38,7 @@ QVariant ShotModel::getSequence()
     return mSequence;
 }
 
-void ShotModel::fire( Shooter* shooter )
+bool ShotModel::fire( Shooter* shooter )
 {
     int direction = shooter->getViewRotation().toInt() % 360;
     if ( !(direction % 90) ) {
@@ -48,7 +48,9 @@ void ShotModel::fire( Shooter* shooter )
         mLeadingRow = shooter->getViewY().toInt()/24;
         commenceFire( shooter );
         mAnimation.start();
+        return true;
     }
+    return false;
 }
 
 void ShotModel::setSequence( const QVariant &sequence )

@@ -24,6 +24,13 @@ public:
     void init( AnimationStateAggregator* aggregate );
 
     /**
+     * @brief Fire the laser beam (i.e. shoot)
+     * @param shooter Identifies the active point of origin
+     * @return true if the shot was successfully started
+     */
+    bool fire( Shooter* shooter );
+
+    /**
      * @brief Getter method needed for animation sequencing
      */
     QVariant getSequence();
@@ -60,12 +67,6 @@ signals:
     void tankKilled();
 
 public slots:
-    /**
-     * @brief Fire the laser beam (i.e. shoot)
-     * @param shooter Identifies the active point of origin
-     */
-    void fire( Shooter* shooter );
-
     /**
      * @brief Setter method used by the animation
      */

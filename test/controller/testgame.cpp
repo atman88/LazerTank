@@ -76,12 +76,12 @@ void testFuturePushToward( int direction, Game* game )
 {
     cout << "testFuturePushToward " << direction << endl;
 
-    Tank* tank = game->getTank();
-    tank->getMoves()->reset();
+    MoveController* moveController = game->getMoveController();
+    moveController->getMoves()->reset();
 
     // move twice; first may merel rotate the tank but more importantly primes the move list:
-    tank->move( direction );
-    tank->move( direction );
+    moveController->move( direction );
+    moveController->move( direction );
     QVERIFY( game->getDeltaPieces()->size() > 0 );
     game->undoLastMove();
     QCOMPARE( game->getDeltaPieces()->size(), 0UL );

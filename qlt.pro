@@ -37,7 +37,8 @@ HEADERS += \
     model/push.h \
     model/modelpoint.h \
     controller/futurechange.h \
-    model/tile.h
+    model/tile.h \
+    controller/movecontroller.h
 
 SOURCES += \
            model/board.cpp \
@@ -65,7 +66,8 @@ SOURCES += \
     model/futureshotpath.cpp \
     view/pushview.cpp \
     model/push.cpp \
-    model/modelpoint.cpp
+    model/modelpoint.cpp \
+    controller/movecontroller.cpp
 
 RESOURCES += qml.qrc
 

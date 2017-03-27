@@ -50,7 +50,7 @@ void BoardWindow::init( Game* game )
 
         QObject::connect( &mSpeedAction, &QAction::toggled, mGame->getSpeedController(), &SpeedController::setHighSpeed );
         QObject::connect( &mUndoMoveAction,  &QAction::triggered, mGame, &Game::undoLastMove );
-        QObject::connect( &mClearMovesAction,&QAction::triggered, mGame->getTank(), &Tank::clearMoves );
+        QObject::connect( &mClearMovesAction,&QAction::triggered, mGame->getMoveController(), &MoveController::clearMoves );
     }
 }
 
@@ -135,8 +135,8 @@ void BoardWindow::render( const QRect* rect, QPainter* painter )
         return;
     }
     Board* board = mGame->getBoard();
-    Tank* tank = mGame->getTank();
-    const PieceMultiSet* moves = tank->getMoves()->toMultiSet();
+    MoveController* moveController = mGame->getMoveController();
+    const PieceMultiSet* moves = moveController->getMoves()->toMultiSet();
     const PieceSet* tiles = board->getPieceManager()->getPieces();
     const PieceSet* deltas = mGame->getDeltaPieces();
 
@@ -204,12 +204,13 @@ void BoardWindow::render( const QRect* rect, QPainter* painter )
     }
 
     bool usingFutureShotPen = false;
-    for( auto it : *tank->getFutureShots()->getPaths() ) {
+    for( auto it : *moveController->getFutureShots()->getPaths() ) {
         if ( rect->intersects( it.getBounds() ) ) {
             if ( !usingFutureShotPen ) {
-                QPen pen( tank->getShot().getPen() );
+                QPen pen( mGame->getTank()->getShot().getPen() );
                 pen.setStyle( Qt::DashLine );
                 painter->setPen( pen );
+                usingFutureShotPen = true;
             }
             painter->drawPath( *it.toQPath() );
         }
@@ -223,7 +224,7 @@ void BoardWindow::render( const QRect* rect, QPainter* painter )
 
     mGame->getTankPush().render( rect, painter );
     mGame->getShotPush().render( rect, painter );
-    tank->render( rect, painter );
+    mGame->getTank()->render( rect, painter );
     if ( mFocus == TANK ) {
         // render the moves ontop of (i.e. after) the tank and it's pushes when focus is at
         // the tank:
@@ -287,7 +288,7 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
             QKeySequence speedSeq( Qt::Key_S );
             QKeySequence captureSeq( Qt::Key_C );
 
-            mMenu.addAction( "shoot& ", mGame->getTank(), &Tank::fire, shootSeq );
+            mMenu.addAction( "shoot& ", mGame->getMoveController(), &MoveController::fire, shootSeq );
             mUndoMoveAction.setText("&Undo");
             mClearMovesAction.setText("Clear Moves");
             mSpeedAction.setText( "&Speed Boost" );
@@ -339,7 +340,7 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
         }
         mGame->getPathFinderController()->testActions( actions, nActions );
 
-        bool movesPending = mGame->getTank()->getMoves()->size() > 0;
+        bool movesPending = mGame->getMoveController()->getMoves()->size() > 0;
         mUndoMoveAction.setEnabled( movesPending );
         mClearMovesAction.setEnabled( movesPending );
 
@@ -383,7 +384,7 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
             break;
 
         case Qt::Key_Space:
-            mGame->getTank()->fire();
+            mGame->getMoveController()->fire();
             break;
 
         case Qt::Key_C: // attempt to capture the flag
@@ -396,9 +397,9 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
             if ( !ev->modifiers() ) {
                 int rotation = keyToAngle(ev->key());
                 if ( rotation >= 0 ) {
-                    mGame->getTank()->move( rotation );
+                    mGame->getMoveController()->move( rotation );
                 } else if ( ev->key() >= Qt::Key_0 && ev->key() <= Qt::Key_9 ) {
-                    mGame->getTank()->fire( ev->key() - Qt::Key_0 );
+                    mGame->getMoveController()->fire( ev->key() - Qt::Key_0 );
                 }
             }
         }
@@ -422,12 +423,12 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
             break;
 
         case Qt::Key_C:
-                mGame->getTank()->wakeup();
+                mGame->getMoveController()->wakeup();
                 break;
 
         case Qt::Key_Backspace:
             if ( ev->modifiers() == Qt::ControlModifier ) {
-                mGame->getTank()->clearMoves();
+                mGame->getMoveController()->clearMoves();
             } else {
                 mGame->undoLastMove();
             }
@@ -467,7 +468,7 @@ void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
 
     switch( event->button() ) {
     case Qt::LeftButton:
-        mGame->getTank()->wakeup();
+        mGame->getMoveController()->wakeup();
         break;
     default:
         ;
