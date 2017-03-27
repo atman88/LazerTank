@@ -43,7 +43,7 @@ const QPixmap* getPixmap( unsigned type )
         { TILE_FUTURE_ERASE, { "tile-future-erase"  } },
         { TILE_FUTURE_INSERT,{ "tile-future-insert" } }
     };
-    static NamedPixmap* nameArray[TileTypeUpperBound] = { 0 };
+    static NamedPixmap* nameArray[PieceTypeUpperBound] = { 0 };
     static QString pathFormat( ":/images/%1.png" );
     static NamedPixmap NullPixmap( "null" );
 

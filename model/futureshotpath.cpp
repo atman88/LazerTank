@@ -15,7 +15,8 @@ FutureShotPath::FutureShotPath( MovePiece* move ) : mMove(move), mShotCount(0), 
 
 FutureShotPath::FutureShotPath( const FutureShotPath& source ) : mMove(source.mMove), mShotCount(source.mShotCount),
   mTailPoint(source.mTailPoint), mBendPoints(source.mBendPoints), mLeadPoint(source.mLeadPoint),
-  mLeadingDirection(source.mLeadingDirection), mUID(source.mUID), mBounds(source.mBounds), mPainterPath(0)
+  mLeadingDirection(source.mLeadingDirection), mUID(source.mUID), mChanges(source.mChanges), mBounds(source.mBounds),
+  mPainterPath(0)
 {
 }
 
@@ -97,11 +98,19 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
             if ( it->mShotCount <= shotCount ) {
                 path = *it;
             } else {
+                game->getBoard(true)->undoChanges( it->mChanges );
                 emit dirtyRect( it->getBounds() );
             }
             mPaths.erase( it );
         }
-        FutureChange *previousChange = 0;
+
+        if ( !shotCount ) {
+            move->setShotPathUID(0);
+            return 0;
+        }
+
+        bool havePreviousChange = false;
+        std::vector<FutureChange>::iterator previousChange;
 
         ModelPoint leadPoint( path.mLeadPoint );
         int leadingDirection = path.mLeadingDirection;
@@ -118,19 +127,21 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
                 if ( curChange.changeType == NO_CHANGE ) {
                     break;
                 }
-                if ( previousChange
+                if ( havePreviousChange
                   && previousChange->changeType == PIECE_PUSHED
                   && curChange.changeType == PIECE_PUSHED
-                  && previousChange->endCoord.equals( path.mLeadPoint ) ) {
-                    ++previousChange->u.multiPush.count;
-                } else {
-                    std::vector<FutureChange>::iterator ret = path.mChanges.insert( path.mChanges.end(), curChange );
-                    previousChange = &(*ret);
+                  && previousChange->point.equals( leadPoint ) ) {
+                    curChange.u.multiPush.count += previousChange->u.multiPush.count;
+                    path.mChanges.erase( previousChange );
+                }
 
-                    // need to resume without advancing the lead point in the case of a tile decay:
-                    if ( curChange.changeType == TILE_CHANGE && curChange.u.tileType == WOOD ) {
-                        leadPoint = path.mLeadPoint;
-                    }
+                std::vector<FutureChange>::iterator ret = path.mChanges.insert( path.mChanges.end(), curChange );
+                havePreviousChange = true;
+                previousChange = ret;
+
+                // need to resume without advancing the lead point in the case of a tile decay:
+                if ( curChange.changeType == TILE_CHANGE && curChange.u.tileType == WOOD ) {
+                    leadPoint = path.mLeadPoint;
                 }
                 ++path.mShotCount;
             }

@@ -1,3 +1,4 @@
+#include <iostream>
 #include <QVariant>
 #include <QFile>
 
@@ -208,3 +209,46 @@ bool getAdjacentPosition( int angle, int *col, int *row )
     }
     return false;
 }
+
+void Board::undoChanges( std::vector<FutureChange> changes )
+{
+    for( auto it = changes.end(); it != changes.begin(); ) {
+        --it;
+        switch( it->changeType ) {
+        case TILE_CHANGE:
+            setTileAt( it->u.tileType, it->point.mCol, it->point.mRow );
+            break;
+
+        case PIECE_ERASED:
+            mPieceManager.insert( it->u.erase.pieceType, it->point.mCol, it->point.mRow, it->u.erase.pieceAngle );
+            break;
+
+        case PIECE_PUSHED:
+        {   int reverseDirection = (it->u.multiPush.direction + 180) % 360;
+            ModelPoint p = it->point;
+            if ( !mPieceManager.eraseAt( it->point.mCol, it->point.mRow ) ) {
+                if ( it->u.multiPush.pieceType != TILE ) {
+                    std::cout << "** undo PIECE_PUSHED didn't erase @ (" << p.mCol << "," << p.mRow << ")" << std::endl;
+                } else if ( tileAt( it->point.mCol, it->point.mRow ) == TILE_SUNK ) {
+                    setTileAt( WATER, it->point.mCol, it->point.mRow );
+                } else {
+                    std::cout << "** undo PIECE_PUSHED didn't erase @ non-sunk (" << p.mCol << "," << p.mRow << ")" << std::endl;
+                }
+            }
+
+            for( int i = it->u.multiPush.count; --i >= 0; ) {
+                if ( !getAdjacentPosition( reverseDirection, &p.mCol, &p.mRow ) ) {
+                    std::cout << "** undo PIECE_PUSHED no adjacent at (" << p.mCol << "," << p.mRow << ")" << std::endl;
+                    break;
+                }
+            }
+            mPieceManager.insert( it->u.multiPush.pieceType, p.mCol, p.mRow, it->u.multiPush.pieceAngle );
+        }
+            break;
+
+        default:
+            ;
+        }
+    }
+}
+

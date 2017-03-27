@@ -4,7 +4,9 @@
 #include <QObject>
 #include <QTextStream>
 
+#include "tile.h"
 #include "model/piecesetmanager.h"
+#include "controller/futurechange.h"
 
 // The last /maps/level%1.txt file we wish to reach. Increase this as new levels are added.
 #define BOARD_MAX_LEVEL 42
@@ -12,25 +14,6 @@
 // The largest board dimensions we care to support
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
 #define BOARD_MAX_HEIGHT PIECE_MAX_ROWCOUNT
-
-// Things that board squares (tiles) can be:
-typedef enum {
-    DIRT = PieceTypeUpperBound,
-    TILE_SUNK,
-    STONE,
-    WATER,
-    FLAG,
-    EMPTY,
-    STONE_MIRROR,
-    STONE_MIRROR__90,
-    STONE_MIRROR_180,
-    STONE_MIRROR_270,
-    STONE_SLIT,
-    STONE_SLIT_90,
-    WOOD,
-    WOOD_DAMAGED,
-    TileTypeUpperBound
-} TileType;
 
 /**
  * @brief Helper method to determine the neighbor square for the given direction
@@ -151,6 +134,11 @@ public:
      * @return The tank way point column. Column 0 is returned when not specified by the previous load.
      */
     int getTankStartRow() const;
+
+    /**
+     * @brief roll back future board changes for this shot path
+     */
+    void undoChanges( std::vector<FutureChange> changes );
 
 signals:
     /**

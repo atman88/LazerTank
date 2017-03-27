@@ -3,8 +3,10 @@
 
 #include <QPainter>
 
+#include "tile.h"
+
 typedef enum {
-    NONE,
+    NONE = TileTypeUpperBound, // must be unique from tile values (allows imageutils to combine them)
     TANK,
     MOVE,
     MOVE_HIGHLIGHT,

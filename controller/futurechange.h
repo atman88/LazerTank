@@ -1,7 +1,8 @@
 #ifndef FUTURECHANGE_H
 #define FUTURECHANGE_H
 
-#include "board.h"
+#include "model/modelpoint.h"
+#include "tile.h"
 
 /**
   * types of future changes
@@ -9,27 +10,34 @@
 typedef enum {
     NO_CHANGE,
     TILE_CHANGE,  // The type of tile deleted, or if WOOD then indicates a decay from WOOD to WOOD_DAMAGED
-    PIECE_DESTROYED,
+    PIECE_ERASED,
     PIECE_PUSHED
 } FutureChangeType;
+
+/**
+ * @brief A record that describes a piece removal
+ */
+typedef struct {
+    PieceType pieceType;
+    int pieceAngle;
+} FutureChangePieceErase;
 
 /**
  * @brief A record that describes a push one or more times
  */
 typedef struct {
-public:
     PieceType pieceType;
     int pieceAngle;
     int direction;
     int count;
-} FutureShotMultiPush;
+} FutureChangeMultiPush;
 
 /**
  * @brief A record that describes a single board change (i.e. transaction)
  **/
 typedef struct {
     FutureChangeType changeType;
-    ModelPoint endCoord; // the last affected square
+    ModelPoint point; // the impacted square
     union {
         /**
          * @brief TILE_CHANGE info
@@ -37,14 +45,14 @@ typedef struct {
         TileType tileType;
 
         /**
-         * @brief PIECE_DESTROYED info
+         * @brief PIECE_ERASED info
          */
-        PieceType pieceType;
+        FutureChangePieceErase erase;
 
         /**
          * @brief PIECE_PUSHED info
          */
-        FutureShotMultiPush multiPush;
+        FutureChangeMultiPush multiPush;
     } u;
 } FutureChange;
 

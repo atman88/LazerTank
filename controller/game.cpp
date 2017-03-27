@@ -379,24 +379,30 @@ bool Game::canShootThru( int col, int row, int *angle, FutureChange *change, Sho
                     return true;
                 }
                 break;
+
             case CANNON:
-                if ( abs( hitPiece->getAngle() - *angle ) == 180 ) {
+            {   int pieceAngle = hitPiece->getAngle();
+                if ( abs( pieceAngle - *angle ) == 180 ) {
                     if ( futuristic ) {
                         mFutureDelta.enable();
                         board = &mFutureBoard;
                     }
-                    board->getPieceManager()->eraseAt( col, row );
                     if ( change ) {
-                        change->changeType = PIECE_DESTROYED;
-                        change->endCoord = ModelPoint( col, row );
-                        change->u.pieceType = CANNON;
+                        change->changeType = PIECE_ERASED;
+                        change->point = ModelPoint( col, row );
+                        change->u.erase.pieceType = CANNON;
+                        change->u.erase.pieceAngle = pieceAngle;
                     }
+                    board->getPieceManager()->eraseAt( col, row );
+
                     if ( hitPoint ) {
                         centerToEntryPoint( *angle, hitPoint );
                     }
                     return false;
                 }
+            }
                 break;
+
             default:
                 ;
             }
@@ -405,13 +411,13 @@ bool Game::canShootThru( int col, int row, int *angle, FutureChange *change, Sho
             int toCol = col, toRow = row;
             if ( canMoveFrom( hitPiece->getType(), *angle, &toCol, &toRow, futuristic ) ) {
                 if ( futuristic ) {
-                    onFuturePush( hitPiece, *angle );
                     change->changeType = PIECE_PUSHED;
-                    change->endCoord = ModelPoint( toCol, toRow );
+                    change->point = ModelPoint( toCol, toRow );
                     change->u.multiPush.pieceType = hitPiece->getType();
                     change->u.multiPush.pieceAngle = hitPiece->getAngle();
                     change->u.multiPush.direction = *angle;
                     change->u.multiPush.count = 1;
+                    onFuturePush( hitPiece, *angle );
                 } else {
                     SimplePiece simple( hitPiece );
                     board->getPieceManager()->eraseAt( col, row );
@@ -477,7 +483,7 @@ bool Game::canShootThru( int col, int row, int *angle, FutureChange *change, Sho
         board->setTileAt( WOOD_DAMAGED, col, row );
         if ( change ) {
             change->changeType = TILE_CHANGE;
-            change->endCoord = ModelPoint( col, row );
+            change->point = ModelPoint( col, row );
             change->u.tileType = WOOD;
         }
         break;
@@ -489,7 +495,7 @@ bool Game::canShootThru( int col, int row, int *angle, FutureChange *change, Sho
         board->setTileAt( DIRT, col, row );
         if ( change ) {
             change->changeType = TILE_CHANGE;
-            change->endCoord = ModelPoint( col, row );
+            change->point = ModelPoint( col, row );
             change->u.tileType = WOOD_DAMAGED;
         }
         break;

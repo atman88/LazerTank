@@ -36,7 +36,8 @@ HEADERS += \
     view/pushview.h \
     model/push.h \
     model/modelpoint.h \
-    controller/futurechange.h
+    controller/futurechange.h \
+    model/tile.h
 
 SOURCES += \
            model/board.cpp \

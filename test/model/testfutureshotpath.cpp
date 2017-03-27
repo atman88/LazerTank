@@ -20,13 +20,26 @@ void TestMain::testFutureShotPath()
     FutureShotPathManager manager;
     manager.setParent( &game );
 
-    int shotCount = 7;
-    MovePiece move( MOVE, game.getTank()->getCol(), game.getTank()->getRow(), 0, shotCount );
-    const FutureShotPath* path = manager.addPath(&move);
+    MovePiece move( MOVE, game.getTank()->getCol(), game.getTank()->getRow(), 0, 6 );
+    const FutureShotPath* path = manager.updatePath(&move);
     QCOMPARE( path->getUID(), move.getShotPathUID() );
 
     Board* futureBoard = game.getBoard(true);
 
     // verify that this is the future board:
     QCOMPARE(game.isMasterBoard(futureBoard), false);
+
+    QCOMPARE( futureBoard->getPieceManager()->typeAt( 2, 3 ), CANNON );
+
+    move.setShotCount( 5 );
+    manager.updatePath(&move);
+    QCOMPARE( futureBoard->getPieceManager()->typeAt( 2, 3 ), CANNON );
+
+    move.setShotCount( 4 );
+    manager.updatePath(&move);
+    QCOMPARE( futureBoard->getPieceManager()->typeAt( 2, 3 ), NONE );
+
+    move.setShotCount( 0 );
+    manager.updatePath(&move);
+    QCOMPARE( game.getDeltaPieces()->size(), 0UL );
 }
