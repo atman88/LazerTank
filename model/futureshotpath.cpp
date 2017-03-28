@@ -72,12 +72,11 @@ const QPainterPath* FutureShotPath::toQPath()
 {
     if ( !mPainterPath ) {
         mPainterPath = new QPainterPath();
-        QPoint leadingPoint;
         mPainterPath->moveTo( mTailPoint.toViewCenterSquare() );
         for( auto it : mBendPoints ) {
             mPainterPath->lineTo( it.toViewCenterSquare() );
         }
-        mPainterPath->moveTo( mLeadPoint.toViewCenterSquare() );
+        mPainterPath->lineTo( mLeadPoint.toViewCenterSquare() );
     }
     return mPainterPath;
 }
