@@ -294,7 +294,7 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
             QKeySequence speedSeq( Qt::Key_S );
             QKeySequence captureSeq( Qt::Key_C );
 
-            mMenu.addAction( "shoot& ", mGame->getMoveController(), SLOT(&MoveController::fire), shootSeq );
+            mMenu.addAction( "shoot& ", mGame->getMoveController(), SLOT(fire()), shootSeq );
             TO_QACTION(mUndoMoveAction).setText("&Undo");
             TO_QACTION(mClearMovesAction).setText("Clear Moves");
             TO_QACTION(mSpeedAction).setText( "&Speed Boost" );
@@ -323,7 +323,7 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
                 action->setData( QVariant(level) );
             }
 
-            mMenu.addAction( QString("E&xit"), this, SLOT(&QWindow::close) );
+            mMenu.addAction( QString("E&xit"), this, SLOT(close()) );
         }
 
         //
@@ -370,6 +370,8 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
             int level = action->data().toInt( &ok );
             if ( ok && level > 0 ) {
                 mGame->getBoard()->load( action->data().toInt() );
+            } else {
+                action->trigger();
             }
         }
     }

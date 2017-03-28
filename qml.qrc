@@ -58,5 +58,6 @@
         <file>maps/level41.txt</file>
         <file>images/move-highlight.png</file>
         <file>maps/level42.txt</file>
+        <file>maps/level43.txt</file>
     </qresource>
 </RCC>

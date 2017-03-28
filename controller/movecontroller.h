@@ -25,13 +25,7 @@ public:
      */
     void move( int direction );
 
-    /**
-     * @brief Fire the tank's laser
-     * @param count The number of times to shoot or -1 to increment the shot count
-     */
-    void fire( int count = -1 );
-
-    /**
+     /**
      * @brief Access the pending tank moves
      */
     PieceListManager* getMoves();
@@ -61,6 +55,12 @@ signals:
     void idle();
 
 public slots:
+    /**
+     * @brief Fire the tank's laser
+     * @param count The number of times to shoot or -1 to increment the shot count
+     */
+    void fire( int count = -1 );
+
     /**
      * @brief Evaluate/advance the current state if possible
      */
@@ -115,7 +115,7 @@ private:
      */
     FutureShotPathManager mFutureShots;
 
-    bool mTriggerPressed;
+    bool mIdle;
 };
 
 #endif // MOVECONTROLLER_H

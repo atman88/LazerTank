@@ -3,7 +3,7 @@
 #include "pathsearchaction.h"
 
 
-MoveController::MoveController(QObject *parent) : QObject(parent), mTriggerPressed(false)
+MoveController::MoveController(QObject *parent) : QObject(parent), mIdle(false)
 {
 }
 
@@ -13,7 +13,6 @@ void MoveController::init( Game* game )
     mFutureShots.setParent(game);
 
     QObject::connect( &game->getTank()->getShot(), &ShotModel::shooterReleased,      this, &MoveController::wakeup, Qt::QueuedConnection );
-//    QObject::connect( game->getMoveAggregate(), &AnimationStateAggregator::finished, this, &MoveController::wakeup, Qt::QueuedConnection );
     QObject::connect( game->getShotAggregate(), &AnimationStateAggregator::finished, this, &MoveController::wakeup, Qt::QueuedConnection );
 }
 
@@ -24,7 +23,7 @@ void MoveController::reset()
 
     mFutureShots.reset();
     mMoves.reset();
-    mTriggerPressed = false;
+    mIdle = true;
 }
 
 void MoveController::move( int direction )
@@ -47,7 +46,9 @@ void MoveController::move( int direction )
                     mToDirection = direction;
                     appendMove( mToPoint.mCol, mToPoint.mRow, direction );
                     // changing direction only so do without delay
-                    tank->doMove( mToPoint.mCol, mToPoint.mRow, direction );
+                    if ( tank->doMove( mToPoint.mCol, mToPoint.mRow, direction ) ) {
+                        mIdle = false;
+                    }
                     return;
                 }
 
@@ -103,11 +104,11 @@ void MoveController::fire( int count )
         if ( Game* game = getGame(this) ) {
             Tank* tank = game->getTank();
 
-            // fire now if not presently shooting
+            // try to fire now if not presently shooting
             if ( !game->getShotAggregate()->active() ) {
                 if ( tank->fire() ) {
                     --count;
-                    mTriggerPressed = true;
+                    mIdle = false;
                 }
             }
 
@@ -126,19 +127,13 @@ void MoveController::clearMoves()
 void MoveController::wakeup()
 {
     Piece* move = mMoves.getFront();
+    bool busy = false;
 
     if ( Game* game = getGame(this) ) {
         Tank* tank = game->getTank();
 
-        if ( mTriggerPressed ) {
-            if ( !tank->getShot().getShooter() ) {
-                mTriggerPressed = false;
-            }
-        }
-        bool busy = mTriggerPressed;
-
-        if ( !busy ) {
-            if ( !game->getMoveAggregate()->active() ) {
+        if ( !(busy = tank->getShot().getShooter() != 0) ) {
+            if ( !(busy = game->getMoveAggregate()->active()) ) {
                 while( move ) {
                     if ( move->getCol() != tank->getCol() || move->getRow() != tank->getRow() || move->getAngle() != tank->getRotation() ) {
                         mToPoint.mCol = move->getCol();
@@ -166,11 +161,8 @@ void MoveController::wakeup()
             if ( !(busy = game->getShotAggregate()->active()) ) {
                 if ( move->getAngle() == tank->getRotation() || !game->getMoveAggregate()->active() ) {
                     if ( MovePiece* movePiece = dynamic_cast<MovePiece*>(move) ) {
-                        int shotCount = movePiece->decrementShots();
-                        if ( shotCount >= 0 ) {
-                            if ( tank->fire() ) {
-                                mTriggerPressed = true;
-                            }
+                        if ( movePiece->decrementShots() >= 0 ) {
+                            busy = tank->fire();
                         }
                     }
                 }
@@ -178,7 +170,10 @@ void MoveController::wakeup()
         }
     }
 
-    if ( !move ) {
+    if ( busy || move ) {
+        mIdle = false;
+    } else if ( !mIdle ) {
+        mIdle = true;
         emit idle();
     }
 }
