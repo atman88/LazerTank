@@ -151,6 +151,7 @@ void MoveController::wakeup()
                         break;
                     }
 
+                    mFutureShots.removePath( move );
                     mMoves.eraseFront();
                     move = mMoves.getFront();
                 }
