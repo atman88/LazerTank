@@ -2,8 +2,6 @@ A Qt implementation of the lazer tank game inspired from http://habrahabr.ru/pos
 
 This implementation offers a structured code base and an experimental move input UI.
 
-NOTE: Requires Qt 5.8 to build. 
-
 Abstract:
 Traditional input methods for this genre tend to favor entertaining the user at the
 expense of the user's thought process. This implementation explores an alternative

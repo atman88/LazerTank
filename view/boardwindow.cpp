@@ -10,7 +10,10 @@
 
 using namespace std;
 
-BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mFocus(MOVE), mGame(0)
+BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mGame(0)
+#if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
+  , mUpdatePending(false)
+#endif
 {
 }
 
@@ -48,9 +51,9 @@ void BoardWindow::init( Game* game )
         QObject::connect( pm, &PieceSetManager::erasedAt,   this, &BoardWindow::renderSquareLater );
         QObject::connect( pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
 
-        QObject::connect( &mSpeedAction, &QAction::toggled, mGame->getSpeedController(), &SpeedController::setHighSpeed );
-        QObject::connect( &mUndoMoveAction,  &QAction::triggered, mGame, &Game::undoLastMove );
-        QObject::connect( &mClearMovesAction,&QAction::triggered, mGame->getMoveController(), &MoveController::clearMoves );
+        QObject::connect( &TO_QACTION(mSpeedAction), &QAction::toggled, mGame->getSpeedController(), &SpeedController::setHighSpeed );
+        QObject::connect( &TO_QACTION(mUndoMoveAction),  &QAction::triggered, mGame, &Game::undoLastMove );
+        QObject::connect( &TO_QACTION(mClearMovesAction),&QAction::triggered, mGame->getMoveController(), &MoveController::clearMoves );
     }
 }
 
@@ -106,6 +109,9 @@ void BoardWindow::renderNow()
         mDirtyRegion.setRects(0,0);
         render( &mRenderRegion );
     }
+#if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
+    mUpdatePending = false;
+#endif
 }
 
 void BoardWindow::renderSquareLater( int col, int row )
@@ -288,26 +294,26 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
             QKeySequence speedSeq( Qt::Key_S );
             QKeySequence captureSeq( Qt::Key_C );
 
-            mMenu.addAction( "shoot& ", mGame->getMoveController(), &MoveController::fire, shootSeq );
-            mUndoMoveAction.setText("&Undo");
-            mClearMovesAction.setText("Clear Moves");
-            mSpeedAction.setText( "&Speed Boost" );
+            mMenu.addAction( "shoot& ", mGame->getMoveController(), SLOT(&MoveController::fire), shootSeq );
+            TO_QACTION(mUndoMoveAction).setText("&Undo");
+            TO_QACTION(mClearMovesAction).setText("Clear Moves");
+            TO_QACTION(mSpeedAction).setText( "&Speed Boost" );
             mPathToAction->setText( "Move &Here" );
             mCaptureAction->setText( "&Capture Flag" );
-            mReloadAction.setText( "&Restart Level" );
+            TO_QACTION(mReloadAction).setText( "&Restart Level" );
 
-            mSpeedAction.setShortcut( speedSeq );
-            mSpeedAction.setCheckable(true);
+            TO_QACTION(mSpeedAction).setShortcut( speedSeq );
+            TO_QACTION(mSpeedAction).setCheckable(true);
             mCaptureAction->setShortcut( captureSeq );
-            mUndoMoveAction.setShortcut( undoSeq );
-            mClearMovesAction.setShortcut(clearSeq);
+            TO_QACTION(mUndoMoveAction).setShortcut( undoSeq );
+            TO_QACTION(mClearMovesAction).setShortcut(clearSeq);
 
-            mMenu.addAction( &mSpeedAction      );
-            mMenu.addAction( &mUndoMoveAction   );
-            mMenu.addAction( &mClearMovesAction );
+            mMenu.addAction( &TO_QACTION(mSpeedAction)      );
+            mMenu.addAction( &TO_QACTION(mUndoMoveAction)   );
+            mMenu.addAction( &TO_QACTION(mClearMovesAction) );
             mMenu.addAction( &(*mPathToAction)  );
             mMenu.addAction( &(*mCaptureAction) );
-            mMenu.addAction( &mReloadAction     );
+            mMenu.addAction( &TO_QACTION(mReloadAction)     );
 
             QAction* action = mMenu.addAction( QString("Select &Level..") );
             action->setMenu( &mLevelsMenu );
@@ -317,15 +323,15 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
                 action->setData( QVariant(level) );
             }
 
-            mMenu.addAction( "E&xit", this, &QWindow::close );
+            mMenu.addAction( QString("E&xit"), this, SLOT(&QWindow::close) );
         }
 
         //
         // freshen dynamic menu item properties
         //
         Board* board = mGame->getBoard();
-        mSpeedAction.setChecked( mGame->getSpeedController()->getHighSpeed() );
-        mReloadAction.setData( QVariant( board->getLevel()) );
+        TO_QACTION(mSpeedAction).setChecked( mGame->getSpeedController()->getHighSpeed() );
+        TO_QACTION(mReloadAction).setData( QVariant( board->getLevel()) );
 
         std::shared_ptr<PathSearchAction> actions[2] = { mCaptureAction, mPathToAction };
         mCaptureAction->setCriteria( mFocus, board->getFlagCol(), board->getFlagRow(), true );
@@ -341,8 +347,8 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
         mGame->getPathFinderController()->testActions( actions, nActions );
 
         bool movesPending = mGame->getMoveController()->getMoves()->size() > 0;
-        mUndoMoveAction.setEnabled( movesPending );
-        mClearMovesAction.setEnabled( movesPending );
+        TO_QACTION(mUndoMoveAction).setEnabled( movesPending );
+        TO_QACTION(mClearMovesAction).setEnabled( movesPending );
 
         //
         // launch menu
@@ -419,7 +425,7 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
             break;
 
         case Qt::Key_S:
-            mSpeedAction.toggle();
+            TO_QACTION(mSpeedAction).toggle();
             break;
 
         case Qt::Key_C:
@@ -494,3 +500,13 @@ void BoardWindow::moveFocus( PieceType what )
     mFocus = what;
     emit focusChanged( what );
 }
+
+#if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
+void BoardWindow::requestUpdate()
+{
+    if ( !mUpdatePending ) {
+        QTimer::singleShot( 17, this, &BoardWindow::renderNow );
+        mUpdatePending = true;
+    }
+}
+#endif

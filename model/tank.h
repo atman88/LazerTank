@@ -1,13 +1,10 @@
 #ifndef TANK_H
 #define TANK_H
 
-#include <QObject>
-#include <QPainter>
-#include <QPropertyAnimation>
-
 #include "view/tankview.h"
 
 class Game;
+class PieceListManager;
 
 class Tank : public TankView
 {
