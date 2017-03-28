@@ -6,6 +6,7 @@
 #include <Qt>
 #include <QtGui>
 #include <QMenu>
+#include <QTextBrowser>
 #include <QtGlobal>
 
 class Board;
@@ -42,9 +43,11 @@ public:
 private:
     QAction* mAction;
 };
+
 #define ACTION ActionProxy
 #define TO_QACTION(a) (*(a).getAction())
 #endif
+
 /**
  * @brief The main window
  */
@@ -54,10 +57,7 @@ class BoardWindow : public QWindow
 
 public:
     explicit BoardWindow(QWindow *parent = 0);
-    ~BoardWindow()
-    {
-        delete mBackingStore;
-    }
+    ~BoardWindow();
     virtual void render(QRegion *region);
     void init( Game* game );
 
@@ -107,6 +107,11 @@ public slots:
      * @brief React to the game board being loaded
      */
     void onBoardLoaded();
+
+    /**
+     * @brief Display the game help
+     */
+    void showHelp();
 
 signals:
     /**
@@ -168,6 +173,7 @@ private:
     PieceType mFocus;
 
     Game* mGame;
+    QTextBrowser* mHelpWidget;
 
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
     void requestUpdate();

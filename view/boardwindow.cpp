@@ -2,6 +2,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QMessageBox>
+#include <QTextBrowser>
 
 #include "boardwindow.h"
 #include "util/renderutils.h"
@@ -10,11 +11,19 @@
 
 using namespace std;
 
-BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mGame(0)
+BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mFocus(MOVE), mGame(0), mHelpWidget(0)
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
   , mUpdatePending(false)
 #endif
 {
+}
+
+BoardWindow::~BoardWindow()
+{
+    if ( mHelpWidget ) {
+        delete mHelpWidget;
+    }
+    delete mBackingStore;
 }
 
 void BoardWindow::exposeEvent(QExposeEvent *)
@@ -86,6 +95,23 @@ void BoardWindow::onBoardLoaded()
             setTitle( title );
         }
     }
+}
+
+void BoardWindow::showHelp()
+{
+    if ( !mHelpWidget ) {
+        mHelpWidget = new QTextBrowser();
+        mHelpWidget->setWindowTitle( QString("LazerTank Help") );
+
+        if ( QScreen* myScreen = screen() ) {
+            QRect rect = myScreen->availableGeometry();
+            rect.setWidth( rect.width()/2 );
+            rect.setHeight( (rect.height() * 2) / 3 );
+            mHelpWidget->setGeometry( rect );
+        }
+        mHelpWidget->setSource( QUrl::fromLocalFile(":/help/qlthelp.html") );
+    }
+    mHelpWidget->show();
 }
 
 void BoardWindow::resizeEvent(QResizeEvent *resizeEvent)
@@ -323,6 +349,7 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
                 action->setData( QVariant(level) );
             }
 
+            mMenu.addAction( QString("&Help"), this, SLOT(showHelp()) );
             mMenu.addAction( QString("E&xit"), this, SLOT(close()) );
         }
 
@@ -441,6 +468,11 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
                 mGame->undoLastMove();
             }
             break;
+
+        case Qt::Key_F1:
+            showHelp();
+            break;
+
         default:
             ;
         }
