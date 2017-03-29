@@ -60,5 +60,6 @@
         <file>maps/level42.txt</file>
         <file>maps/level43.txt</file>
         <file>help/qlthelp.html</file>
+        <file>maps/level44.txt</file>
     </qresource>
 </RCC>

@@ -9,7 +9,7 @@
 #include "controller/futurechange.h"
 
 // The last /maps/level%1.txt file we wish to reach. Increase this as new levels are added.
-#define BOARD_MAX_LEVEL 43
+#define BOARD_MAX_LEVEL 44
 
 // The largest board dimensions we care to support
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT

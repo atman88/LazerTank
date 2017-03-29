@@ -37,6 +37,11 @@ public slots:
      */
     void onStateChanged(QAbstractAnimation::State newState, QAbstractAnimation::State oldState);
 
+    /**
+     * @brief Reset to default state without signaling
+     */
+    void reset();
+
 private:
     int mActiveCount;
 };

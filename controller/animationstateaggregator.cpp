@@ -23,3 +23,8 @@ void AnimationStateAggregator::onStateChanged( QAbstractAnimation::State newStat
         }
     }
 }
+
+void AnimationStateAggregator::reset()
+{
+    mActiveCount = 0;
+}

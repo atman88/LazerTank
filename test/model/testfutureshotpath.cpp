@@ -42,4 +42,17 @@ void TestMain::testFutureShotPath()
     move.setShotCount( 0 );
     manager.updatePath(&move);
     QCOMPARE( game.getDeltaPieces()->size(), 0UL );
+
+    // test future shot through the master tank point:
+    map =
+      "W\n"
+      "T\n"
+      ".\n";
+    s.setString( &map, QIODevice::ReadOnly );
+    masterBoard->load( s );
+    game.getMoveController()->move(180); // rotate down
+    game.getMoveController()->move(180); // move down -> 0,2
+    game.getMoveController()->move(  0); // rotate up
+    game.getMoveController()->fire();
+    QCOMPARE( futureBoard->tileAt( 0, 0 ), WOOD_DAMAGED );
 }
