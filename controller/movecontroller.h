@@ -90,10 +90,9 @@ private:
      * @param col The column of the new move to append
      * @param row The row of the new move to append
      * @param direction The direction of the new move to append
-     * @param shotCount The number of shots attributed to this move
      * @param pushPiece The piece that this move pushes or 0 if it doesn't cause a push
      */
-    void appendMove( int col, int row, int direction, int shotCount = 0, Piece* pushPiece = 0 );
+    void appendMove(int col, int row, int direction, Piece* pushPiece = 0 );
 
     /**
      * @brief The square that the tank is moving toward. Nullified when not moving.

@@ -46,7 +46,7 @@ const PieceMultiSet* PieceListManager::toMultiSet()
     return mMultiSet;
 }
 
-void PieceListManager::appendInternal( Piece* piece )
+Piece* PieceListManager::appendInternal( Piece* piece )
 {
     mPieces.push_back( piece );
     if ( mSet ) {
@@ -56,25 +56,25 @@ void PieceListManager::appendInternal( Piece* piece )
         mMultiSet->insert( piece );
     }
     emit appended( piece->getCol(), piece->getRow() );
+    return piece;
 }
 
-void PieceListManager::append( PieceType type, int col, int row, int angle )
+Piece* PieceListManager::append( PieceType type, int col, int row, int angle )
 {
-    appendInternal( new SimplePiece( type, col, row, angle ) );
+    return appendInternal( new SimplePiece( type, col, row, angle ) );
 }
 
-void PieceListManager::append( PieceType type, int col, int row, int angle, int shotCount, Piece* pushPiece )
+Piece* PieceListManager::append( PieceType type, int col, int row, int angle, int shotCount, Piece* pushPiece )
 {
-    appendInternal( new MovePiece( type, col, row, angle, shotCount, pushPiece ) );
+    return appendInternal( new MovePiece( type, col, row, angle, shotCount, pushPiece ) );
 }
 
-void PieceListManager::append( const Piece* source )
+Piece* PieceListManager::append( const Piece* source )
 {
     if ( const MovePiece* move = dynamic_cast<const MovePiece*>(source) ) {
-        appendInternal( new MovePiece(move) );
-    } else {
-        appendInternal( new SimplePiece(source) );
+        return appendInternal( new MovePiece(move) );
     }
+    return appendInternal( new SimplePiece(source) );
 }
 
 void PieceListManager::append( const PieceList& source )

@@ -37,18 +37,18 @@ public:
     /**
      * @brief Adds a new piece to the end of this list from the given values
      */
-    void append( PieceType type, int col, int row, int angle = 0 );
+    Piece* append( PieceType type, int col, int row, int angle = 0 );
 
     /**
      * @brief Adds a new piece to the end of this list from the given values
      */
-    void append( PieceType type, int col, int row, int angle, int shotCount, Piece* pushPiece = 0 );
+    Piece* append( PieceType type, int col, int row, int angle, int shotCount, Piece* pushPiece = 0 );
 
     /**
      * @brief Adds a copy of the given piece to the end of this list
      * @param source The piece to append
      */
-    void append( const Piece* source );
+    Piece* append( const Piece* source );
 
     /**
      * @brief Copy elements from source into the end of this list
@@ -132,7 +132,7 @@ public slots:
     void reset( PieceListManager* source = 0 );
 
 private:
-    void appendInternal( Piece* piece );
+    Piece* appendInternal( Piece* piece );
     bool eraseInternal(PieceList::iterator it );
     void replaceInternal( Piece* piece, PieceType type, int newAngle );
 

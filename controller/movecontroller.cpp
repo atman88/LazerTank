@@ -71,7 +71,7 @@ void MoveController::move( int direction )
 
                 Piece* pushPiece = 0;
                 if ( game->canMoveFrom( TANK, direction, &col, &row, true, &pushPiece ) ) {
-                    appendMove( col, row, direction, 0, pushPiece );
+                    appendMove( col, row, direction, pushPiece );
                     if ( pushPiece ) {
                         game->onFuturePush( pushPiece, direction );
                     }
@@ -104,16 +104,22 @@ void MoveController::fire( int count )
         if ( Game* game = getGame(this) ) {
             Tank* tank = game->getTank();
 
-            // try to fire now if not presently shooting
-            if ( !game->getShotAggregate()->active() ) {
-                if ( tank->fire() ) {
-                    --count;
-                    mIdle = false;
+            if ( count == 1 ) {
+                // try to fire now to suppress showing the future for this single shot from idle:
+                if ( !game->getShotAggregate()->active() ) {
+                    if ( tank->fire() ) {
+                        count = 0;
+                        mIdle = false;
+                    }
                 }
             }
 
-            if ( count > 0 ) {
-                mMoves.append( MOVE, tank->getCol(), tank->getRow(), tank->getRotation(), count );
+            if ( count ) {
+                Piece* piece = mMoves.append( MOVE, tank->getCol(), tank->getRow(), tank->getRotation(), count );
+                if ( MovePiece* move = dynamic_cast<MovePiece*>(piece) ) {
+                    mFutureShots.updatePath( move );
+                }
+                wakeup();
             }
         }
     }
@@ -213,10 +219,10 @@ void MoveController::onPathFound( PieceListManager* path, PathSearchAction* acti
     }
 }
 
-void MoveController::appendMove( int col, int row, int direction, int shotCount, Piece* pushPiece )
+void MoveController::appendMove( int col, int row, int direction, Piece* pushPiece )
 {
     mMoves.replaceBack( MOVE ); // erase highlight
-    mMoves.append( MOVE_HIGHLIGHT, col, row, direction, shotCount, pushPiece );
+    mMoves.append( MOVE_HIGHLIGHT, col, row, direction, 0, pushPiece );
 }
 
 void MoveController::setFocus( PieceType what )
