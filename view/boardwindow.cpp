@@ -174,8 +174,8 @@ void BoardWindow::render( const QRect* rect, QPainter* painter )
 
     int minX = rect->left()/24;
     int minY = rect->top() /24;
-    int maxX = (rect->right() -1)/24;
-    int maxY = (rect->bottom()-1)/24;
+    int maxX = (rect->right() +24-1)/24;
+    int maxY = (rect->bottom()+24-1)/24;
 
     SimplePiece pos(MOVE, minX, minY);
     PieceSet::iterator moveIterator = moves->lower_bound( &pos );

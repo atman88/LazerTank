@@ -79,9 +79,11 @@ void PushView::setX( const QVariant& x )
 {
     int xv = x.toInt();
     if ( xv != mBoundingRect.left() ) {
-        QRect dirty( mBoundingRect );
         mBoundingRect.moveLeft( xv );
-        dirty |= mBoundingRect;
+        QRect dirty( mBoundingRect );
+        if ( !mRenderedBoundingRect.isNull() ) {
+            dirty |= mRenderedBoundingRect;
+        }
         emit rectDirty( dirty );
     }
 }
@@ -90,9 +92,11 @@ void PushView::setY( const QVariant& y )
 {
     int yv = y.toInt();
     if ( yv != mBoundingRect.top() ) {
-        QRect dirty( mBoundingRect );
         mBoundingRect.moveTop( yv );
-        dirty |= mBoundingRect;
+        QRect dirty( mBoundingRect );
+        if ( !mRenderedBoundingRect.isNull() ) {
+            dirty |= mRenderedBoundingRect;
+        }
         emit rectDirty( dirty );
     }
 }
