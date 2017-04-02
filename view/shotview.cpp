@@ -232,6 +232,7 @@ bool ShotView::shedTail()
 void ShotView::releaseShooter()
 {
     if ( mShooter ) {
+        std::cout << "ShotView: shooterReleased" << std::endl;
         mShooter = 0;
         emit shooterReleased();
     }

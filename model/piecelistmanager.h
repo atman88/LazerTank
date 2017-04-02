@@ -37,12 +37,9 @@ public:
     /**
      * @brief Adds a new piece to the end of this list from the given values
      */
-    Piece* append( PieceType type, int col, int row, int angle = 0 );
-
-    /**
-     * @brief Adds a new piece to the end of this list from the given values
-     */
-    Piece* append( PieceType type, int col, int row, int angle, int shotCount, Piece* pushPiece = 0 );
+    Piece* append( PieceType type, ModelPoint point, int angle = 0 );
+    Piece* append( PieceType type, ModelPoint point, int angle, int shotCount, Piece* pushPiece = 0 );
+    Piece* append( PieceType type, ModelVector vector, int shotCount, Piece* pushPiece = 0 );
 
     /**
      * @brief Adds a copy of the given piece to the end of this list

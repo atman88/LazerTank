@@ -17,6 +17,7 @@ private slots:
     void testPieceListManager();
     void testPush();
     void testFutureShotPath();
+    void testReplay();
 };
 
 class SignalReceptor : public QObject

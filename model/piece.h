@@ -16,8 +16,15 @@
 class Piece : public PieceView
 {
 public:
-    Piece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 )
-      : PieceView(type,col,row,angle)
+    Piece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 ) : PieceView(type,col,row,angle)
+    {
+    }
+
+    Piece( PieceType type, ModelPoint point = ModelPoint(0,0), int angle = 0 ) : PieceView(type,point,angle)
+    {
+    }
+
+    Piece( PieceType type, ModelVector vector ) : PieceView(type,vector)
     {
     }
 
@@ -70,10 +77,18 @@ public:
 class SimplePiece : public Piece
 {
 public:
-    SimplePiece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 )
-      : Piece(type,col,row,angle)
+    SimplePiece( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 ) : Piece(type,col,row,angle)
     {
     }
+
+    SimplePiece( PieceType type = NONE, ModelPoint point = ModelPoint(0,0), int angle = 0 ) : Piece(type,point,angle)
+    {
+    }
+
+    SimplePiece( PieceType type, ModelVector vector ) : Piece(type,vector)
+    {
+    }
+
     SimplePiece( const Piece* source ) : Piece(source)
     {
     }
@@ -105,6 +120,22 @@ public:
           mPushPieceType( pushPiece ? pushPiece->mType  : NONE),
           mPushPieceAngle(pushPiece ? pushPiece->mAngle : 0),
           mShotCount(shotCount), mShotPathUID(0)
+    {
+    }
+
+    MovePiece( PieceType type, ModelPoint point, int angle = 0,  int shotCount = 0, Piece* pushPiece = 0 )
+      : SimplePiece( type, point, angle ),
+        mPushPieceType( pushPiece ? pushPiece->mType  : NONE),
+        mPushPieceAngle(pushPiece ? pushPiece->mAngle : 0),
+        mShotCount(shotCount), mShotPathUID(0)
+    {
+    }
+
+    MovePiece( PieceType type, ModelVector vector, int shotCount = 0, Piece* pushPiece = 0 )
+      : SimplePiece( type, vector ),
+        mPushPieceType( pushPiece ? pushPiece->mType  : NONE),
+        mPushPieceAngle(pushPiece ? pushPiece->mAngle : 0),
+        mShotCount(shotCount), mShotPathUID(0)
     {
     }
 

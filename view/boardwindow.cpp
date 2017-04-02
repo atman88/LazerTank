@@ -305,7 +305,7 @@ int keyToAngle( int key )
     }
 }
 
-void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
+void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
 {
     if ( mGame ) {
         QPoint pos;
@@ -349,6 +349,7 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
                 action->setData( QVariant(level) );
             }
 
+            mMenu.addAction( QString("Replay"), mGame, SLOT(restartLevel()) );
             mMenu.addAction( QString("&Help"), this, SLOT(showHelp()) );
             mMenu.addAction( QString("E&xit"), this, SLOT(close()) );
         }
@@ -361,15 +362,15 @@ void BoardWindow::showMenu( QPoint* globalPos, int col, int row )
         TO_QACTION(mReloadAction).setData( QVariant( board->getLevel()) );
 
         std::shared_ptr<PathSearchAction> actions[2] = { mCaptureAction, mPathToAction };
-        mCaptureAction->setCriteria( mFocus, board->getFlagCol(), board->getFlagRow(), true );
+        mCaptureAction->setCriteria( mFocus, board->getFlagPoint(), true );
         int nActions;
-        if ( col < 0 ) {
+        if ( p.mCol < 0 ) {
             nActions = 1;
             mPathToAction->setVisible( false );
         } else {
             nActions = 2;
             mPathToAction->setVisible( true );
-            mPathToAction->setCriteria( mFocus, col, row, true );
+            mPathToAction->setCriteria( mFocus, p, true );
         }
         mGame->getPathFinderController()->testActions( actions, nActions );
 
@@ -424,7 +425,7 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
 
         case Qt::Key_C: // attempt to capture the flag
         {   Board* board = mGame->getBoard();
-            mCaptureAction->setCriteria( mFocus, board->getFlagCol(), board->getFlagRow(), false );
+            mCaptureAction->setCriteria( mFocus, board->getFlagPoint(), false );
             mGame->getPathFinderController()->doAction( mCaptureAction );
             break;
         }
@@ -488,11 +489,11 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
     switch( event->button() ) {
     case Qt::RightButton:
     {   QPoint globalPos = event->globalPos();
-        showMenu( &globalPos, event->pos().x()/24, event->pos().y()/24 );
+        showMenu( &globalPos, ModelPoint( event->pos() ) );
         break;
     }
     case Qt::LeftButton:
-        mPathToAction->setCriteria( mFocus, event->pos().x()/24, event->pos().y()/24, false );
+        mPathToAction->setCriteria( mFocus, ModelPoint( event->pos() ), false );
         mGame->getPathFinderController()->doAction( mPathToAction );
         break;
     default:
@@ -512,20 +513,6 @@ void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
         break;
     default:
         ;
-    }
-}
-
-void BoardWindow::onTankKilled()
-{
-    QMessageBox msgBox;
-    msgBox.setText("Level lost!");
-    msgBox.exec();
-
-    if ( mGame ) {
-        Board* board = mGame->getBoard();
-        if ( board ) {
-            board->load( board->getLevel() );
-        }
     }
 }
 

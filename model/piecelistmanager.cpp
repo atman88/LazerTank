@@ -59,14 +59,19 @@ Piece* PieceListManager::appendInternal( Piece* piece )
     return piece;
 }
 
-Piece* PieceListManager::append( PieceType type, int col, int row, int angle )
+Piece* PieceListManager::append( PieceType type, ModelPoint point, int angle )
 {
-    return appendInternal( new SimplePiece( type, col, row, angle ) );
+    return appendInternal( new SimplePiece( type, point, angle ) );
 }
 
-Piece* PieceListManager::append( PieceType type, int col, int row, int angle, int shotCount, Piece* pushPiece )
+Piece* PieceListManager::append( PieceType type, ModelPoint point, int angle, int shotCount, Piece* pushPiece )
 {
-    return appendInternal( new MovePiece( type, col, row, angle, shotCount, pushPiece ) );
+    return appendInternal( new MovePiece( type, point, angle, shotCount, pushPiece ) );
+}
+
+Piece* PieceListManager::append( PieceType type, ModelVector vector, int shotCount, Piece* pushPiece )
+{
+    return appendInternal( new MovePiece( type, vector, shotCount, pushPiece ) );
 }
 
 Piece* PieceListManager::append( const Piece* source )
@@ -163,7 +168,7 @@ bool PieceListManager::replaceFront( PieceType type, int newAngle )
     return false;
 }
 
-bool PieceListManager::replaceBack(PieceType type, int newAngle )
+bool PieceListManager::replaceBack( PieceType type, int newAngle )
 {
     if ( !mPieces.empty() ) {
         replaceInternal( mPieces.back(), type, newAngle );

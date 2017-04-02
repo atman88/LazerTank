@@ -91,13 +91,12 @@ public:
      * @brief Determine whether the given single move is legal
      * @param what The type of peice being moved
      * @param angle The direction to move in. Must be one of 0, 90, 180 or 270
-     * @param col The Piece's originating column as input. Returns the resultant column
-     * @param row The Piece's originating row as input. Returns the resultant row
+     * @param point The Piece's originating position as input. Returns the resultant position
      * @param futuristic If true, all outstanding moves are considered, otherwise only the current board state is considered
      * @param pushPiece if non-null, returns a reference to any piece that this move would push
      * @return true if the move is allowed, otherwise false
      */
-    bool canMoveFrom( PieceType what, int angle, int *col, int *row, bool futuristic, Piece **pushPiece = 0 );
+    bool canMoveFrom( PieceType what, int angle, ModelPoint *point, bool futuristic, Piece **pushPiece = 0 );
 
     /**
      * @brief Determines the outcome of a laser shot through the given square
@@ -114,14 +113,13 @@ public:
     /**
      * @brief Determines whether the given piece can move to the given square. Pending moves are not considered.
      * @param what The type of piece
-     * @param col The column of the square to consider
-     * @param row The row of the square to consider
+     * @param point The square to consider
      * @param fromAngle The entry direction
      * @param pushPiece if non-null, returns a reference to any piece that this placement would result in pushing
      * @param futuristic If true, all outstanding moves are considered, otherwise only the current board state is considered
      * @return true if the placement is a legal move
      */
-    bool canPlaceAt( PieceType what, int col, int row, int fromAngle, bool futuristic = false, Piece **pushPiece = 0 );
+    bool canPlaceAt( PieceType what, ModelPoint point, int fromAngle, bool futuristic = false, Piece **pushPiece = 0 );
 
     /**
      * @brief Records a push of piece that will be pushed as a result of some future change
@@ -200,30 +198,39 @@ public slots:
      */
     void sightCannons();
 
+    /**
+     * @brief Handler for when the tank is destroyed
+     */
+    void onTankKilled();
+
+    /**
+     * @brief Restart the current level
+     * @param replay If true, restarts and automates an instant replay
+     */
+    void restartLevel( bool replay = true );
+
 private:
     /**
      * @brief Determines whether the given single move is legal
      * @param what The type of peice being moved
      * @param angle The direction to move in. Must be one of 0, 90, 180 or 270.
-     * @param col The Piece's originating column. Returns the resultant column.
-     * @param row The Piece's originating row. Returns the resultant row.
+     * @param point The Piece's originating square. Returns the resultant square.
      * @param board The board to consider
      * @param pushResult Set to true if a piece would get pushed by the move
      * @return true if allowed, otherwise false
      */
-    bool canMoveFrom( PieceType what, int angle, int *col, int *row, Board* board, Piece **pushPiece = 0 );
+    bool canMoveFrom( PieceType what, int angle, ModelPoint *point, Board* board, Piece **pushPiece = 0 );
 
     /**
      * @brief Determines whether the given piece can enter the given square.
      * @param what The type of peice.
-     * @param col The column of the square to consider
-     * @param row The row of the square to consider
+     * @param point The square to consider
      * @param fromAngle The entry direction
      * @param board The board to consider
      * @param pushPiece if non-null, returns a reference to any piece that that this placement would result in pushing
      * @return true if the entry is legal
      */
-    bool canPlaceAt( PieceType what, int col, int row, int fromAngle, Board* board, Piece **pushPiece = 0 );
+    bool canPlaceAt( PieceType what, ModelPoint point, int fromAngle, Board* board, Piece **pushPiece = 0 );
 
     SpeedController mSpeedController;
     AnimationStateAggregator mMoveAggregate;

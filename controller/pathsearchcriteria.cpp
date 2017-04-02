@@ -1,24 +1,21 @@
 #include <iostream>
 #include "pathsearchcriteria.h"
 
-PathSearchCriteria::PathSearchCriteria() : mStartCol(-1), mStartRow(-1), mStartDirection(0), mTargetCol(-1), mTargetRow(-1),
-  mFocus(MOVE), mMoveWhenFound(false)
+PathSearchCriteria::PathSearchCriteria() : mStartDirection(0), mFocus(MOVE), mMoveWhenFound(false)
 {
 }
 
-PathSearchCriteria::PathSearchCriteria( const PathSearchCriteria& source ) : mStartCol(source.mStartCol),
-  mStartRow(source.mStartRow), mStartDirection(source.mStartDirection), mTargetCol(source.mTargetCol),
-  mTargetRow(source.mTargetRow), mFocus(source.mFocus), mMoveWhenFound(source.mMoveWhenFound)
+PathSearchCriteria::PathSearchCriteria( const PathSearchCriteria& source ) : mStartPoint(source.mStartPoint),
+  mStartDirection(source.mStartDirection), mTargetPoint(source.mTargetPoint), mFocus(source.mFocus),
+  mMoveWhenFound(source.mMoveWhenFound)
 {
 }
 
 PathSearchCriteria& PathSearchCriteria::operator =(const PathSearchCriteria other)
 {
-    mStartCol       = other.mStartCol;
-    mStartRow       = other.mStartRow;
+    mStartPoint     = other.mStartPoint;
     mStartDirection = other.mStartDirection;
-    mTargetCol      = other.mTargetCol;
-    mTargetRow      = other.mTargetRow;
+    mTargetPoint    = other.mTargetPoint;
     mFocus          = other.mFocus;
     mMoveWhenFound  = other.mMoveWhenFound;
 
@@ -27,23 +24,25 @@ PathSearchCriteria& PathSearchCriteria::operator =(const PathSearchCriteria othe
 
 bool PathSearchCriteria::operator ==(const PathSearchCriteria other)
 {
-    return mStartCol       == other.mStartCol
-        && mStartRow       == other.mStartRow
+    return mStartPoint     == other.mStartPoint
         && mStartDirection == other.mStartDirection
-        && mTargetCol      == other.mTargetCol
-        && mTargetRow      == other.mTargetRow
+        && mTargetPoint    == other.mTargetPoint
         && mFocus          == other.mFocus
         && mMoveWhenFound  == other.mMoveWhenFound;
 }
 
+ModelPoint PathSearchCriteria::getTargetPoint() const
+{
+    return mTargetPoint;
+}
 int PathSearchCriteria::getTargetCol() const
 {
-    return mTargetCol;
+    return mTargetPoint.mCol;
 }
 
 int PathSearchCriteria::getTargetRow() const
 {
-    return mTargetRow;
+    return mTargetPoint.mRow;
 }
 
 bool PathSearchCriteria::getMoveWhenFound() const
@@ -51,14 +50,19 @@ bool PathSearchCriteria::getMoveWhenFound() const
     return mMoveWhenFound;
 }
 
+ModelPoint PathSearchCriteria::getStartPoint() const
+{
+    return mStartPoint;
+}
+
 int PathSearchCriteria::getStartCol() const
 {
-    return mStartCol;
+    return mStartPoint.mCol;
 }
 
 int PathSearchCriteria::getStartRow() const
 {
-    return mStartRow;
+    return mStartPoint.mRow;
 }
 
 int PathSearchCriteria::getStartDirection() const

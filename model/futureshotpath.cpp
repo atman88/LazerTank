@@ -116,7 +116,7 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
 
         while( path.mShotCount < shotCount ) {
             path.mLeadPoint = leadPoint;
-            if ( !getAdjacentPosition( leadingDirection, &leadPoint.mCol, &leadPoint.mRow ) ) {
+            if ( !getAdjacentPosition( leadingDirection, &leadPoint ) ) {
                 break;
             }
 

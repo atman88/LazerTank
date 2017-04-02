@@ -14,6 +14,13 @@ public:
     }
 
     /**
+     * @brief Construct a ModelPoint from a view coordinate
+     */
+    explicit ModelPoint( const QPoint& source )  : mCol(source.x() / 24), mRow(source.y() / 24)
+    {
+    }
+
+    /**
      * @brief Construct a copy of a model point
      */
     ModelPoint( const ModelPoint& source ) : mCol(source.mCol), mRow(source.mRow)
@@ -41,7 +48,8 @@ public:
     /**
      * @brief compare equality
      */
-    bool equals( ModelPoint& other );
+    bool equals( const ModelPoint& other ) const;
+    bool operator == ( const ModelPoint& other ) const;
 
     /**
      * @brief Update the given min and max points such that the bounds min,max contain this point.
@@ -57,8 +65,46 @@ public:
      */
     QPoint toViewCenterSquare() const;
 
+    /**
+     * @brief Convert to a view point corresponding to upper left corner of the square
+     * @return
+     */
+    QPoint toViewUpperLeft() const;
+
     int mCol;
     int mRow;
+};
+
+class ModelVector : public ModelPoint
+{
+public:
+    ModelVector() : ModelPoint(-1,-1), mAngle(-1)
+    {
+    }
+
+    ModelVector( int col, int row, int direction = 0 ) : ModelPoint(col,row), mAngle(direction)
+    {
+    }
+
+    ModelVector( const ModelPoint& source, int direction = 0 ) : ModelPoint(source), mAngle(direction)
+    {
+    }
+
+    ModelVector( const ModelVector& source ) : ModelPoint(source), mAngle(source.mAngle)
+    {
+    }
+
+    void setPoint( ModelPoint p )
+    {
+        *dynamic_cast<ModelPoint*>(this) = p;
+    }
+
+    /**
+     * @brief compare equality
+     */
+    bool equals( const ModelVector& other ) const;
+
+    int mAngle;
 };
 
 #endif // MODELPOINT_H

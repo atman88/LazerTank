@@ -65,12 +65,7 @@ public:
      * @brief pop up the menu
      * @param globalPos - optional position argument intended for mouse-related events
      */
-    void showMenu( QPoint* globalPos = 0, int col = -1, int row = -1 );
-
-    /**
-     * @brief Invoke the window's UI for when the tank is destroyed
-     */
-    void onTankKilled();
+    void showMenu( QPoint* globalPos = 0, ModelPoint p = ModelPoint() );
 
     /**
      * @brief Access the window's popup menu

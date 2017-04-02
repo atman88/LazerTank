@@ -8,7 +8,7 @@
 #include "util/renderutils.h"
 #include "util/gameutils.h"
 
-Tank::Tank(QObject* parent) : TankView(parent), mCol(0), mRow(0)
+Tank::Tank(QObject* parent) : TankView(parent), mVector(0,0,0)
 {
 }
 
@@ -26,40 +26,67 @@ void Tank::init( Game* game )
     TankView::init( game );
 }
 
-void Tank::reset( int col, int row )
+const ModelPoint& Tank::getPoint() const
 {
-    mCol = col;
-    mRow = row;
-    mRotation = 0;
-    QPoint p( col*24, row*24 );
-    TankView::reset( p );
+    return mVector;
 }
 
-bool Tank::doMove( int col, int row, int direction )
+const ModelVector& Tank::getVector() const
 {
-    return mRotateAnimation.animateBetween( mViewRotation, direction )
-         | mHorizontalAnimation.animateBetween( getViewX().toInt(), col*24 )
-         | mVerticalAnimation.animateBetween(   getViewY().toInt(), row*24 );
+    return mVector;
+}
+
+void Tank::reset( ModelPoint point )
+{
+    mVector.setPoint( point );
+    mVector.mAngle = 0;
+    TankView::reset( point.toViewUpperLeft() );
+    mRecorder.reset();
+}
+
+bool Tank::doMove( ModelVector& vector )
+{
+    if ( mRotateAnimation.animateBetween( mViewRotation, vector.mAngle )
+       | mHorizontalAnimation.animateBetween( getViewX().toInt(), vector.mCol*24 )
+       | mVerticalAnimation.animateBetween(   getViewY().toInt(), vector.mRow*24 ) ) {
+        mRecorder.addMove( vector.mAngle );
+        return true;
+    }
+    return false;
+}
+
+bool Tank::fire()
+{
+    if ( Shooter::fire() ) {
+        mRecorder.addShot();
+        return true;
+    }
+    return false;
 }
 
 int Tank::getRow() const
 {
-    return mRow;
+    return mVector.mRow;
 }
 
 int Tank::getRotation() const
 {
-    return mRotation;
+    return mVector.mAngle;
 }
 
 int Tank::getCol() const
 {
-    return mCol;
+    return mVector.mCol;
 }
 
-void Tank::onMoved(int col, int row, int rotation)
+void Tank::onMoved( int col , int row, int rotation )
 {
-    mCol = col;
-    mRow = row;
-    mRotation = rotation;
+    mVector.mCol   = col;
+    mVector.mRow   = row;
+    mVector.mAngle = rotation;
+}
+
+Recorder& Tank::getRecorder()
+{
+    return mRecorder;
 }

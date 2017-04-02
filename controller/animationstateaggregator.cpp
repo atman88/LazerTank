@@ -1,3 +1,4 @@
+#include <iostream>
 #include <QVariant>
 #include "animationstateaggregator.h"
 
@@ -19,6 +20,7 @@ void AnimationStateAggregator::onStateChanged( QAbstractAnimation::State newStat
              && newState == QAbstractAnimation::Stopped ) {
         if ( --mActiveCount <= 0 ) {
             mActiveCount = 0;
+            std::cout << "AnimationStateAggregator " << qPrintable(objectName()) << ": finished" << std::endl;
             emit finished();
         }
     }

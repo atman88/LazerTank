@@ -6,7 +6,7 @@ PathSearchAction::PathSearchAction(QObject *parent) : QAction(parent)
 {
 }
 
-void PathSearchAction::setCriteria( PieceType focus, int targetCol, int targetRow, bool moveWhenFound )
+void PathSearchAction::setCriteria( PieceType focus, const ModelPoint& target, bool moveWhenFound )
 {
     if ( Game* game = getGame(this) ) {
         MoveController* moveController = game->getMoveController();
@@ -19,22 +19,19 @@ void PathSearchAction::setCriteria( PieceType focus, int targetCol, int targetRo
                 mFocus = TANK;
             } else {
                 mFocus = MOVE;
-                mStartCol = move->getCol();
-                mStartRow = move->getRow();
+                mStartPoint = *move;
                 mStartDirection = move->getAngle();
             }
         }
 
         if ( mFocus == TANK ) {
             Tank* tank = game->getTank();
-            mStartCol = tank->getCol();
-            mStartRow = tank->getRow();
+            mStartPoint = tank->getPoint();
             mStartDirection = tank->getRotation();
         }
     }
 
-    mTargetCol = targetCol;
-    mTargetRow = targetRow;
+    mTargetPoint = target;
     mMoveWhenFound = moveWhenFound;
 }
 

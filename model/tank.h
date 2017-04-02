@@ -1,6 +1,7 @@
 #ifndef TANK_H
 #define TANK_H
 
+#include "util/recorder.h"
 #include "view/tankview.h"
 
 class Game;
@@ -14,6 +15,18 @@ public:
     Tank(QObject *parent = 0);
     virtual ~Tank() {}
     void init( Game* game );
+
+    /**
+     * @brief Get the board position the tank currently resides on.
+     * In the case where the tank is moving to a new square, the square the tank is moving away from is returned.
+     */
+    const ModelPoint& getPoint() const;
+
+    /**
+     * @brief Get the board position and rotation of the tank
+     * In the case where the tank is moving to a new square, the square the tank is moving away from is returned.
+     */
+    const ModelVector& getVector() const;
 
     /**
      * @brief Get the column the tank currently resides on.
@@ -41,15 +54,18 @@ public:
      * @param direction The rotation to animate into
      * @return true if started animating
      */
-    bool doMove( int col, int row, int direction );
+    bool doMove( ModelVector& vector );
+
+    bool fire();
+
+    Recorder& getRecorder();
 
 public slots:
     /**
      * @brief Restores the tank to its idle state positioned at the given square
-     * @param col The column of the square to position the tank in
-     * @param row The row of the square to position the tank in
+     * @param point The square to position the tank in
      */
-    void reset( int col, int row );
+    void reset( ModelPoint point );
 
 protected:
     /**
@@ -58,9 +74,8 @@ protected:
     void onMoved( int col, int row, int rotation ) override;
 
 private:
-    int mCol;
-    int mRow;
-    int mRotation;
+    ModelVector mVector;
+    Recorder mRecorder;
 };
 
 #endif // TANK_H

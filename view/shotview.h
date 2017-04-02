@@ -48,6 +48,7 @@ public:
 
 signals:
     void rectDirty( QRect& rect );
+
     /**
      * @brief emitted when the shooter is no longer used to define it's start point
      */

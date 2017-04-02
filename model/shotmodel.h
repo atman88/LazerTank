@@ -7,6 +7,7 @@ class Game;
 class AnimationStateAggregator;
 class Shooter;
 
+#include "model/modelpoint.h"
 #include "view/shotview.h"
 
 class ShotModel : public ShotView
@@ -46,20 +47,6 @@ public:
      */
     int getDistance() const;
 
-    /**
-     * @brief Get the column where the laser beam has extended to
-     * @return The column number or -1 if the shot is inactive
-     */
-    int getLeadingCol() const;
-    void setLeadingCol(int leadingCol);
-
-    /**
-     * @brief Get the row where the laser beam has extended to
-     * @return The row number or -1 if the shot is inactive
-     */
-    int getLeadingRow() const;
-    void setLeadingRow(int leadingRow);
-
 signals:
     /**
      * @brief Notifies that the laser beam hit the tank
@@ -81,8 +68,7 @@ public slots:
 private:
     QVariant mSequence;
     QPropertyAnimation mAnimation;
-    int mLeadingCol;
-    int mLeadingRow;
+    ModelPoint mLeadingPoint;
     int mLeadingDirection;
     int mDistance;
     bool mShedding;

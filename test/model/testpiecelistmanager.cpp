@@ -5,10 +5,10 @@ void TestMain::testPieceListManager()
 {
     PieceListManager manager;
 
-    manager.append( MOVE, 1, 2,  90 );
-    manager.append( MOVE, 1, 2, 270 );
-    manager.append( MOVE, 3, 4,   0 );
-    manager.append( MOVE, 3, 4, 180 );
+    manager.append( MOVE, ModelPoint(1, 2),  90 );
+    manager.append( MOVE, ModelPoint(1, 2), 270 );
+    manager.append( MOVE, ModelPoint(3, 4),   0 );
+    manager.append( MOVE, ModelPoint(3, 4), 180 );
     QCOMPARE( manager.toSet()->size(), 2UL );
     QCOMPARE( manager.toMultiSet()->size(), 4UL );
     manager.eraseBack();

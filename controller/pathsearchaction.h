@@ -19,11 +19,11 @@ public:
     /**
      * @brief Set criteria for this search
      * The the game's tank position is always used for the search starting coordinate
-     * @param targetCol
-     * @param targetRow
+     * @param focus The focus of the starting point. Either TANK or MOVE.
+     * @param target The square to find a path to.
      * @param moveWhenFound
      */
-    void setCriteria( PieceType focus, int targetCol, int targetRow, bool moveWhenFound );
+    void setCriteria( PieceType focus, const ModelPoint& target, bool moveWhenFound );
 
     PathSearchCriteria* getCriteria();
 };

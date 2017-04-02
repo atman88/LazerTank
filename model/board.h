@@ -9,7 +9,7 @@
 #include "controller/futurechange.h"
 
 // The last /maps/level%1.txt file we wish to reach. Increase this as new levels are added.
-#define BOARD_MAX_LEVEL 44
+#define BOARD_MAX_LEVEL 45
 
 // The largest board dimensions we care to support
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
@@ -18,11 +18,10 @@
 /**
  * @brief Helper method to determine the neighbor square for the given direction
  * @param angle The direction. Legal values are 0, 90, 180, 270.
- * @param col Input starting column. Returns the resultant column
- * @param row Input starting row. Returns the resultant row
+ * @param point Inputs the starting position. Returns the resultant position
  * @return true if the angle is legal
  */
-bool getAdjacentPosition( int angle, int *col, int *row );
+bool getAdjacentPosition( int angle, ModelPoint *point );
 
 /**
  * @brief The Board class
@@ -112,28 +111,15 @@ public:
     void load( const Board* source );
 
     /**
-     * @brief Get the column that the flag is on for this board
-     * @return The column of the flag or -1 if the board does not contain a flag (malformed).
+     * @brief Get the location of the flag
      */
-    int getFlagCol() const;
+    ModelPoint getFlagPoint() const;
 
     /**
-     * @brief Get the row that the flag is on for this board
-     * @return The row of the flag or -1 if the board does not contain a flag (malformed).
+     * @brief Get square that the tank was loaded at for this board
+     * @return The tank way point. The point 0,0 is returned when not specified in the previously loaded board data.
      */
-    int getFlagRow() const;
-
-    /**
-     * @brief Get the column that the tank was loaded at for this board
-     * @return The tank way point column. Column 0 is returned when not specified by the previous load.
-     */
-    int getTankStartCol() const;
-
-    /**
-     * @brief Get the row that the tank was loaded at for this board
-     * @return The tank way point column. Column 0 is returned when not specified by the previous load.
-     */
-    int getTankStartRow() const;
+    ModelPoint getTankStartPoint() const;
 
     /**
      * @brief roll back future board changes for this shot path
@@ -158,10 +144,8 @@ private:
     int mLevel;
     int mWidth;
     int mHeight;
-    int mFlagCol;
-    int mFlagRow;
-    int mTankWayPointCol;
-    int mTankWayPointRow;
+    ModelPoint mFlagPoint;
+    ModelPoint mTankWayPoint;
 
     unsigned char mTiles[BOARD_MAX_WIDTH*BOARD_MAX_HEIGHT];
 

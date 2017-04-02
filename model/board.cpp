@@ -4,7 +4,7 @@
 
 #include "board.h"
 
-Board::Board( QObject* parent )  : QObject(parent), mLevel(0), mWidth(16), mHeight(16), mFlagCol(-1), mFlagRow(-1)
+Board::Board( QObject* parent )  : QObject(parent), mLevel(0), mWidth(16), mHeight(16)
 {
     memset( mTiles, EMPTY, sizeof mTiles );
 }
@@ -26,24 +26,14 @@ void Board::initPiece( PieceType type, int col, int row, int angle )
     mTiles[row*BOARD_MAX_HEIGHT + col] = DIRT;
 }
 
-int Board::getTankStartCol() const
+ModelPoint Board::getTankStartPoint() const
 {
-    return mTankWayPointCol;
+    return mTankWayPoint;
 }
 
-int Board::getTankStartRow() const
+ModelPoint Board::getFlagPoint() const
 {
-    return mTankWayPointRow;
-}
-
-int Board::getFlagCol() const
-{
-    return mFlagCol;
-}
-
-int Board::getFlagRow() const
-{
-    return mFlagRow;
+    return mFlagPoint;
 }
 
 bool Board::load( QString& fileName, int level )
@@ -64,8 +54,8 @@ void Board::load( QTextStream& stream, int level )
     int row = 0;
     unsigned char* rowp = mTiles;
     mWidth = 0;
-    mTankWayPointCol = mTankWayPointRow = 0;
-    mFlagCol = mFlagRow = -1;
+    mTankWayPoint = ModelPoint(0,0);
+    mFlagPoint.setNull();
     mPieceManager.reset();
 
     do {
@@ -91,8 +81,8 @@ void Board::load( QTextStream& stream, int level )
             case 'e': rowp[col++] = EMPTY;     break;
             case 'm': rowp[col++] = TILE_SUNK; break;
             case 'F':
-                mFlagCol = col;
-                mFlagRow = row;
+                mFlagPoint.mCol = col;
+                mFlagPoint.mRow = row;
                 rowp[col++] = FLAG;
                 break;
 
@@ -122,8 +112,8 @@ void Board::load( QTextStream& stream, int level )
                 break;
 
             case 'T':
-                mTankWayPointCol = col;
-                mTankWayPointRow = row;
+                mTankWayPoint.mCol = col;
+                mTankWayPoint.mRow = row;
 
                 // fall through
 
@@ -197,13 +187,13 @@ bool Board::applyPushResult( PieceType mType, int col, int row, int pieceAngle )
     return false;
 }
 
-bool getAdjacentPosition( int angle, int *col, int *row )
+bool getAdjacentPosition( int angle, ModelPoint *point )
 {
     switch( angle ) {
-    case   0: *row -= 1; return true;
-    case  90: *col += 1; return true;
-    case 180: *row += 1; return true;
-    case 270: *col -= 1; return true;
+    case   0: point->mRow -= 1; return true;
+    case  90: point->mCol += 1; return true;
+    case 180: point->mRow += 1; return true;
+    case 270: point->mCol -= 1; return true;
     default:
         ;
     }
@@ -237,7 +227,7 @@ void Board::undoChanges( std::vector<FutureChange> changes )
             }
 
             for( int i = it->u.multiPush.count; --i >= 0; ) {
-                if ( !getAdjacentPosition( reverseDirection, &p.mCol, &p.mRow ) ) {
+                if ( !getAdjacentPosition( reverseDirection, &p ) ) {
                     std::cout << "** undo PIECE_PUSHED no adjacent at (" << p.mCol << "," << p.mRow << ")" << std::endl;
                     break;
                 }

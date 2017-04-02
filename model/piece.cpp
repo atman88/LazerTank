@@ -14,6 +14,7 @@ MovePiece::MovePiece( const Piece* source ) : SimplePiece(source)
         mPushPieceAngle = 0;
         mShotPathUID = 0;
     }
+    mShotCount = source->getShotCount();
 }
 
 bool MovePiece::hasPush() const

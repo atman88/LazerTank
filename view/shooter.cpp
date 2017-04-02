@@ -13,9 +13,9 @@ void Shooter::init( Game* game, PieceType type, QColor color )
     mShot.setParent(this);
     mShot.setColor( color );
 
-    BoardWindow* window = game->getWindow();
-    if ( window ) {
-        QObject::connect( &mShot, &ShotModel::tankKilled, window, &BoardWindow::onTankKilled );
+    QObject::connect( &mShot, &ShotModel::tankKilled, game, &Game::onTankKilled );
+
+    if ( BoardWindow* window = game->getWindow() ) {
         QObject::connect( &mShot, &ShotView::rectDirty,   window, &BoardWindow::renderLater  );
     }
 

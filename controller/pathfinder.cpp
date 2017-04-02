@@ -22,15 +22,16 @@ bool PathFinder::findPath( PathSearchCriteria* criteria, bool testOnly )
     // initialize the search map
     // Note: Done here (in the app thread) to ensure the board doesn't change while reading it.
     if ( Game* game = getGame(this) ) {
-        if ( game->canPlaceAt( TANK, criteria->getTargetCol(), criteria->getTargetRow(), 0, criteria->isFuturistic() )) {
+        if ( game->canPlaceAt( TANK, criteria->getTargetPoint(), 0, criteria->isFuturistic() )) {
             Board* board = game->getBoard( criteria->isFuturistic() );
             mMaxCol = board->getWidth()-1;
             mMaxRow = board->getHeight()-1;
 
-            for( int row = mMaxRow; row >= 0; --row ) {
-                for( int col = mMaxCol; col >= 0; --col ) {
-                    mSearchMap[row*BOARD_MAX_WIDTH+col] =
-                      game->canPlaceAt( TANK, col, row, 0, criteria->getFocus() != TANK ) ? TRAVERSIBLE : BLOCKED;
+            ModelPoint point;
+            for( point.mRow = mMaxRow; point.mRow >= 0; --point.mRow ) {
+                for( point.mCol = mMaxCol; point.mCol >= 0; --point.mCol ) {
+                    mSearchMap[point.mRow*BOARD_MAX_WIDTH+point.mCol] =
+                      game->canPlaceAt( TANK, point, 0, criteria->getFocus() != TANK ) ? TRAVERSIBLE : BLOCKED;
                 }
             }
 
@@ -81,8 +82,7 @@ void PathFinder::buildPath( int col, int row )
     int direction = 0;
 
     while( col != mRunCriteria.getTargetCol() || row != mRunCriteria.getTargetRow() ) {
-        int lastCol = col;
-        int lastRow = row;
+        ModelPoint lastPoint( col, row );
 
         if ( --mPassValue < 0 ) {
             mPassValue = TRAVERSIBLE-1;
@@ -95,13 +95,13 @@ void PathFinder::buildPath( int col, int row )
             break;
         }
 
-        if ( lastCol   != mRunCriteria.getStartCol()
-          || lastRow   != mRunCriteria.getStartRow()
+        if ( lastPoint.mCol != mRunCriteria.getStartCol()
+          || lastPoint.mRow != mRunCriteria.getStartRow()
           || direction != mRunCriteria.getStartDirection() ) {
-            mMoves.append( MOVE, lastCol, lastRow, direction );
+            mMoves.append( MOVE, lastPoint, direction );
         }
     }
-    mMoves.append( MOVE, col, row, direction );
+    mMoves.append( MOVE, ModelPoint( col, row ), direction );
 }
 
 void PathFinder::tryAt( int col, int row )

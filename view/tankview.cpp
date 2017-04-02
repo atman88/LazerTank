@@ -68,7 +68,7 @@ void TankView::resume()
     }
 }
 
-void TankView::reset( QPoint& p )
+void TankView::reset( const QPoint& p )
 {
     stop();
     Shooter::reset( p );

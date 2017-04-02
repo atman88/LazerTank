@@ -2,7 +2,7 @@
 #include "controller/game.h"
 #include "util/gameutils.h"
 
-ShotModel::ShotModel(QObject *parent) : ShotView(parent), mLeadingCol(-1), mLeadingRow(-1), mDistance(0), mShedding(false),
+ShotModel::ShotModel(QObject *parent) : ShotView(parent), mDistance(0), mShedding(false),
   mKillSequence(0)
 {
     mAnimation.setTargetObject(this);
@@ -15,7 +15,7 @@ ShotModel::ShotModel(QObject *parent) : ShotView(parent), mLeadingCol(-1), mLead
 void ShotModel::reset()
 {
     mAnimation.stop();
-    mLeadingCol = mLeadingRow = -1;
+    mLeadingPoint.setNull();
     mSequence = QVariant(-1);
     mDistance = 0;
     mShedding = false;
@@ -44,8 +44,7 @@ bool ShotModel::fire( Shooter* shooter )
     if ( !(direction % 90) ) {
         reset();
         mLeadingDirection = direction;
-        mLeadingCol = shooter->getViewX().toInt()/24;
-        mLeadingRow = shooter->getViewY().toInt()/24;
+        mLeadingPoint = ModelPoint( shooter->getViewX().toInt()/24, shooter->getViewY().toInt()/24 );
         commenceFire( shooter );
         mAnimation.start();
         return true;
@@ -78,11 +77,11 @@ void ShotModel::setSequence( const QVariant &sequence )
     }
 
     if ( !hasTerminationPoint() ) {
-        if ( getAdjacentPosition( mLeadingDirection, &mLeadingCol, &mLeadingRow ) ) {
-            QPoint hitPoint( modelToViewCenterSquare(mLeadingCol,mLeadingRow) );
+        if ( getAdjacentPosition( mLeadingDirection, &mLeadingPoint ) ) {
+            QPoint hitPoint = mLeadingPoint.toViewCenterSquare();
             int entryDirection = mLeadingDirection;
-            if ( game->canShootThru( mLeadingCol, mLeadingRow, &mLeadingDirection, 0, getShooter(), &hitPoint ) ) {
-                grow( modelToViewCenterSquare(mLeadingCol,mLeadingRow), entryDirection );
+            if ( game->canShootThru( mLeadingPoint.mCol, mLeadingPoint.mRow, &mLeadingDirection, 0, getShooter(), &hitPoint ) ) {
+                grow( mLeadingPoint.toViewCenterSquare(), entryDirection );
             } else {
                 addTermination( entryDirection, hitPoint );
                 mShedding = true;
@@ -108,24 +107,4 @@ void ShotModel::startShedding()
 void ShotModel::setIsKill()
 {
     mKillSequence = 1;
-}
-
-int ShotModel::getLeadingRow() const
-{
-    return mLeadingRow;
-}
-
-void ShotModel::setLeadingRow(int leadingRow)
-{
-    mLeadingRow = leadingRow;
-}
-
-void ShotModel::setLeadingCol(int leadingCol)
-{
-    mLeadingCol = leadingCol;
-}
-
-int ShotModel::getLeadingCol() const
-{
-    return mLeadingCol;
 }

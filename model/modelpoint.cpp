@@ -11,10 +11,14 @@ void ModelPoint::setNull()
     mCol = mRow = -1;
 }
 
-bool ModelPoint::equals(ModelPoint &other)
+bool ModelPoint::equals( const ModelPoint& other ) const
 {
-    return mCol == other.mCol
-        && mRow == other.mRow;
+    return mCol == other.mCol && mRow == other.mRow;
+}
+
+bool ModelPoint::operator ==( const ModelPoint& other ) const
+{
+    return equals(other);
 }
 
 void ModelPoint::minMax(ModelPoint &min, ModelPoint &max) const
@@ -26,4 +30,14 @@ void ModelPoint::minMax(ModelPoint &min, ModelPoint &max) const
 QPoint ModelPoint::toViewCenterSquare() const
 {
     return modelToViewCenterSquare( mCol, mRow );
+}
+
+QPoint ModelPoint::toViewUpperLeft() const
+{
+    return QPoint( mCol*24, mRow* 24 );
+}
+
+bool ModelVector::equals(const ModelVector &other) const
+{
+    return mCol == other.mCol && mRow == other.mRow && mAngle == other.mAngle;
 }

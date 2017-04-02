@@ -2,6 +2,7 @@
 #include <Qt>
 #include <QVariant>
 #include <QMessageBox>
+#include <QPushButton>
 
 #include "game.h"
 #include "boardwindow.h"
@@ -77,12 +78,12 @@ void Game::init( BoardWindow* window )
 void Game::onBoardLoaded()
 {
     mFutureDelta.enable( false );
-    mMoveController.reset();
     mMoveAggregate.reset();
     mShotAggregate.reset();
-    mTank.reset( mBoard.getTankStartCol(), mBoard.getTankStartRow() );
+    mTank.reset( mBoard.getTankStartPoint() );
     mActiveCannon.reset( NullPoint );
     mSpeedController.setHighSpeed(false);
+    mMoveController.onBoardLoaded( &mBoard );
 }
 
 void Game::endMoveDeltaTracking()
@@ -123,18 +124,18 @@ Push& Game::getShotPush()
     return mShotPush;
 }
 
-bool Game::canMoveFrom( PieceType what, int angle, int *col, int *row, Board* board, Piece **pushPiece ) {
-    return getAdjacentPosition(angle, col, row) && canPlaceAt( what, *col, *row, angle, board, pushPiece );
+bool Game::canMoveFrom( PieceType what, int angle, ModelPoint *point, Board* board, Piece **pushPiece ) {
+    return getAdjacentPosition(angle, point) && canPlaceAt( what, *point, angle, board, pushPiece );
 }
 
-bool Game::canMoveFrom( PieceType what, int angle, int *col, int *row, bool futuristic, Piece **pushPiece )
+bool Game::canMoveFrom( PieceType what, int angle, ModelPoint *point, bool futuristic, Piece **pushPiece )
 {
-    if ( what != TANK && *col == mTank.getCol() && *row == mTank.getRow() ) {
+    if ( what != TANK && point->equals( mTank.getPoint() ) ) {
         return false;
     }
 
-    if ( getAdjacentPosition(angle, col, row) ) {
-        return canPlaceAt( what, *col, *row, angle, getBoard(futuristic), pushPiece );
+    if ( getAdjacentPosition( angle, point ) ) {
+        return canPlaceAt( what, *point, angle, getBoard(futuristic), pushPiece );
     }
     return false;
 }
@@ -230,13 +231,28 @@ void Game::onMoveAggregatorFinished()
     mSpeedController.stepSpeed();
 
     if ( mBoard.tileAt(mTank.getCol(),mTank.getRow()) == FLAG ) {
-        QMessageBox msgBox;
-        msgBox.setText("Level completed!");
-        msgBox.exec();
+        // if we don't have a window then we're headless (i.e. testing); don't show message boxes for the headless case
+        if ( mWindow ) {
+            QMessageBox msgBox;
+            msgBox.setWindowTitle( "Level completed!");
+            msgBox.setText( QString("%1 total moves").arg( mTank.getRecorder().getCount() ) );
+            QPushButton* replayButton = msgBox.addButton( QString("&Replay"    ), QMessageBox::ActionRole );
+            QPushButton* nextButton   = msgBox.addButton( QString("&Next Level"), QMessageBox::AcceptRole );
+            QPushButton* exitButton   = msgBox.addButton( QString("E&xit"      ), QMessageBox::DestructiveRole );
+            msgBox.setDefaultButton( nextButton );
 
-        int nextLevel = mBoard.getLevel() + 1;
-        if ( nextLevel <= BOARD_MAX_LEVEL ) {
-            mBoard.load( nextLevel );
+            msgBox.exec();
+
+            if ( msgBox.clickedButton() == exitButton ) {
+                mWindow->close();
+            } else if ( msgBox.clickedButton() == replayButton ) {
+                restartLevel( true );
+            } else {
+                int nextLevel = mBoard.getLevel() + 1;
+                if ( nextLevel <= BOARD_MAX_LEVEL ) {
+                    mBoard.load( nextLevel );
+                }
+            }
         }
         return;
     }
@@ -252,21 +268,21 @@ void Game::onBoardTileChanged( int col, int row )
     }
 }
 
-bool Game::canPlaceAt(PieceType what, int col, int row, int fromAngle, bool futuristic, Piece **pushPiece )
+bool Game::canPlaceAt(PieceType what, ModelPoint point, int fromAngle, bool futuristic, Piece **pushPiece )
 {
-    return canPlaceAt( what, col, row, fromAngle, getBoard(futuristic), pushPiece );
+    return canPlaceAt( what, point, fromAngle, getBoard(futuristic), pushPiece );
 }
 
-bool Game::canPlaceAt(PieceType what, int col, int row, int fromAngle, Board* board, Piece **pushPiece )
+bool Game::canPlaceAt(PieceType what, ModelPoint point, int fromAngle, Board* board, Piece **pushPiece )
 {
-    switch( board->tileAt(col,row) ) {
+    switch( board->tileAt( point.mCol, point.mRow ) ) {
     case DIRT:
     case TILE_SUNK:
-    {   Piece* hit = board->getPieceManager()->pieceAt( col, row );
+    {   Piece* hit = board->getPieceManager()->pieceAt( point.mCol, point.mRow );
         if ( hit ) {
             if ( what == TANK && pushPiece ) {
                 *pushPiece = hit;
-                return canMoveFrom( hit->getType(), fromAngle, &col, &row, board );
+                return canMoveFrom( hit->getType(), fromAngle, &point, board );
             }
             return false;
         }
@@ -419,11 +435,11 @@ bool Game::canShootThru( int col, int row, int *angle, FutureChange *change, Sho
             }
 
             // push it:
-            int toCol = col, toRow = row;
-            if ( canMoveFrom( hitPiece->getType(), *angle, &toCol, &toRow, futuristic ) ) {
+            ModelPoint toPoint(  col, row );
+            if ( canMoveFrom( hitPiece->getType(), *angle, &toPoint, futuristic ) ) {
                 if ( futuristic ) {
                     change->changeType = PIECE_PUSHED;
-                    change->point = ModelPoint( toCol, toRow );
+                    change->point = toPoint;
                     change->u.multiPush.pieceType = hitPiece->getType();
                     change->u.multiPush.pieceAngle = hitPiece->getAngle();
                     change->u.multiPush.direction = *angle;
@@ -432,7 +448,7 @@ bool Game::canShootThru( int col, int row, int *angle, FutureChange *change, Sho
                 } else {
                     SimplePiece simple( hitPiece );
                     board->getPieceManager()->eraseAt( col, row );
-                    mShotPush.start( simple, col, row, toCol, toRow );
+                    mShotPush.start( simple, col, row, toPoint.mCol, toPoint.mRow );
                 }
             }
             break;
@@ -526,11 +542,11 @@ void Game::onTankPushingInto( int col, int row, int fromAngle )
     PieceSetManager* pm = mBoard.getPieceManager();
     Piece* what = pm->pieceAt( col, row );
     if ( what ) {
-        int toCol = col, toRow = row;
-        if ( getAdjacentPosition(fromAngle, &toCol, &toRow) ) {
+        ModelPoint toPoint( col, row );
+        if ( getAdjacentPosition( fromAngle, &toPoint ) ) {
             SimplePiece simple( what );
             pm->eraseAt( col, row );
-            mTankPush.start( simple, col, row, toCol, toRow );
+            mTankPush.start( simple, col, row, toPoint.mCol, toPoint.mRow );
         } else {
             std::cout << "*** no adjacent for angle " << fromAngle << std::endl;
         }
@@ -562,20 +578,19 @@ void Game::onFuturePush( Piece* pushPiece, int direction )
     mFutureDelta.enable();
 
     // copy values before pushPiece likely deleted:
-    int col        = pushPiece->getCol();
-    int row        = pushPiece->getRow();
-    PieceType type = pushPiece->getType();
-    int pieceAngle = pushPiece->getAngle();
+    ModelPoint point = *pushPiece;
+    PieceType type   = pushPiece->getType();
+    int pieceAngle   = pushPiece->getAngle();
 
     if ( !mFutureBoard.getPieceManager()->erase( pushPiece ) ) {
-        std::cout << "*** failed to erase future pushPiece at " << col << "," << row << std::endl;
+        std::cout << "*** failed to erase future pushPiece at " << point.mCol << "," << point.mRow << std::endl;
     }
 
-    if ( !getAdjacentPosition( direction, &col, &row ) ) {
-        std::cout << "*** failed to get future pushPiece position for " << direction << "/" << col << "," << row << std::endl;
+    if ( !getAdjacentPosition( direction, &point ) ) {
+        std::cout << "*** failed to get future pushPiece position for " << direction << "/" << point.mCol << "," << point.mRow << std::endl;
         return;
     }
-    mFutureBoard.applyPushResult( type, col, row, pieceAngle );
+    mFutureBoard.applyPushResult( type, point.mCol, point.mRow, pieceAngle );
 }
 
 const PieceSet* Game::getDeltaPieces()
@@ -588,15 +603,14 @@ const PieceSet* Game::getDeltaPieces()
 
 void Game::undoFuturePush( MovePiece* pusher )
 {
-    int col = pusher->getCol();
-    int row = pusher->getRow();
-    if ( getAdjacentPosition( pusher->getAngle(), &col, &row ) ) {
+    ModelPoint point = *pusher;
+    if ( getAdjacentPosition( pusher->getAngle(), &point ) ) {
         PieceSetManager* pieceManager = mFutureBoard.getPieceManager();
-        Piece* pushee = pieceManager->pieceAt( col, row );
+        Piece* pushee = pieceManager->pieceAt( point.mCol, point.mRow );
         if ( pushee ) {
             pieceManager->erase( pushee );
-        } else if ( pusher->getPushPieceType() == TILE && mFutureBoard.tileAt(col, row ) == TILE_SUNK ) {
-            mFutureBoard.setTileAt( WATER, col, row );
+        } else if ( pusher->getPushPieceType() == TILE && mFutureBoard.tileAt( point.mCol, point.mRow ) == TILE_SUNK ) {
+            mFutureBoard.setTileAt( WATER, point.mCol, point.mRow );
         }
         pieceManager->insert( pusher->getPushPieceType(), pusher->getCol(), pusher->getRow(), pusher->getPushPieceAngle() );
     }
@@ -620,5 +634,35 @@ void Game::undoLastMove()
             undoFuturePush( dynamic_cast<MovePiece*>(piece) );
         }
         mMoveController.eraseLastMove();
+    }
+}
+
+void Game::onTankKilled()
+{
+    // if we don't have a window then we're headless (i.e. testing); don't show message boxes for the headless case
+    if ( mWindow ) {
+        QMessageBox msgBox;
+        msgBox.setWindowTitle("Level lost!");
+        QPushButton* restartButton = msgBox.addButton( QString("Re&start"), QMessageBox::AcceptRole      );
+        QPushButton* replayButton  = msgBox.addButton( QString("&Replay" ), QMessageBox::ActionRole      );
+        QPushButton* exitButton    = msgBox.addButton( QString("E&xit"   ), QMessageBox::DestructiveRole );
+        msgBox.setDefaultButton( restartButton );
+
+        msgBox.exec();
+
+        if ( msgBox.clickedButton() == exitButton ) {
+            mWindow->close();
+        } else {
+            restartLevel( msgBox.clickedButton() == replayButton );
+        }
+    }
+}
+
+void Game::restartLevel( bool replay )
+{
+    mMoveController.setReplay( replay );
+    mBoard.load( mBoard.getLevel() );
+    if ( replay ) {
+        mMoveController.wakeup();
     }
 }

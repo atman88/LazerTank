@@ -4,6 +4,7 @@
 #include <QPainter>
 
 #include "tile.h"
+#include "model/modelpoint.h"
 
 typedef enum {
     NONE = TileTypeUpperBound, // must be unique from tile values (allows imageutils to combine them)
@@ -20,11 +21,18 @@ typedef enum {
 } PieceType;
 
 
-class PieceView
+class PieceView : public ModelVector
 {
 public:
-    PieceView( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 )
-      : mType(type), mCol(col), mRow(row), mAngle(angle)
+    PieceView( PieceType type = NONE, int col = 0, int row = 0, int angle = 0 ) : ModelVector(col,row,angle), mType(type)
+    {
+    }
+
+    PieceView( PieceType type, ModelPoint& point, int angle = 0 ) : ModelVector(point,angle), mType(type)
+    {
+    }
+
+    PieceView( PieceType type, ModelVector& vector ) : ModelVector(vector), mType(type)
     {
     }
 
@@ -83,9 +91,6 @@ public:
 
 protected:
     PieceType mType;
-    int mCol;
-    int mRow;
-    int mAngle;
 };
 
 #endif // PIECEVIEW_H

@@ -4,12 +4,19 @@
 #include <QObject>
 
 class Game;
+class Board;
 class PathSearchAction;
+class RecorderReader;
 
 #include "model/modelpoint.h"
 #include "model/futureshotpath.h"
 #include "model/piecelistmanager.h"
 
+typedef enum {
+    Idle,
+    Rotating,
+    Firing
+} MoveState;
 
 class MoveController : public QObject
 {
@@ -17,11 +24,11 @@ class MoveController : public QObject
 public:
     explicit MoveController( QObject *parent = 0 );
     void init( Game* game );
-    void reset();
+    void onBoardLoaded( Board* board );
 
     /**
      * @brief move the tank one square
-     * @param direction A rotation angle (one of 0, 90, 180, 270) or -1 to evaluate the current move state (wake it up)
+     * @param direction A rotation angle (one of 0, 90, 180, 270)
      */
     void move( int direction );
 
@@ -84,25 +91,25 @@ public slots:
      */
     void onPathFound( PieceListManager* path, PathSearchAction* action );
 
+    void setReplay( bool on );
+
+    bool replaying() const;
+
+private slots:
+    void replayPlayback();
+
 private:
     /**
      * @brief helper method to add a move to the list of moves that is highlight-aware
-     * @param col The column of the new move to append
-     * @param row The row of the new move to append
-     * @param direction The direction of the new move to append
+     * @param vector The column, row and direction for the new move
      * @param pushPiece The piece that this move pushes or 0 if it doesn't cause a push
      */
-    void appendMove(int col, int row, int direction, Piece* pushPiece = 0 );
+    void appendMove(ModelVector vector, Piece* pushPiece = 0 );
 
     /**
      * @brief The square that the tank is moving toward. Nullified when not moving.
      */
-    ModelPoint mToPoint;
-
-    /**
-     * @brief The angle that the tank is rotating toward or -1 if not rotating.
-     */
-    int mToDirection;
+    ModelVector mToVector;
 
     /**
      * @brief Pending moves where the first element may be in progress; all subsequent elements are future moves.
@@ -114,7 +121,8 @@ private:
      */
     FutureShotPathManager mFutureShots;
 
-    bool mIdle;
+    MoveState mState;
+    RecorderReader* mReplaySource;
 };
 
 #endif // MOVECONTROLLER_H
