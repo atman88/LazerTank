@@ -62,10 +62,10 @@ public:
 
 public slots:
     /**
-     * @brief Restores the tank to its idle state positioned at the given square
+     * @brief Restores the tank to its idle state as appropriate after a board change
      * @param point The square to position the tank in
      */
-    void reset( ModelPoint point );
+    void onBoardLoaded( ModelPoint point );
 
 protected:
     /**

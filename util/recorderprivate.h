@@ -59,9 +59,9 @@ public:
     ~RecorderPrivate();
 
     /**
-     * @brief restore to its empty state
+     * @brief Reset as appropriate on a board change
      */
-    void reset();
+    void onBoardLoaded();
 
     /**
      * @brief Query whether anything has been recorded yet

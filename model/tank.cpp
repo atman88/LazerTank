@@ -36,13 +36,12 @@ const ModelVector& Tank::getVector() const
     return mVector;
 }
 
-void Tank::reset( ModelPoint point )
+void Tank::onBoardLoaded( ModelPoint point )
 {
     mVector.setPoint( point );
     mVector.mAngle = 0;
     TankView::reset( point.toViewUpperLeft() );
-    mRecorder.reset();
-    std::cout << "tank: reset" << std::endl;
+    mRecorder.onBoardLoaded();
 }
 
 bool Tank::doMove( ModelVector& vector )

@@ -80,7 +80,7 @@ void Game::onBoardLoaded()
     mFutureDelta.enable( false );
     mMoveAggregate.reset();
     mShotAggregate.reset();
-    mTank.reset( mBoard.getTankStartPoint() );
+    mTank.onBoardLoaded( mBoard.getTankStartPoint() );
     mActiveCannon.reset( NullPoint );
     mSpeedController.setHighSpeed(false);
     mMoveController.onBoardLoaded( &mBoard );

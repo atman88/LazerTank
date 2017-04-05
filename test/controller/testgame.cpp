@@ -36,7 +36,7 @@ void TestMain::testMove()
 void testCannonAt( int tankCol, int tankRow, Game* game )
 {
     cout << "testCannonAt " << tankCol << "," << tankRow << endl;
-    game->getTank()->reset( ModelPoint(tankCol,tankRow) );
+    game->getTank()->onBoardLoaded( ModelPoint(tankCol,tankRow) );
     game->getCannonShot().reset();
 
     game->sightCannons();

@@ -68,9 +68,9 @@ void MoveController::fire( int count )
         }
         MovePiece* move = mMoves.setShotCountBack( count );
         // show its future if we expect it won't animate immediately:
-        if ( count > 1 || mState == RotateStage ) {
+//        if ( count > 1 || mState == RotateStage ) {
             mFutureShots.updatePath( move );
-        }
+//        }
         if ( nMoves == 1 && mState == FiringStage ) {
             wakeup();
         }

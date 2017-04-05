@@ -18,10 +18,13 @@ RecorderPrivate::~RecorderPrivate()
     free( mRecorded );
 }
 
-void RecorderPrivate::reset()
+void RecorderPrivate::onBoardLoaded()
 {
-    mCurMove.u.value = 0;
-    mRecordedCount = 0;
+    // reset if not playing back
+    if ( !mReader ) {
+        mCurMove.u.value = 0;
+        mRecordedCount = 0;
+    }
 }
 
 bool RecorderPrivate::isEmpty() const
@@ -59,6 +62,11 @@ void RecorderPrivate::closeReader()
 
 void RecorderPrivate::recordMove(bool adjacent, int rotation)
 {
+    // inhibit writes when reading
+    if ( mReader ) {
+        return;
+    }
+
     // Starting a new move so finish the outstanding lazy write now if pending
     if ( !mCurMove.isEmpty() ) {
         if ( !commitCurMove() ) {
@@ -87,6 +95,11 @@ void RecorderPrivate::recordMove(bool adjacent, int rotation)
 
 void RecorderPrivate::recordShot()
 {
+    // inhibit writes when reading
+    if ( mReader ) {
+        return;
+    }
+
     if ( mCurMove.u.move.shotCount < MAX_MOVE_SHOT_COUNT ) {
         if ( ++mCurMove.u.move.shotCount == MAX_MOVE_SHOT_COUNT ) {
             // lazy clear

@@ -12,9 +12,9 @@ Recorder::~Recorder()
     free( mPrivate );
 }
 
-void Recorder::reset()
+void Recorder::onBoardLoaded()
 {
-    mPrivate->reset();
+    mPrivate->onBoardLoaded();
 }
 
 bool Recorder::isEmpty() const

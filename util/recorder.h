@@ -77,9 +77,9 @@ public:
     ~Recorder();
 
     /**
-     * @brief Restore this reader to its empty state
+     * @brief Reset as appropriate on a board change
      */
-    void reset();
+    void onBoardLoaded();
 
     /**
      * @brief record a change in direction
