@@ -31,13 +31,15 @@ void MoveController::onBoardLoaded( Board* board )
 
 void MoveController::move( int direction )
 {
+    std::cout << "MoveController: move " << direction << std::endl;
     if ( Game* game = getGame(this) ) {
         Tank* tank = game->getTank();
         Piece* lastMove = mMoves.getBack();
         ModelVector vector = (lastMove ? *lastMove : tank->getVector());
 
         if ( direction >= 0 && direction != vector.mAngle ) {
-            if ( !lastMove || lastMove->hasPush() || lastMove->getShotCount() ) {
+            if ( !lastMove || lastMove->hasPush() || lastMove->getShotCount()
+               || (mState == FiringStage && mMoves.size() == 1) ) {
                 appendMove( ModelVector(vector, direction) );
             } else {
                 mMoves.replaceBack( MOVE_HIGHLIGHT, direction );
@@ -58,6 +60,7 @@ void MoveController::move( int direction )
 
 void MoveController::fire( int count )
 {
+    std::cout << "MoveController: fire " << count << std::endl;
     if ( int nMoves = mMoves.size() ) {
         // -1 signifies an increment
         if ( count < 0 ) {

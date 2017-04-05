@@ -103,6 +103,12 @@ private:
      */
     bool commitCurMove();
 
+    /**
+     * @brief store the current move in the mRecorded records without committing the write offset
+     * @return the offset past the written move. mRecordedCount is returned if unsuccessful.
+     */
+    int storeCurMove();
+
     EncodedMove mCurMove;
     EncodedMove mCurContinuation;
 

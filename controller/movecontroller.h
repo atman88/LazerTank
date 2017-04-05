@@ -6,11 +6,11 @@
 class Game;
 class Board;
 class PathSearchAction;
-class RecorderReader;
 
 #include "model/modelpoint.h"
 #include "model/futureshotpath.h"
 #include "model/piecelistmanager.h"
+#include "util/recorder.h"
 
 typedef enum {
     Idle,
@@ -19,7 +19,7 @@ typedef enum {
     IdlingStage
 } MoveState;
 
-class MoveController : public QObject
+class MoveController : public QObject, public RecorderConsumer
 {
     Q_OBJECT
 public:
@@ -31,7 +31,7 @@ public:
      * @brief move the tank one square
      * @param direction A rotation angle (one of 0, 90, 180, 270) or -1 to advance in the current direction
      */
-    void move( int direction );
+    void move( int direction ) override;
 
      /**
      * @brief Access the pending tank moves
@@ -72,7 +72,7 @@ public slots:
      * @brief Fire the tank's laser
      * @param count The number of times to shoot or -1 to increment the shot count
      */
-    void fire( int count = -1 );
+    void fire( int count = -1 ) override;
 
     /**
      * @brief Evaluate/advance the current state if possible
@@ -97,8 +97,16 @@ public slots:
      */
     void onPathFound( PieceListManager* path, PathSearchAction* action );
 
-    void setReplay( bool on );
+    /**
+     * @brief Enable/disable automatic replay
+     * @param on
+     */
+    void setReplay( bool on ) override;
 
+    /**
+     * @brief Query whether automatic replay is enabled
+     * @return true if enabled otherwise false
+     */
     bool replaying() const;
 
 private slots:

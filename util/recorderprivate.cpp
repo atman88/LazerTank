@@ -92,7 +92,7 @@ void RecorderPrivate::recordShot()
             // lazy clear
             mCurContinuation.clear();
         }
-    } else if ( mCurMove.u.continuation.shotCount < MAX_CONTINUATION_SHOT_COUNT ) {
+    } else if ( mCurContinuation.u.continuation.shotCount < MAX_CONTINUATION_SHOT_COUNT ) {
         ++mCurContinuation.u.continuation.shotCount;
     } else {
         // The most likely anticipated reason for reaching here would be for a board with more adjacent wooden
@@ -103,15 +103,25 @@ void RecorderPrivate::recordShot()
     }
 }
 
+int RecorderPrivate::storeCurMove()
+{
+    int count = mRecordedCount;
+    mRecorded[count++] = mCurMove;
+    if ( mCurMove.u.move.shotCount == MAX_MOVE_SHOT_COUNT && !mCurContinuation.isEmpty() ) {
+        mRecorded[count++] = mCurContinuation;
+    }
+    return count;
+}
+
 bool RecorderPrivate::commitCurMove()
 {
-    if ( mRecordedCount >= mCapacity ) {
+    // store unconditionally. Note this relies on the mRecorded being sized to mCapacity+3.
+    int count = storeCurMove();
+    if ( count >= mCapacity ) {
         std::cout << "* todo: level lost due to max # moves exceeded" << std::endl;
         return false;
     }
-    mRecorded[mRecordedCount++] = mCurMove;
-    if ( mCurMove.u.move.shotCount == MAX_MOVE_SHOT_COUNT && !mCurContinuation.isEmpty() ) {
-        mRecorded[mRecordedCount++] = mCurContinuation;
-    }
+    mRecordedCount = count;
     return true;
 }
+

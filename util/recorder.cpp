@@ -54,10 +54,7 @@ void Recorder::recordShot()
 
 RecorderReader::RecorderReader( RecorderPrivate *source ) : mOffset(0), mLastDirection(0)
 {
-    mRecordedCount = source->mRecordedCount;
-    if ( !source->mCurMove.isEmpty() ) {
-        source->mRecorded[mRecordedCount++] = source->mCurMove;
-    }
+    mRecordedCount = source->storeCurMove();
     mSource = source;
 }
 
@@ -84,18 +81,18 @@ void RecorderReader::abort()
     mOffset = mRecordedCount;
 }
 
-bool RecorderReader::readNext( MoveController* controller )
+bool RecorderReader::readNext( RecorderConsumer* consumer )
 {
     EncodedMove encoded = readInternal();
     if ( encoded.isEmpty() ) {
         // reached end
-        controller->setReplay( false );
+        consumer->setReplay( false );
         return false;
     }
 
     bool empty = true;
     if ( encoded.u.move.adjacent ) {
-        controller->move( mLastDirection );
+        consumer->move( mLastDirection );
         empty = false;
     }
 
@@ -108,11 +105,11 @@ bool RecorderReader::readNext( MoveController* controller )
         default:
             // this should be impossible given the bit field is two bits but let's see if the implementation proves that wrong
             std::cout << "**CORRUPT decoded angle at " << mOffset << std::endl;
-            controller->setReplay( false );
+            consumer->setReplay( false );
             abort();
             return false;
         }
-        controller->move( mLastDirection );
+        consumer->move( mLastDirection );
         empty = false;
     }
 
@@ -120,7 +117,7 @@ bool RecorderReader::readNext( MoveController* controller )
     if ( empty ) {
         std::cout << "** readNext: Non-move read unexpectedly" << std::endl;
         abort();
-        controller->setReplay( false );
+        consumer->setReplay( false );
         return false;
     }
 
@@ -136,13 +133,13 @@ bool RecorderReader::readNext( MoveController* controller )
                 // Let's sanity-check while we're here:
                 if ( shotCount == 7 ) {
                     std::cout << "**readNext: unexpected empty continuation encountered" << std::endl;
-                    controller->setReplay( false );
+                    consumer->setReplay( false );
                     abort();
                     return false;
                 }
             }
         }
-        controller->fire( shotCount );
+        consumer->fire( shotCount );
     }
     return true;
 }

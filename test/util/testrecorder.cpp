@@ -4,6 +4,44 @@
 
 using namespace std;
 
+class TestRecorderConsumer : public RecorderConsumer
+{
+public:
+    TestRecorderConsumer() : mMoveCallCount(0), mFireCallCount(0), mReplayOnCallCount(0), mLastMoveDirection(0),
+      mLastFireCount(0), mLastReplayOn(false)
+    {
+    }
+
+    void move( int direction )
+    {
+        cout << "TestRecordConsumer: move(" << direction << ")" << endl;
+        ++mMoveCallCount;
+        mLastMoveDirection = direction;
+    }
+
+    void fire( int count )
+    {
+        cout << "TestRecordConsumer: fire(" << count << ")" << endl;
+        ++mFireCallCount;
+        mLastFireCount = count;
+    }
+
+    void setReplay( bool on )
+    {
+        cout << "TestRecordConsumer: setReplay(" << on << ")" << endl;
+        ++mReplayOnCallCount;
+        mLastReplayOn = on;
+    }
+
+    int mMoveCallCount;
+    int mFireCallCount;
+    int mReplayOnCallCount;
+
+    int mLastMoveDirection;
+    int mLastFireCount;
+    bool mLastReplayOn;
+};
+
 void TestMain::testRecorder()
 {
     // test the bit field macros:
@@ -34,19 +72,26 @@ void TestMain::testRecorder()
 
     // fill to the overflow point:
     recorder.recordMove( true, 180 );
-    recorder.recordMove( true, 180 );
+    recorder.recordMove( true, -1 );
     // cause a shot continuation (worst case):
-    for( int i = 0; i <= MAX_MOVE_SHOT_COUNT; ++i ) {
-        recorder.recordShot();
-    }
-    recorder.recordMove( true, 180 );
-    // cause a shot continuation (worst case):
-    for( int i = 0; i <= MAX_MOVE_SHOT_COUNT; ++i ) {
+    int shotCount;
+    for( shotCount = 0; shotCount <= MAX_MOVE_SHOT_COUNT; ++shotCount ) {
         recorder.recordShot();
     }
 
     int count = recorder.getCount();
     // it should discover the overflow with this:
-    recorder.recordMove( true, 180 );
+    recorder.recordMove( true, -1 );
     QVERIFY2( recorder.getCount() == count, "count overflowed" );
+
+    RecorderReader* reader = recorder.getReader();
+    TestRecorderConsumer consumer;
+    QVERIFY( reader->readNext( &consumer ) );
+    QVERIFY( consumer.mLastMoveDirection == 180 );
+
+    QVERIFY( reader->readNext( &consumer ) );
+    QVERIFY( consumer.mLastMoveDirection == 180 );
+    QVERIFY( consumer.mLastFireCount == shotCount );
+
+    QVERIFY2( reader->readNext( &consumer ) == false, "didn't hit expected end" );
 }

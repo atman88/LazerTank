@@ -2,9 +2,33 @@
 #define RECORDER_H
 
 class Recorder;
-class MoveController;
 struct EncodedMove;
 class RecorderPrivate;
+
+/**
+ * @brief The RecorderReader interface
+ */
+class RecorderConsumer
+{
+public:
+    /**
+     * @brief Serves a move to the consumer
+     * @param direction A rotation angle (one of 0, 90, 180, 270) or -1 to advance in the current direction
+     */
+    virtual void move( int direction ) = 0;
+
+    /**
+     * @brief Updates the consumer on the replay state
+     * @param on
+     */
+    virtual void setReplay( bool on ) = 0;
+
+    /**
+     * @brief Serves a shot to the consumer
+     * @param count The number of times to shoot
+     */
+    virtual void fire( int count ) = 0;
+};
 
 class RecorderReader
 {
@@ -17,10 +41,10 @@ public:
 
     /**
      * @brief Perform the next recorded move sequence
-     * @param controller The move controller used to perform the move
+     * @param consumer The object to receive the move
      * @return true if the next sequence was performed or false if at the end of the recording or an error was encountered
      */
-    bool readNext( MoveController* controller );
+    bool readNext( RecorderConsumer* consumer );
 
 private:
     /**
