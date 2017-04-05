@@ -42,14 +42,16 @@ void Tank::reset( ModelPoint point )
     mVector.mAngle = 0;
     TankView::reset( point.toViewUpperLeft() );
     mRecorder.reset();
+    std::cout << "tank: reset" << std::endl;
 }
 
 bool Tank::doMove( ModelVector& vector )
 {
-    if ( mRotateAnimation.animateBetween( mViewRotation, vector.mAngle )
-       | mHorizontalAnimation.animateBetween( getViewX().toInt(), vector.mCol*24 )
-       | mVerticalAnimation.animateBetween(   getViewY().toInt(), vector.mRow*24 ) ) {
-        mRecorder.addMove( vector.mAngle );
+    bool moving =  mHorizontalAnimation.animateBetween( getViewX().toInt(), vector.mCol*24 )
+                || mVerticalAnimation.animateBetween(   getViewY().toInt(), vector.mRow*24 );
+    bool rotating = mRotateAnimation.animateBetween( mViewRotation, vector.mAngle );
+    if ( moving || rotating ) {
+        mRecorder.recordMove( moving, rotating ? vector.mAngle : -1 );
         return true;
     }
     return false;
@@ -58,7 +60,9 @@ bool Tank::doMove( ModelVector& vector )
 bool Tank::fire()
 {
     if ( Shooter::fire() ) {
-        mRecorder.addShot();
+        std::cout << "fire" << std::endl;
+        mRecorder.recordShot();
+        std::cout << "tank: firing " << getRotation() << std::endl;
         return true;
     }
     return false;

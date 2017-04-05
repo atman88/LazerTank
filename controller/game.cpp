@@ -661,8 +661,10 @@ void Game::onTankKilled()
 void Game::restartLevel( bool replay )
 {
     mMoveController.setReplay( replay );
-    mBoard.load( mBoard.getLevel() );
-    if ( replay ) {
-        mMoveController.wakeup();
-    }
+    mBoard.reload();
+}
+
+void Game::replayLevel()
+{
+    restartLevel( true );
 }

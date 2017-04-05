@@ -14,8 +14,9 @@ class RecorderReader;
 
 typedef enum {
     Idle,
-    Rotating,
-    Firing
+    RotateStage,
+    FiringStage,
+    IdlingStage
 } MoveState;
 
 class MoveController : public QObject
@@ -28,7 +29,7 @@ public:
 
     /**
      * @brief move the tank one square
-     * @param direction A rotation angle (one of 0, 90, 180, 270)
+     * @param direction A rotation angle (one of 0, 90, 180, 270) or -1 to advance in the current direction
      */
     void move( int direction );
 
@@ -60,6 +61,11 @@ signals:
      * @brief Notifies that the tank has completed all it's outstanding moves
      */
     void idle();
+
+    /**
+     * @brief Indicates that replay playback has ended
+     */
+    void replayFinished();
 
 public slots:
     /**
@@ -105,6 +111,12 @@ private:
      * @param pushPiece The piece that this move pushes or 0 if it doesn't cause a push
      */
     void appendMove(ModelVector vector, Piece* pushPiece = 0 );
+
+    /**
+     * @brief change the move state
+     * @param newState The state to transition to
+     */
+    void transitionState( MoveState newState );
 
     /**
      * @brief The square that the tank is moving toward. Nullified when not moving.

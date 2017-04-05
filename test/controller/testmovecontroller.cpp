@@ -37,9 +37,29 @@ void TestMain::testReplay()
 
     moveController->move( 180 );
     moveController->fire();
-    QVERIFY( idleSpy.wait( 2000 ) );
+    QVERIFY( idleSpy.wait( 1000 ) );
     pos.mAngle = 180;
-    QVERIFY( game.getTank()->getVector().equals(pos) );
-//    Not seeing this shotPush advance within the test environment:
-//    QVERIFY( game.getBoard()->getPieceManager()->typeAt(1,2) == TILE );
+    QVERIFY( game.getTank()->getVector().equals(pos) );\
+
+    if ( game.getShotAggregate()->active() ) {
+        QSignalSpy shotSpy( game.getShotAggregate(), &AnimationStateAggregator::finished );
+        shotSpy.wait( 1000 );
+    }
+    QVERIFY( game.getBoard()->getPieceManager()->typeAt(1,2) == TILE );
+
+    std::cout << "testmovecontroller: start replay" << std::endl;
+
+    game.replayLevel();
+    QVERIFY( game.getBoard()->getPieceManager()->typeAt(3,0) == NONE );
+    QVERIFY( game.getBoard()->getPieceManager()->typeAt(1,2) == NONE );
+
+    QSignalSpy replaySpy( moveController, &MoveController::replayFinished );
+    QVERIFY( replaySpy.wait( 4000 ) );
+    QVERIFY( game.getBoard()->getPieceManager()->typeAt(3,0) == TILE );
+
+    if ( game.getShotAggregate()->active() ) {
+        QSignalSpy shotSpy( game.getShotAggregate(), &AnimationStateAggregator::finished );
+        shotSpy.wait( 1000 );
+    }
+    QVERIFY( game.getBoard()->getPieceManager()->typeAt(1,2) == TILE );
 }

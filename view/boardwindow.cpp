@@ -63,6 +63,8 @@ void BoardWindow::init( Game* game )
         QObject::connect( &TO_QACTION(mSpeedAction), &QAction::toggled, mGame->getSpeedController(), &SpeedController::setHighSpeed );
         QObject::connect( &TO_QACTION(mUndoMoveAction),  &QAction::triggered, mGame, &Game::undoLastMove );
         QObject::connect( &TO_QACTION(mClearMovesAction),&QAction::triggered, mGame->getMoveController(), &MoveController::clearMoves );
+
+        QObject::connect( game->getMoveController(), &MoveController::replayFinished, this, &BoardWindow::onReplayFinished );
     }
 }
 
@@ -75,7 +77,7 @@ void BoardWindow::onBoardLoaded()
         QRect myGeometry = geometry();
         myGeometry.setSize( size.size() );
 
-        // center it roughly if it's position isn't initialized, :
+        // center it roughly if it's position isn't initialized
         if ( !isExposed() && !myGeometry.x() && !myGeometry.y() ) {
             if ( QScreen* myScreen = screen() ) {
                 QRect available = myScreen->availableGeometry();
@@ -112,6 +114,13 @@ void BoardWindow::showHelp()
         mHelpWidget->setSource( QUrl::fromLocalFile(":/help/qlthelp.html") );
     }
     mHelpWidget->show();
+}
+
+void BoardWindow::onReplayFinished()
+{
+    if ( !mReplayTextRenderRect.isNull() ) {
+        renderLater( mReplayTextRenderRect );
+    }
 }
 
 void BoardWindow::resizeEvent(QResizeEvent *resizeEvent)
@@ -263,6 +272,25 @@ void BoardWindow::render( const QRect* rect, QPainter* painter )
         renderListIn( moveIterator, moves->end(), rect, painter );
     }
     mGame->getCannonShot().render( painter );
+
+    if ( mGame->getMoveController()->replaying() ) {
+        QFont font = painter->font();
+        font.setBold(true);
+        font.setItalic(true);
+        font.setPixelSize(36);
+        painter->setFont( font );
+
+        if ( mReplayTextRenderRect.isNull() ) {
+            mReplayTextRenderRect = painter->boundingRect( QRect(0,0,width(),height()), Qt::AlignCenter, QString("REPLAY") );
+        }
+
+        if ( rect->intersects( mReplayTextRenderRect ) ) {
+            QPen pen;
+            pen.setColor( QColor(32,32,255,127) );
+            painter->setPen( pen );
+            painter->drawText( mReplayTextRenderRect, QString("REPLAY") );
+        }
+    }
 }
 
 void BoardWindow::render(QRegion* region)
@@ -289,6 +317,11 @@ bool BoardWindow::event(QEvent *event)
     if (event->type() == QEvent::UpdateRequest) {
         renderNow();
         return true;
+    }
+
+    if ( event->type() == QEvent::Resize ) {
+        // nullify this given it is stale:
+        mReplayTextRenderRect = QRect();
     }
 
     return QWindow::event(event);
@@ -349,7 +382,7 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
                 action->setData( QVariant(level) );
             }
 
-            mMenu.addAction( QString("Replay"), mGame, SLOT(restartLevel()) );
+            mMenu.addAction( QString("Replay"), mGame, SLOT(replayLevel()) );
             mMenu.addAction( QString("&Help"), this, SLOT(showHelp()) );
             mMenu.addAction( QString("E&xit"), this, SLOT(close()) );
         }

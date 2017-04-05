@@ -39,7 +39,8 @@ HEADERS += \
     controller/futurechange.h \
     model/tile.h \
     controller/movecontroller.h \
-    util/recorder.h
+    util/recorder.h \
+    util/recorderprivate.h
 
 SOURCES += \
            model/board.cpp \
@@ -69,7 +70,8 @@ SOURCES += \
     model/push.cpp \
     model/modelpoint.cpp \
     controller/movecontroller.cpp \
-    util/recorder.cpp
+    util/recorder.cpp \
+    util/recorderprivate.cpp
 
 RESOURCES += qml.qrc
 
@@ -86,7 +88,8 @@ test{
         test/controller/testgame.cpp \
         test/model/testpiecelistmanager.cpp \
         test/model/testfutureshotpath.cpp \
-        test/controller/testmovecontroller.cpp
+        test/controller/testmovecontroller.cpp \
+        test/util/testrecorder.cpp
 }
 else{
     TARGET = qlt

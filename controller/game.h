@@ -207,7 +207,12 @@ public slots:
      * @brief Restart the current level
      * @param replay If true, restarts and automates an instant replay
      */
-    void restartLevel( bool replay = true );
+    void restartLevel( bool replay = false );
+
+    /**
+     * @brief Automate an instant replay of the current level
+     */
+    void replayLevel();
 
 private:
     /**

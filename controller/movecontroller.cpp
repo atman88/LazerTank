@@ -23,7 +23,10 @@ void MoveController::onBoardLoaded( Board* board )
 
     mFutureShots.reset();
     mMoves.reset();
+
+    // emit unconditionally to prime the pump:
     mState = Idle;
+    emit idle();
 }
 
 void MoveController::move( int direction )
@@ -33,7 +36,7 @@ void MoveController::move( int direction )
         Piece* lastMove = mMoves.getBack();
         ModelVector vector = (lastMove ? *lastMove : tank->getVector());
 
-        if ( direction != vector.mAngle ) {
+        if ( direction >= 0 && direction != vector.mAngle ) {
             if ( !lastMove || lastMove->hasPush() || lastMove->getShotCount() ) {
                 appendMove( ModelVector(vector, direction) );
             } else {
@@ -44,7 +47,7 @@ void MoveController::move( int direction )
             if ( game->canMoveFrom( TANK, vector.mAngle, &vector, true, &pushPiece ) ) {
                 appendMove( vector, pushPiece );
                 if ( pushPiece ) {
-                    game->onFuturePush( pushPiece, direction );
+                    game->onFuturePush( pushPiece, vector.mAngle );
                 }
             }
         }
@@ -62,10 +65,10 @@ void MoveController::fire( int count )
         }
         MovePiece* move = mMoves.setShotCountBack( count );
         // show its future if we expect it won't animate immediately:
-        if ( count > 1 || mState == Rotating ) {
+        if ( count > 1 || mState == RotateStage ) {
             mFutureShots.updatePath( move );
         }
-        if ( nMoves == 1 && mState == Firing ) {
+        if ( nMoves == 1 && mState == FiringStage ) {
             wakeup();
         }
     } else if ( count ) {
@@ -103,13 +106,13 @@ void MoveController::wakeup()
         }
 
         // always wait for any current rotation to complete before proceeding with a queued move:
-        if ( mState == Rotating && game->getMoveAggregate()->active() ) {
+        if ( mState == RotateStage && game->getMoveAggregate()->active() ) {
             return;
         }
 
         Piece* move = mMoves.getFront();
         while( move ) {
-            if ( mState == Idle || mState == Rotating ) {
+            if ( mState != FiringStage ) {
                 if ( !tank->getVector().equals( *move ) ) {
                     bool hasRotation = mToVector.mAngle != move->getAngle();
                     mToVector = *move;
@@ -119,19 +122,19 @@ void MoveController::wakeup()
                     }
 
                     if ( tank->doMove( *move ) && hasRotation ) {
-                        mState = Rotating;
+                        transitionState( RotateStage );
                         return; // waiting for current rotation to complete
                     }
                 }
-                mState = Firing;
+                transitionState( FiringStage );
             }
 
-            if ( mState == Firing ) {
+            if ( mState == FiringStage ) {
                 if ( !move->getShotCount() ) {
                     if ( game->getMoveAggregate()->active() ) {
                         return; // waiting for current move to complete before advancing
                     }
-                    mState = Idle;
+                    transitionState( IdlingStage );
                 } else {
                     if ( game->getShotAggregate()->active() ) {
                         return; // waiting for existing shot to complete
@@ -146,15 +149,14 @@ void MoveController::wakeup()
             }
 
             // nothing waiting on this move; advance to next move
-            std::cout << "move done state=" << mState << std::endl;
             mFutureShots.removePath( move );
             mMoves.eraseFront();
-            mState = Idle;
+            transitionState( IdlingStage );
             move = mMoves.getFront();
         }
     }
 
-    emit idle();
+    transitionState( Idle );
 }
 
 void MoveController::eraseLastMove()
@@ -194,12 +196,15 @@ void MoveController::onPathFound( PieceListManager* path, PathSearchAction* acti
 void MoveController::setReplay( bool on )
 {
     if ( on ) {
-        mReplaySource = getGame(this)->getTank()->getRecorder().getReader();
-        QObject::connect( this, &MoveController::idle, this, &MoveController::replayPlayback, Qt::QueuedConnection );
+        if ( !mReplaySource ) {
+            mReplaySource = getGame(this)->getTank()->getRecorder().getReader();
+            QObject::connect( this, &MoveController::idle, this, &MoveController::replayPlayback, Qt::QueuedConnection );
+        }
     } else if ( mReplaySource ) {
         QObject::disconnect( this, &MoveController::idle, this, &MoveController::replayPlayback );
         getGame(this)->getTank()->getRecorder().closeReader();
         mReplaySource = 0;
+        emit replayFinished();
     }
 }
 
@@ -212,6 +217,26 @@ void MoveController::appendMove( ModelVector vector, Piece* pushPiece )
 {
     mMoves.replaceBack( MOVE ); // erase highlight
     mMoves.append( MOVE_HIGHLIGHT, vector, 0, pushPiece );
+}
+
+void MoveController::transitionState(MoveState newState)
+{
+    if ( newState != mState ) {
+        std::cout << "moveController ";
+        switch( newState ) {
+        case Idle:        std::cout << "Idle";        break;
+        case RotateStage: std::cout << "RotateStage"; break;
+        case FiringStage: std::cout << "FiringStage"; break;
+        case IdlingStage: std::cout << "IdlingStage"; break;
+        default:          std::cout << newState;      break;
+        }
+        std::cout << std::endl;
+
+        mState = newState;
+        if ( newState == Idle ) {
+            emit idle();
+        }
+    }
 }
 
 void MoveController::setFocus( PieceType what )
@@ -232,7 +257,7 @@ void MoveController::setFocus( PieceType what )
 
 void MoveController::replayPlayback()
 {
-    if ( mReplaySource ) {
+    if ( mReplaySource && mState == Idle ) {
         mReplaySource->readNext( this );
     }
 }

@@ -91,6 +91,12 @@ public:
     bool load( int level );
 
     /**
+     * @brief reload the current board
+     * @return true if successful
+     */
+    bool reload();
+
+    /**
      * @brief load the given file
      * @param fileName
      * @param level optional level number to associate with the instance or -1 if the file does not correspond to a level
@@ -150,6 +156,8 @@ private:
     unsigned char mTiles[BOARD_MAX_WIDTH*BOARD_MAX_HEIGHT];
 
     PieceSetManager mPieceManager;
+
+    QTextStream* mStream;
 };
 
 #endif // BOARD_H

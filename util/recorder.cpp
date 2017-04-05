@@ -1,88 +1,63 @@
 #include <iostream>
-#include "recorder.h"
+#include "recorderprivate.h"
 #include "controller/game.h"
+
+Recorder::Recorder( int capacity )
+{
+    mPrivate = new RecorderPrivate( capacity );
+}
 
 Recorder::~Recorder()
 {
-    if ( mReader ) {
-        delete mReader;
-        mReader = 0;
-    }
+    free( mPrivate );
 }
 
 void Recorder::reset()
 {
-    mCurMove.encodedAngle = 0;
-    mCurMove.shotCount = 0;
-    mRecordedCount = 0;
+    mPrivate->reset();
 }
 
 bool Recorder::isEmpty() const
 {
-    return mCurMove.encodedAngle == 0 && mCurMove.shotCount == 0 && mRecordedCount == 0;
+    return mPrivate->isEmpty();
 }
 
 int Recorder::getCount() const
 {
-    int count = mRecordedCount;
-    if ( !isEmpty() ) {
-        ++count;
-    }
-    return count;
+    return mPrivate->getCount();
 }
 
 RecorderReader* Recorder::getReader()
 {
-    if ( !mReader ) {
-        mReader = new RecorderReader( this );
-    }
-    return mReader;
+    return mPrivate->getReader();
 }
 
 void Recorder::closeReader()
 {
-    if ( mReader ) {
-        delete mReader;
-        mReader = 0;
-    }
+    mPrivate->closeReader();
 }
 
-void Recorder::addMove( int direction )
+int Recorder::getCapacity() const
 {
-    if ( mCurMove.encodedAngle ) {
-        if ( mRecordedCount == (sizeof mRecorded)/(sizeof *mRecorded) ) {
-            std::cout << "* todo: level lost due to max # moves exceeded" << std::endl;
-            return;
-        }
-
-        std::cout << "record " << ((int) mCurMove.encodedAngle) << "," << ((int) mCurMove.shotCount) << std::endl;
-        mRecorded[mRecordedCount++] = mCurMove;
-    }
-
-    switch( direction ) {
-    case   0: mCurMove.encodedAngle = 1; break;
-    case  90: mCurMove.encodedAngle = 2; break;
-    case 180: mCurMove.encodedAngle = 3; break;
-    case 270: mCurMove.encodedAngle = 4; break;
-    default:
-        // this is unexpected, but rollback such that this call is a noop for this case
-        --mRecordedCount;
-        return;
-    }
-    mCurMove.shotCount = 0;
+    return mPrivate->mCapacity;
 }
 
-void Recorder::addShot()
+void Recorder::recordMove( bool adjacent, int rotation )
 {
-    if ( mCurMove.shotCount < 31 ) {
-        ++mCurMove.shotCount;
-    }
+    mPrivate->recordMove( adjacent, rotation );
 }
 
-RecorderReader::RecorderReader( Recorder *source ) : mOffset(0)
+void Recorder::recordShot()
+{
+    mPrivate->recordShot();
+}
+
+RecorderReader::RecorderReader( RecorderPrivate *source ) : mOffset(0), mLastDirection(0)
 {
     mRecordedCount = source->mRecordedCount;
-    mLastMove = source->mCurMove;
+    if ( !source->mCurMove.isEmpty() ) {
+        source->mRecorded[mRecordedCount++] = source->mCurMove;
+    }
     mSource = source;
 }
 
@@ -91,36 +66,83 @@ void RecorderReader::rewind()
     mOffset = 0;
 }
 
+EncodedMove RecorderReader::readInternal()
+{
+    if ( mOffset < mRecordedCount ) {
+        return mSource->mRecorded[mOffset++];
+    }
+
+    // reached the end
+    EncodedMove empty;
+    empty.clear();
+    return empty;
+}
+
+void RecorderReader::abort()
+{
+    // inhibit future reading by seeking to the end
+    mOffset = mRecordedCount;
+}
+
 bool RecorderReader::readNext( MoveController* controller )
 {
-    EncodedMove encoded;
-
-    if ( mOffset < mRecordedCount ) {
-        encoded = mSource->mRecorded[mOffset++];
-    } else if ( mOffset == mRecordedCount ) {
-        encoded = mLastMove;
-        ++mOffset;
-    } else {
-        controller->setReplay( false );
-        return false;
-    }
-    std::cout << "read " << ((int) encoded.encodedAngle) << "," << ((int) encoded.shotCount) << std::endl;
-
-    int angle;
-    switch( encoded.encodedAngle ) {
-    case 1: angle =   0; break;
-    case 2: angle =  90; break;
-    case 3: angle = 180; break;
-    case 4: angle = 270; break;
-    default:
-        std::cout << "**CORRUPT decoded angle at " << mOffset << std::endl;
+    EncodedMove encoded = readInternal();
+    if ( encoded.isEmpty() ) {
+        // reached end
         controller->setReplay( false );
         return false;
     }
 
-    controller->move( angle );
-    if ( encoded.shotCount ) {
-        controller->fire( encoded.shotCount );
+    bool empty = true;
+    if ( encoded.u.move.adjacent ) {
+        controller->move( mLastDirection );
+        empty = false;
+    }
+
+    if ( encoded.u.move.rotate ) {
+        switch( encoded.u.move.encodedAngle ) {
+        case 0: mLastDirection =   0; break;
+        case 1: mLastDirection =  90; break;
+        case 2: mLastDirection = 180; break;
+        case 3: mLastDirection = 270; break;
+        default:
+            // this should be impossible given the bit field is two bits but let's see if the implementation proves that wrong
+            std::cout << "**CORRUPT decoded angle at " << mOffset << std::endl;
+            controller->setReplay( false );
+            abort();
+            return false;
+        }
+        controller->move( mLastDirection );
+        empty = false;
+    }
+
+    // let's sanity-check while we're here:
+    if ( empty ) {
+        std::cout << "** readNext: Non-move read unexpectedly" << std::endl;
+        abort();
+        controller->setReplay( false );
+        return false;
+    }
+
+    if ( int shotCount = encoded.u.move.shotCount ) {
+        if ( shotCount == MAX_MOVE_SHOT_COUNT ) {
+            // check for a possible continuation
+            encoded = readInternal();
+            if ( encoded.u.continuation.header ) {
+                // Not a continuation - undo this read (just peeking)
+                --mOffset;
+            } else {
+                shotCount += encoded.u.continuation.shotCount;
+                // Let's sanity-check while we're here:
+                if ( shotCount == 7 ) {
+                    std::cout << "**readNext: unexpected empty continuation encountered" << std::endl;
+                    controller->setReplay( false );
+                    abort();
+                    return false;
+                }
+            }
+        }
+        controller->fire( shotCount );
     }
     return true;
 }

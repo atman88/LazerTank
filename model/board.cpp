@@ -4,7 +4,7 @@
 
 #include "board.h"
 
-Board::Board( QObject* parent )  : QObject(parent), mLevel(0), mWidth(16), mHeight(16)
+Board::Board( QObject* parent )  : QObject(parent), mLevel(0), mWidth(16), mHeight(16), mStream(0)
 {
     memset( mTiles, EMPTY, sizeof mTiles );
 }
@@ -13,6 +13,19 @@ bool Board::load( int level ) {
     QString namePattern( ":/maps/level%1.txt" );
     QString name = namePattern.arg(level);
     return load( name, level );\
+}
+
+bool Board::reload()
+{
+    if ( !mStream ) {
+        return load( mLevel );
+    }
+
+    if ( mStream->seek(0) ) {
+        load( *mStream, mLevel );
+        return true;
+    }
+    return false;
 }
 
 PieceSetManager* Board::getPieceManager()
@@ -131,6 +144,7 @@ void Board::load( QTextStream& stream, int level )
 
     mHeight = row;
     mLevel = level;
+    mStream = ( level < 0 ) ? &stream : 0;
 
     emit boardLoaded();
 }
