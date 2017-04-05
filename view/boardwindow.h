@@ -162,6 +162,7 @@ private:
     ACTION mReloadAction;
     ACTION mUndoMoveAction;
     ACTION mClearMovesAction;
+    ACTION mReplayAction;
     // using shared pointers for these ui objects so they can be safely shared with the controller:
     std::shared_ptr<PathSearchAction> mCaptureAction;
     std::shared_ptr<PathSearchAction> mPathToAction;

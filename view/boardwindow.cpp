@@ -63,6 +63,7 @@ void BoardWindow::init( Game* game )
         QObject::connect( &TO_QACTION(mSpeedAction), &QAction::toggled, mGame->getSpeedController(), &SpeedController::setHighSpeed );
         QObject::connect( &TO_QACTION(mUndoMoveAction),  &QAction::triggered, mGame, &Game::undoLastMove );
         QObject::connect( &TO_QACTION(mClearMovesAction),&QAction::triggered, mGame->getMoveController(), &MoveController::clearMoves );
+        QObject::connect( &TO_QACTION(mReplayAction),    &QAction::triggered, mGame, &Game::replayLevel );
 
         QObject::connect( game->getMoveController(), &MoveController::replayFinished, this, &BoardWindow::onReplayFinished );
     }
@@ -286,7 +287,7 @@ void BoardWindow::render( const QRect* rect, QPainter* painter )
 
         if ( rect->intersects( mReplayTextRenderRect ) ) {
             QPen pen;
-            pen.setColor( QColor(32,32,255,127) );
+            pen.setColor( QColor(255,255,255,170) );
             painter->setPen( pen );
             painter->drawText( mReplayTextRenderRect, QString("REPLAY") );
         }
@@ -352,6 +353,7 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             QKeySequence clearSeq( Qt::CTRL|Qt::Key_Backspace );
             QKeySequence speedSeq( Qt::Key_S );
             QKeySequence captureSeq( Qt::Key_C );
+            QKeySequence replaySeq( Qt::ALT|Qt::Key_A );
 
             mMenu.addAction( "shoot& ", mGame->getMoveController(), SLOT(fire()), shootSeq );
             TO_QACTION(mUndoMoveAction).setText("&Undo");
@@ -360,12 +362,14 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             mPathToAction->setText( "Move &Here" );
             mCaptureAction->setText( "&Capture Flag" );
             TO_QACTION(mReloadAction).setText( "&Restart Level" );
+            TO_QACTION(mReplayAction).setText( "&Auto Replay" );
 
             TO_QACTION(mSpeedAction).setShortcut( speedSeq );
             TO_QACTION(mSpeedAction).setCheckable(true);
             mCaptureAction->setShortcut( captureSeq );
             TO_QACTION(mUndoMoveAction).setShortcut( undoSeq );
             TO_QACTION(mClearMovesAction).setShortcut(clearSeq);
+            TO_QACTION(mReplayAction).setShortcut( replaySeq );
 
             mMenu.addAction( &TO_QACTION(mSpeedAction)      );
             mMenu.addAction( &TO_QACTION(mUndoMoveAction)   );
@@ -382,7 +386,7 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
                 action->setData( QVariant(level) );
             }
 
-            mMenu.addAction( QString("Replay"), mGame, SLOT(replayLevel()) );
+            mMenu.addAction( &TO_QACTION(mReplayAction) );
             mMenu.addAction( QString("&Help"), this, SLOT(showHelp()) );
             mMenu.addAction( QString("E&xit"), this, SLOT(close()) );
         }
@@ -410,6 +414,7 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
         bool movesPending = mGame->getMoveController()->getMoves()->size() > 0;
         TO_QACTION(mUndoMoveAction).setEnabled( movesPending );
         TO_QACTION(mClearMovesAction).setEnabled( movesPending );
+        TO_QACTION(mReplayAction.setEnabled( !mGame->getTank()->getRecorder().isEmpty() );)
 
         //
         // launch menu
@@ -492,8 +497,14 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
             break;
 
         case Qt::Key_C:
-                mGame->getMoveController()->wakeup();
-                break;
+            mGame->getMoveController()->wakeup();
+            break;
+
+        case Qt::Key_A:
+            if ( ev->modifiers() == Qt::AltModifier ) {
+                mGame->replayLevel();
+            }
+            break;
 
         case Qt::Key_Backspace:
             if ( ev->modifiers() == Qt::ControlModifier ) {

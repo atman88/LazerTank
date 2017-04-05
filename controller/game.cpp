@@ -666,5 +666,7 @@ void Game::restartLevel( bool replay )
 
 void Game::replayLevel()
 {
-    restartLevel( true );
+    if ( !mTank.getRecorder().isEmpty() ) {
+        restartLevel( true );
+    }
 }
