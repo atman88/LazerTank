@@ -643,9 +643,10 @@ void Game::onTankKilled()
     if ( mWindow ) {
         QMessageBox msgBox;
         msgBox.setWindowTitle("Level lost!");
-        QPushButton* restartButton = msgBox.addButton( QString("Re&start"), QMessageBox::AcceptRole      );
-        QPushButton* replayButton  = msgBox.addButton( QString("&Replay" ), QMessageBox::ActionRole      );
-        QPushButton* exitButton    = msgBox.addButton( QString("E&xit"   ), QMessageBox::DestructiveRole );
+        msgBox.setText( "Restart level?\nTip: Select Auto Replay to choose a restore point." );
+        QPushButton* restartButton = msgBox.addButton( QString("Re&start"     ), QMessageBox::AcceptRole      );
+        QPushButton* replayButton  = msgBox.addButton( QString("&Auto Replay" ), QMessageBox::ActionRole      );
+        QPushButton* exitButton    = msgBox.addButton( QString("E&xit"        ), QMessageBox::DestructiveRole );
         msgBox.setDefaultButton( restartButton );
 
         msgBox.exec();

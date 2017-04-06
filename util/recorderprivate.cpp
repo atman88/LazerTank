@@ -55,6 +55,10 @@ RecorderReader*RecorderPrivate::getReader()
 void RecorderPrivate::closeReader()
 {
     if ( mReader ) {
+        // Update our state so that recording resumes where the reader stopped:
+        mRecordedCount = mReader->getOffset();
+        mCurMove.clear(); // discard any lazy commit
+
         delete mReader;
         mReader = 0;
     }

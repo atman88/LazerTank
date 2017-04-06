@@ -46,6 +46,12 @@ public:
      */
     bool readNext( RecorderConsumer* consumer );
 
+    /**
+     * @brief Obtain the read position
+     * @return
+     */
+    int getOffset() const;
+
 private:
     /**
      * @brief error state handler

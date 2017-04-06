@@ -75,6 +75,11 @@ EncodedMove RecorderReader::readInternal()
     return empty;
 }
 
+int RecorderReader::getOffset() const
+{
+    return mOffset;
+}
+
 void RecorderReader::abort()
 {
     // inhibit future reading by seeking to the end

@@ -448,7 +448,7 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
     if ( !ev->isAutoRepeat() && mGame ) {
         switch( ev->key() ) {
         case Qt::Key_Escape:
-            if ( !ev->modifiers() ) {
+            if ( !ev->modifiers() && !checkForReplay() )  {
                 showMenu();
             }
             break;
@@ -458,17 +458,21 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
             break;
 
         case Qt::Key_Space:
-            mGame->getMoveController()->fire();
+            if ( !checkForReplay() )  {
+                mGame->getMoveController()->fire();
+            }
             break;
 
         case Qt::Key_C: // attempt to capture the flag
-        {   Board* board = mGame->getBoard();
-            mCaptureAction->setCriteria( mFocus, board->getFlagPoint(), false );
-            mGame->getPathFinderController()->doAction( mCaptureAction );
+            if ( !checkForReplay() )  {
+                Board* board = mGame->getBoard();
+                mCaptureAction->setCriteria( mFocus, board->getFlagPoint(), false );
+                mGame->getPathFinderController()->doAction( mCaptureAction );
+            }
             break;
-        }
+
         default:
-            if ( !ev->modifiers() ) {
+            if ( !ev->modifiers() && !checkForReplay() ) {
                 int rotation = keyToAngle(ev->key());
                 if ( rotation >= 0 ) {
                     mGame->getMoveController()->move( rotation );
@@ -485,7 +489,9 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
     if ( !ev->isAutoRepeat() && mGame ) {
         switch( ev->key() ) {
         case Qt::Key_Space:
-            mGame->getTank()->ceaseFire();
+            if ( !checkForReplay() )  {
+                mGame->getTank()->ceaseFire();
+            }
             break;
 
         case Qt::Key_Control:
@@ -497,7 +503,9 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
             break;
 
         case Qt::Key_C:
-            mGame->getMoveController()->wakeup();
+            if ( !checkForReplay() )  {
+                mGame->getMoveController()->wakeup();
+            }
             break;
 
         case Qt::Key_A:
@@ -507,10 +515,12 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
             break;
 
         case Qt::Key_Backspace:
-            if ( ev->modifiers() == Qt::ControlModifier ) {
-                mGame->getMoveController()->clearMoves();
-            } else {
-                mGame->undoLastMove();
+            if ( !checkForReplay() )  {
+                if ( ev->modifiers() == Qt::ControlModifier ) {
+                    mGame->getMoveController()->clearMoves();
+                } else {
+                    mGame->undoLastMove();
+                }
             }
             break;
 
@@ -532,14 +542,19 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
 
     switch( event->button() ) {
     case Qt::RightButton:
-    {   QPoint globalPos = event->globalPos();
-        showMenu( &globalPos, ModelPoint( event->pos() ) );
+        if ( !checkForReplay() )  {
+            QPoint globalPos = event->globalPos();
+            showMenu( &globalPos, ModelPoint( event->pos() ) );
+        }
         break;
-    }
+
     case Qt::LeftButton:
-        mPathToAction->setCriteria( mFocus, ModelPoint( event->pos() ), false );
-        mGame->getPathFinderController()->doAction( mPathToAction );
+        if ( !checkForReplay() )  {
+            mPathToAction->setCriteria( mFocus, ModelPoint( event->pos() ), false );
+            mGame->getPathFinderController()->doAction( mPathToAction );
+        }
         break;
+
     default:
         ;
     }
@@ -553,7 +568,9 @@ void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
 
     switch( event->button() ) {
     case Qt::LeftButton:
-        mGame->getMoveController()->wakeup();
+        if ( !checkForReplay() )  {
+            mGame->getMoveController()->wakeup();
+        }
         break;
     default:
         ;
@@ -564,6 +581,24 @@ void BoardWindow::moveFocus( PieceType what )
 {
     mFocus = what;
     emit focusChanged( what );
+}
+
+int BoardWindow::checkForReplay()
+{
+    if ( mGame && mGame->getMoveController()->replaying() ) {
+        mGame->getTank()->pause();
+
+        QMessageBox::StandardButton button = QMessageBox::question( 0, "Auto Replay", "Play from here?",
+          QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes );
+        if ( button == QMessageBox::Yes ) {
+            mGame->getMoveController()->setReplay( false );
+        }
+        mGame->getTank()->resume();
+
+        return (button == QMessageBox::Yes) ? -1 /* indicate changed to inactive */ : 1 /* indicate replay is active */;
+    }
+
+    return 0; // indicate replay inactive
 }
 
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))

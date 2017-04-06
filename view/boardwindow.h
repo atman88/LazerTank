@@ -113,6 +113,12 @@ public slots:
      */
     void onReplayFinished();
 
+    /**
+     * @brief Confirms whether replay is active
+     * @return 0 if not active, 1 if active or -1 if set inactive as a result of this call
+     */
+    int checkForReplay();
+
 signals:
     /**
      * @brief Notifies that the user has moved the focus
