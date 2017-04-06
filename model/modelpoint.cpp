@@ -32,6 +32,18 @@ QPoint ModelPoint::toViewCenterSquare() const
     return modelToViewCenterSquare( mCol, mRow );
 }
 
+QPoint ModelVector::toViewExitPoint() const
+{
+    QPoint point = this->toViewCenterSquare();
+    switch( mAngle ) {
+    case   0: point.setY( point.y()-24/2 ); break;
+    case  90: point.setX( point.x()+24/2 ); break;
+    case 180: point.setY( point.y()+24/2 ); break;
+    case 270: point.setX( point.x()-24/2 ); break;
+    }
+    return point;
+}
+
 QPoint ModelPoint::toViewUpperLeft() const
 {
     return QPoint( mCol*24, mRow* 24 );

@@ -250,6 +250,12 @@ void BoardWindow::render( const QRect* rect, QPainter* painter )
         if ( rect->intersects( it.getBounds() ) ) {
             if ( !usingFutureShotPen ) {
                 QPen pen( mGame->getTank()->getShot().getPen() );
+
+                // dim it's color to contrast future shots from actual shots:
+                QColor color = pen.color();
+                color.setAlpha(127);
+                pen.setColor( color );
+
                 pen.setStyle( Qt::DashLine );
                 painter->setPen( pen );
                 usingFutureShotPen = true;

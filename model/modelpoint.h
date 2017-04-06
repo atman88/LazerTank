@@ -61,7 +61,6 @@ public:
 
     /**
      * @brief Obtain the view point corresponding to the center of of this square
-     * @return
      */
     QPoint toViewCenterSquare() const;
 
@@ -103,6 +102,11 @@ public:
      * @brief compare equality
      */
     bool equals( const ModelVector& other ) const;
+
+    /**
+     * @brief Obtain the view point corresponding to the point where a shot would exit this square for this vector
+     */
+    QPoint toViewExitPoint() const;
 
     int mAngle;
 };

@@ -63,8 +63,7 @@ private:
     int mShotCount;
     ModelPoint mTailPoint;
     std::vector<ModelPoint> mBendPoints;
-    ModelPoint mLeadPoint;
-    int mLeadingDirection;
+    ModelVector mLeadVector;
     int mUID;
     std::vector<FutureChange> mChanges;
     QRect mBounds;
