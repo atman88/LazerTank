@@ -29,7 +29,7 @@ void MoveController::onBoardLoaded( Board* board )
     emit idle();
 }
 
-void MoveController::move( int direction )
+void MoveController::move( int direction, bool doWakeup )
 {
     std::cout << "MoveController: move " << direction << std::endl;
     if ( Game* game = getGame(this) ) {
@@ -54,7 +54,9 @@ void MoveController::move( int direction )
             }
         }
 
-        wakeup();
+        if ( doWakeup ) {
+            wakeup();
+        }
     }
 }
 

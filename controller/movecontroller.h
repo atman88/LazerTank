@@ -31,7 +31,7 @@ public:
      * @brief move the tank one square
      * @param direction A rotation angle (one of 0, 90, 180, 270) or -1 to advance in the current direction
      */
-    void move( int direction ) override;
+    void move( int direction, bool doWakeup = true ) override;
 
      /**
      * @brief Access the pending tank moves

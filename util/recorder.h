@@ -15,7 +15,7 @@ public:
      * @brief Serves a move to the consumer
      * @param direction A rotation angle (one of 0, 90, 180, 270) or -1 to advance in the current direction
      */
-    virtual void move( int direction ) = 0;
+    virtual void move( int direction, bool doWakeup = true ) = 0;
 
     /**
      * @brief Updates the consumer on the replay state

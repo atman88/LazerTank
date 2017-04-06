@@ -97,7 +97,7 @@ bool RecorderReader::readNext( RecorderConsumer* consumer )
 
     bool empty = true;
     if ( encoded.u.move.adjacent ) {
-        consumer->move( mLastDirection );
+        consumer->move( mLastDirection, !encoded.u.move.rotate );
         empty = false;
     }
 
