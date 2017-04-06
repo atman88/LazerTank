@@ -405,7 +405,7 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
         bool movesPending = mGame->getMoveController()->getMoves()->size() > 0;
         TO_QACTION(mUndoMoveAction).setEnabled( movesPending );
         TO_QACTION(mClearMovesAction).setEnabled( movesPending );
-        TO_QACTION(mReplayAction.setEnabled( !mGame->getTank()->getRecorder().isEmpty() );)
+        TO_QACTION(mReplayAction).setEnabled( !mGame->getTank()->getRecorder().isEmpty() );
 
         //
         // launch menu
