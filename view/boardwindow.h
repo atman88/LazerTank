@@ -11,6 +11,7 @@
 
 class Board;
 class Game;
+class ReplayText;
 
 #include "controller/pathsearchaction.h"
 #include "model/piece.h"
@@ -109,11 +110,6 @@ public slots:
     void showHelp();
 
     /**
-     * @brief handler for when the replay is ended
-     */
-    void onReplayFinished();
-
-    /**
      * @brief Confirms whether replay is active
      * @return 0 if not active, 1 if active or -1 if set inactive as a result of this call
      */
@@ -182,7 +178,7 @@ private:
     Game* mGame;
     QTextBrowser* mHelpWidget;
 
-    QRect mReplayTextRenderRect;
+    ReplayText* mReplayText;
 
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
     void requestUpdate();

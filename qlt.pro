@@ -40,7 +40,8 @@ HEADERS += \
     model/tile.h \
     controller/movecontroller.h \
     util/recorder.h \
-    util/recorderprivate.h
+    util/recorderprivate.h \
+    view/replaytext.h
 
 SOURCES += \
            model/board.cpp \
@@ -71,7 +72,8 @@ SOURCES += \
     model/modelpoint.cpp \
     controller/movecontroller.cpp \
     util/recorder.cpp \
-    util/recorderprivate.cpp
+    util/recorderprivate.cpp \
+    view/replaytext.cpp
 
 RESOURCES += qml.qrc
 

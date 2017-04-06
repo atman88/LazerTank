@@ -31,7 +31,6 @@ void MoveController::onBoardLoaded( Board* board )
 
 void MoveController::move( int direction, bool doWakeup )
 {
-    std::cout << "MoveController: move " << direction << std::endl;
     if ( Game* game = getGame(this) ) {
         Tank* tank = game->getTank();
         Piece* lastMove = mMoves.getBack();
@@ -62,7 +61,6 @@ void MoveController::move( int direction, bool doWakeup )
 
 void MoveController::fire( int count )
 {
-    std::cout << "MoveController: fire " << count << std::endl;
     if ( int nMoves = mMoves.size() ) {
         // -1 signifies an increment
         if ( count < 0 ) {
@@ -227,15 +225,15 @@ void MoveController::appendMove( ModelVector vector, Piece* pushPiece )
 void MoveController::transitionState(MoveState newState)
 {
     if ( newState != mState ) {
-        std::cout << "moveController ";
-        switch( newState ) {
-        case Idle:        std::cout << "Idle";        break;
-        case RotateStage: std::cout << "RotateStage"; break;
-        case FiringStage: std::cout << "FiringStage"; break;
-        case IdlingStage: std::cout << "IdlingStage"; break;
-        default:          std::cout << newState;      break;
-        }
-        std::cout << std::endl;
+//        std::cout << "moveController ";
+//        switch( newState ) {
+//        case Idle:        std::cout << "Idle";        break;
+//        case RotateStage: std::cout << "RotateStage"; break;
+//        case FiringStage: std::cout << "FiringStage"; break;
+//        case IdlingStage: std::cout << "IdlingStage"; break;
+//        default:          std::cout << newState;      break;
+//        }
+//        std::cout << std::endl;
 
         mState = newState;
         if ( newState == Idle ) {

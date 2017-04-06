@@ -5,6 +5,7 @@
 #include <QTextBrowser>
 
 #include "boardwindow.h"
+#include "replaytext.h"
 #include "util/renderutils.h"
 #include "util/imageutils.h"
 #include "controller/game.h"
@@ -22,6 +23,9 @@ BoardWindow::~BoardWindow()
 {
     if ( mHelpWidget ) {
         delete mHelpWidget;
+    }
+    if ( mReplayText ) {
+        delete mReplayText;
     }
     delete mBackingStore;
 }
@@ -64,8 +68,6 @@ void BoardWindow::init( Game* game )
         QObject::connect( &TO_QACTION(mUndoMoveAction),  &QAction::triggered, mGame, &Game::undoLastMove );
         QObject::connect( &TO_QACTION(mClearMovesAction),&QAction::triggered, mGame->getMoveController(), &MoveController::clearMoves );
         QObject::connect( &TO_QACTION(mReplayAction),    &QAction::triggered, mGame, &Game::replayLevel );
-
-        QObject::connect( game->getMoveController(), &MoveController::replayFinished, this, &BoardWindow::onReplayFinished );
     }
 }
 
@@ -115,13 +117,6 @@ void BoardWindow::showHelp()
         mHelpWidget->setSource( QUrl::fromLocalFile(":/help/qlthelp.html") );
     }
     mHelpWidget->show();
-}
-
-void BoardWindow::onReplayFinished()
-{
-    if ( !mReplayTextRenderRect.isNull() ) {
-        renderLater( mReplayTextRenderRect );
-    }
 }
 
 void BoardWindow::resizeEvent(QResizeEvent *resizeEvent)
@@ -281,22 +276,12 @@ void BoardWindow::render( const QRect* rect, QPainter* painter )
     mGame->getCannonShot().render( painter );
 
     if ( mGame->getMoveController()->replaying() ) {
-        QFont font = painter->font();
-        font.setBold(true);
-        font.setItalic(true);
-        font.setPixelSize(36);
-        painter->setFont( font );
-
-        if ( mReplayTextRenderRect.isNull() ) {
-            mReplayTextRenderRect = painter->boundingRect( QRect(0,0,width(),height()), Qt::AlignCenter, QString("REPLAY") );
+        if ( !mReplayText ) {
+            mReplayText = new ReplayText( this, QString("REPLAY") );
+            QObject::connect( mReplayText, &ReplayText::dirty, this, &BoardWindow::renderLater );
         }
 
-        if ( rect->intersects( mReplayTextRenderRect ) ) {
-            QPen pen;
-            pen.setColor( QColor(255,255,255,170) );
-            painter->setPen( pen );
-            painter->drawText( mReplayTextRenderRect, QString("REPLAY") );
-        }
+        mReplayText->render( rect, painter );
     }
 }
 
@@ -326,9 +311,9 @@ bool BoardWindow::event(QEvent *event)
         return true;
     }
 
-    if ( event->type() == QEvent::Resize ) {
+    if ( event->type() == QEvent::Resize && mReplayText ) {
         // nullify this given it is stale:
-        mReplayTextRenderRect = QRect();
+        mReplayText->onResize();
     }
 
     return QWindow::event(event);

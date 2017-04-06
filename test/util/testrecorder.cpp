@@ -12,9 +12,9 @@ public:
     {
     }
 
-    void move( int direction )
+    void move( int direction, bool doWakeup = true )
     {
-        cout << "TestRecordConsumer: move(" << direction << ")" << endl;
+        cout << "TestRecordConsumer: move(" << direction << "," << doWakeup << ")" << endl;
         ++mMoveCallCount;
         mLastMoveDirection = direction;
     }

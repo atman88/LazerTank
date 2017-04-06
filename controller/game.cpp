@@ -233,6 +233,9 @@ void Game::onMoveAggregatorFinished()
     if ( mBoard.tileAt(mTank.getCol(),mTank.getRow()) == FLAG ) {
         // if we don't have a window then we're headless (i.e. testing); don't show message boxes for the headless case
         if ( mWindow ) {
+            // ensure this is off now to remove it from the display:
+            mMoveController.setReplay( false );
+
             QMessageBox msgBox;
             msgBox.setWindowTitle( "Level completed!");
             msgBox.setText( QString("%1 total moves").arg( mTank.getRecorder().getCount() ) );
@@ -641,6 +644,9 @@ void Game::onTankKilled()
 {
     // if we don't have a window then we're headless (i.e. testing); don't show message boxes for the headless case
     if ( mWindow ) {
+        // ensure this is off now to remove it from the display:
+        mMoveController.setReplay( false );
+
         QMessageBox msgBox;
         msgBox.setWindowTitle("Level lost!");
         msgBox.setText( "Restart level?\nTip: Select Auto Replay to choose a restore point." );
