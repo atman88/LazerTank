@@ -472,11 +472,11 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
             break;
 
         default:
-            if ( !ev->modifiers() && !checkForReplay() ) {
+            if ( !ev->modifiers() ) {
                 int rotation = keyToAngle(ev->key());
-                if ( rotation >= 0 ) {
+                if ( rotation >= 0 && !checkForReplay() ) {
                     mGame->getMoveController()->move( rotation );
-                } else if ( ev->key() >= Qt::Key_0 && ev->key() <= Qt::Key_9 ) {
+                } else if ( ev->key() >= Qt::Key_0 && ev->key() <= Qt::Key_9 && !checkForReplay() ) {
                     mGame->getMoveController()->fire( ev->key() - Qt::Key_0 );
                 }
             }
