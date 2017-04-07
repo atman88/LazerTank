@@ -39,7 +39,7 @@ const QRect& FutureShotPath::initBounds()
             it.minMax( min, max );
         }
         mLeadVector.minMax( min, max );
-        mBounds.setTopLeft( min.toViewCenterSquare() );
+        mBounds.setTopLeft( min.toViewUpperLeft() );
         mBounds.setBottomRight( max.toViewCenterSquare() );
         mBounds += QMargins(1,1,1,1);
     }

@@ -65,10 +65,14 @@ public:
     QPoint toViewCenterSquare() const;
 
     /**
-     * @brief Convert to a view point corresponding to upper left corner of the square
-     * @return
+     * @brief Generates a view point which corresponds to the upper left corner for this square
      */
     QPoint toViewUpperLeft() const;
+
+    /**
+     * @brief Generates a view point which corresponds to the lower right corner for this square
+     */
+    QPoint toViewLowerRight() const;
 
     int mCol;
     int mRow;

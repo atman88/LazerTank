@@ -49,6 +49,11 @@ QPoint ModelPoint::toViewUpperLeft() const
     return QPoint( mCol*24, mRow* 24 );
 }
 
+QPoint ModelPoint::toViewLowerRight() const
+{
+    return QPoint( mCol*24+24-1, mRow* 24+24-1 );
+}
+
 bool ModelVector::equals(const ModelVector &other) const
 {
     return mCol == other.mCol && mRow == other.mRow && mAngle == other.mAngle;
