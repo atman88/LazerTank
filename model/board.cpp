@@ -79,15 +79,12 @@ void Board::load( QTextStream& stream, int level )
 
         int i = 0, col = 0;
         while( i < line.size() ) {
-            while( line.at(i).isSpace() ) {
-                ++i;
-            }
-            if ( i >= line.size() ) {
-                break;
+            QChar c = line.at(i++);
+            if ( c.isSpace() ) {
+                continue;
             }
 
-
-            switch( line.at(i++).unicode() ) {
+            switch( c.unicode() ) {
             case 'S': rowp[col++] = STONE;     break;
             case 'W': rowp[col++] = WOOD;      break;
             case 'w': rowp[col++] = WATER;     break;
