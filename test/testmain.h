@@ -12,12 +12,19 @@ public:
     ~TestMain() {}
 
 private slots:
-    void testMove();
-    void testCannon();
+    void testGameMove();
+    void testGameCannon();
+    void testGamePush();
+
     void testPieceListManager();
-    void testPush();
+
     void testFutureShotPath();
-    void testRecorder();
+    void testFutureShotThruMasterTank();
+
+    void testRecorderBitFields();
+    void testRecorderRecordSize();
+    void testRecorderOverflow();
+
     void testReplay();
 };
 

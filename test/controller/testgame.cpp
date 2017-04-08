@@ -6,7 +6,7 @@
 
 using namespace std;
 
-void TestMain::testMove()
+void TestMain::testGameMove()
 {
     Game game;
     game.init( 0 );
@@ -52,7 +52,7 @@ void testCannonAt( int tankCol, int tankRow, Game* game )
     QCOMPARE( killedReceptor.mReceived, true );
 }
 
-void TestMain::testCannon()
+void TestMain::testGameCannon()
 {
     Game game;
     game.init( 0 );
@@ -86,7 +86,7 @@ void testFuturePushToward( int direction, Game* game )
     QCOMPARE( game->getDeltaPieces()->size(), 0UL );
 }
 
-void TestMain::testPush()
+void TestMain::testGamePush()
 {
     Game game;
     game.init( 0 );

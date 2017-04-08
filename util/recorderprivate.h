@@ -98,24 +98,25 @@ public:
 
 private:
     /**
-     * @brief Saves the lazily-written mCurMove value to the mRecorded records
-     * @return true if sucessful
-     */
-    bool commitCurMove();
-
-    /**
      * @brief store the current move in the mRecorded records without committing the write offset
      * @return the offset past the written move. mRecordedCount is returned if unsuccessful.
      */
     int storeCurMove();
 
-    EncodedMove mCurMove;
-    EncodedMove mCurContinuation;
+    /**
+     * @brief Saves the lazily-written mCurMove/mCurContinuation pair to the record buffer
+     * @return true if sucessful
+     */
+    bool commitCurMove();
 
-    int mRecordedCount;
-    EncodedMove* mRecorded;
-    int mCapacity;
-    RecorderReader* mReader;
+    EncodedMove mCurMove;             // the primary record for the current move being assembled
+    EncodedMove mCurContinuation;     // companion to mCurMove, uses lazy initialization- in use if mCurMove's shotCount at max
+
+    int mRecordedCount;               // number of records currently saved in the buffer
+    EncodedMove* mRecorded;           // the recording buffer
+    int mCapacity;                    // Configured recording limit
+    int mRecordedAllocationWaterMark; // tracks allocations
+    RecorderReader* mReader;          // the single active reader or 0 if not currently reading
 
     friend class Recorder;
     friend class RecorderReader;

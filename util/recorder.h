@@ -76,10 +76,10 @@ public:
     /**
      * @brief Constructor
      * @param capacity Specify how much recording to allow. This value loosely translates into the number of move
-     * sequences that can be recorded. It defaults to a reasonably generous number needed to complete any one of the
-     * available packaged levels.
+     * sequences that can be recorded. It should default to a generous number needed to complete any one of the
+     * available levels.
      */
-    Recorder( int capacity = 1024 );
+    Recorder( int capacity = 8000 );
     ~Recorder();
 
     /**

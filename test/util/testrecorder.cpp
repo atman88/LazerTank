@@ -42,9 +42,11 @@ public:
     bool mLastReplayOn;
 };
 
-void TestMain::testRecorder()
+/**
+ * @brief Verify the bit field macros are consistent with their field definitions
+ */
+void TestMain::testRecorderBitFields()
 {
-    // test the bit field macros:
     EncodedMove move;
     move.clear();
 
@@ -64,9 +66,22 @@ void TestMain::testRecorder()
     QVERIFY2( move.u.continuation.shotCount == MAX_CONTINUATION_SHOT_COUNT, "MAX_MOVE_SHOT_COUNT too small" );
     // confirm it overflows here:
     QVERIFY2( ++move.u.continuation.shotCount == 0, "MAX_CONTINUATION_SHOT_COUNT too big");
+}
 
+/**
+ * @brief Verify that the encoded record packs to a single byte as expected
+ */
+void TestMain::testRecorderRecordSize()
+{
+    QVERIFY( sizeof(EncodedMove) == 1 );
+}
 
-    Recorder recorder( 2 );
+/**
+ * @brief Test recorder overflow detection/handling
+ */
+void TestMain::testRecorderOverflow()
+{
+    RecorderPrivate recorder( 2 );
     QVERIFY( recorder.isEmpty() );
     QVERIFY( recorder.getCount() == 0 );
 

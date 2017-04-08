@@ -2,12 +2,23 @@
 #include <malloc.h>
 #include "recorderprivate.h"
 
+// In a spirit of friendly memory consumption stewardship, this class grows its recording buffer as needed in chunks of size:
+#define ALLOCATION_CHUNK_SIZE 1000
 
 RecorderPrivate::RecorderPrivate(int capacity) : mRecordedCount(0), mCapacity(capacity), mReader(0)
 {
     mCurMove.clear();
-    // allocate an additional two elements to allow for the lazily committed current value
-    mRecorded = (EncodedMove*) malloc( (capacity+2) * sizeof(EncodedMove) );
+
+    // Allocate the initial chunk of the recording buffer
+    //
+    mRecordedAllocationWaterMark = std::min( capacity, ALLOCATION_CHUNK_SIZE ) ;
+    // Note +3 is to allow for lazy overflow detection; +3 handles worst case where last and previous both have continuations
+    mRecorded = (EncodedMove*) std::malloc( (mRecordedAllocationWaterMark+3) * sizeof(EncodedMove) );
+    if ( !mRecorded ) {
+        std::cout << "** failed to allocate Recorder buffer!" << std::endl;
+        // inhibit recording functionality by:
+        mRecordedAllocationWaterMark = 0;
+    }
 }
 
 RecorderPrivate::~RecorderPrivate()
@@ -15,7 +26,7 @@ RecorderPrivate::~RecorderPrivate()
     if ( mReader ) {
         delete mReader;
     }
-    free( mRecorded );
+    std::free( mRecorded );
 }
 
 void RecorderPrivate::onBoardLoaded()
@@ -123,22 +134,45 @@ void RecorderPrivate::recordShot()
 int RecorderPrivate::storeCurMove()
 {
     int count = mRecordedCount;
-    mRecorded[count++] = mCurMove;
-    if ( mCurMove.u.move.shotCount == MAX_MOVE_SHOT_COUNT && !mCurContinuation.isEmpty() ) {
-        mRecorded[count++] = mCurContinuation;
+
+    // confirm recording has not been inhibited
+    if ( mRecordedAllocationWaterMark ) {
+
+        // store unconditionally. Note this relies on mRecorded being sized +3.
+        mRecorded[count++] = mCurMove;
+        if ( mCurMove.u.move.shotCount == MAX_MOVE_SHOT_COUNT && !mCurContinuation.isEmpty() ) {
+            mRecorded[count++] = mCurContinuation;
+        }
     }
+
     return count;
 }
 
 bool RecorderPrivate::commitCurMove()
 {
-    // store unconditionally. Note this relies on the mRecorded being sized to mCapacity+3.
     int count = storeCurMove();
-    if ( count >= mCapacity ) {
-        std::cout << "* todo: level lost due to max # moves exceeded" << std::endl;
-        return false;
+    if ( count >= mRecordedAllocationWaterMark ) {
+        // check recording hasn't been inhibited
+        if ( mRecordedAllocationWaterMark ) {
+
+            //
+            // attempt to grow the buffer
+            //
+            int newWaterMark = std::min( mRecordedAllocationWaterMark + ALLOCATION_CHUNK_SIZE, mCapacity );
+            if ( newWaterMark > mRecordedAllocationWaterMark ) {
+                if ( void* p = std::realloc( mRecorded, (newWaterMark+3) * sizeof(EncodedMove) ) ) {
+                    mRecorded = (EncodedMove*) p;
+                    mRecordedAllocationWaterMark = newWaterMark;
+                }
+            }
+        }
+
+        // test for failure:
+        if ( count >= mRecordedAllocationWaterMark ) {
+            std::cout << "* Record buffer filled to capacity " << mCapacity << std::endl;
+            return false;
+        }
     }
     mRecordedCount = count;
     return true;
 }
-
