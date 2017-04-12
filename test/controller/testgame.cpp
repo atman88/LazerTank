@@ -9,17 +9,13 @@ using namespace std;
 void TestMain::testGameMove()
 {
     Game game;
-    game.init( 0 );
-
-    Board* board = game.getBoard();
-    QString map(
+    initGame( game,
       "T..F......\n"
       "..........\n"
       ".M........\n"
       "..........\n"
       "..........\n" );
-    QTextStream s(&map);
-    board->load( s );
+    Board* board = game.getBoard();
     cout << "board " << board->getWidth() << "x" << board->getHeight() << endl;
 
     const PieceSet* tiles = board->getPieceManager()->getPieces();
@@ -55,15 +51,12 @@ void testCannonAt( int tankCol, int tankRow, Game* game )
 void TestMain::testGameCannon()
 {
     Game game;
-    game.init( 0 );
-    QString map(
-    "v...<\n"
-    ".....\n"
-    "..T..\n"
-    ".....\n"
-    ">...^\n" );
-    QTextStream s(&map);
-    game.getBoard()->load( s );
+    initGame( game,
+      "v...<\n"
+      ".....\n"
+      "..T..\n"
+      ".....\n"
+      ">...^\n" );
 
     testCannonAt( 2, 0, &game );
     testCannonAt( 4, 2, &game );
@@ -78,7 +71,7 @@ void testFuturePushToward( int direction, Game* game )
     MoveController* moveController = game->getMoveController();
     moveController->getMoves()->reset();
 
-    // move twice; first may merel rotate the tank but more importantly primes the move list:
+    // move twice; first may merely rotate the tank but more importantly primes the move list:
     moveController->move( direction );
     moveController->move( direction );
     QVERIFY( game->getDeltaPieces()->size() > 0 );
@@ -89,16 +82,13 @@ void testFuturePushToward( int direction, Game* game )
 void TestMain::testGamePush()
 {
     Game game;
-    game.init( 0 );
-    QString map(
+    initGame( game,
         ".. m ..\n"
         ".. M ..\n"
         ".. . ..\n"
         "w< T >.\n"
         "..[M/..\n"
         ".. w ..\n" );
-    QTextStream s(&map);
-    game.getBoard()->load( s );
 
     // force the move aggregate active so the tank won't be woken up:
     game.getMoveAggregate()->onStateChanged( QAbstractAnimation::Running, QAbstractAnimation::Stopped );

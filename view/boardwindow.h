@@ -59,7 +59,6 @@ class BoardWindow : public QWindow
 public:
     explicit BoardWindow(QWindow *parent = 0);
     ~BoardWindow();
-    virtual void render(QRegion *region);
     void init( Game* game );
 
     /**
@@ -122,6 +121,11 @@ signals:
      */
     void focusChanged( PieceType what );
 
+    /**
+     * @brief Emitted the first time the window has a paintable surface
+     */
+    void paintable();
+
 protected:
     /**
      * @brief Window event handlers
@@ -131,10 +135,25 @@ protected:
     void keyReleaseEvent(QKeyEvent *ev) override;
     void mousePressEvent( QMouseEvent* event ) override;
     void mouseReleaseEvent( QMouseEvent* event ) override;
+    void showEvent(QShowEvent*) override;
     void resizeEvent(QResizeEvent *event) override;
     void exposeEvent(QExposeEvent *event) override;
 
 private:
+    /**
+     * @brief Size the window to fit the given number of columns and rows
+     * @param cols The number of columns
+     * @param rows The number of rows
+     */
+    void setSize( int cols, int rows );
+
+    /**
+     * @brief Event handler helper to resize the backing store. Rendering is managed by the caller.
+     * @param size the new size
+     * @return true if changed
+     */
+    bool resizeInternal( const QSize& size );
+
     /**
      * @brief Repaint a rectangular area
      * @param rect The area to repaint
@@ -172,6 +191,7 @@ private:
 
     QRegion mDirtyRegion;
     QRegion mRenderRegion;
+    bool mRenderedOnce;
 
     PieceType mFocus;
 

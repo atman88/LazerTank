@@ -10,14 +10,11 @@ using namespace std;
 void TestMain::testReplay()
 {
     Game game;
-    game.init( 0 );
-    Board* board = game.getBoard();
-    QString map(
+    QTextStream map(
       "T.M.\n"
       ".M..\n"
       "....\n" );
-    QTextStream s(&map);
-    board->load( s );
+    initGame( game, map );
 
     MoveController* moveController = game.getMoveController();
     QSignalSpy idleSpy( moveController, &MoveController::idle );

@@ -12,11 +12,16 @@
 
 using namespace std;
 
-BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mFocus(MOVE), mGame(0), mHelpWidget(0)
+BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mBackingStore(0), mRenderedOnce(false), mFocus(MOVE), mGame(0),
+  mHelpWidget(0), mReplayText(0)
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
   , mUpdatePending(false)
 #endif
 {
+    setFlags( Qt::Dialog );
+    create();
+    // default our size to something reasonable; choosing 6x6 because that is the size of level 1
+    setSize( 6, 6 );
 }
 
 BoardWindow::~BoardWindow()
@@ -30,44 +35,46 @@ BoardWindow::~BoardWindow()
     delete mBackingStore;
 }
 
-void BoardWindow::exposeEvent(QExposeEvent *)
+void BoardWindow::setSize( int cols, int rows )
 {
-    if ( mGame && isExposed() ) {
-        Board* board = mGame->getBoard();
-        if (board ) {
-            QRect size( 0, 0, board->getWidth()*24, board->getHeight()*24 );
-            mDirtyRegion += size;
-            renderNow();
+    QRect size( 0, 0, cols * 24, rows * 24 );
+    QRect myGeometry = geometry();
+    myGeometry.setSize( size.size() );
+
+    // center it roughly if it's position isn't initialized
+    if ( !isExposed() && !myGeometry.x() && !myGeometry.y() ) {
+        if ( QScreen* myScreen = screen() ) {
+            QRect available = myScreen->availableGeometry();
+            myGeometry.moveTo( (available.width() -myGeometry.width() )/2,
+                               (available.height()-myGeometry.height())/2  );
         }
     }
+    setGeometry(myGeometry);
+    renderNow();
 }
 
 void BoardWindow::init( Game* game )
 {
-    setFlags( Qt::Dialog );
-    create();
-
     mCaptureAction = std::make_shared<PathSearchAction>(this);
     mPathToAction  = std::make_shared<PathSearchAction>(this);
-    mBackingStore = new QBackingStore(this);
 
     if ( game ) {
         mGame = game;
         setProperty("GameHandle", game->property("GameHandle"));
 
-        onBoardLoaded();
         Board* board = game->getBoard();
-        QObject::connect( board, &Board::boardLoaded,   this, &BoardWindow::onBoardLoaded     );
         QObject::connect( board, &Board::tileChangedAt, this, &BoardWindow::renderSquareLater );
 
         PieceSetManager* pm = board->getPieceManager();
         QObject::connect( pm, &PieceSetManager::erasedAt,   this, &BoardWindow::renderSquareLater );
         QObject::connect( pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
 
-        QObject::connect( &TO_QACTION(mSpeedAction), &QAction::toggled, mGame->getSpeedController(), &SpeedController::setHighSpeed );
-        QObject::connect( &TO_QACTION(mUndoMoveAction),  &QAction::triggered, mGame, &Game::undoLastMove );
-        QObject::connect( &TO_QACTION(mClearMovesAction),&QAction::triggered, mGame->getMoveController(), &MoveController::clearMoves );
-        QObject::connect( &TO_QACTION(mReplayAction),    &QAction::triggered, mGame, &Game::replayLevel );
+        QObject::connect( &TO_QACTION(mSpeedAction), &QAction::toggled, game->getSpeedController(), &SpeedController::setHighSpeed );
+        QObject::connect( &TO_QACTION(mUndoMoveAction),  &QAction::triggered, game, &Game::undoLastMove );
+        QObject::connect( &TO_QACTION(mClearMovesAction),&QAction::triggered, game->getMoveController(), &MoveController::clearMoves );
+        QObject::connect( &TO_QACTION(mReplayAction),    &QAction::triggered, game, &Game::replayLevel );
+
+        QObject::connect( game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded );
     }
 }
 
@@ -75,24 +82,7 @@ void BoardWindow::onBoardLoaded()
 {
     if ( mGame ) {
         Board* board = mGame->getBoard();
-        QRect size( 0, 0, board->getWidth()*24, board->getHeight()*24 );
-
-        QRect myGeometry = geometry();
-        myGeometry.setSize( size.size() );
-
-        // center it roughly if it's position isn't initialized
-        if ( !isExposed() && !myGeometry.x() && !myGeometry.y() ) {
-            if ( QScreen* myScreen = screen() ) {
-                QRect available = myScreen->availableGeometry();
-                myGeometry.moveTo( (available.width() -myGeometry.width() )/2,
-                                   (available.height()-myGeometry.height())/2  );
-            }
-        }
-        setGeometry(myGeometry);
-
-        mDirtyRegion += size;
-
-        renderLater( size );
+        setSize( board->getWidth(), board->getHeight() );
 
         int level = board->getLevel();
         if ( level > 0 ) {
@@ -119,32 +109,6 @@ void BoardWindow::showHelp()
     mHelpWidget->show();
 }
 
-void BoardWindow::resizeEvent(QResizeEvent *resizeEvent)
-{
-    mBackingStore->resize(resizeEvent->size());
-    if (isExposed()) {
-        Game* mGame = getGame(this);
-        if ( mGame ) {
-            Board* board = mGame->getBoard();
-            QRect size( 0, 0, board->getWidth()*24, board->getHeight()*24 );
-            mDirtyRegion += size;
-            renderNow();
-        }
-    }
-}
-
-void BoardWindow::renderNow()
-{
-    if ( isExposed() ) {
-        mDirtyRegion.swap( mRenderRegion );
-        mDirtyRegion.setRects(0,0);
-        render( &mRenderRegion );
-    }
-#if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
-    mUpdatePending = false;
-#endif
-}
-
 void BoardWindow::renderSquareLater( int col, int row )
 {
     QRect dirty(col*24, row*24, 24, 24);
@@ -166,11 +130,8 @@ QMenu& BoardWindow::getMenu()
     return mMenu;
 }
 
-void BoardWindow::render( const QRect* rect, QPainter* painter )
+void BoardWindow::render(const QRect* rect, QPainter* painter )
 {
-    if ( !mGame ) {
-        return;
-    }
     Board* board = mGame->getBoard();
     MoveController* moveController = mGame->getMoveController();
     const PieceMultiSet* moves = moveController->getMoves()->toMultiSet();
@@ -285,17 +246,42 @@ void BoardWindow::render( const QRect* rect, QPainter* painter )
     }
 }
 
-void BoardWindow::render(QRegion* region)
+void BoardWindow::renderNow()
 {
-    mBackingStore->beginPaint(*region);
-    QPaintDevice *device = mBackingStore->paintDevice();
-    QPainter painter(device);
-    QRect rect = region->boundingRect();
+    if ( mBackingStore ) {
+        if ( QPaintDevice *device = mBackingStore->paintDevice() ) {
+            bool boardLoaded = mGame ? mGame->isBoardLoaded() : false;
+            QRect rect;
+            if ( boardLoaded ) {
+                mDirtyRegion.swap( mRenderRegion );
+                mDirtyRegion.setRects(0,0);
+                rect = mRenderRegion.boundingRect();
+            } else {
+                rect = QRect( QPoint(0,0), size() );
+                mRenderRegion = rect;
+            }
 
-    render( &rect, &painter );
+            mBackingStore->beginPaint( mRenderRegion );
+            QPainter painter( device );
 
-    mBackingStore->endPaint();
-    mBackingStore->flush(*region);
+            if ( !boardLoaded ) {
+                painter.fillRect( rect, Qt::black );
+            } else {
+                render( &rect, &painter );
+            }
+
+            mBackingStore->endPaint();
+            mBackingStore->flush( mRenderRegion );
+
+#if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
+            mUpdatePending = false;
+#endif
+            if ( !mRenderedOnce ) {
+                mRenderedOnce = true;
+                emit paintable();
+            }
+        }
+    }
 }
 
 void BoardWindow::renderLater( const QRect& rect )
@@ -304,16 +290,54 @@ void BoardWindow::renderLater( const QRect& rect )
     requestUpdate();
 }
 
-bool BoardWindow::event(QEvent *event)
+bool BoardWindow::resizeInternal( const QSize& size )
 {
-    if (event->type() == QEvent::UpdateRequest) {
-        renderNow();
+    mDirtyRegion = QRect( QPoint(0,0), size );
+
+    if ( mBackingStore && mBackingStore->size() != size ) {
+        mBackingStore->resize( size );
+        if ( mReplayText ) {
+            mReplayText->onResize();
+        }
         return true;
     }
+    return false;
+}
 
-    if ( event->type() == QEvent::Resize && mReplayText ) {
-        // nullify this given it is stale:
-        mReplayText->onResize();
+void BoardWindow::showEvent(QShowEvent*)
+{
+    if ( !mBackingStore ) {
+        mBackingStore = new QBackingStore(this);
+
+        // sizing it on first here because I don't see the backing store constructor initializing it's size
+        resizeInternal( size() );
+    }
+    renderNow();
+}
+
+void BoardWindow::resizeEvent( QResizeEvent* resizeEvent )
+{
+    if ( resizeInternal( resizeEvent->size() ) ) {
+        renderNow();
+    }
+}
+
+void BoardWindow::exposeEvent( QExposeEvent* )
+{
+    if ( mBackingStore ) {
+        mDirtyRegion = QRect( QPoint(0,0), mBackingStore->size() );
+        renderNow();
+    }
+}
+
+bool BoardWindow::event( QEvent* event )
+{
+    QEvent::Type type = event->type();
+    if ( type == QEvent::UpdateRequest ) {
+        if ( isExposed() ) {
+            renderNow();
+        }
+        return true;
     }
 
     return QWindow::event(event);
@@ -595,7 +619,7 @@ int BoardWindow::checkForReplay()
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
 void BoardWindow::requestUpdate()
 {
-    if ( !mUpdatePending ) {
+    if ( isExposed() && !mUpdatePending ) {
         QTimer::singleShot( 17, this, &BoardWindow::renderNow );
         mUpdatePending = true;
     }

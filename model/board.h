@@ -154,7 +154,6 @@ private:
     ModelPoint mTankWayPoint;
 
     unsigned char mTiles[BOARD_MAX_WIDTH*BOARD_MAX_HEIGHT];
-
     PieceSetManager mPieceManager;
 
     QTextStream* mStream;

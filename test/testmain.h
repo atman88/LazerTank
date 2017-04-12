@@ -4,12 +4,17 @@
 #include <QObject>
 #include <QTest>
 
+class Game;
+
 class TestMain : public QObject
 {
     Q_OBJECT
 public:
     TestMain() {}
     ~TestMain() {}
+
+    void initGame( Game& game, const char* map );
+    void initGame( Game& game, QTextStream& map );
 
 private slots:
     void testGameMove();

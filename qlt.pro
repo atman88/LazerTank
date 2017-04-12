@@ -41,7 +41,9 @@ HEADERS += \
     controller/movecontroller.h \
     util/recorder.h \
     util/recorderprivate.h \
-    view/replaytext.h
+    view/replaytext.h \
+    util/workerthread.h \
+    controller/gameinitializer.h
 
 SOURCES += \
            model/board.cpp \
@@ -73,7 +75,9 @@ SOURCES += \
     controller/movecontroller.cpp \
     util/recorder.cpp \
     util/recorderprivate.cpp \
-    view/replaytext.cpp
+    view/replaytext.cpp \
+    util/workerthread.cpp \
+    controller/gameinitializer.cpp
 
 RESOURCES += qml.qrc
 

@@ -153,6 +153,12 @@ public:
 
     MoveController* getMoveController();
 
+    /**
+     * @brief Query whether the board is fully loaded
+     * @return true if the board is loaded or false if the board is in the process of being loaded or has yet to be loaded
+     */
+    bool isBoardLoaded();
+
 public slots:
     /**
      * @brief Receives notification that the tank is about to move toward the identified square
@@ -161,6 +167,11 @@ public slots:
      * @param fromAngle The direction the tank will move in
      */
     void onTankPushingInto( int col, int row, int fromAngle );
+
+    /**
+     * @brief Notifies the game that the board is being loaded
+     */
+    void onBoardLoading();
 
     /**
      * @brief Receives notification that the board's map changed
@@ -214,6 +225,12 @@ public slots:
      */
     void replayLevel();
 
+signals:
+    /**
+     * @brief Emitted after the board is loaded and interested game objects have updated
+     */
+    void boardLoaded();
+
 private:
     /**
      * @brief Determines whether the given single move is legal
@@ -245,6 +262,8 @@ private:
     BoardWindow* mWindow;
 
     Board mBoard;
+    bool mBoardLoaded;
+
     MoveController mMoveController;
     PathFinderController mPathFinderController;
     Push mTankPush;

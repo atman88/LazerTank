@@ -9,7 +9,7 @@
 #include "speedcontroller.h"
 #include "util/renderutils.h"
 
-Game::Game() : mWindow(0)
+Game::Game() : mWindow(0), mBoardLoaded(0)
 {
     mHandle.game = this;
     setProperty("GameHandle", QVariant::fromValue(mHandle));
@@ -23,30 +23,6 @@ void Game::init( BoardWindow* window )
     mShotPush.setParent( this );
     mSpeedController.setParent( this );
     mMoveController.setParent( this );
-
-    if ( window ) {
-        window->init( this );
-
-        QObject::connect( window, &BoardWindow::focusChanged, &mMoveController, &MoveController::setFocus );
-        QObject::connect( &mTankPush, &Push::rectDirty, window, &BoardWindow::renderLater );
-        QObject::connect( &mShotPush, &Push::rectDirty, window, &BoardWindow::renderLater );
-
-        QObject::connect( &mTank, &Tank::changed, window, &BoardWindow::renderLater );
-        QObject::connect( mMoveController.getFutureShots(), &FutureShotPathManager::dirtyRect, window, &BoardWindow::renderLater );
-
-        QMenu& menu = window->getMenu();
-        QObject::connect( &menu, &QMenu::aboutToShow, &mTank, &Tank::pause  );
-        QObject::connect( &menu, &QMenu::aboutToHide, &mTank, &Tank::resume );
-
-        PieceListManager* moveManager = mMoveController.getMoves();
-        QObject::connect( moveManager, &PieceListManager::appended, window, &BoardWindow::renderSquareLater );
-        QObject::connect( moveManager, &PieceListManager::erased,   window, &BoardWindow::renderSquareLater );
-        QObject::connect( moveManager, &PieceListManager::changed,  window, &BoardWindow::renderSquareLater );
-
-        QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::erasedAt,   window, &BoardWindow::renderSquareLater );
-        QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::insertedAt, window, &BoardWindow::renderSquareLater );
-        QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::changedAt,  window, &BoardWindow::renderSquareLater );
-    }
 
     mTank.init( this );
 
@@ -72,7 +48,41 @@ void Game::init( BoardWindow* window )
     mFutureDelta.init( &mBoard, &mFutureBoard );
 
     QObject::connect( &mBoard, &Board::tileChangedAt, this, &Game::onBoardTileChanged );
-    QObject::connect( &mBoard, &Board::boardLoaded,   this, &Game::onBoardLoaded      );
+    QObject::connect( &mBoard, &Board::boardLoaded,   this, &Game::onBoardLoaded, Qt::QueuedConnection );
+
+    if ( window ) {
+        QObject::connect( window, &BoardWindow::focusChanged, &mMoveController, &MoveController::setFocus );
+        QObject::connect( &mTankPush, &Push::rectDirty, window, &BoardWindow::renderLater );
+        QObject::connect( &mShotPush, &Push::rectDirty, window, &BoardWindow::renderLater );
+
+        QObject::connect( &mTank, &Tank::changed, window, &BoardWindow::renderLater );
+        QObject::connect( mMoveController.getFutureShots(), &FutureShotPathManager::dirtyRect, window, &BoardWindow::renderLater );
+
+        QMenu& menu = window->getMenu();
+        QObject::connect( &menu, &QMenu::aboutToShow, &mTank, &Tank::pause  );
+        QObject::connect( &menu, &QMenu::aboutToHide, &mTank, &Tank::resume );
+
+        PieceListManager* moveManager = mMoveController.getMoves();
+        QObject::connect( moveManager, &PieceListManager::appended, window, &BoardWindow::renderSquareLater );
+        QObject::connect( moveManager, &PieceListManager::erased,   window, &BoardWindow::renderSquareLater );
+        QObject::connect( moveManager, &PieceListManager::changed,  window, &BoardWindow::renderSquareLater );
+
+        QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::erasedAt,   window, &BoardWindow::renderSquareLater );
+        QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::insertedAt, window, &BoardWindow::renderSquareLater );
+        QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::changedAt,  window, &BoardWindow::renderSquareLater );
+
+        window->init( this );
+    }
+}
+
+void Game::onBoardLoading()
+{
+    mBoardLoaded = false;
+}
+
+bool Game::isBoardLoaded()
+{
+    return mBoardLoaded;
 }
 
 void Game::onBoardLoaded()
@@ -84,6 +94,8 @@ void Game::onBoardLoaded()
     mActiveCannon.reset( NullPoint );
     mSpeedController.setHighSpeed(false);
     mMoveController.onBoardLoaded( &mBoard );
+    mBoardLoaded = true;
+    emit boardLoaded();
 }
 
 void Game::endMoveDeltaTracking()

@@ -1,10 +1,11 @@
 #include <iostream>
 #include <QVariant>
 #include <QFile>
+#include <QThread>
 
 #include "board.h"
 
-Board::Board( QObject* parent )  : QObject(parent), mLevel(0), mWidth(16), mHeight(16), mStream(0)
+Board::Board( QObject* parent ) : QObject(parent), mLevel(0), mWidth(6), mHeight(6), mStream(0)
 {
     memset( mTiles, EMPTY, sizeof mTiles );
 }
@@ -52,14 +53,13 @@ ModelPoint Board::getFlagPoint() const
 bool Board::load( QString& fileName, int level )
 {
     QFile file( fileName );
-    if ( !file.open(QIODevice::ReadOnly|QIODevice::Text) ) {
-        return false;
+    bool rc = file.open(QIODevice::ReadOnly|QIODevice::Text);
+    if ( rc ) {
+        QTextStream stream(&file);
+        load( stream, level );
+        file.close();
     }
-    QTextStream stream(&file);
-    load( stream, level );
-
-    file.close();
-    return true;
+    return rc;
 }
 
 void Board::load( QTextStream& stream, int level )

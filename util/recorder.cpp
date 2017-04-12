@@ -9,7 +9,7 @@ Recorder::Recorder( int capacity )
 
 Recorder::~Recorder()
 {
-    free( mPrivate );
+    delete mPrivate;
 }
 
 void Recorder::onBoardLoaded()

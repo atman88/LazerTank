@@ -2,16 +2,34 @@
 #define GAMEINITIALIZER_H
 
 #include <QObject>
+#include "view/boardwindow.h"
+#include "controller/game.h"
+#include "util/workerthread.h"
 
-class GameInitializer : public QObject
+/**
+ * @brief Controller class for initializing the game
+ */
+class GameInitializer : public QObject, Runnable
 {
     Q_OBJECT
+
 public:
-    explicit GameInitializer(QObject *parent = 0);
+    explicit GameInitializer(QObject* parent = 0);
+    void init();
 
-signals:
+    // Implementation of the LoadRunnable
+    void run() override;
 
-public slots:
+private slots:
+    /**
+     * @brief Executes game initalization
+     */
+    void initGame();
+
+public:
+    BoardWindow mWindow;
+    Game mGame;
+    WorkerThread mWorker;
 };
 
 #endif // GAMEINITIALIZER_H

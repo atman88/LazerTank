@@ -6,16 +6,11 @@
 void TestMain::testFutureShotPath()
 {
     Game game;
-    game.init( 0 );
-
-    Board* masterBoard = game.getBoard();
-    QString map(
+    initGame( game,
       "[M/W[\\M\n"
       " w . <\n"
       " M . .\n"
       " T m .\n" );
-    QTextStream s(&map);
-    masterBoard->load( s );
 
     FutureShotPathManager manager;
     manager.setParent( &game );
@@ -50,14 +45,10 @@ void TestMain::testFutureShotPath()
 void TestMain::testFutureShotThruMasterTank()
 {
     Game game;
-    game.init( 0 );
-
-    QString map =
+    initGame( game,
       "W\n"
       "T\n"
-      ".\n";
-    QTextStream s(&map);
-    game.getBoard()->load( s );
+      ".\n" );
     game.getMoveController()->move(180); // rotate down
     game.getMoveController()->move(180); // move down -> 0,2
     game.getMoveController()->move(  0); // rotate up

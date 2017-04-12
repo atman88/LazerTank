@@ -15,6 +15,9 @@ class PathSearchAction : public QAction, public PathSearchCriteria
     Q_OBJECT
 public:
     explicit PathSearchAction(QObject *parent = 0);
+    ~PathSearchAction()
+    {
+    }
 
     /**
      * @brief Set criteria for this search
