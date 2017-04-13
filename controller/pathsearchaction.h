@@ -25,8 +25,9 @@ public:
      * @param focus The focus of the starting point. Either TANK or MOVE.
      * @param target The square to find a path to.
      * @param moveWhenFound
+     * @return true if successful
      */
-    void setCriteria( PieceType focus, const ModelPoint& target, bool moveWhenFound );
+    bool setCriteria( PieceType focus, const ModelPoint& target, bool moveWhenFound );
 
     PathSearchCriteria* getCriteria();
 };

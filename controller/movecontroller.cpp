@@ -100,6 +100,7 @@ void MoveController::clearMoves()
 
 void MoveController::wakeup()
 {
+std::cout << "MoveController wakeup" << std::endl;
     if ( Game* game = getGame(this) ) {
         Tank* tank = game->getTank();
 

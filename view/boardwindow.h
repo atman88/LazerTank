@@ -1,7 +1,6 @@
 #ifndef BOARDWINDOW_H
 #define BOARDWINDOW_H
 
-#include <memory>
 #include <QMouseEvent>
 #include <Qt>
 #include <QtGui>
@@ -13,7 +12,7 @@ class Board;
 class Game;
 class ReplayText;
 
-#include "controller/pathsearchaction.h"
+#include "gameregistry.h"
 #include "model/piece.h"
 
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 7, 0))
@@ -59,7 +58,7 @@ class BoardWindow : public QWindow
 public:
     explicit BoardWindow(QWindow *parent = 0);
     ~BoardWindow();
-    void init( Game* game );
+    void init( GameRegistry* registry );
 
     /**
      * @brief pop up the menu
@@ -184,9 +183,6 @@ private:
     ACTION mUndoMoveAction;
     ACTION mClearMovesAction;
     ACTION mReplayAction;
-    // using shared pointers for these ui objects so they can be safely shared with the controller:
-    std::shared_ptr<PathSearchAction> mCaptureAction;
-    std::shared_ptr<PathSearchAction> mPathToAction;
     QMenu mLevelsMenu;
 
     QRegion mDirtyRegion;

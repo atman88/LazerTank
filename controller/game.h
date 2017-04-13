@@ -3,7 +3,6 @@
 
 #include <QObject>
 
-struct GameHandle;
 class BoardWindow;
 class ShotModel;
 class PathFinderController;
@@ -27,8 +26,7 @@ class Game : public QObject
 
 public:
     Game();
-    GameHandle getHandle();
-    void init( BoardWindow* window );
+    void init( GameRegistry* registry );
 
     /**
      * @brief Get the current board
@@ -41,12 +39,6 @@ public:
      * @return true if the board is the master otherwise false
      */
     bool isMasterBoard( Board* board );
-
-    /**
-     * @brief Get this game's main window
-     * @return The associated window, or 0 if not initialized
-     */
-    BoardWindow* getWindow() const;
 
     /**
      * @brief Access the game's tank object
@@ -257,9 +249,6 @@ private:
     SpeedController mSpeedController;
     AnimationStateAggregator mMoveAggregate;
     AnimationStateAggregator mShotAggregate;
-
-    GameHandle mHandle;
-    BoardWindow* mWindow;
 
     Board mBoard;
     bool mBoardLoaded;

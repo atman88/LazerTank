@@ -6,9 +6,12 @@ PathSearchAction::PathSearchAction(QObject *parent) : QAction(parent)
 {
 }
 
-void PathSearchAction::setCriteria( PieceType focus, const ModelPoint& target, bool moveWhenFound )
+bool PathSearchAction::setCriteria( PieceType focus, const ModelPoint& target, bool moveWhenFound )
 {
     if ( Game* game = getGame(this) ) {
+        mTargetPoint = target;
+        mMoveWhenFound = moveWhenFound;
+
         MoveController* moveController = game->getMoveController();
 
         if ( focus == TANK ) {
@@ -29,10 +32,10 @@ void PathSearchAction::setCriteria( PieceType focus, const ModelPoint& target, b
             mStartPoint = tank->getPoint();
             mStartDirection = tank->getRotation();
         }
-    }
 
-    mTargetPoint = target;
-    mMoveWhenFound = moveWhenFound;
+        return true;
+    }
+    return false;
 }
 
 PathSearchCriteria *PathSearchAction::getCriteria()

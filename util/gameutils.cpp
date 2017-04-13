@@ -2,19 +2,36 @@
 #include <QPoint>
 
 #include "gameutils.h"
+#include "controller/gameregistry.h"
 
-// find the game from the object hierarchy:
+// find the registry from the object hierarchy:
 
-Game* getGame( QObject* gameObject )
+GameRegistry* getRegistry( const QObject* gameObject )
 {
-    QObject* p = gameObject;
+    const QObject* p = gameObject;
     QVariant v;
 
     while( p && !(v = p->property("GameHandle")).isValid() ) {
         p = p->parent();
     }
 
-    return v.value<GameHandle>().game;
+    return v.value<GameHandle>().registry;
+}
+
+Game* getGame( const QObject* gameObject )
+{
+    if ( GameRegistry* registry = getRegistry(gameObject) ) {
+        return &registry->mGame;
+    }
+    return 0;
+}
+
+BoardWindow* getWindow( QObject* gameObject )
+{
+    if ( GameRegistry* registry = getRegistry(gameObject) ) {
+        return registry->mWindow;
+    }
+    return 0;
 }
 
 QPoint modelToViewCenterSquare( int col, int row )

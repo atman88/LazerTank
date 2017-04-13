@@ -9,8 +9,8 @@
 #include "util/renderutils.h"
 #include "util/imageutils.h"
 #include "controller/game.h"
+#include "controller/gameregistry.h"
 
-using namespace std;
 
 BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mBackingStore(0), mRenderedOnce(false), mFocus(MOVE), mGame(0),
   mHelpWidget(0), mReplayText(0)
@@ -53,29 +53,24 @@ void BoardWindow::setSize( int cols, int rows )
     renderNow();
 }
 
-void BoardWindow::init( Game* game )
+void BoardWindow::init( GameRegistry* registry )
 {
-    mCaptureAction = std::make_shared<PathSearchAction>(this);
-    mPathToAction  = std::make_shared<PathSearchAction>(this);
+    Game* game = mGame = &registry->mGame;
+    setProperty("GameHandle", registry->property("GameHandle"));
 
-    if ( game ) {
-        mGame = game;
-        setProperty("GameHandle", game->property("GameHandle"));
+    Board* board = game->getBoard();
+    QObject::connect( board, &Board::tileChangedAt, this, &BoardWindow::renderSquareLater );
 
-        Board* board = game->getBoard();
-        QObject::connect( board, &Board::tileChangedAt, this, &BoardWindow::renderSquareLater );
+    PieceSetManager* pm = board->getPieceManager();
+    QObject::connect( pm, &PieceSetManager::erasedAt,   this, &BoardWindow::renderSquareLater );
+    QObject::connect( pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
 
-        PieceSetManager* pm = board->getPieceManager();
-        QObject::connect( pm, &PieceSetManager::erasedAt,   this, &BoardWindow::renderSquareLater );
-        QObject::connect( pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
+    QObject::connect( &TO_QACTION(mSpeedAction), &QAction::toggled, game->getSpeedController(), &SpeedController::setHighSpeed );
+    QObject::connect( &TO_QACTION(mUndoMoveAction),  &QAction::triggered, game, &Game::undoLastMove );
+    QObject::connect( &TO_QACTION(mClearMovesAction),&QAction::triggered, game->getMoveController(), &MoveController::clearMoves );
+    QObject::connect( &TO_QACTION(mReplayAction),    &QAction::triggered, game, &Game::replayLevel );
 
-        QObject::connect( &TO_QACTION(mSpeedAction), &QAction::toggled, game->getSpeedController(), &SpeedController::setHighSpeed );
-        QObject::connect( &TO_QACTION(mUndoMoveAction),  &QAction::triggered, game, &Game::undoLastMove );
-        QObject::connect( &TO_QACTION(mClearMovesAction),&QAction::triggered, game->getMoveController(), &MoveController::clearMoves );
-        QObject::connect( &TO_QACTION(mReplayAction),    &QAction::triggered, game, &Game::replayLevel );
-
-        QObject::connect( game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded );
-    }
+    QObject::connect( game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded );
 }
 
 void BoardWindow::onBoardLoaded()
@@ -356,8 +351,11 @@ int keyToAngle( int key )
 
 void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
 {
-    if ( mGame ) {
+    if ( GameRegistry* registry = getRegistry(this) ) {
         QPoint pos;
+
+        PathSearchAction& captureAction = registry->mCaptureAction;
+        PathSearchAction& pathToAction  = registry->mPathToAction;
 
         //
         // create the menu on first use
@@ -374,14 +372,14 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             TO_QACTION(mUndoMoveAction).setText("&Undo");
             TO_QACTION(mClearMovesAction).setText("Clear Moves");
             TO_QACTION(mSpeedAction).setText( "&Speed Boost" );
-            mPathToAction->setText( "Move &Here" );
-            mCaptureAction->setText( "&Capture Flag" );
+            pathToAction.setText( "Move &Here" );
+            captureAction.setText( "&Capture Flag" );
             TO_QACTION(mReloadAction).setText( "&Restart Level" );
             TO_QACTION(mReplayAction).setText( "&Auto Replay" );
 
             TO_QACTION(mSpeedAction).setShortcut( speedSeq );
             TO_QACTION(mSpeedAction).setCheckable(true);
-            mCaptureAction->setShortcut( captureSeq );
+            captureAction.setShortcut( captureSeq );
             TO_QACTION(mUndoMoveAction).setShortcut( undoSeq );
             TO_QACTION(mClearMovesAction).setShortcut(clearSeq);
             TO_QACTION(mReplayAction).setShortcut( replaySeq );
@@ -389,8 +387,8 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             mMenu.addAction( &TO_QACTION(mSpeedAction)      );
             mMenu.addAction( &TO_QACTION(mUndoMoveAction)   );
             mMenu.addAction( &TO_QACTION(mClearMovesAction) );
-            mMenu.addAction( &(*mPathToAction)  );
-            mMenu.addAction( &(*mCaptureAction) );
+            mMenu.addAction( &pathToAction );
+            mMenu.addAction( &captureAction );
             mMenu.addAction( &TO_QACTION(mReloadAction)     );
 
             QAction* action = mMenu.addAction( QString("Select &Level..") );
@@ -413,16 +411,16 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
         TO_QACTION(mSpeedAction).setChecked( mGame->getSpeedController()->getHighSpeed() );
         TO_QACTION(mReloadAction).setData( QVariant( board->getLevel()) );
 
-        std::shared_ptr<PathSearchAction> actions[2] = { mCaptureAction, mPathToAction };
-        mCaptureAction->setCriteria( mFocus, board->getFlagPoint(), true );
-        int nActions;
+        PathSearchAction* actions[2];
+        int nActions = 0;
+        if ( captureAction.setCriteria( mFocus, board->getFlagPoint(), true ) ) {
+            actions[nActions++] = &captureAction;
+        }
         if ( p.mCol < 0 ) {
-            nActions = 1;
-            mPathToAction->setVisible( false );
-        } else {
-            nActions = 2;
-            mPathToAction->setVisible( true );
-            mPathToAction->setCriteria( mFocus, p, true );
+            pathToAction.setVisible( false );
+        } else if ( pathToAction.setCriteria( mFocus, p, true ) ) {
+            actions[nActions++] = &pathToAction;
+            pathToAction.setVisible( true );
         }
         mGame->getPathFinderController()->testActions( actions, nActions );
 
@@ -442,10 +440,10 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             pos.setY( geometry().top()   );
         }
         QAction* action = mMenu.exec( pos );
-        if ( action == &(*mCaptureAction) ) {
-            mGame->getPathFinderController()->doAction( mCaptureAction );
-        } else if ( action == &(*mPathToAction) ) {
-            mGame->getPathFinderController()->doAction( mPathToAction );
+        if ( action == &captureAction ) {
+            mGame->getPathFinderController()->doAction( &captureAction );
+        } else if ( action == &pathToAction ) {
+            mGame->getPathFinderController()->doAction( &pathToAction );
         } else if ( action ) {
             bool ok;
             int level = action->data().toInt( &ok );
@@ -480,9 +478,12 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
 
         case Qt::Key_C: // attempt to capture the flag
             if ( !checkForReplay() )  {
-                Board* board = mGame->getBoard();
-                mCaptureAction->setCriteria( mFocus, board->getFlagPoint(), false );
-                mGame->getPathFinderController()->doAction( mCaptureAction );
+                if ( GameRegistry* registry = getRegistry(this) ) {
+                    PathSearchAction& captureAction = registry->mCaptureAction;
+                    Board* board = mGame->getBoard();
+                    captureAction.setCriteria( mFocus, board->getFlagPoint(), false );
+                    mGame->getPathFinderController()->doAction( &captureAction );
+                }
             }
             break;
 
@@ -565,8 +566,11 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
 
     case Qt::LeftButton:
         if ( !checkForReplay() )  {
-            mPathToAction->setCriteria( mFocus, ModelPoint( event->pos() ), false );
-            mGame->getPathFinderController()->doAction( mPathToAction );
+            if ( GameRegistry* registry = getRegistry(this) ) {
+                PathSearchAction& pathToAction = registry->mPathToAction;
+                pathToAction.setCriteria( mFocus, ModelPoint( event->pos() ), false );
+                mGame->getPathFinderController()->doAction( &pathToAction );
+            }
         }
         break;
 

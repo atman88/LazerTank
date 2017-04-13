@@ -1,7 +1,6 @@
 #ifndef PATHFINDERCONTROLLER_H
 #define PATHFINDERCONTROLLER_H
 
-#include <memory>
 #include <QObject>
 
 class Game;
@@ -26,7 +25,7 @@ public:
      * performed and if successful, notifies the result via the pathFound signal.
      * @return true if the action is successfully started
      */
-    bool doAction( std::shared_ptr<PathSearchAction> action, bool testOnly = false );
+    bool doAction( PathSearchAction* action, bool testOnly = false );
 
     /**
      * @brief test multiple actions.
@@ -34,7 +33,7 @@ public:
      * @param actions An array of search term containers
      * @param count The dimension of the array
      */
-    void testActions( std::shared_ptr<PathSearchAction> actions[], unsigned count );
+    void testActions( PathSearchAction* actions[], unsigned count );
 
 signals:
     /**
@@ -59,8 +58,8 @@ private:
     void testNextAction();
 
     PathFinder mPathFinder;
-    std::shared_ptr<PathSearchAction> mCurAction;
-    std::list<std::shared_ptr<PathSearchAction>> mTestActions;
+    PathSearchAction* mCurAction;
+    std::list<PathSearchAction*> mTestActions;
 };
 
 #endif // PATHFINDERCONTROLLER_H

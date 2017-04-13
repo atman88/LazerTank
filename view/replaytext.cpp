@@ -34,7 +34,7 @@ void ReplayText::render( const QRect* rect, QPainter* painter )
                 mInitialized = true;
             }
 
-            if ( BoardWindow* window = game->getWindow() ) {
+            if ( BoardWindow* window = getWindow(this) ) {
                 QSize size = window->size();
                 painter->setFont( mFont );
                 mBounds = painter->boundingRect( QRect(QPoint(0,0),size), Qt::AlignCenter, mText );

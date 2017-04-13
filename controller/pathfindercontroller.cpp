@@ -20,7 +20,7 @@ void PathFinderController::init( Game* game )
     }
 }
 
-bool PathFinderController::doAction( std::shared_ptr<PathSearchAction> action, bool testOnly )
+bool PathFinderController::doAction( PathSearchAction* action, bool testOnly )
 {
     mCurAction = action;
     return mPathFinder.findPath( action->getCriteria(), testOnly );
@@ -35,11 +35,11 @@ void PathFinderController::testNextAction()
     }
 }
 
-void PathFinderController::testActions( std::shared_ptr<PathSearchAction> actions[], unsigned count )
+void PathFinderController::testActions( PathSearchAction* actions[], unsigned count )
 {
     mTestActions.clear();
     while( count > 0 ) {
-        std::shared_ptr<PathSearchAction> action = actions[--count];
+        PathSearchAction* action = actions[--count];
         action->setEnabled( false ); // default to disabled until tested
         mTestActions.push_front( action );
     }

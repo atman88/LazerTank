@@ -1,6 +1,7 @@
 #include "shooter.h"
 #include "boardwindow.h"
 #include "game.h"
+#include "util/gameutils.h"
 
 Shooter::Shooter(QObject *parent) : QObject(parent), mViewRotation(0), mBoundingRect( QRect(0,0,24,24) ), mType(NONE)
 {
@@ -15,7 +16,7 @@ void Shooter::init( Game* game, PieceType type, QColor color )
 
     QObject::connect( &mShot, &ShotModel::tankKilled, game, &Game::onTankKilled );
 
-    if ( BoardWindow* window = game->getWindow() ) {
+    if ( BoardWindow* window = getWindow(this) ) {
         QObject::connect( &mShot, &ShotView::rectDirty,   window, &BoardWindow::renderLater  );
     }
 

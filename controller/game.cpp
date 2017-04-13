@@ -5,19 +5,18 @@
 #include <QPushButton>
 
 #include "game.h"
+#include "gameregistry.h"
 #include "boardwindow.h"
 #include "speedcontroller.h"
 #include "util/renderutils.h"
 
-Game::Game() : mWindow(0), mBoardLoaded(0)
+Game::Game() : mBoardLoaded(0)
 {
-    mHandle.game = this;
-    setProperty("GameHandle", QVariant::fromValue(mHandle));
 }
 
-void Game::init( BoardWindow* window )
+void Game::init( GameRegistry* registry )
 {
-    mWindow = window;
+    setParent( registry );
 
     mTankPush.setParent( this );
     mShotPush.setParent( this );
@@ -50,7 +49,7 @@ void Game::init( BoardWindow* window )
     QObject::connect( &mBoard, &Board::tileChangedAt, this, &Game::onBoardTileChanged );
     QObject::connect( &mBoard, &Board::boardLoaded,   this, &Game::onBoardLoaded, Qt::QueuedConnection );
 
-    if ( window ) {
+    if ( BoardWindow* window = registry->mWindow ) {
         QObject::connect( window, &BoardWindow::focusChanged, &mMoveController, &MoveController::setFocus );
         QObject::connect( &mTankPush, &Push::rectDirty, window, &BoardWindow::renderLater );
         QObject::connect( &mShotPush, &Push::rectDirty, window, &BoardWindow::renderLater );
@@ -71,7 +70,7 @@ void Game::init( BoardWindow* window )
         QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::insertedAt, window, &BoardWindow::renderSquareLater );
         QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::changedAt,  window, &BoardWindow::renderSquareLater );
 
-        window->init( this );
+        window->init( registry );
     }
 }
 
@@ -101,11 +100,6 @@ void Game::onBoardLoaded()
 void Game::endMoveDeltaTracking()
 {
     mFutureDelta.enable( false );
-}
-
-GameHandle Game::getHandle()
-{
-    return mHandle;
 }
 
 Board* Game::getBoard( bool futuristic )
@@ -244,7 +238,7 @@ void Game::onMoveAggregatorFinished()
 
     if ( mBoard.tileAt(mTank.getCol(),mTank.getRow()) == FLAG ) {
         // if we don't have a window then we're headless (i.e. testing); don't show message boxes for the headless case
-        if ( mWindow ) {
+        if ( BoardWindow* window = getWindow(this) ) {
             // ensure this is off now to remove it from the display:
             mMoveController.setReplay( false );
 
@@ -259,7 +253,7 @@ void Game::onMoveAggregatorFinished()
             msgBox.exec();
 
             if ( msgBox.clickedButton() == exitButton ) {
-                mWindow->close();
+                window->close();
             } else if ( msgBox.clickedButton() == replayButton ) {
                 restartLevel( true );
             } else {
@@ -321,11 +315,6 @@ MoveController* Game::getMoveController()
 PathFinderController* Game::getPathFinderController()
 {
     return &mPathFinderController;
-}
-
-BoardWindow* Game::getWindow() const
-{
-    return mWindow;
 }
 
 bool getShotReflection( int mirrorAngle, int *shotAngle )
@@ -655,7 +644,7 @@ void Game::undoLastMove()
 void Game::onTankKilled()
 {
     // if we don't have a window then we're headless (i.e. testing); don't show message boxes for the headless case
-    if ( mWindow ) {
+    if ( BoardWindow* window = getWindow(this) ) {
         // ensure this is off now to remove it from the display:
         mMoveController.setReplay( false );
 
@@ -670,7 +659,7 @@ void Game::onTankKilled()
         msgBox.exec();
 
         if ( msgBox.clickedButton() == exitButton ) {
-            mWindow->close();
+            window->close();
         } else {
             restartLevel( msgBox.clickedButton() == replayButton );
         }
