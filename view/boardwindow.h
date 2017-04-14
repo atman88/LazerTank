@@ -9,10 +9,10 @@
 #include <QtGlobal>
 
 class Board;
+class GameRegistry;
 class Game;
 class ReplayText;
 
-#include "gameregistry.h"
 #include "model/piece.h"
 
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 7, 0))

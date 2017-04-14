@@ -6,10 +6,16 @@
 
 #include "boardwindow.h"
 #include "replaytext.h"
+#include "controller/gameregistry.h"
+#include "controller/game.h"
+#include "controller/speedcontroller.h"
+#include "controller/movecontroller.h"
+#include "controller/pathfindercontroller.h"
+#include "model/tank.h"
+#include "model/push.h"
+#include "model/shotmodel.h"
 #include "util/renderutils.h"
 #include "util/imageutils.h"
-#include "controller/game.h"
-#include "controller/gameregistry.h"
 
 
 BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mBackingStore(0), mRenderedOnce(false), mFocus(MOVE),
@@ -61,9 +67,9 @@ void BoardWindow::init( GameRegistry* registry )
     Board* board = game.getBoard();
     QObject::connect( board, &Board::tileChangedAt, this, &BoardWindow::renderSquareLater );
 
-    PieceSetManager* pm = board->getPieceManager();
-    QObject::connect( pm, &PieceSetManager::erasedAt,   this, &BoardWindow::renderSquareLater );
-    QObject::connect( pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
+    PieceSetManager& pm = board->getPieceManager();
+    QObject::connect( &pm, &PieceSetManager::erasedAt,   this, &BoardWindow::renderSquareLater );
+    QObject::connect( &pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
 
     QObject::connect( &TO_QACTION(mSpeedAction), &QAction::toggled, &registry->getSpeedController(), &SpeedController::setHighSpeed );
     QObject::connect( &TO_QACTION(mUndoMoveAction),  &QAction::triggered, &game, &Game::undoLastMove );
@@ -129,8 +135,8 @@ void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* p
 {
     Board* board = registry->getGame().getBoard();
     MoveController& moveController = registry->getMoveController();
-    const PieceMultiSet* moves = moveController.getMoves()->toMultiSet();
-    const PieceSet* tiles = board->getPieceManager()->getPieces();
+    const PieceMultiSet* moves = moveController.getMoves().toMultiSet();
+    const PieceSet& tiles = board->getPieceManager().getPieces();
     const PieceSet* deltas = registry->getGame().getDeltaPieces();
 
     int minX = rect->left()/24;
@@ -140,7 +146,7 @@ void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* p
 
     SimplePiece pos(MOVE, minX, minY);
     PieceSet::iterator moveIterator = moves->lower_bound( &pos );
-    PieceSet::iterator tileIterator = tiles->lower_bound( &pos );
+    PieceSet::iterator tileIterator = tiles.lower_bound( &pos );
     PieceSet::iterator deltasIterator;
     if ( deltas ) {
         deltasIterator = deltas->lower_bound( &pos );
@@ -191,13 +197,13 @@ void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* p
         }
     }
 
-    renderListIn( tileIterator, tiles->end(), rect, painter );
+    renderListIn( tileIterator, tiles.end(), rect, painter );
     if ( deltas ) {
         renderListIn( deltasIterator, deltas->end(), rect, painter );
     }
 
     bool usingFutureShotPen = false;
-    for( auto it : *moveController.getFutureShots()->getPaths() ) {
+    for( auto it : moveController.getFutureShots().getPaths() ) {
         if ( rect->intersects( it.getBounds() ) ) {
             if ( !usingFutureShotPen ) {
                 QPen pen( registry->getTank().getShot().getPen() );
@@ -425,7 +431,7 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
         }
         registry->getPathFinderController().testActions( actions, nActions );
 
-        bool movesPending = registry->getMoveController().getMoves()->size() > 0;
+        bool movesPending = registry->getMoveController().getMoves().size() > 0;
         TO_QACTION(mUndoMoveAction).setEnabled( movesPending );
         TO_QACTION(mClearMovesAction).setEnabled( movesPending );
         TO_QACTION(mReplayAction).setEnabled( !registry->getTank().getRecorder().isEmpty() );

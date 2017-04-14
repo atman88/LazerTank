@@ -71,7 +71,7 @@ public:
      * @brief Get managed access to the pieces on this board
      * @return The manager for the pieces on this board
      */
-    PieceSetManager* getPieceManager();
+    PieceSetManager& getPieceManager();
 
     /**
      * @brief Update the board as a result of the given push

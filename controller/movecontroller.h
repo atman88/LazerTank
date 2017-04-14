@@ -3,12 +3,12 @@
 
 #include <QObject>
 
+class GameRegistry;
 class Game;
+class FutureShotPathManager;
 class Board;
 class PathSearchAction;
 
-#include "gameregistry.h"
-#include "model/modelpoint.h"
 #include "model/futureshotpath.h"
 #include "model/piecelistmanager.h"
 #include "util/recorder.h"
@@ -37,7 +37,7 @@ public:
      /**
      * @brief Access the pending tank moves
      */
-    PieceListManager* getMoves();
+    PieceListManager& getMoves();
 
     /**
      * @brief Method to erase (undo) the last move. (Provides highlight-awareness)
@@ -47,7 +47,7 @@ public:
     /**
      * @brief Access the pending tank shots
      */
-    FutureShotPathManager* getFutureShots();
+    FutureShotPathManager& getFutureShots();
 
 signals:
     /**

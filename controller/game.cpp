@@ -6,7 +6,12 @@
 
 #include "game.h"
 #include "gameregistry.h"
-#include "boardwindow.h"
+#include "movecontroller.h"
+#include "pathfindercontroller.h"
+#include "animationstateaggregator.h"
+#include "model/tank.h"
+#include "model/push.h"
+#include "view/boardwindow.h"
 #include "speedcontroller.h"
 #include "util/renderutils.h"
 
@@ -49,20 +54,20 @@ void Game::init( GameRegistry* registry )
         QObject::connect( &registry->getShotPush(), &Push::rectDirty, window, &BoardWindow::renderLater );
 
         QObject::connect( &registry->getTank(), &Tank::changed, window, &BoardWindow::renderLater );
-        QObject::connect( registry->getMoveController().getFutureShots(), &FutureShotPathManager::dirtyRect, window, &BoardWindow::renderLater );
+        QObject::connect( &registry->getMoveController().getFutureShots(), &FutureShotPathManager::dirtyRect, window, &BoardWindow::renderLater );
 
         QMenu& menu = window->getMenu();
         QObject::connect( &menu, &QMenu::aboutToShow, &registry->getTank(), &Tank::pause  );
         QObject::connect( &menu, &QMenu::aboutToHide, &registry->getTank(), &Tank::resume );
 
-        PieceListManager* moveManager = registry->getMoveController().getMoves();
-        QObject::connect( moveManager, &PieceListManager::appended, window, &BoardWindow::renderSquareLater );
-        QObject::connect( moveManager, &PieceListManager::erased,   window, &BoardWindow::renderSquareLater );
-        QObject::connect( moveManager, &PieceListManager::changed,  window, &BoardWindow::renderSquareLater );
+        PieceListManager& moveManager = registry->getMoveController().getMoves();
+        QObject::connect( &moveManager, &PieceListManager::appended, window, &BoardWindow::renderSquareLater );
+        QObject::connect( &moveManager, &PieceListManager::erased,   window, &BoardWindow::renderSquareLater );
+        QObject::connect( &moveManager, &PieceListManager::changed,  window, &BoardWindow::renderSquareLater );
 
-        QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::erasedAt,   window, &BoardWindow::renderSquareLater );
-        QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::insertedAt, window, &BoardWindow::renderSquareLater );
-        QObject::connect( mFutureDelta.getPieceManager(), &PieceSetManager::changedAt,  window, &BoardWindow::renderSquareLater );
+        QObject::connect( &mFutureDelta.getPieceManager(), &PieceSetManager::erasedAt,   window, &BoardWindow::renderSquareLater );
+        QObject::connect( &mFutureDelta.getPieceManager(), &PieceSetManager::insertedAt, window, &BoardWindow::renderSquareLater );
+        QObject::connect( &mFutureDelta.getPieceManager(), &PieceSetManager::changedAt,  window, &BoardWindow::renderSquareLater );
 
         window->init( registry );
     }
@@ -134,7 +139,7 @@ bool canSightThru( Board* board, int col, int row )
     switch( board->tileAt( col, row ) ) {
     case DIRT:
     case TILE_SUNK:
-        return board->getPieceManager()->typeAt( col, row ) == NONE;
+        return board->getPieceManager().typeAt( col, row ) == NONE;
     case WATER:
     case FLAG:
         return true;
@@ -147,13 +152,13 @@ void Game::sightCannons()
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
         // fire any cannon
-        const PieceSet* pieces = mBoard.getPieceManager()->getPieces();
+        const PieceSet& pieces = mBoard.getPieceManager().getPieces();
         bool sighted = false;
         int tankCol = registry->getTank().getCol();
         int tankRow = registry->getTank().getRow();
         int fireAngle, fireCol, fireRow;
 
-        for( auto it = pieces->cbegin(); !sighted && it != pieces->cend(); ++it ) {
+        for( auto it = pieces.cbegin(); !sighted && it != pieces.cend(); ++it ) {
             if ( (*it)->getType() == CANNON ) {
                 fireAngle = (*it)->getAngle();
                 if ( tankCol == (*it)->getCol() ) {
@@ -217,7 +222,7 @@ void Game::onPushed(PieceType type, int col, int row, int pieceAngle )
 
 void Game::onMoveAggregatorFinished()
 {
-    if ( !mFutureDelta.getPieceManager()->size() ) {
+    if ( !mFutureDelta.getPieceManager().size() ) {
         mFutureDelta.enable( false );
     }
     if ( GameRegistry* registry = getRegistry(this) ) {
@@ -276,7 +281,7 @@ bool Game::canPlaceAt(PieceType what, ModelPoint point, int fromAngle, Board* bo
     switch( board->tileAt( point.mCol, point.mRow ) ) {
     case DIRT:
     case TILE_SUNK:
-    {   Piece* hit = board->getPieceManager()->pieceAt( point.mCol, point.mRow );
+    {   Piece* hit = board->getPieceManager().pieceAt( point.mCol, point.mRow );
         if ( hit ) {
             if ( what == TANK && pushPiece ) {
                 *pushPiece = hit;
@@ -381,7 +386,7 @@ bool Game::canShootThru( int col, int row, int *angle, FutureChange *change, Sho
     switch( board->tileAt(col,row) ) {
     case DIRT:
     case TILE_SUNK:
-    {   Piece* hitPiece = board->getPieceManager()->pieceAt( col, row );
+    {   Piece* hitPiece = board->getPieceManager().pieceAt( col, row );
         if ( hitPiece ) {
             switch( hitPiece->getType() ) {
             case TILE_MIRROR:
@@ -403,7 +408,7 @@ bool Game::canShootThru( int col, int row, int *angle, FutureChange *change, Sho
                         change->u.erase.pieceType = CANNON;
                         change->u.erase.pieceAngle = pieceAngle;
                     }
-                    board->getPieceManager()->eraseAt( col, row );
+                    board->getPieceManager().eraseAt( col, row );
 
                     if ( hitPoint ) {
                         centerToEntryPoint( *angle, hitPoint );
@@ -430,7 +435,7 @@ bool Game::canShootThru( int col, int row, int *angle, FutureChange *change, Sho
                     onFuturePush( hitPiece, *angle );
                 } else {
                     SimplePiece simple( hitPiece );
-                    board->getPieceManager()->eraseAt( col, row );
+                    board->getPieceManager().eraseAt( col, row );
                     if ( GameRegistry* registry = getRegistry(this) ) {
                         registry->getShotPush().start( simple, col, row, toPoint.mCol, toPoint.mRow );
                     }
@@ -527,13 +532,13 @@ bool Game::canShootThru( int col, int row, int *angle, FutureChange *change, Sho
 
 void Game::onTankPushingInto( int col, int row, int fromAngle )
 {
-    PieceSetManager* pm = mBoard.getPieceManager();
-    Piece* what = pm->pieceAt( col, row );
+    PieceSetManager& pm = mBoard.getPieceManager();
+    Piece* what = pm.pieceAt( col, row );
     if ( what ) {
         ModelPoint toPoint( col, row );
         if ( getAdjacentPosition( fromAngle, &toPoint ) ) {
             SimplePiece simple( what );
-            pm->eraseAt( col, row );
+            pm.eraseAt( col, row );
             if ( GameRegistry* registry = getRegistry(this) ) {
                 registry->getTankPush().start( simple, col, row, toPoint.mCol, toPoint.mRow );
             }
@@ -552,7 +557,7 @@ void Game::onFuturePush( Piece* pushPiece, int direction )
     PieceType type   = pushPiece->getType();
     int pieceAngle   = pushPiece->getAngle();
 
-    if ( !mFutureBoard.getPieceManager()->erase( pushPiece ) ) {
+    if ( !mFutureBoard.getPieceManager().erase( pushPiece ) ) {
         std::cout << "*** failed to erase future pushPiece at " << point.mCol << "," << point.mRow << std::endl;
     }
 
@@ -566,7 +571,7 @@ void Game::onFuturePush( Piece* pushPiece, int direction )
 const PieceSet* Game::getDeltaPieces()
 {
     if ( mFutureDelta.enabled() ) {
-        return mFutureDelta.getPieceManager()->getPieces();
+        return &mFutureDelta.getPieceManager().getPieces();
     }
     return 0;
 }
@@ -575,22 +580,22 @@ void Game::undoFuturePush( MovePiece* pusher )
 {
     ModelPoint point = *pusher;
     if ( getAdjacentPosition( pusher->getAngle(), &point ) ) {
-        PieceSetManager* pieceManager = mFutureBoard.getPieceManager();
-        Piece* pushee = pieceManager->pieceAt( point.mCol, point.mRow );
+        PieceSetManager& pieceManager = mFutureBoard.getPieceManager();
+        Piece* pushee = pieceManager.pieceAt( point.mCol, point.mRow );
         if ( pushee ) {
-            pieceManager->erase( pushee );
+            pieceManager.erase( pushee );
         } else if ( pusher->getPushPieceType() == TILE && mFutureBoard.tileAt( point.mCol, point.mRow ) == TILE_SUNK ) {
             mFutureBoard.setTileAt( WATER, point.mCol, point.mRow );
         }
-        pieceManager->insert( pusher->getPushPieceType(), pusher->getCol(), pusher->getRow(), pusher->getPushPieceAngle() );
+        pieceManager.insert( pusher->getPushPieceType(), pusher->getCol(), pusher->getRow(), pusher->getPushPieceAngle() );
     }
 }
 
 void Game::undoLastMove()
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
-        PieceListManager* moveManager = registry->getMoveController().getMoves();
-        switch( moveManager->size() ) {
+        PieceListManager& moveManager = registry->getMoveController().getMoves();
+        switch( moveManager.size() ) {
         case 0: // empty
             return;
         case 1: // allow if not doing this move
@@ -599,7 +604,7 @@ void Game::undoLastMove()
             }
         }
 
-        Piece* piece = moveManager->getBack();
+        Piece* piece = moveManager.getBack();
         if ( piece ) {
             if ( piece->hasPush() ) {
                 undoFuturePush( dynamic_cast<MovePiece*>(piece) );

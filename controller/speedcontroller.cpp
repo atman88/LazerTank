@@ -26,7 +26,7 @@ int SpeedController::desiredSpeed()
     }
 
     if ( GameRegistry* registry = getRegistry(this) ) {
-        int distance = registry->getMoveController().getMoves()->getList()->size();
+        int distance = registry->getMoveController().getMoves().getList().size();
         return (distance < 3) ? NORMAL_SPEED : NORMAL_SPEED - std::min( distance-3, NSPEED_STEPS ) * 100;
     }
 

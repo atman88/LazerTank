@@ -19,9 +19,9 @@ PieceListManager::~PieceListManager()
     }
 }
 
-const PieceList* PieceListManager::getList() const
+const PieceList& PieceListManager::getList() const
 {
-    return &mPieces;
+    return mPieces;
 }
 
 const PieceSet* PieceListManager::toSet()
@@ -220,8 +220,8 @@ void PieceListManager::reset( PieceListManager* source )
     }
 
     if ( source ) {
-        const PieceList* list = source->getList();
-        for( auto it : *list ) {
+        const PieceList& list = source->getList();
+        for( auto it : list ) {
             append( it );
         }
     }

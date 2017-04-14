@@ -32,7 +32,7 @@ public:
     /**
      * @brief Access the pieces which depict the differences between the two boards
      */
-    const PieceSetManager* getPieceManager() const;
+    const PieceSetManager& getPieceManager() const;
 
     /**
      * @brief Query whether delta tracking is currently enabled

@@ -11,9 +11,9 @@ PieceSetManager::~PieceSetManager()
     }
 }
 
-const PieceSet* PieceSetManager::getPieces() const
+const PieceSet& PieceSetManager::getPieces() const
 {
-    return &mPieces;
+    return mPieces;
 }
 
 void PieceSetManager::insert( PieceType type, int col, int row, int angle )
@@ -106,8 +106,8 @@ void PieceSetManager::reset(const PieceSetManager* source)
     }
 
     if ( source != 0 ) {
-        const PieceSet* sourceSet = source->getPieces();
-        for( auto it : *sourceSet ) {
+        const PieceSet& sourceSet = source->getPieces();
+        for( auto it : sourceSet ) {
             insert( it->getType(), it->getCol(), it->getRow(), it->getAngle() );
         }
     }

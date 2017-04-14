@@ -7,7 +7,6 @@
 #include <QRect>
 #include <QPainterPath>
 
-#include "util/gameutils.h"
 #include "modelpoint.h"
 #include "piece.h"
 #include "controller/futurechange.h"
@@ -97,7 +96,7 @@ public:
     const FutureShotPath* updatePath( MovePiece* move );
     void removePath( Piece* piece );
 
-    const FutureShotPathSet* getPaths() const;
+    const FutureShotPathSet& getPaths() const;
 
 signals:
     void dirtyRect( const QRect& rect );

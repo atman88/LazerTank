@@ -6,16 +6,11 @@
 class BoardWindow;
 class ShotModel;
 class PathFinderController;
+class Shooter;
 
-#include "animationstateaggregator.h"
-#include "pathfindercontroller.h"
-#include "movecontroller.h"
+#include "gameregistry.h"
 #include "model/boarddelta.h"
 #include "model/board.h"
-#include "model/tank.h"
-#include "model/push.h"
-#include "view/shooter.h"
-#include "util/gameutils.h"
 
 /**
  * @brief The Game class responsible for controlling/implementing overall game logic
@@ -95,7 +90,7 @@ public:
     /**
      * @brief Obtain the set of pieces representing differences between the current board and
      * what the board will be as a result of applying outstanding moves
-     * @return set of future pieces
+     * @return set of future pieces or 0 if future tracking is not active
      */
     const PieceSet* getDeltaPieces();
 

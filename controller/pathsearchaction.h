@@ -1,7 +1,6 @@
 #ifndef PATHSEARCHACTION_H
 #define PATHSEARCHACTION_H
 
-#include <iostream>
 #include <QAction>
 #include <QObject>
 

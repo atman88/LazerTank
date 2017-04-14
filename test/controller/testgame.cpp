@@ -1,7 +1,9 @@
 #include <iostream>
 #include "../testmain.h"
 #include "controller/game.h"
-
+#include "controller/animationstateaggregator.h"
+#include "controller/movecontroller.h"
+#include "model/tank.h"
 #include "model/shotmodel.h"
 
 using namespace std;
@@ -18,9 +20,9 @@ void TestMain::testGameMove()
     Board* board = game.getBoard();
     cout << "board " << board->getWidth() << "x" << board->getHeight() << endl;
 
-    const PieceSet* tiles = board->getPieceManager()->getPieces();
-    QCOMPARE( tiles->size(), 1UL );
-    QCOMPARE( (*tiles->begin())->encodedPos(), Piece::encodePos(1,2));
+    const PieceSet& tiles = board->getPieceManager().getPieces();
+    QCOMPARE( tiles.size(), 1UL );
+    QCOMPARE( (*tiles.begin())->encodedPos(), Piece::encodePos(1,2));
 
     // check off-board values;
     QCOMPARE( game.canPlaceAt(TANK,ModelPoint(-1, 0),270), false );
@@ -68,7 +70,7 @@ void testFuturePushToward( int direction, GameRegistry* registry )
     cout << "testFuturePushToward " << direction << endl;
 
     MoveController& moveController = registry->getMoveController();
-    moveController.getMoves()->reset();
+    moveController.getMoves().reset();
 
     // move twice; first may merely rotate the tank but more importantly primes the move list:
     moveController.move( direction );

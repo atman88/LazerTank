@@ -29,9 +29,9 @@ bool Board::reload()
     return false;
 }
 
-PieceSetManager* Board::getPieceManager()
+PieceSetManager& Board::getPieceManager()
 {
-    return &mPieceManager;
+    return mPieceManager;
 }
 
 void Board::initPiece( PieceType type, int col, int row, int angle )

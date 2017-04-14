@@ -19,7 +19,7 @@ public:
     /**
      * @brief Get the underlying set being managed
      */
-    const PieceSet* getPieces() const;
+    const PieceSet& getPieces() const;
 
     /**
      * @brief Creates a new piece from the given values and adds it to this set

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <QPainterPath>
 #include "shotview.h"
+#include "shooter.h"
 #include "model/board.h"
 #include "controller/game.h"
 #include "util/renderutils.h"

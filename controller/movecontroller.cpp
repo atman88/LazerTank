@@ -1,6 +1,9 @@
 #include "movecontroller.h"
 #include "game.h"
+#include "animationstateaggregator.h"
 #include "pathsearchaction.h"
+#include "model/tank.h"
+#include "model/shotmodel.h"
 #include "util/recorder.h"
 
 
@@ -98,7 +101,6 @@ void MoveController::clearMoves()
 
 void MoveController::wakeup()
 {
-std::cout << "MoveController wakeup" << std::endl;
     if ( GameRegistry* registry = getRegistry(this) ) {
         Tank& tank = registry->getTank();
 
@@ -170,14 +172,14 @@ void MoveController::eraseLastMove()
     }
 }
 
-FutureShotPathManager* MoveController::getFutureShots()
+FutureShotPathManager& MoveController::getFutureShots()
 {
-    return &mFutureShots;
+    return mFutureShots;
 }
 
-PieceListManager* MoveController::getMoves()
+PieceListManager& MoveController::getMoves()
 {
-    return &mMoves;
+    return mMoves;
 }
 
 void MoveController::onPathFound( PieceListManager* path, PathSearchAction* action )
@@ -186,7 +188,7 @@ void MoveController::onPathFound( PieceListManager* path, PathSearchAction* acti
         mMoves.reset( path );
     } else {
         mMoves.replaceBack( MOVE );
-        mMoves.append( *path->getList() );
+        mMoves.append( path->getList() );
     }
     mMoves.replaceBack( MOVE_HIGHLIGHT );
 

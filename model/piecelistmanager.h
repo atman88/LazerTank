@@ -19,7 +19,7 @@ public:
     /**
      * @brief Get the underlying list being managed
      */
-    const PieceList* getList() const;
+    const PieceList& getList() const;
 
     /**
      * @brief Get this list in the form of a set

@@ -4,6 +4,8 @@
 
 #include "movecontroller.h"
 #include "game.h"
+#include "animationstateaggregator.h"
+#include "model/tank.h"
 
 using namespace std;
 
@@ -17,7 +19,7 @@ void TestMain::testReplay()
 
     MoveController& moveController = mRegistry->getMoveController();
     Tank& tank = mRegistry->getTank();
-    PieceSetManager* boardPieces = mRegistry->getGame().getBoard()->getPieceManager();
+    PieceSetManager& boardPieces = mRegistry->getGame().getBoard()->getPieceManager();
 
     QSignalSpy idleSpy( &moveController, &MoveController::idle );
     ModelVector pos = tank.getVector();
@@ -32,7 +34,7 @@ void TestMain::testReplay()
     QVERIFY( idleSpy.wait( 1000 ) );
     pos.mCol += 1;
     QVERIFY( tank.getVector().equals(pos) );
-    QVERIFY( boardPieces->typeAt(3,0) == TILE );
+    QVERIFY( boardPieces.typeAt(3,0) == TILE );
 
     moveController.move( 180 );
     moveController.fire();
@@ -44,21 +46,21 @@ void TestMain::testReplay()
         QSignalSpy shotSpy( &mRegistry->getShotAggregate(), &AnimationStateAggregator::finished );
         shotSpy.wait( 1000 );
     }
-    QVERIFY( boardPieces->typeAt(1,2) == TILE );
+    QVERIFY( boardPieces.typeAt(1,2) == TILE );
 
     std::cout << "testmovecontroller: start replay" << std::endl;
 
     mRegistry->getGame().replayLevel();
-    QVERIFY( boardPieces->typeAt(3,0) == NONE );
-    QVERIFY( boardPieces->typeAt(1,2) == NONE );
+    QVERIFY( boardPieces.typeAt(3,0) == NONE );
+    QVERIFY( boardPieces.typeAt(1,2) == NONE );
 
     QSignalSpy replaySpy( &moveController, &MoveController::replayFinished );
     QVERIFY( replaySpy.wait( 4000 ) );
-    QVERIFY( boardPieces->typeAt(3,0) == TILE );
+    QVERIFY( boardPieces.typeAt(3,0) == TILE );
 
     if ( mRegistry->getShotAggregate().active() ) {
         QSignalSpy shotSpy( &mRegistry->getShotAggregate(), &AnimationStateAggregator::finished );
         shotSpy.wait( 1000 );
     }
-    QVERIFY( boardPieces->typeAt(1,2) == TILE );
+    QVERIFY( boardPieces.typeAt(1,2) == TILE );
 }

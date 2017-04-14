@@ -6,8 +6,6 @@
 
 class Game;
 
-#include "model/piece.h"
-
 /**
  * @brief A game animation speed container
  */
@@ -50,7 +48,6 @@ private:
     bool mHighSpeed;
     bool mStepPending;
     int mSpeed;
-    const PieceList* mMovesListRef; // a reference to the tank's move list to avoid multiple lookups
 };
 
 /**

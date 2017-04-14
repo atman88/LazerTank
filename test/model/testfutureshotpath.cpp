@@ -1,7 +1,9 @@
 #include "../testmain.h"
 #include "model/futureshotpath.h"
 #include "controller/game.h"
+#include "controller/movecontroller.h"
 #include "model/board.h"
+#include "model/tank.h"
 
 void TestMain::testFutureShotPath()
 {
@@ -24,15 +26,15 @@ void TestMain::testFutureShotPath()
     // verify that this is the future board:
     QCOMPARE(game.isMasterBoard(futureBoard), false);
 
-    QCOMPARE( futureBoard->getPieceManager()->typeAt( 2, 3 ), CANNON );
+    QCOMPARE( futureBoard->getPieceManager().typeAt( 2, 3 ), CANNON );
 
     move.setShotCount( 5 );
     manager.updatePath(&move);
-    QCOMPARE( futureBoard->getPieceManager()->typeAt( 2, 3 ), CANNON );
+    QCOMPARE( futureBoard->getPieceManager().typeAt( 2, 3 ), CANNON );
 
     move.setShotCount( 4 );
     manager.updatePath(&move);
-    QCOMPARE( futureBoard->getPieceManager()->typeAt( 2, 3 ), NONE );
+    QCOMPARE( futureBoard->getPieceManager().typeAt( 2, 3 ), NONE );
 
     move.setShotCount( 0 );
     manager.updatePath(&move);

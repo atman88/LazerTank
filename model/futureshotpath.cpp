@@ -171,7 +171,7 @@ void FutureShotPathManager::removePath( Piece* piece )
     }
 }
 
-const FutureShotPathSet* FutureShotPathManager::getPaths() const
+const FutureShotPathSet& FutureShotPathManager::getPaths() const
 {
-    return &mPaths;
+    return mPaths;
 }

@@ -20,7 +20,7 @@ bool PathSearchAction::setCriteria( PieceType focus, const ModelPoint& target, b
         if ( focus == TANK ) {
             mFocus = TANK;
         } else {
-            Piece* move = moveController.getMoves()->getBack();
+            Piece* move = moveController.getMoves().getBack();
             if ( !move ) {
                 mFocus = TANK;
             } else {
@@ -40,7 +40,7 @@ bool PathSearchAction::setCriteria( PieceType focus, const ModelPoint& target, b
     return false;
 }
 
-PathSearchCriteria *PathSearchAction::getCriteria()
+PathSearchCriteria* PathSearchAction::getCriteria()
 {
     return dynamic_cast<PathSearchCriteria*>(this);
 }
