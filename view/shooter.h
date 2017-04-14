@@ -5,7 +5,7 @@
 #include <QVariant>
 #include <QRect>
 
-class Game;
+class GameRegistry;
 class BoardWindow;
 class Shooter;
 
@@ -25,7 +25,7 @@ class Shooter : public QObject
 public:
     Shooter(QObject *parent = 0);
     virtual ~Shooter() {}
-    void init( Game* game, PieceType type, QColor color );
+    void init( GameRegistry* registry, PieceType type, QColor color );
 
     void reset( QPoint p );
 

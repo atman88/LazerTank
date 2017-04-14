@@ -4,17 +4,17 @@
 #include <QObject>
 #include <QTest>
 
-class Game;
+class GameRegistry;
 
 class TestMain : public QObject
 {
     Q_OBJECT
 public:
-    TestMain() {}
-    ~TestMain() {}
+    TestMain();
+    ~TestMain();
 
-    void initGame( Game& game, const char* map );
-    void initGame( Game& game, QTextStream& map );
+    void initGame( const char* map );
+    void initGame( QTextStream& map );
 
 private slots:
     void testGameMove();
@@ -31,6 +31,10 @@ private slots:
     void testRecorderOverflow();
 
     void testReplay();
+
+private:
+    QTextStream* mStream;
+    GameRegistry* mRegistry;
 };
 
 class SignalReceptor : public QObject
@@ -59,6 +63,5 @@ public:
 public slots:
     void receive() { mReceived = true; }
 };
-
 
 #endif // TESTMAIN_H

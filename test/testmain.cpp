@@ -2,23 +2,39 @@
 #include <QString>
 
 #include "testmain.h"
+#include "controller/gameregistry.h"
 #include "controller/game.h"
+#include "util/workerthread.h"
+
 
 QTEST_MAIN(TestMain)
 
-void TestMain::initGame( Game& game, const char* map )
+TestMain::TestMain() : mStream(0), mRegistry(0)
 {
-    QSignalSpy loadSpy( &game, &Game::boardLoaded );
-    game.init(0);
-    QTextStream s( map );
-    game.getBoard()->load( s );
-    QCOMPARE( loadSpy.wait(1000), true );
 }
 
-void TestMain::initGame(Game& game, QTextStream& map )
+TestMain::~TestMain()
 {
+    if ( mRegistry ) {
+        delete mRegistry;
+    }
+    if ( mStream ) {
+        delete mStream;
+    }
+}
+
+void TestMain::initGame( const char* map )
+{
+    mStream = new QTextStream( map );
+    initGame( *mStream );
+}
+
+void TestMain::initGame( QTextStream& map )
+{
+    mRegistry = new GameRegistry();
+    Game& game = mRegistry->getGame();
     QSignalSpy loadSpy( &game, &Game::boardLoaded );
-    game.init(0);
+    game.init(mRegistry);
     game.getBoard()->load( map );
     QCOMPARE( loadSpy.wait(1000), true );
 }

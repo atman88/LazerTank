@@ -11,7 +11,7 @@ class TankView : public Shooter
 
 public:
     explicit TankView(QObject *parent = 0);
-    void init( Game* game );
+    void init( GameRegistry* registry );
     void render( const QRect* rect, QPainter* painter );
     void pause();
     void resume();

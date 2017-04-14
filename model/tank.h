@@ -14,7 +14,7 @@ class Tank : public TankView
 public:
     Tank(QObject *parent = 0);
     virtual ~Tank() {}
-    void init( Game* game );
+    void init( GameRegistry* registry );
 
     /**
      * @brief Get the board position the tank currently resides on.

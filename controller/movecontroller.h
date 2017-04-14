@@ -7,6 +7,7 @@ class Game;
 class Board;
 class PathSearchAction;
 
+#include "gameregistry.h"
 #include "model/modelpoint.h"
 #include "model/futureshotpath.h"
 #include "model/piecelistmanager.h"
@@ -24,7 +25,7 @@ class MoveController : public QObject, public RecorderConsumer
     Q_OBJECT
 public:
     explicit MoveController( QObject *parent = 0 );
-    void init( Game* game );
+    void init( GameRegistry* registry );
     void onBoardLoaded( Board* board );
 
     /**

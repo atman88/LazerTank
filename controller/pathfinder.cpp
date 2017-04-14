@@ -3,7 +3,8 @@
 
 #include "util/gameutils.h"
 #include "pathfinder.h"
-#include "game.h"
+#include "controller/game.h"
+#include "controller/gameregistry.h"
 #include "model/push.h"
 
 // search map values:
@@ -21,9 +22,10 @@ bool PathFinder::findPath( PathSearchCriteria* criteria, bool testOnly )
 
     // initialize the search map
     // Note: Done here (in the app thread) to ensure the board doesn't change while reading it.
-    if ( Game* game = getGame(this) ) {
-        if ( game->canPlaceAt( TANK, criteria->getTargetPoint(), 0, criteria->isFuturistic() )) {
-            Board* board = game->getBoard( criteria->isFuturistic() );
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        Game& game = registry->getGame();
+        if ( game.canPlaceAt( TANK, criteria->getTargetPoint(), 0, criteria->isFuturistic() )) {
+            Board* board = game.getBoard( criteria->isFuturistic() );
             mMaxCol = board->getWidth()-1;
             mMaxRow = board->getHeight()-1;
 
@@ -31,14 +33,14 @@ bool PathFinder::findPath( PathSearchCriteria* criteria, bool testOnly )
             for( point.mRow = mMaxRow; point.mRow >= 0; --point.mRow ) {
                 for( point.mCol = mMaxCol; point.mCol >= 0; --point.mCol ) {
                     mSearchMap[point.mRow*BOARD_MAX_WIDTH+point.mCol] =
-                      game->canPlaceAt( TANK, point, 0, criteria->getFocus() != TANK ) ? TRAVERSIBLE : BLOCKED;
+                      game.canPlaceAt( TANK, point, 0, criteria->getFocus() != TANK ) ? TRAVERSIBLE : BLOCKED;
                 }
             }
 
             // account for any outstanding pushes if this is on the master board
-            if ( game->isMasterBoard(board) ) {
-                addPush( game->getTankPush() );
-                addPush( game->getShotPush() );
+            if ( game.isMasterBoard(board) ) {
+                addPush( registry->getTankPush() );
+                addPush( registry->getShotPush() );
             }
 
             mCriteria = *criteria;

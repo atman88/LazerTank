@@ -22,7 +22,7 @@ public:
      * @brief Initialization method
      * @param aggregate The aggregator this shot should participate in
      */
-    void init( AnimationStateAggregator* aggregate );
+    void init( AnimationStateAggregator& aggregate );
 
     /**
      * @brief Fire the laser beam (i.e. shoot)

@@ -2,7 +2,8 @@
 #include <algorithm>
 
 #include "speedcontroller.h"
-#include "game.h"
+#include "gameregistry.h"
+#include "movecontroller.h"
 
 // movement speed in milliseconds per square
 const int NORMAL_SPEED = 800;
@@ -24,8 +25,8 @@ int SpeedController::desiredSpeed()
         return HIGH_SPEED;
     }
 
-    if ( Game* game = getGame(this) ) {
-        int distance = game->getMoveController()->getMoves()->getList()->size();
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        int distance = registry->getMoveController().getMoves()->getList()->size();
         return (distance < 3) ? NORMAL_SPEED : NORMAL_SPEED - std::min( distance-3, NSPEED_STEPS ) * 100;
     }
 

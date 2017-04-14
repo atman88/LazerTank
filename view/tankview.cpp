@@ -8,7 +8,7 @@ TankView::TankView(QObject *parent) : Shooter(parent)
 {
 }
 
-void TankView::init(Game *game)
+void TankView::init( GameRegistry* registry )
 {
     mRotateAnimation.setTargetObject(this);
     mRotateAnimation.setPropertyName("rotation");
@@ -17,7 +17,7 @@ void TankView::init(Game *game)
     mVerticalAnimation.setTargetObject(this);
     mVerticalAnimation.setPropertyName("y");
 
-    Shooter::init( game, TANK, QColor(0,255,33) );
+    Shooter::init( registry, TANK, QColor(0,255,33) );
 }
 
 void TankView::render( const QRect* rect, QPainter* painter )

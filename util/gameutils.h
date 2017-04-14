@@ -26,20 +26,6 @@ Q_DECLARE_METATYPE(GameHandle)
 extern GameRegistry* getRegistry( const QObject* gameObject );
 
 /**
- * @brief Obtain the Game object from a given object's parental hierarchy
- * @param gameObject A QObject associated with the desired Game
- * @return The Game if found, otherwise 0
- */
-extern Game* getGame( const QObject* gameObject );
-
-/**
- * @brief Obtain the window from a given object's parental hierarchy
- * @param gameObject A QObject associated with the desired Game
- * @return The window if found, otherwise 0
- */
-BoardWindow* getWindow( QObject* gameObject );
-
-/**
  * @brief convert a model coordinate into a view center point
  * @param col
  * @param row

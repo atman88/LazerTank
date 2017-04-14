@@ -28,9 +28,9 @@ int ShotModel::getDistance() const
     return mDistance;
 }
 
-void ShotModel::init( AnimationStateAggregator* aggregate )
+void ShotModel::init(AnimationStateAggregator& aggregate )
 {
-    QObject::connect( &mAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
+    QObject::connect( &mAnimation, &QPropertyAnimation::stateChanged, &aggregate, &AnimationStateAggregator::onStateChanged );
 }
 
 QVariant ShotModel::getSequence()
@@ -56,46 +56,43 @@ void ShotModel::setSequence( const QVariant &sequence )
 {
     mSequence = sequence;
 
-    Game* game = getGame(this);
-    if ( !game ) {
-        return;
-    }
-
-    if ( mKillSequence ) {
-        switch( mKillSequence++ ) {
-        case 1:
-            killTheTank();
-            break;
-        case 3:
-            mAnimation.pause(); // freeze the shot to show the kill
-            emit tankKilled();
-            break;
-        default:
-            break;
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        if ( mKillSequence ) {
+            switch( mKillSequence++ ) {
+            case 1:
+                killTheTank();
+                break;
+            case 3:
+                mAnimation.pause(); // freeze the shot to show the kill
+                emit tankKilled();
+                break;
+            default:
+                break;
+            }
+            return;
         }
-        return;
-    }
 
-    if ( !hasTerminationPoint() ) {
-        if ( getAdjacentPosition( mLeadingDirection, &mLeadingPoint ) ) {
-            QPoint hitPoint = mLeadingPoint.toViewCenterSquare();
-            int entryDirection = mLeadingDirection;
-            if ( game->canShootThru( mLeadingPoint.mCol, mLeadingPoint.mRow, &mLeadingDirection, 0, getShooter(), &hitPoint ) ) {
-                grow( mLeadingPoint.toViewCenterSquare(), entryDirection );
-            } else {
-                addTermination( entryDirection, hitPoint );
-                mShedding = true;
+        if ( !hasTerminationPoint() ) {
+            if ( getAdjacentPosition( mLeadingDirection, &mLeadingPoint ) ) {
+                QPoint hitPoint = mLeadingPoint.toViewCenterSquare();
+                int entryDirection = mLeadingDirection;
+                if ( registry->getGame().canShootThru( mLeadingPoint.mCol, mLeadingPoint.mRow, &mLeadingDirection, 0, getShooter(), &hitPoint ) ) {
+                    grow( mLeadingPoint.toViewCenterSquare(), entryDirection );
+                } else {
+                    addTermination( entryDirection, hitPoint );
+                    mShedding = true;
+                }
             }
         }
-    }
 
-    bool isTravelling = true;
-    if ( ++mDistance > 5 && mShedding && !mKillSequence ) {
-        isTravelling = shedTail();
-    }
+        bool isTravelling = true;
+        if ( ++mDistance > 5 && mShedding && !mKillSequence ) {
+            isTravelling = shedTail();
+        }
 
-    if ( !isTravelling && !mKillSequence ) {
-        mAnimation.stop();
+        if ( !isTravelling && !mKillSequence ) {
+            mAnimation.stop();
+        }
     }
 }
 

@@ -8,13 +8,13 @@ MoveController::MoveController(QObject *parent) : QObject(parent), mState(Idle),
 {
 }
 
-void MoveController::init( Game* game )
+void MoveController::init( GameRegistry* registry )
 {
-    setParent(game);
-    mFutureShots.setParent(game);
+    setParent(registry);
+    mFutureShots.setParent(registry);
 
-    QObject::connect( &game->getTank()->getShot(), &ShotModel::shooterReleased,      this, &MoveController::wakeup, Qt::QueuedConnection );
-    QObject::connect( game->getShotAggregate(), &AnimationStateAggregator::finished, this, &MoveController::wakeup, Qt::QueuedConnection );
+    QObject::connect( &registry->getTank().getShot(), &ShotModel::shooterReleased,        this, &MoveController::wakeup, Qt::QueuedConnection );
+    QObject::connect( &registry->getShotAggregate(), &AnimationStateAggregator::finished, this, &MoveController::wakeup, Qt::QueuedConnection );
 }
 
 void MoveController::onBoardLoaded( Board* board )
@@ -31,10 +31,9 @@ void MoveController::onBoardLoaded( Board* board )
 
 void MoveController::move( int direction, bool doWakeup )
 {
-    if ( Game* game = getGame(this) ) {
-        Tank* tank = game->getTank();
+    if ( GameRegistry* registry = getRegistry(this) ) {
         Piece* lastMove = mMoves.getBack();
-        ModelVector vector = (lastMove ? *lastMove : tank->getVector());
+        ModelVector vector = (lastMove ? *lastMove : registry->getTank().getVector());
 
         if ( direction >= 0 && direction != vector.mAngle ) {
             if ( !lastMove || lastMove->hasPush() || lastMove->getShotCount()
@@ -45,10 +44,10 @@ void MoveController::move( int direction, bool doWakeup )
             }
         } else {
             Piece* pushPiece = 0;
-            if ( game->canMoveFrom( TANK, vector.mAngle, &vector, true, &pushPiece ) ) {
+            if ( registry->getGame().canMoveFrom( TANK, vector.mAngle, &vector, true, &pushPiece ) ) {
                 appendMove( vector, pushPiece );
                 if ( pushPiece ) {
-                    game->onFuturePush( pushPiece, vector.mAngle );
+                    registry->getGame().onFuturePush( pushPiece, vector.mAngle );
                 }
             }
         }
@@ -79,9 +78,8 @@ void MoveController::fire( int count )
             count = 1;
         }
 
-        if ( Game* game = getGame(this) ) {
-            Tank* tank = game->getTank();
-            Piece* piece = mMoves.append( MOVE, tank->getVector(), count );
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            Piece* piece = mMoves.append( MOVE, registry->getTank().getVector(), count );
             // show it's future if it's got multiple shots
             if ( count > 1 ) {
                 if ( MovePiece* move = dynamic_cast<MovePiece*>(piece) ) {
@@ -101,23 +99,23 @@ void MoveController::clearMoves()
 void MoveController::wakeup()
 {
 std::cout << "MoveController wakeup" << std::endl;
-    if ( Game* game = getGame(this) ) {
-        Tank* tank = game->getTank();
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        Tank& tank = registry->getTank();
 
         // always wait while the trigger is pressed:
-        if ( tank->getShot().getShooter() ) {
+        if ( tank.getShot().getShooter() ) {
             return;
         }
 
         // always wait for any current rotation to complete before proceeding with a queued move:
-        if ( mState == RotateStage && game->getMoveAggregate()->active() ) {
+        if ( mState == RotateStage && registry->getMoveAggregate().active() ) {
             return;
         }
 
         Piece* move = mMoves.getFront();
         while( move ) {
             if ( mState != FiringStage ) {
-                if ( !tank->getVector().equals( *move ) ) {
+                if ( !tank.getVector().equals( *move ) ) {
                     bool hasRotation = mToVector.mAngle != move->getAngle();
                     mToVector = *move;
 
@@ -125,7 +123,7 @@ std::cout << "MoveController wakeup" << std::endl;
                         emit pushingInto( move->getCol(), move->getRow(), move->getAngle() );
                     }
 
-                    if ( tank->doMove( *move ) && hasRotation ) {
+                    if ( tank.doMove( *move ) && hasRotation ) {
                         transitionState( RotateStage );
                         return; // waiting for current rotation to complete
                     }
@@ -135,15 +133,15 @@ std::cout << "MoveController wakeup" << std::endl;
 
             if ( mState == FiringStage ) {
                 if ( !move->getShotCount() ) {
-                    if ( game->getMoveAggregate()->active() ) {
+                    if ( registry->getMoveAggregate().active() ) {
                         return; // waiting for current move to complete before advancing
                     }
                     transitionState( IdlingStage );
                 } else {
-                    if ( game->getShotAggregate()->active() ) {
+                    if ( registry->getShotAggregate().active() ) {
                         return; // waiting for existing shot to complete
                     }
-                    if ( tank->fire() ) {
+                    if ( tank.fire() ) {
                         if ( MovePiece* movePiece = dynamic_cast<MovePiece*>(move) ) {
                             movePiece->decrementShots();
                         }
@@ -201,12 +199,16 @@ void MoveController::setReplay( bool on )
 {
     if ( on ) {
         if ( !mReplaySource ) {
-            mReplaySource = getGame(this)->getTank()->getRecorder().getReader();
+            if ( GameRegistry* registry = getRegistry(this) ) {
+                mReplaySource = registry->getTank().getRecorder().getReader();
+            }
             QObject::connect( this, &MoveController::idle, this, &MoveController::replayPlayback, Qt::QueuedConnection );
         }
     } else if ( mReplaySource ) {
         QObject::disconnect( this, &MoveController::idle, this, &MoveController::replayPlayback );
-        getGame(this)->getTank()->getRecorder().closeReader();
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            registry->getTank().getRecorder().closeReader();
+        }
         mReplaySource = 0;
         emit replayFinished();
     }
@@ -250,11 +252,11 @@ void MoveController::setFocus( PieceType what )
         mMoves.replaceFront(what == TANK ? MOVE_HIGHLIGHT : MOVE );
     }
 
-    if ( Game* game = getGame(this) ) {
+    if ( GameRegistry* registry = getRegistry(this) ) {
         if ( what == TANK ) {
-            game->getTank()->pause();
+            registry->getTank().pause();
         } else {
-            game->getTank()->resume();
+            registry->getTank().resume();
         }
     }
 }

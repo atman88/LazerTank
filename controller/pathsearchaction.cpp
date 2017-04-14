@@ -1,23 +1,26 @@
 #include "pathsearchaction.h"
 #include "pathfindercontroller.h"
-#include "game.h"
+#include "gameregistry.h"
+#include "movecontroller.h"
+#include "model/tank.h"
 
-PathSearchAction::PathSearchAction(QObject *parent) : QAction(parent)
+
+PathSearchAction::PathSearchAction( QObject*parent ) : QAction(parent)
 {
 }
 
 bool PathSearchAction::setCriteria( PieceType focus, const ModelPoint& target, bool moveWhenFound )
 {
-    if ( Game* game = getGame(this) ) {
+    if ( GameRegistry* registry = getRegistry(this) ) {
         mTargetPoint = target;
         mMoveWhenFound = moveWhenFound;
 
-        MoveController* moveController = game->getMoveController();
+        MoveController& moveController = registry->getMoveController();
 
         if ( focus == TANK ) {
             mFocus = TANK;
         } else {
-            Piece* move = moveController->getMoves()->getBack();
+            Piece* move = moveController.getMoves()->getBack();
             if ( !move ) {
                 mFocus = TANK;
             } else {
@@ -28,9 +31,8 @@ bool PathSearchAction::setCriteria( PieceType focus, const ModelPoint& target, b
         }
 
         if ( mFocus == TANK ) {
-            Tank* tank = game->getTank();
-            mStartPoint = tank->getPoint();
-            mStartDirection = tank->getRotation();
+            mStartPoint = registry->getTank().getPoint();
+            mStartDirection = registry->getTank().getRotation();
         }
 
         return true;

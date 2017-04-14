@@ -2,8 +2,11 @@
 #include <QEvent>
 #include <QCoreApplication>
 #include "tank.h"
+#include "controller/gameregistry.h"
 #include "controller/game.h"
 #include "controller/pathsearchaction.h"
+#include "controller/animationstateaggregator.h"
+#include "controller/speedcontroller.h"
 #include "util/imageutils.h"
 #include "util/renderutils.h"
 #include "util/gameutils.h"
@@ -12,18 +15,18 @@ Tank::Tank(QObject* parent) : TankView(parent), mVector(0,0,0)
 {
 }
 
-void Tank::init( Game* game )
+void Tank::init( GameRegistry* registry )
 {
-    setParent(game);
-    AnimationStateAggregator* aggregate = game->getMoveAggregate();
-    QObject::connect( &mRotateAnimation,     &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
-    QObject::connect( &mHorizontalAnimation, &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
-    QObject::connect( &mVerticalAnimation,   &QPropertyAnimation::stateChanged, aggregate, &AnimationStateAggregator::onStateChanged );
-    SpeedController* controller = game->getSpeedController();
-    mRotateAnimation.setController( controller );
-    mHorizontalAnimation.setController( controller );
-    mVerticalAnimation.setController( controller );
-    TankView::init( game );
+    setParent( registry );
+    AnimationStateAggregator& aggregate = registry->getMoveAggregate();
+    QObject::connect( &mRotateAnimation,     &QPropertyAnimation::stateChanged, &aggregate, &AnimationStateAggregator::onStateChanged );
+    QObject::connect( &mHorizontalAnimation, &QPropertyAnimation::stateChanged, &aggregate, &AnimationStateAggregator::onStateChanged );
+    QObject::connect( &mVerticalAnimation,   &QPropertyAnimation::stateChanged, &aggregate, &AnimationStateAggregator::onStateChanged );
+    SpeedController& controller = registry->getSpeedController();
+    mRotateAnimation.setController( &controller );
+    mHorizontalAnimation.setController( &controller );
+    mVerticalAnimation.setController( &controller );
+    TankView::init( registry );
 }
 
 const ModelPoint& Tank::getPoint() const

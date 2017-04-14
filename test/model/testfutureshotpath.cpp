@@ -5,20 +5,20 @@
 
 void TestMain::testFutureShotPath()
 {
-    Game game;
-    initGame( game,
+    initGame(
       "[M/W[\\M\n"
       " w . <\n"
       " M . .\n"
       " T m .\n" );
 
     FutureShotPathManager manager;
-    manager.setParent( &game );
+    manager.setParent( mRegistry );
 
-    MovePiece move( MOVE, game.getTank()->getCol(), game.getTank()->getRow(), 0, 6 );
+    MovePiece move( MOVE, mRegistry->getTank().getCol(), mRegistry->getTank().getRow(), 0, 6 );
     const FutureShotPath* path = manager.updatePath(&move);
     QCOMPARE( path->getUID(), move.getShotPathUID() );
 
+    Game& game = mRegistry->getGame();
     Board* futureBoard = game.getBoard(true);
 
     // verify that this is the future board:
@@ -44,14 +44,14 @@ void TestMain::testFutureShotPath()
  */
 void TestMain::testFutureShotThruMasterTank()
 {
-    Game game;
-    initGame( game,
+    initGame(
       "W\n"
       "T\n"
       ".\n" );
-    game.getMoveController()->move(180); // rotate down
-    game.getMoveController()->move(180); // move down -> 0,2
-    game.getMoveController()->move(  0); // rotate up
-    game.getMoveController()->fire();
-    QCOMPARE( game.getBoard(true)->tileAt( 0, 0 ), WOOD_DAMAGED );
+    MoveController& moveController = mRegistry->getMoveController();
+    moveController.move(180); // rotate down
+    moveController.move(180); // move down -> 0,2
+    moveController.move(  0); // rotate up
+    moveController.fire();
+    QCOMPARE( mRegistry->getGame().getBoard(true)->tileAt( 0, 0 ), WOOD_DAMAGED );
 }

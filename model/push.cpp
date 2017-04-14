@@ -1,4 +1,5 @@
 #include "push.h"
+#include "controller/gameregistry.h"
 #include "controller/game.h"
 
 Push::Push( QObject* parent ) : PushView(parent)
@@ -24,7 +25,7 @@ int Push::getTargetRow() const
 
 void Push::stopping()
 {
-    if ( Game* game = getGame(this) ) {
-        game->onPushed( getType(), mTargetCol, mTargetRow, getPieceAngle() );
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        registry->getGame().onPushed( getType(), mTargetCol, mTargetRow, getPieceAngle() );
     }
 }

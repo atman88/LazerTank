@@ -16,52 +16,46 @@ Game::Game() : mBoardLoaded(0)
 
 void Game::init( GameRegistry* registry )
 {
-    setParent( registry );
+    registry->getTank().init( registry );
 
-    mTankPush.setParent( this );
-    mShotPush.setParent( this );
-    mSpeedController.setParent( this );
-    mMoveController.setParent( this );
+    MoveController& moveController = registry->getMoveController();
+    moveController.init( registry );
+    QObject::connect( &moveController, &MoveController::pushingInto, this, &Game::onTankPushingInto );
+    QObject::connect( &moveController, &MoveController::idle, this, &Game::endMoveDeltaTracking );
+    QObject::connect( &registry->getPathFinderController(), &PathFinderController::pathFound, &moveController, &MoveController::onPathFound );
 
-    mTank.init( this );
+    registry->getActiveCannon().init( registry, CANNON, QColor(255,50,83) );
 
-    mMoveController.init( this );
-    QObject::connect( &mMoveController, &MoveController::pushingInto, this, &Game::onTankPushingInto );
-    QObject::connect( &mMoveController, &MoveController::idle, this, &Game::endMoveDeltaTracking );
-    QObject::connect( &mPathFinderController, &PathFinderController::pathFound, &mMoveController, &MoveController::onPathFound );
+    registry->getPathFinderController().init(this);
 
-    mActiveCannon.init( this, CANNON, QColor(255,50,83) );
+    registry->getMoveAggregate().setObjectName("MoveAggregate");
+    registry->getShotAggregate().setObjectName("ShotAggregate");
 
-    mPathFinderController.init(this);
-
-    mMoveAggregate.setObjectName("MoveAggregate");
-    mShotAggregate.setObjectName("ShotAggregate");
-
-    mTankPush.init( this );
-    mShotPush.init( this );
-    QObject::connect( &mTankPush, &Push::stateChanged, &mMoveAggregate, &AnimationStateAggregator::onStateChanged );
-    QObject::connect( &mShotPush, &Push::stateChanged, &mShotAggregate, &AnimationStateAggregator::onStateChanged );
-    QObject::connect( &mMoveAggregate, &AnimationStateAggregator::finished, this, &Game::onMoveAggregatorFinished, Qt::QueuedConnection );
-    QObject::connect( &mShotAggregate, &AnimationStateAggregator::finished, this, &Game::sightCannons );
+    registry->getTankPush().init( registry );
+    registry->getShotPush().init( registry );
+    QObject::connect( &registry->getTankPush(), &Push::stateChanged, &registry->getMoveAggregate(), &AnimationStateAggregator::onStateChanged );
+    QObject::connect( &registry->getShotPush(), &Push::stateChanged, &registry->getShotAggregate(), &AnimationStateAggregator::onStateChanged );
+    QObject::connect( &registry->getMoveAggregate(), &AnimationStateAggregator::finished, this, &Game::onMoveAggregatorFinished, Qt::QueuedConnection );
+    QObject::connect( &registry->getShotAggregate(), &AnimationStateAggregator::finished, this, &Game::sightCannons );
 
     mFutureDelta.init( &mBoard, &mFutureBoard );
 
     QObject::connect( &mBoard, &Board::tileChangedAt, this, &Game::onBoardTileChanged );
     QObject::connect( &mBoard, &Board::boardLoaded,   this, &Game::onBoardLoaded, Qt::QueuedConnection );
 
-    if ( BoardWindow* window = registry->mWindow ) {
-        QObject::connect( window, &BoardWindow::focusChanged, &mMoveController, &MoveController::setFocus );
-        QObject::connect( &mTankPush, &Push::rectDirty, window, &BoardWindow::renderLater );
-        QObject::connect( &mShotPush, &Push::rectDirty, window, &BoardWindow::renderLater );
+    if ( BoardWindow* window = registry->getWindow() ) {
+        QObject::connect( window, &BoardWindow::focusChanged, &registry->getMoveController(), &MoveController::setFocus );
+        QObject::connect( &registry->getTankPush(), &Push::rectDirty, window, &BoardWindow::renderLater );
+        QObject::connect( &registry->getShotPush(), &Push::rectDirty, window, &BoardWindow::renderLater );
 
-        QObject::connect( &mTank, &Tank::changed, window, &BoardWindow::renderLater );
-        QObject::connect( mMoveController.getFutureShots(), &FutureShotPathManager::dirtyRect, window, &BoardWindow::renderLater );
+        QObject::connect( &registry->getTank(), &Tank::changed, window, &BoardWindow::renderLater );
+        QObject::connect( registry->getMoveController().getFutureShots(), &FutureShotPathManager::dirtyRect, window, &BoardWindow::renderLater );
 
         QMenu& menu = window->getMenu();
-        QObject::connect( &menu, &QMenu::aboutToShow, &mTank, &Tank::pause  );
-        QObject::connect( &menu, &QMenu::aboutToHide, &mTank, &Tank::resume );
+        QObject::connect( &menu, &QMenu::aboutToShow, &registry->getTank(), &Tank::pause  );
+        QObject::connect( &menu, &QMenu::aboutToHide, &registry->getTank(), &Tank::resume );
 
-        PieceListManager* moveManager = mMoveController.getMoves();
+        PieceListManager* moveManager = registry->getMoveController().getMoves();
         QObject::connect( moveManager, &PieceListManager::appended, window, &BoardWindow::renderSquareLater );
         QObject::connect( moveManager, &PieceListManager::erased,   window, &BoardWindow::renderSquareLater );
         QObject::connect( moveManager, &PieceListManager::changed,  window, &BoardWindow::renderSquareLater );
@@ -86,13 +80,15 @@ bool Game::isBoardLoaded()
 
 void Game::onBoardLoaded()
 {
-    mFutureDelta.enable( false );
-    mMoveAggregate.reset();
-    mShotAggregate.reset();
-    mTank.onBoardLoaded( mBoard.getTankStartPoint() );
-    mActiveCannon.reset( NullPoint );
-    mSpeedController.setHighSpeed(false);
-    mMoveController.onBoardLoaded( &mBoard );
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        mFutureDelta.enable( false );
+        registry->getMoveAggregate().reset();
+        registry->getShotAggregate().reset();
+        registry->getTank().onBoardLoaded( mBoard.getTankStartPoint() );
+        registry->getActiveCannon().reset( NullPoint );
+        registry->getSpeedController().setHighSpeed(false);
+        registry->getMoveController().onBoardLoaded( &mBoard );
+    }
     mBoardLoaded = true;
     emit boardLoaded();
 }
@@ -115,29 +111,16 @@ bool Game::isMasterBoard( Board* board )
     return board == &mBoard;
 }
 
-Tank* Game::getTank()
-{
-    return &mTank;
-}
-
-Push& Game::getTankPush()
-{
-    return mTankPush;
-}
-
-Push& Game::getShotPush()
-{
-    return mShotPush;
-}
-
 bool Game::canMoveFrom( PieceType what, int angle, ModelPoint *point, Board* board, Piece **pushPiece ) {
     return getAdjacentPosition(angle, point) && canPlaceAt( what, *point, angle, board, pushPiece );
 }
 
 bool Game::canMoveFrom( PieceType what, int angle, ModelPoint *point, bool futuristic, Piece **pushPiece )
 {
-    if ( what != TANK && point->equals( mTank.getPoint() ) ) {
-        return false;
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        if ( what != TANK && point->equals( registry->getTank().getPoint() ) ) {
+            return false;
+        }
     }
 
     if ( getAdjacentPosition( angle, point ) ) {
@@ -162,65 +145,68 @@ bool canSightThru( Board* board, int col, int row )
 
 void Game::sightCannons()
 {
-    // fire any cannon
-    const PieceSet* pieces = mBoard.getPieceManager()->getPieces();
-    bool sighted = false;
-    int tankCol = mTank.getCol();
-    int tankRow = mTank.getRow();
-    int fireAngle, fireCol, fireRow;
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        // fire any cannon
+        const PieceSet* pieces = mBoard.getPieceManager()->getPieces();
+        bool sighted = false;
+        int tankCol = registry->getTank().getCol();
+        int tankRow = registry->getTank().getRow();
+        int fireAngle, fireCol, fireRow;
 
-    for( auto it = pieces->cbegin(); !sighted && it != pieces->cend(); ++it ) {
-        if ( (*it)->getType() == CANNON ) {
-            fireAngle = (*it)->getAngle();
-            if ( tankCol == (*it)->getCol() ) {
-                fireRow = (*it)->getRow();
-                int dir;
-                if ( fireAngle == 0 && tankRow < fireRow ) {
-                    dir = -1;
-                } else if ( fireAngle == 180 && tankRow > fireRow ) {
-                    dir = 1;
-                } else {
-                    continue;
-                }
-                for( int row = fireRow+dir; ; row += dir ) {
-                    if ( row == tankRow ) {
-                        fireCol = tankCol;
-                        sighted = true;
-                        break;
+        for( auto it = pieces->cbegin(); !sighted && it != pieces->cend(); ++it ) {
+            if ( (*it)->getType() == CANNON ) {
+                fireAngle = (*it)->getAngle();
+                if ( tankCol == (*it)->getCol() ) {
+                    fireRow = (*it)->getRow();
+                    int dir;
+                    if ( fireAngle == 0 && tankRow < fireRow ) {
+                        dir = -1;
+                    } else if ( fireAngle == 180 && tankRow > fireRow ) {
+                        dir = 1;
+                    } else {
+                        continue;
                     }
-                    if ( !canSightThru( &mBoard, tankCol, row ) ) {
-                        break;
+                    for( int row = fireRow+dir; ; row += dir ) {
+                        if ( row == tankRow ) {
+                            fireCol = tankCol;
+                            sighted = true;
+                            break;
+                        }
+                        if ( !canSightThru( &mBoard, tankCol, row ) ) {
+                            break;
+                        }
                     }
-                }
-            } else if ( tankRow == (*it)->getRow() ) {
-                fireCol = (*it)->getCol();
-                int dir;
-                if ( fireAngle == 270 && tankCol < fireCol ) {
-                    dir = -1;
-                } else if ( fireAngle == 90 && tankCol > fireCol ) {
-                    dir = 1;
-                } else {
-                    continue;
-                }
-                for( int col = fireCol+dir; ; col += dir ) {
-                    if ( col == tankCol ) {
-                        fireRow = tankRow;
-                        sighted = true;
-                        break;
+                } else if ( tankRow == (*it)->getRow() ) {
+                    fireCol = (*it)->getCol();
+                    int dir;
+                    if ( fireAngle == 270 && tankCol < fireCol ) {
+                        dir = -1;
+                    } else if ( fireAngle == 90 && tankCol > fireCol ) {
+                        dir = 1;
+                    } else {
+                        continue;
                     }
-                    if ( !canSightThru( &mBoard, col, tankRow ) ) {
-                        break;
+                    for( int col = fireCol+dir; ; col += dir ) {
+                        if ( col == tankCol ) {
+                            fireRow = tankRow;
+                            sighted = true;
+                            break;
+                        }
+                        if ( !canSightThru( &mBoard, col, tankRow ) ) {
+                            break;
+                        }
                     }
                 }
             }
         }
-    }
 
-    if ( sighted ) {
-        mActiveCannon.setViewX( fireCol*24 );
-        mActiveCannon.setViewY( fireRow*24 );
-        mActiveCannon.setViewRotation( fireAngle );
-        mActiveCannon.fire();
+        if ( sighted ) {
+            Shooter& activeCannon = registry->getActiveCannon();
+            activeCannon.setViewX( fireCol*24 );
+            activeCannon.setViewY( fireRow*24 );
+            activeCannon.setViewRotation( fireAngle );
+            activeCannon.fire();
+        }
     }
 }
 
@@ -234,40 +220,43 @@ void Game::onMoveAggregatorFinished()
     if ( !mFutureDelta.getPieceManager()->size() ) {
         mFutureDelta.enable( false );
     }
-    mSpeedController.stepSpeed();
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        registry->getSpeedController().stepSpeed();
+        Tank& tank = registry->getTank();
 
-    if ( mBoard.tileAt(mTank.getCol(),mTank.getRow()) == FLAG ) {
-        // if we don't have a window then we're headless (i.e. testing); don't show message boxes for the headless case
-        if ( BoardWindow* window = getWindow(this) ) {
-            // ensure this is off now to remove it from the display:
-            mMoveController.setReplay( false );
+        if ( mBoard.tileAt(tank.getCol(),tank.getRow()) == FLAG ) {
+            // if we don't have a window then we're headless (i.e. testing); don't show message boxes for the headless case
+            if ( registry->getWindow() ) {
+                // ensure this is off now to remove it from the display:
+                registry->getMoveController().setReplay( false );
 
-            QMessageBox msgBox;
-            msgBox.setWindowTitle( "Level completed!");
-            msgBox.setText( QString("%1 total moves").arg( mTank.getRecorder().getCount() ) );
-            QPushButton* replayButton = msgBox.addButton( QString("&Auto Replay" ), QMessageBox::ActionRole );
-            QPushButton* nextButton   = msgBox.addButton( QString("&Next Level"  ), QMessageBox::AcceptRole );
-            QPushButton* exitButton   = msgBox.addButton( QString("E&xit"        ), QMessageBox::DestructiveRole );
-            msgBox.setDefaultButton( nextButton );
+                QMessageBox msgBox;
+                msgBox.setWindowTitle( "Level completed!");
+                msgBox.setText( QString("%1 total moves").arg( tank.getRecorder().getCount() ) );
+                QPushButton* replayButton = msgBox.addButton( QString("&Auto Replay" ), QMessageBox::ActionRole );
+                QPushButton* nextButton   = msgBox.addButton( QString("&Next Level"  ), QMessageBox::AcceptRole );
+                QPushButton* exitButton   = msgBox.addButton( QString("E&xit"        ), QMessageBox::DestructiveRole );
+                msgBox.setDefaultButton( nextButton );
 
-            msgBox.exec();
+                msgBox.exec();
 
-            if ( msgBox.clickedButton() == exitButton ) {
-                window->close();
-            } else if ( msgBox.clickedButton() == replayButton ) {
-                restartLevel( true );
-            } else {
-                int nextLevel = mBoard.getLevel() + 1;
-                if ( nextLevel <= BOARD_MAX_LEVEL ) {
-                    mBoard.load( nextLevel );
+                if ( msgBox.clickedButton() == exitButton ) {
+                    registry->getWindow()->close();
+                } else if ( msgBox.clickedButton() == replayButton ) {
+                    restartLevel( true );
+                } else {
+                    int nextLevel = mBoard.getLevel() + 1;
+                    if ( nextLevel <= BOARD_MAX_LEVEL ) {
+                        mBoard.load( nextLevel );
+                    }
                 }
             }
+            return;
         }
-        return;
-    }
 
-    sightCannons();
-    mMoveController.wakeup();
+        sightCannons();
+        registry->getMoveController().wakeup();
+    }
 }
 
 void Game::onBoardTileChanged( int col, int row )
@@ -305,16 +294,6 @@ bool Game::canPlaceAt(PieceType what, ModelPoint point, int fromAngle, Board* bo
         ;
     }
     return false;
-}
-
-MoveController* Game::getMoveController()
-{
-    return &mMoveController;
-}
-
-PathFinderController* Game::getPathFinderController()
-{
-    return &mPathFinderController;
 }
 
 bool getShotReflection( int mirrorAngle, int *shotAngle )
@@ -452,43 +431,48 @@ bool Game::canShootThru( int col, int row, int *angle, FutureChange *change, Sho
                 } else {
                     SimplePiece simple( hitPiece );
                     board->getPieceManager()->eraseAt( col, row );
-                    mShotPush.start( simple, col, row, toPoint.mCol, toPoint.mRow );
+                    if ( GameRegistry* registry = getRegistry(this) ) {
+                        registry->getShotPush().start( simple, col, row, toPoint.mCol, toPoint.mRow );
+                    }
                 }
             }
             break;
         }
 
         if ( isMasterBoard(board) ) {
-            QPoint centerOfSquare = modelToViewCenterSquare( col, row );
-            if ( !canShootThruPush( centerOfSquare, *angle, mTankPush, hitPoint ) ) {
-                return false;
-            }
-            if ( !canShootThruPush( centerOfSquare, *angle, mShotPush, hitPoint ) ) {
-                return false;
-            }
-
-            // for the tank, vet that the distance is greater than zero to avoid undesireable self-inflicted wounds:
-            if ( source ) {
-                if ( (source->getType() != TANK || source->getShot().getDistance())
-                   && mTank.getRect().contains(centerOfSquare) ) {
-                    switch( *angle ) {
-                    case  90:
-                    case 270:
-                        if ( hitPoint ) {
-                            hitPoint->setX( mTank.getViewX().toInt()+24/2 );
-                            centerToEntryPoint( *angle, hitPoint );
-                        }
-                        break;
-                    case   0:
-                    case 180:
-                        if ( hitPoint ) {
-                            hitPoint->setY( mTank.getViewY().toInt()+24/2 );
-                            centerToEntryPoint( *angle, hitPoint );
-                        }
-                        break;
-                    }
-                    source->getShot().setIsKill();
+            if ( GameRegistry* registry = getRegistry(this) ) {
+                QPoint centerOfSquare = modelToViewCenterSquare( col, row );
+                if ( !canShootThruPush( centerOfSquare, *angle, registry->getTankPush(), hitPoint ) ) {
                     return false;
+                }
+                if ( !canShootThruPush( centerOfSquare, *angle, registry->getShotPush(), hitPoint ) ) {
+                    return false;
+                }
+
+                // for the tank, vet that the distance is greater than zero to avoid undesireable self-inflicted wounds:
+                if ( source ) {
+                    Tank& tank = registry->getTank();
+                    if ( (source->getType() != TANK || source->getShot().getDistance())
+                         && tank.getRect().contains(centerOfSquare) ) {
+                        switch( *angle ) {
+                        case  90:
+                        case 270:
+                            if ( hitPoint ) {
+                                hitPoint->setX( tank.getViewX().toInt()+24/2 );
+                                centerToEntryPoint( *angle, hitPoint );
+                            }
+                            break;
+                        case   0:
+                        case 180:
+                            if ( hitPoint ) {
+                                hitPoint->setY( tank.getViewY().toInt()+24/2 );
+                                centerToEntryPoint( *angle, hitPoint );
+                            }
+                            break;
+                        }
+                        source->getShot().setIsKill();
+                        return false;
+                    }
                 }
             }
         }
@@ -550,31 +534,13 @@ void Game::onTankPushingInto( int col, int row, int fromAngle )
         if ( getAdjacentPosition( fromAngle, &toPoint ) ) {
             SimplePiece simple( what );
             pm->eraseAt( col, row );
-            mTankPush.start( simple, col, row, toPoint.mCol, toPoint.mRow );
+            if ( GameRegistry* registry = getRegistry(this) ) {
+                registry->getTankPush().start( simple, col, row, toPoint.mCol, toPoint.mRow );
+            }
         } else {
             std::cout << "*** no adjacent for angle " << fromAngle << std::endl;
         }
     }
-}
-
-AnimationStateAggregator* Game::getMoveAggregate()
-{
-    return &mMoveAggregate;
-}
-
-AnimationStateAggregator* Game::getShotAggregate()
-{
-    return &mShotAggregate;
-}
-
-ShotModel& Game::getCannonShot()
-{
-    return mActiveCannon.getShot();
-}
-
-SpeedController *Game::getSpeedController()
-{
-    return &mSpeedController;
 }
 
 void Game::onFuturePush( Piece* pushPiece, int direction )
@@ -622,59 +588,67 @@ void Game::undoFuturePush( MovePiece* pusher )
 
 void Game::undoLastMove()
 {
-    PieceListManager* moveManager = mMoveController.getMoves();
-    switch( moveManager->size() ) {
-    case 0: // empty
-        return;
-    case 1: // allow if not doing this move
-        if ( mMoveAggregate.active() ) {
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        PieceListManager* moveManager = registry->getMoveController().getMoves();
+        switch( moveManager->size() ) {
+        case 0: // empty
             return;
+        case 1: // allow if not doing this move
+            if ( registry->getMoveAggregate().active() ) {
+                return;
+            }
         }
-    }
 
-    Piece* piece = moveManager->getBack();
-    if ( piece ) {
-        if ( piece->hasPush() ) {
-            undoFuturePush( dynamic_cast<MovePiece*>(piece) );
+        Piece* piece = moveManager->getBack();
+        if ( piece ) {
+            if ( piece->hasPush() ) {
+                undoFuturePush( dynamic_cast<MovePiece*>(piece) );
+            }
+            registry->getMoveController().eraseLastMove();
         }
-        mMoveController.eraseLastMove();
     }
 }
 
 void Game::onTankKilled()
 {
-    // if we don't have a window then we're headless (i.e. testing); don't show message boxes for the headless case
-    if ( BoardWindow* window = getWindow(this) ) {
-        // ensure this is off now to remove it from the display:
-        mMoveController.setReplay( false );
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        // if we don't have a window then we're headless (i.e. testing); don't show message boxes for the headless case
+        if ( registry->getWindow() ) {
+            // ensure this is off now to remove it from the display:
+            registry->getMoveController().setReplay( false );
 
-        QMessageBox msgBox;
-        msgBox.setWindowTitle("Level lost!");
-        msgBox.setText( "Restart level?\nTip: Select Auto Replay to choose a restore point." );
-        QPushButton* restartButton = msgBox.addButton( QString("Re&start"     ), QMessageBox::AcceptRole      );
-        QPushButton* replayButton  = msgBox.addButton( QString("&Auto Replay" ), QMessageBox::ActionRole      );
-        QPushButton* exitButton    = msgBox.addButton( QString("E&xit"        ), QMessageBox::DestructiveRole );
-        msgBox.setDefaultButton( restartButton );
+            QMessageBox msgBox;
+            msgBox.setWindowTitle("Level lost!");
+            msgBox.setText( "Restart level?\nTip: Select Auto Replay to choose a restore point." );
+            QPushButton* restartButton = msgBox.addButton( QString("Re&start"     ), QMessageBox::AcceptRole      );
+            QPushButton* replayButton  = msgBox.addButton( QString("&Auto Replay" ), QMessageBox::ActionRole      );
+            QPushButton* exitButton    = msgBox.addButton( QString("E&xit"        ), QMessageBox::DestructiveRole );
+            msgBox.setDefaultButton( restartButton );
 
-        msgBox.exec();
+            msgBox.exec();
 
-        if ( msgBox.clickedButton() == exitButton ) {
-            window->close();
-        } else {
-            restartLevel( msgBox.clickedButton() == replayButton );
+            if ( msgBox.clickedButton() == exitButton ) {
+                registry->getWindow()->close();
+            } else {
+                restartLevel( msgBox.clickedButton() == replayButton );
+            }
         }
     }
 }
 
 void Game::restartLevel( bool replay )
 {
-    mMoveController.setReplay( replay );
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        registry->getMoveController().setReplay( replay );
+    }
     mBoard.reload();
 }
 
 void Game::replayLevel()
 {
-    if ( !mTank.getRecorder().isEmpty() ) {
-        restartLevel( true );
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        if ( !registry->getTank().getRecorder().isEmpty() ) {
+            restartLevel( true );
+        }
     }
 }

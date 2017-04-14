@@ -18,22 +18,6 @@ GameRegistry* getRegistry( const QObject* gameObject )
     return v.value<GameHandle>().registry;
 }
 
-Game* getGame( const QObject* gameObject )
-{
-    if ( GameRegistry* registry = getRegistry(gameObject) ) {
-        return &registry->mGame;
-    }
-    return 0;
-}
-
-BoardWindow* getWindow( QObject* gameObject )
-{
-    if ( GameRegistry* registry = getRegistry(gameObject) ) {
-        return registry->mWindow;
-    }
-    return 0;
-}
-
 QPoint modelToViewCenterSquare( int col, int row )
 {
     return QPoint( col*24+24/2, row*24+24/2 );

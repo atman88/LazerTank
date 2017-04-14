@@ -41,45 +41,6 @@ public:
     bool isMasterBoard( Board* board );
 
     /**
-     * @brief Access the game's tank object
-     */
-    Tank* getTank();
-
-    /**
-     * Container for the piece currently being pushed by the tank
-     * It's type is NONE when the tank isn't pushing a piece
-     */
-    Push& getTankPush();
-
-    /**
-     * Container for the piece currently being pushed by a shot
-     * It's type is NONE when no piece is being shot
-     */
-    Push& getShotPush();
-
-    /**
-     * @brief the current laser shot being fired
-     * Only one cannon is fired at a time. This is the single lazer path shot from any single selected cannon
-     */
-    ShotModel& getCannonShot();
-
-    /**
-     * @brief Access to the controller that manages the game speed used by animations
-     */
-    SpeedController* getSpeedController();
-
-    /**
-     * @brief Holds the aggregate state of the current tank move including any push the move is doing
-     */
-    AnimationStateAggregator* getMoveAggregate();
-
-    /**
-     * @brief Holds the aggregate state of active shots including any pushes the shot are doing
-     * @return
-     */
-    AnimationStateAggregator* getShotAggregate();
-
-    /**
      * @brief Determine whether the given single move is legal
      * @param what The type of peice being moved
      * @param angle The direction to move in. Must be one of 0, 90, 180 or 270
@@ -137,13 +98,6 @@ public:
      * @return set of future pieces
      */
     const PieceSet* getDeltaPieces();
-
-    /**
-     * @brief Get controlled access to the path finder
-     */
-    PathFinderController* getPathFinderController();
-
-    MoveController* getMoveController();
 
     /**
      * @brief Query whether the board is fully loaded
@@ -246,19 +200,9 @@ private:
      */
     bool canPlaceAt( PieceType what, ModelPoint point, int fromAngle, Board* board, Piece **pushPiece = 0 );
 
-    SpeedController mSpeedController;
-    AnimationStateAggregator mMoveAggregate;
-    AnimationStateAggregator mShotAggregate;
-
     Board mBoard;
     bool mBoardLoaded;
 
-    MoveController mMoveController;
-    PathFinderController mPathFinderController;
-    Push mTankPush;
-    Push mShotPush;
-    Tank mTank;
-    Shooter mActiveCannon;
     Board mFutureBoard;
     BoardDelta mFutureDelta;
 };

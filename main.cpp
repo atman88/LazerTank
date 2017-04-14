@@ -9,10 +9,8 @@ int main(int argc, char *argv[])
 
     qRegisterMetaType<GameHandle>("GameHandle");
 
-    Game game;
-    WorkerThread worker;
     BoardWindow window;
-    GameRegistry registry( game, &window, worker );
+    GameRegistry registry( &window );
     GameInitializer initializer;
     initializer.init( registry );
 

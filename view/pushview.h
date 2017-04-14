@@ -6,7 +6,7 @@
 #include <QRect>
 #include <QPainter>
 
-class Game;
+class GameRegistry;
 
 #include "controller/speedcontroller.h"
 #include "model/piece.h"
@@ -23,7 +23,7 @@ class PushView : public QObject
 public:
     PushView( QObject* parent = 0 );
 
-    void init( Game* game );
+    void init( GameRegistry* registry );
     void render( const QRect* rect, QPainter* painter );
 
     /**

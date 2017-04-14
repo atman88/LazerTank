@@ -15,7 +15,7 @@ ReplayText::ReplayText( QObject* parent, const QString& text, int minAlpha, int 
 void ReplayText::render( const QRect* rect, QPainter* painter )
 {
     if ( mBounds.isNull() ) {
-        if ( Game* game = getGame(this) ) {
+        if ( GameRegistry* registry = getRegistry(this) ) {
             // lazily initialize on first use:
             if ( !mInitialized ) {
                 mFont = painter->font();
@@ -29,12 +29,12 @@ void ReplayText::render( const QRect* rect, QPainter* painter )
                 mAnimation.setEasingCurve( QEasingCurve::InOutQuad );
                 mAnimation.setDuration( 2000 );
 
-                QObject::connect( game->getMoveController(), &MoveController::replayFinished, this, &ReplayText::disable );
+                QObject::connect( &registry->getMoveController(), &MoveController::replayFinished, this, &ReplayText::disable );
                 QObject::connect( &mAnimation, &QPropertyAnimation::finished, this, &ReplayText::startCycle, Qt::QueuedConnection );
                 mInitialized = true;
             }
 
-            if ( BoardWindow* window = getWindow(this) ) {
+            if ( BoardWindow* window = registry->getWindow() ) {
                 QSize size = window->size();
                 painter->setFont( mFont );
                 mBounds = painter->boundingRect( QRect(QPoint(0,0),size), Qt::AlignCenter, mText );

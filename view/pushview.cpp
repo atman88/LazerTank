@@ -1,6 +1,6 @@
 #include <iostream>
 #include "push.h"
-#include "controller/game.h"
+#include "controller/gameregistry.h"
 #include "util/renderutils.h"
 
 PushView::PushView( QObject* parent ) : QObject(parent)
@@ -18,11 +18,11 @@ PushView::PushView( QObject* parent ) : QObject(parent)
     mBoundingRect.setRect(0,0,24,24);
 }
 
-void PushView::init( Game* game )
+void PushView::init( GameRegistry* registry )
 {
-    SpeedController* SpeedController = game->getSpeedController();
-    mHorizontalAnimation.setController( SpeedController );
-    mVerticalAnimation.setController( SpeedController );
+    SpeedController& SpeedController = registry->getSpeedController();
+    mHorizontalAnimation.setController( &SpeedController );
+    mVerticalAnimation.setController( &SpeedController );
 }
 
 void PushView::start( Piece& what, int fromX, int fromY, int toX, int toY )

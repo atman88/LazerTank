@@ -85,7 +85,7 @@ void FutureShotPathManager::reset()
 
 const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
 {
-    if ( Game* game = getGame(this) ) {
+    if ( GameRegistry* registry = getRegistry(this) ) {
         int shotCount = move->getShotCount();
 
         FutureShotPath path(move);
@@ -94,7 +94,7 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
             if ( it->mShotCount <= shotCount ) {
                 path = *it;
             } else {
-                game->getBoard(true)->undoChanges( it->mChanges );
+                registry->getGame().getBoard(true)->undoChanges( it->mChanges );
                 emit dirtyRect( it->getBounds() );
             }
             mPaths.erase( it );
@@ -118,7 +118,7 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
 
             FutureChange curChange;
             curChange.changeType = NO_CHANGE;
-            if ( !game->canShootThru( leadVector.mCol, leadVector.mRow, &leadVector.mAngle, &curChange ) ) {
+            if ( !registry->getGame().canShootThru( leadVector.mCol, leadVector.mRow, &leadVector.mAngle, &curChange ) ) {
                 if ( curChange.changeType == NO_CHANGE ) {
                     break;
                 }

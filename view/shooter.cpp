@@ -1,26 +1,27 @@
 #include "shooter.h"
 #include "boardwindow.h"
-#include "game.h"
+#include "controller/gameregistry.h"
+#include "controller/game.h"
 #include "util/gameutils.h"
 
 Shooter::Shooter(QObject *parent) : QObject(parent), mViewRotation(0), mBoundingRect( QRect(0,0,24,24) ), mType(NONE)
 {
 }
 
-void Shooter::init( Game* game, PieceType type, QColor color )
+void Shooter::init( GameRegistry* registry, PieceType type, QColor color )
 {
-    setParent(game);
+    setParent(registry);
     mType = type;
     mShot.setParent(this);
     mShot.setColor( color );
 
-    QObject::connect( &mShot, &ShotModel::tankKilled, game, &Game::onTankKilled );
+    QObject::connect( &mShot, &ShotModel::tankKilled, &registry->getGame(), &Game::onTankKilled );
 
-    if ( BoardWindow* window = getWindow(this) ) {
+    if ( BoardWindow* window = registry->getWindow() ) {
         QObject::connect( &mShot, &ShotView::rectDirty,   window, &BoardWindow::renderLater  );
     }
 
-    mShot.init( game->getShotAggregate() );
+    mShot.init( registry->getShotAggregate() );
 }
 
 void Shooter::reset( QPoint p )

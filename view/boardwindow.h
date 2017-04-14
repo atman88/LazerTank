@@ -156,9 +156,10 @@ private:
     /**
      * @brief Repaint a rectangular area
      * @param rect The area to repaint
+     * @param registry The valid game registry
      * @param painter The painter associated with this render operation
      */
-    void render( const QRect* rect, QPainter* painter );
+    void render( const QRect* rect, GameRegistry* registry, QPainter* painter );
 
     /**
      * @brief Helper method to render the given set within the given rectangular area
@@ -191,7 +192,7 @@ private:
 
     PieceType mFocus;
 
-    Game* mGame;
+    bool mGameInitialized;
     QTextBrowser* mHelpWidget;
 
     ReplayText* mReplayText;
