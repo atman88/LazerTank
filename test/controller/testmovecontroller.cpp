@@ -1,13 +1,83 @@
 #include <iostream>
-#include <QSignalSpy>
+#include <QObject>
+#include <QRect>
 #include "../testmain.h"
-
+#include "../util/piecelistmanagerobserver.h"
 #include "movecontroller.h"
 #include "game.h"
 #include "animationstateaggregator.h"
 #include "model/tank.h"
+#include "model/shotmodel.h"
 
 using namespace std;
+
+
+void setupTestMultiShot( TestMain* main, PieceListManagerObserver **shotObserver )
+{
+    QTextStream map(
+      "TM...\n"
+      ".....\n" );
+    main->initGame( map );
+
+    MoveController& moveController = main->getRegistry()->getMoveController();
+    *shotObserver = new PieceListManagerObserver( moveController.getMoves(), 3, 3 );
+    moveController.move( 90 );
+    moveController.fire( 3 );
+}
+
+void completeTestMultiShot( TestMain* main, PieceListManagerObserver **shotObserver )
+{
+    MoveController& moveController = main->getRegistry()->getMoveController();
+
+    moveController.move( 180 );
+    QSignalSpy idleSpy( &moveController, &MoveController::idle );
+    QVERIFY( idleSpy.wait( 4000 ) );
+
+    (*shotObserver)->printCounts();
+    delete *shotObserver;
+
+    QVERIFY( main->getRegistry()->getGame().getBoard()->getPieceManager().typeAt(4,0) == TILE );
+}
+
+void TestMain::testMultiShotQueued()
+{
+    PieceListManagerObserver* shotObserver;
+    setupTestMultiShot( this, &shotObserver );
+    completeTestMultiShot( this, &shotObserver );
+}
+
+void TestMain::testMultiShotShotDirty()
+{
+    PieceListManagerObserver* shotObserver;
+    setupTestMultiShot( this, &shotObserver );
+
+    DirtySpy dirtySpy( &mRegistry->getTank().getShot() );
+    QVERIFY( dirtySpy.wait( 3000 ) );
+
+    completeTestMultiShot( this, &shotObserver );
+}
+
+void TestMain::testMultiShotShooterRelease()
+{
+    PieceListManagerObserver* shotObserver;
+    setupTestMultiShot( this, &shotObserver );
+
+    QSignalSpy releaseSpy( &mRegistry->getTank().getShot(), SIGNAL(shooterReleased()) );
+    QVERIFY( releaseSpy.wait( 3000 ) );
+
+    completeTestMultiShot( this, &shotObserver );
+}
+
+void TestMain::testMultiShotShotFinished()
+{
+    PieceListManagerObserver* shotObserver;
+    setupTestMultiShot( this, &shotObserver );
+
+    QSignalSpy finishedSpy( &mRegistry->getShotAggregate(), &AnimationStateAggregator::finished );
+    QVERIFY( finishedSpy.wait( 3000 ) );
+
+    completeTestMultiShot( this, &shotObserver );
+}
 
 void TestMain::testReplay()
 {

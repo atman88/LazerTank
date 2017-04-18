@@ -15,7 +15,7 @@ class PathSearchAction;
 
 typedef enum {
     Idle,
-    RotateStage,
+    MovingStage,
     FiringStage,
     IdlingStage
 } MoveState;

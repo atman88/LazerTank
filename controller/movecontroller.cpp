@@ -1,9 +1,11 @@
+#include <iostream>
 #include "movecontroller.h"
 #include "game.h"
 #include "animationstateaggregator.h"
 #include "pathsearchaction.h"
 #include "model/tank.h"
 #include "model/shotmodel.h"
+#include "model/push.h"
 #include "util/recorder.h"
 
 
@@ -110,7 +112,7 @@ void MoveController::wakeup()
         }
 
         // always wait for any current rotation to complete before proceeding with a queued move:
-        if ( mState == RotateStage && registry->getMoveAggregate().active() ) {
+        if ( mState == MovingStage && registry->getMoveAggregate().active() ) {
             return;
         }
 
@@ -125,8 +127,8 @@ void MoveController::wakeup()
                         emit pushingInto( move->getCol(), move->getRow(), move->getAngle() );
                     }
 
-                    if ( tank.doMove( *move ) && hasRotation ) {
-                        transitionState( RotateStage );
+                    if ( tank.doMove( *move ) && (hasRotation || move->hasPush()) ) {
+                        transitionState( MovingStage );
                         return; // waiting for current rotation to complete
                     }
                 }

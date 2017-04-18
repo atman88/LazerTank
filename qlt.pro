@@ -86,7 +86,8 @@ RESOURCES += qml.qrc
 test{
     INCLUDEPATH += test/controller
 
-    HEADERS += test/testmain.h
+    HEADERS += test/testmain.h \
+      test/util/piecelistmanagerobserver.h
 
     TARGET = qlttest
 
@@ -97,7 +98,8 @@ test{
         test/model/testpiecelistmanager.cpp \
         test/model/testfutureshotpath.cpp \
         test/controller/testmovecontroller.cpp \
-        test/util/testrecorder.cpp
+        test/util/testrecorder.cpp \
+        test/util/piecelistmanagerobserver.cpp
 }
 else{
     TARGET = qlt

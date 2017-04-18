@@ -1,3 +1,4 @@
+#include <iostream>
 #include <QSignalSpy>
 #include <QString>
 
@@ -37,4 +38,31 @@ void TestMain::initGame( QTextStream& map )
     game.init(mRegistry);
     game.getBoard()->load( map );
     QCOMPARE( loadSpy.wait(1000), true );
+}
+
+GameRegistry* TestMain::getRegistry() const
+{
+    return mRegistry;
+}
+
+DirtySpy::DirtySpy(QObject* object) : QObject(0)
+{
+    mSignalSpy = new QSignalSpy(this,&DirtySpy::dirty);
+    QObject::connect( object, SIGNAL(rectDirty(QRect&)), this, SLOT(rectDirty(QRect&)) );
+}
+
+DirtySpy::~DirtySpy()
+{
+    delete mSignalSpy;
+}
+
+bool DirtySpy::wait(int msecs)
+{
+    return mSignalSpy->wait(msecs);
+}
+
+void DirtySpy::rectDirty( QRect& rect __attribute__ ((unused)) )
+{
+    std::cout << "DirtySpy: dirty" << std::endl;
+    emit dirty();
 }

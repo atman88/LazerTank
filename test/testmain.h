@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTest>
+#include <QSignalSpy>
 
 class GameRegistry;
 
@@ -15,6 +16,8 @@ public:
 
     void initGame( const char* map );
     void initGame( QTextStream& map );
+
+    GameRegistry* getRegistry() const;
 
 private slots:
     void testGameMove();
@@ -30,11 +33,36 @@ private slots:
     void testRecorderRecordSize();
     void testRecorderOverflow();
 
+    void testMultiShotQueued();
+    void testMultiShotShotDirty();
+    void testMultiShotShooterRelease();
+    void testMultiShotShotFinished();
     void testReplay();
 
 private:
     QTextStream* mStream;
     GameRegistry* mRegistry;
+};
+
+/**
+ * @brief Wrapper for the dirty signal to allow its passed-by-reference signal arg
+ */
+class DirtySpy : public QObject
+{
+    Q_OBJECT
+
+public:
+    DirtySpy(QObject* object );
+    ~DirtySpy();
+    bool wait( int msecs = 5000 );
+
+public slots:
+    void rectDirty(QRect& rect);
+signals:
+    void dirty();
+
+private:
+    QSignalSpy* mSignalSpy;
 };
 
 class SignalReceptor : public QObject
