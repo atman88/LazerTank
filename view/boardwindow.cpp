@@ -56,6 +56,7 @@ void BoardWindow::setSize( int cols, int rows )
         }
     }
     setGeometry(myGeometry);
+    mDirtyRegion = size;
     renderNow();
 }
 
