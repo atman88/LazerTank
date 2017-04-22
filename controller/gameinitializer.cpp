@@ -18,17 +18,6 @@ void GameInitializer::init( GameRegistry& registry )
 void GameInitializer::initGame()
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
-        // do this on the app thread:
         registry->getGame().init( registry );
-        // load the board via a background thread:
-        registry->getWorker().doWork( this );
-    }
-}
-
-void GameInitializer::run()
-{
-    if ( GameRegistry* registry = getRegistry(this) ) {
-        registry->getGame().onBoardLoading();
-        registry->getGame().getBoard()->load( 1 );
     }
 }

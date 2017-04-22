@@ -4,29 +4,68 @@
 #include <QThread>
 
 #include "board.h"
+#include "controller/gameregistry.h"
+#include "util/workerthread.h"
 
-Board::Board( QObject* parent ) : QObject(parent), mLevel(0), mWidth(6), mHeight(6), mStream(0)
+class LoadRunnable : Runnable
+{
+public:
+    LoadRunnable(Board& board) : mBoard(board)
+    {
+    }
+    ~LoadRunnable()
+    {
+    }
+
+    void loadFile( QString fileName, int level )
+    {
+        mFileName = fileName;
+        mLevel = level;
+        if ( GameRegistry* registry = getRegistry(&mBoard) ) {
+            emit mBoard.boardLoading();
+            registry->getWorker().doWork( this );
+        }
+    }
+
+    void run() override
+    {
+        mBoard.load( mFileName, mLevel );
+    }
+
+private:
+    Board& mBoard;
+    QString mFileName;
+    int mLevel;
+};
+
+Board::Board( QObject* parent ) : QObject(parent), mLevel(0), mWidth(6), mHeight(6), mStream(0), mRunnable(0)
 {
     memset( mTiles, EMPTY, sizeof mTiles );
 }
 
-bool Board::load( int level ) {
-    QString namePattern( ":/maps/level%1.txt" );
-    QString name = namePattern.arg(level);
-    return load( name, level );\
+Board::~Board()
+{
+    delete mRunnable;
 }
 
-bool Board::reload()
+void Board::load( int level ) {
+    QString namePattern( ":/maps/level%1.txt" );
+    QString name = namePattern.arg(level);
+    if ( !mRunnable ) {
+        mRunnable = new LoadRunnable(*this);
+    }
+    mRunnable->loadFile( name, level );\
+}
+
+void Board::reload()
 {
     if ( !mStream ) {
-        return load( mLevel );
+        load( mLevel );
     }
 
     if ( mStream->seek(0) ) {
         load( *mStream, mLevel );
-        return true;
     }
-    return false;
 }
 
 PieceSetManager& Board::getPieceManager()

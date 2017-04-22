@@ -46,6 +46,7 @@ void Game::init( GameRegistry* registry )
     mFutureDelta.init( &mBoard, &mFutureBoard );
 
     QObject::connect( &mBoard, &Board::tileChangedAt, this, &Game::onBoardTileChanged );
+    QObject::connect( &mBoard, &Board::boardLoading,  this, &Game::onBoardLoading );
     QObject::connect( &mBoard, &Board::boardLoaded,   this, &Game::onBoardLoaded, Qt::QueuedConnection );
 
     if ( BoardWindow* window = registry->getWindow() ) {
@@ -71,6 +72,9 @@ void Game::init( GameRegistry* registry )
 
         window->init( registry );
     }
+
+    mBoard.setParent(this);
+    mBoard.load( 1 );
 }
 
 void Game::onBoardLoading()

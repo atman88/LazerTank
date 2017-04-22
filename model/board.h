@@ -15,6 +15,8 @@
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
 #define BOARD_MAX_HEIGHT PIECE_MAX_ROWCOUNT
 
+class LoadRunnable;
+
 /**
  * @brief Helper method to determine the neighbor square for the given direction
  * @param angle The direction. Legal values are 0, 90, 180, 270.
@@ -33,6 +35,7 @@ class Board : public QObject
 
 public:
     Board( QObject* parent = 0 );
+    ~Board();
 
     /**
      * @brief Get the current level number. A level number corresponds to a /map/level%1.txt file.
@@ -86,15 +89,13 @@ public:
     /**
      * @brief load a level
      * @param level A level number between 1 and BOARD_MAX_LEVEL
-     * @return true if successful
      */
-    bool load( int level );
+    void load( int level );
 
     /**
      * @brief reload the current board
-     * @return true if successful
      */
-    bool reload();
+    void reload();
 
     /**
      * @brief load the given file
@@ -134,6 +135,11 @@ public:
 
 signals:
     /**
+     * @brief Notifies that the board is being loaded in the background
+     */
+    void boardLoading();
+
+    /**
      * @brief Signals that the contents of this board has been replaced (via one of its load methods)
      */
     void boardLoaded();
@@ -157,6 +163,7 @@ private:
     PieceSetManager mPieceManager;
 
     QTextStream* mStream;
+    LoadRunnable* mRunnable;
 };
 
 #endif // BOARD_H

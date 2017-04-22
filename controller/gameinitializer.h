@@ -9,16 +9,13 @@
 /**
  * @brief Controller class for initializing the game
  */
-class GameInitializer : public QObject, Runnable
+class GameInitializer : public QObject
 {
     Q_OBJECT
 
 public:
     explicit GameInitializer();
     void init( GameRegistry& registry );
-
-    // Implementation of the LoadRunnable
-    void run() override;
 
 private slots:
     /**

@@ -4,8 +4,6 @@
 #include <QObject>
 
 class GameRegistry;
-class Game;
-class BoardWindow;
 
 /**
  * @brief The Game handle
