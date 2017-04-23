@@ -139,7 +139,7 @@ void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* p
     MoveController& moveController = registry->getMoveController();
     const PieceMultiSet* moves = moveController.getMoves().toMultiSet();
     const PieceSet& tiles = board->getPieceManager().getPieces();
-    const PieceSet* deltas = registry->getGame().getDeltaPieces();
+    const PieceSet* deltas = (moveController.replaying() ? 0 : registry->getGame().getDeltaPieces());
 
     int minX = rect->left()/24;
     int minY = rect->top() /24;
@@ -147,7 +147,7 @@ void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* p
     int maxY = (rect->bottom()+24-1)/24;
 
     SimplePiece pos(MOVE, minX, minY);
-    PieceSet::iterator moveIterator = moves->lower_bound( &pos );
+    PieceSet::iterator moveIterator = (moveController.replaying() ? moves->end() : moves->lower_bound( &pos ));
     PieceSet::iterator tileIterator = tiles.lower_bound( &pos );
     PieceSet::iterator deltasIterator;
     if ( deltas ) {
@@ -204,22 +204,24 @@ void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* p
         renderListIn( deltasIterator, deltas->end(), rect, painter );
     }
 
-    bool usingFutureShotPen = false;
-    for( auto it : moveController.getFutureShots().getPaths() ) {
-        if ( rect->intersects( it.getBounds() ) ) {
-            if ( !usingFutureShotPen ) {
-                QPen pen( registry->getTank().getShot().getPen() );
+    if ( !moveController.replaying() ) {
+        bool usingFutureShotPen = false;
+        for( auto it : moveController.getFutureShots().getPaths() ) {
+            if ( rect->intersects( it.getBounds() ) ) {
+                if ( !usingFutureShotPen ) {
+                    QPen pen( registry->getTank().getShot().getPen() );
 
-                // dim it's color to contrast future shots from actual shots:
-                QColor color = pen.color();
-                color.setAlpha(127);
-                pen.setColor( color );
+                    // dim it's color to contrast future shots from actual shots:
+                    QColor color = pen.color();
+                    color.setAlpha(127);
+                    pen.setColor( color );
 
-                pen.setStyle( Qt::DashLine );
-                painter->setPen( pen );
-                usingFutureShotPen = true;
+                    pen.setStyle( Qt::DashLine );
+                    painter->setPen( pen );
+                    usingFutureShotPen = true;
+                }
+                painter->drawPath( *it.toQPath() );
             }
-            painter->drawPath( *it.toQPath() );
         }
     }
 
