@@ -253,12 +253,8 @@ void Game::onMoveAggregatorFinished()
                     registry->getWindow()->close();
                 } else if ( msgBox.clickedButton() == replayButton ) {
                     restartLevel( true );
-                } else {
-                    LevelList& levels = registry->getLevelList();
-                    int i = levels.nextLevel( mBoard.getLevel() );
-                    if ( i >= 0 ) {
-                        mBoard.load( i );
-                    }
+                } else if ( int i = registry->getLevelList().nextLevel( mBoard.getLevel() ) ) {
+                    mBoard.load( i );
                 }
             }
             return;

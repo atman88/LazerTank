@@ -95,7 +95,7 @@ public:
     Push& getShotPush();
 
     /**
-     * @brief getLevelList Access the list of available levels
+     * @brief Access the list of available levels
      */
     LevelList& getLevelList();
 

@@ -82,14 +82,14 @@ int LevelList::nextLevel( int curLevel ) const
         index = 0;
     } else {
         if ( (index = mList.indexOf( Level(curLevel) )) < 0 ) {
-            return -1;
+            return 0;
         }
         ++index;
     }
     if ( index < mList.size() ) {
         return mList.at(index).getNumber();
     }
-    return -1;
+    return 0;
 }
 
 QList<Level> LevelList::getList() const

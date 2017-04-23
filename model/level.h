@@ -9,6 +9,9 @@
 
 class GameRegistry;
 
+/**
+ * @brief Representation of a level and its attributes
+ */
 class Level
 {
 public:
@@ -17,6 +20,9 @@ public:
     bool operator==( const Level& other ) const;
     bool operator<( const Level& other ) const;
 
+    /**
+     * @brief Get the number for this level. The level number is both the displayed number and the key value.
+     */
     int getNumber() const;
 
 private:
@@ -26,6 +32,9 @@ private:
 
 class DirLoadRunnable;
 
+/**
+ * @brief A level list container class
+ */
 class LevelList : public QObject
 {
     Q_OBJECT
@@ -35,11 +44,19 @@ public:
 
     void init( GameRegistry* registry );
 
+    /**
+     * @brief Get the number of the next available level
+     * @param curLevel The previous level
+     * @return The next level or 0 if no more levels available
+     */
     int nextLevel( int curLevel ) const;
 
     QList<Level> getList() const;
 
 signals:
+    /**
+     * @brief Notifies that initialization has completed
+     */
     void initialized();
 
 private:
