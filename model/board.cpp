@@ -61,9 +61,7 @@ void Board::reload()
 {
     if ( !mStream ) {
         load( mLevel );
-    }
-
-    if ( mStream->seek(0) ) {
+    } else if ( mStream->seek(0) ) {
         load( *mStream, mLevel );
     }
 }
