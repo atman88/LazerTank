@@ -19,9 +19,23 @@ public:
 
 private slots:
     /**
+     * @brief Receives notification that the window has begun rendering
+     */
+    void onWindowPaintable();
+
+    /**
+     * @brief Receives notification that the levels are initialized
+     */
+    void onLevelListInitialized();
+
+    /**
      * @brief Executes game initalization
      */
-    void initGame();
+    void resumeInitialization();
+
+private:
+    bool mWindowPaintable;
+    bool mLevelListInitialized;
 };
 
 #endif // GAMEINITIALIZER_H

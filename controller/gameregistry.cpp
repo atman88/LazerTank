@@ -9,16 +9,17 @@
 #include "model/tank.h"
 #include "view/shooter.h"
 #include "model/push.h"
+#include "model/level.h"
 #include "util/workerthread.h"
 
 GameRegistry::GameRegistry( BoardWindow* window, Game* game,
   SpeedController* speedController, MoveController* moveController, PathFinderController* pathFinderController,
   AnimationStateAggregator* moveAggregate, AnimationStateAggregator* shotAggregate, Tank* tank, Shooter* activeCannon,
-  Push* tankPush, Push* shotPush )
+  Push* tankPush, Push* shotPush, LevelList* levelList )
   : QObject(0), mWindow(window), mGame(game),
     mSpeedController(speedController), mMoveController(moveController), mPathFinderController(pathFinderController),
     mMoveAggregate(moveAggregate), mShotAggregate(shotAggregate), mTank(tank), mActiveCannon(activeCannon),
-    mTankPush(tankPush), mShotPush(shotPush)
+    mTankPush(tankPush), mShotPush(shotPush), mLevelList(levelList)
 {
     mHandle.registry = this;
     setProperty("GameHandle", QVariant::fromValue(mHandle));
@@ -32,6 +33,7 @@ GameRegistry::GameRegistry( BoardWindow* window, Game* game,
     if ( activeCannon          ) onInject( activeCannon );
     if ( tankPush              ) onInject( tankPush );
     if ( shotPush              ) onInject( shotPush );
+    if ( levelList             ) onInject( levelList );
 
     mWorker.setParent(this);
     mCaptureAction.setParent(this);
@@ -70,6 +72,7 @@ DECL_GETTER(Tank,Tank)
 DECL_GETTER(ActiveCannon,Shooter)
 DECL_GETTER(TankPush,Push)
 DECL_GETTER(ShotPush,Push)
+DECL_GETTER(LevelList,LevelList)
 
 WorkerThread&     GameRegistry::getWorker()        { return mWorker;        }
 PathSearchAction& GameRegistry::getCaptureAction() { return mCaptureAction; }
@@ -88,4 +91,3 @@ GameRegistry::~GameRegistry()
         object->setParent(0);
     }
 }
-

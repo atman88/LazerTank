@@ -14,6 +14,7 @@
 #include "model/tank.h"
 #include "model/push.h"
 #include "model/shotmodel.h"
+#include "model/level.h"
 #include "util/renderutils.h"
 #include "util/imageutils.h"
 
@@ -402,9 +403,9 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             QAction* action = mMenu.addAction( QString("Select &Level..") );
             action->setMenu( &mLevelsMenu );
             QString text( "level %1" );
-            for( int level = 1; level <= BOARD_MAX_LEVEL; ++level ) {
-                action = mLevelsMenu.addAction( text.arg(level) );
-                action->setData( QVariant(level) );
+            for( Level level : registry->getLevelList().getList() ) {
+                action = mLevelsMenu.addAction( text.arg(level.getNumber()) );
+                action->setData( QVariant(level.getNumber()) );
             }
 
             mMenu.addAction( &TO_QACTION(mReplayAction) );

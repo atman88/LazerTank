@@ -13,11 +13,11 @@ class SpeedController;
 class MoveController;
 class PathFinderController;
 class AnimationStateAggregator;
+class LevelList;
 class Tank;
 class Shooter;
 class ShotModel;
 class Push;
-class WorkerThread;
 
 class GameRegistry : public QObject
 {
@@ -26,7 +26,7 @@ public:
     explicit GameRegistry( BoardWindow* window = 0, Game* game = 0,
       SpeedController* speedController = 0, MoveController* moveController = 0, PathFinderController* pathFinderController = 0,
       AnimationStateAggregator* moveAggregate = 0, AnimationStateAggregator* shotAggregate = 0,
-      Tank* tank = 0, Shooter* activeCannon = 0, Push* tankPush = 0, Push* shotPush = 0 );
+      Tank* tank = 0, Shooter* activeCannon = 0, Push* tankPush = 0, Push* shotPush = 0, LevelList* levelList = 0 );
     ~GameRegistry();
     GameHandle getHandle();
 
@@ -95,6 +95,11 @@ public:
     Push& getShotPush();
 
     /**
+     * @brief getLevelList Access the list of available levels
+     */
+    LevelList& getLevelList();
+
+    /**
      * @brief Access to the background thread
      */
     WorkerThread& getWorker();
@@ -127,6 +132,7 @@ private:
     Shooter* mActiveCannon;
     Push* mTankPush;
     Push* mShotPush;
+    LevelList* mLevelList;
 
     WorkerThread mWorker;
     PathSearchAction mCaptureAction;

@@ -7,12 +7,13 @@
 #include "game.h"
 #include "gameregistry.h"
 #include "movecontroller.h"
+#include "speedcontroller.h"
 #include "pathfindercontroller.h"
 #include "animationstateaggregator.h"
 #include "model/tank.h"
 #include "model/push.h"
+#include "model/level.h"
 #include "view/boardwindow.h"
-#include "speedcontroller.h"
 #include "util/renderutils.h"
 
 Game::Game() : mBoardLoaded(0)
@@ -74,7 +75,6 @@ void Game::init( GameRegistry* registry )
     }
 
     mBoard.setParent(this);
-    mBoard.load( 1 );
 }
 
 void Game::onBoardLoading()
@@ -254,9 +254,10 @@ void Game::onMoveAggregatorFinished()
                 } else if ( msgBox.clickedButton() == replayButton ) {
                     restartLevel( true );
                 } else {
-                    int nextLevel = mBoard.getLevel() + 1;
-                    if ( nextLevel <= BOARD_MAX_LEVEL ) {
-                        mBoard.load( nextLevel );
+                    LevelList& levels = registry->getLevelList();
+                    int i = levels.nextLevel( mBoard.getLevel() );
+                    if ( i >= 0 ) {
+                        mBoard.load( i );
                     }
                 }
             }

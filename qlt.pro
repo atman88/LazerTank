@@ -44,7 +44,8 @@ HEADERS += \
     view/replaytext.h \
     util/workerthread.h \
     controller/gameinitializer.h \
-    controller/gameregistry.h
+    controller/gameregistry.h \
+    model/level.h
 
 SOURCES += \
            model/board.cpp \
@@ -79,7 +80,8 @@ SOURCES += \
     view/replaytext.cpp \
     util/workerthread.cpp \
     controller/gameinitializer.cpp \
-    controller/gameregistry.cpp
+    controller/gameregistry.cpp \
+    model/level.cpp
 
 RESOURCES += qml.qrc
 
@@ -106,5 +108,3 @@ else{
 
     SOURCES += main.cpp
 }
-
-DISTFILES +=
