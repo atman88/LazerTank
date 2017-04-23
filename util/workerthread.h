@@ -28,9 +28,15 @@ public:
      */
     void doWork( Runnable* runnable );
 
+    /**
+     * @brief Inform this class that the app is shutting down
+     */
+    void shutdown();
+
 private:
     void run() override;
     std::list<Runnable*> mPending;
+    bool mShuttingDown;
 };
 
 #endif // WORKERTHREAD_H

@@ -39,6 +39,8 @@ private slots:
     void testMultiShotShotFinished();
     void testReplay();
 
+    void testWorker();
+
 private:
     QTextStream* mStream;
     GameRegistry* mRegistry;

@@ -1,18 +1,26 @@
 #include "workerthread.h"
 
-WorkerThread::WorkerThread()
+WorkerThread::WorkerThread() : mShuttingDown(false)
 {
 }
 
-void WorkerThread::doWork(Runnable* runnable)
+void WorkerThread::doWork( Runnable* runnable )
 {
-    mPending.push_back( runnable );
-    start( LowPriority );
+    if ( !mShuttingDown ) {
+        mPending.push_back( runnable );
+        start( LowPriority );
+    }
+}
+
+void WorkerThread::shutdown()
+{
+    mShuttingDown = true;
+    wait(3000);
 }
 
 void WorkerThread::run()
 {
-    while (mPending.size() > 0 ) {
+    while( mPending.size() > 0 && !mShuttingDown) {
        mPending.front()->run();
        mPending.pop_front();
     }

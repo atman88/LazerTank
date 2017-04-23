@@ -101,7 +101,8 @@ test{
         test/model/testfutureshotpath.cpp \
         test/controller/testmovecontroller.cpp \
         test/util/testrecorder.cpp \
-        test/util/piecelistmanagerobserver.cpp
+        test/util/piecelistmanagerobserver.cpp \
+        test/util/testworker.cpp
 }
 else{
     TARGET = qlt

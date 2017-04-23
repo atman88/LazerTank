@@ -90,4 +90,6 @@ GameRegistry::~GameRegistry()
     for( QObject* object : mInjectionList ) {
         object->setParent(0);
     }
+
+    mWorker.shutdown();
 }
