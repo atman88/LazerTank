@@ -244,6 +244,7 @@ void Game::onMoveAggregatorFinished()
                 QPushButton* nextButton   = msgBox.addButton( QString("&Next Level"  ), QMessageBox::AcceptRole );
                 QPushButton* exitButton   = msgBox.addButton( QString("E&xit"        ), QMessageBox::DestructiveRole );
                 msgBox.setDefaultButton( nextButton );
+                nextButton->setEnabled( registry->getLevelList().nextLevel(mBoard.getLevel()) != 0 );
 
                 msgBox.exec();
 
