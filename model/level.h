@@ -60,7 +60,6 @@ signals:
     void initialized();
 
 private:
-    DirLoadRunnable* mDirLoadRunnable;
     QList<Level> mList;
 
     friend class DirLoadRunnable;

@@ -28,14 +28,14 @@ uint qHash( const Level& level )
     return level.getNumber();
 }
 
-LevelList::LevelList() : QObject(0), mDirLoadRunnable(0)
+LevelList::LevelList() : QObject(0)
 {
 }
 
 class DirLoadRunnable : public Runnable
 {
 public:
-    DirLoadRunnable( LevelList* list ) : mList(list)
+    DirLoadRunnable( LevelList* list ) : Runnable(true), mList(list)
     {
     }
 
@@ -68,11 +68,7 @@ private:
 
 void LevelList::init( GameRegistry* registry )
 {
-    if ( !mDirLoadRunnable ) {
-        mDirLoadRunnable = new DirLoadRunnable( this );
-    }
-
-    registry->getWorker().doWork( mDirLoadRunnable );
+    registry->getWorker().doWork( new DirLoadRunnable( this ) );
 }
 
 int LevelList::nextLevel( int curLevel ) const

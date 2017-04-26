@@ -70,8 +70,6 @@ void Game::init( GameRegistry* registry )
         QObject::connect( &mFutureDelta.getPieceManager(), &PieceSetManager::erasedAt,   window, &BoardWindow::renderSquareLater );
         QObject::connect( &mFutureDelta.getPieceManager(), &PieceSetManager::insertedAt, window, &BoardWindow::renderSquareLater );
         QObject::connect( &mFutureDelta.getPieceManager(), &PieceSetManager::changedAt,  window, &BoardWindow::renderSquareLater );
-
-        window->init( registry );
     }
 
     mBoard.setParent(this);

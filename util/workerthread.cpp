@@ -21,7 +21,13 @@ void WorkerThread::shutdown()
 void WorkerThread::run()
 {
     while( mPending.size() > 0 && !mShuttingDown) {
-       mPending.front()->run();
-       mPending.pop_front();
+        Runnable* runnable = mPending.front();
+        if ( !mShuttingDown ) {
+            runnable->run();
+        }
+        mPending.pop_front();
+        if ( runnable->mDeleteWhenDone ) {
+            delete runnable;
+        }
     }
 }

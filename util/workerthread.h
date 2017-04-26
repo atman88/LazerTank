@@ -10,8 +10,14 @@
 class Runnable
 {
 public:
-    virtual void run() = 0;
+    Runnable( bool deleteWhenDone = false ) : mDeleteWhenDone(deleteWhenDone)
+    {
+    }
+
     virtual ~Runnable() {}
+    virtual void run() = 0;
+
+    bool mDeleteWhenDone;
 };
 
 /**

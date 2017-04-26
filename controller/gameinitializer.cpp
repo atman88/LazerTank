@@ -41,12 +41,15 @@ void GameInitializer::resumeInitialization()
     //
     // second phase: sequential execution of:
     //   2.1) initialization of the game on the foreground thread
-    //   2.2) kick off loading the board first board
+    //   2.2) kick off loading the first board
     //
     if ( mWindowPaintable && mLevelListInitialized ) {
         if ( GameRegistry* registry = getRegistry(this) ) {
             registry->getGame().init( registry );
             registry->getGame().getBoard()->load( registry->getLevelList().nextLevel(-1) );
+            if ( BoardWindow* window = registry->getWindow() ) {
+                window->init( registry );
+            }
         }
     }
 }
