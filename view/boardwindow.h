@@ -13,6 +13,8 @@ class GameRegistry;
 class Game;
 class ReplayText;
 
+#include "boardrenderer.h"
+#include "levelchooser.h"
 #include "model/piece.h"
 
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 7, 0))
@@ -178,13 +180,14 @@ private:
     void moveFocus( PieceType what );
 
     QBackingStore *mBackingStore;
+    BoardRenderer mRenderer;
     QMenu mMenu;
     ACTION mSpeedAction;
     ACTION mReloadAction;
     ACTION mUndoMoveAction;
     ACTION mClearMovesAction;
     ACTION mReplayAction;
-    QMenu mLevelsMenu;
+    ACTION mChooseLevelAction;
 
     QRegion mDirtyRegion;
     QRegion mRenderRegion;

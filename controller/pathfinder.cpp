@@ -26,12 +26,11 @@ bool PathFinder::findPath( PathSearchCriteria* criteria, bool testOnly )
         Game& game = registry->getGame();
         if ( game.canPlaceAt( TANK, criteria->getTargetPoint(), 0, criteria->isFuturistic() )) {
             Board* board = game.getBoard( criteria->isFuturistic() );
-            mMaxCol = board->getWidth()-1;
-            mMaxRow = board->getHeight()-1;
+            mMaxPoint = board->getLowerRight();
 
             ModelPoint point;
-            for( point.mRow = mMaxRow; point.mRow >= 0; --point.mRow ) {
-                for( point.mCol = mMaxCol; point.mCol >= 0; --point.mCol ) {
+            for( point.mRow = mMaxPoint.mRow; point.mRow >= 0; --point.mRow ) {
+                for( point.mCol = mMaxPoint.mCol; point.mCol >= 0; --point.mCol ) {
                     mSearchMap[point.mRow*BOARD_MAX_WIDTH+point.mCol] =
                       game.canPlaceAt( TANK, point, 0, criteria->getFocus() != TANK ) ? TRAVERSIBLE : BLOCKED;
                 }
@@ -62,8 +61,8 @@ void PathFinder::addPush( Push& push )
 /*
 void PathFinder::printSearchMap()
 {
-    for( int row = 0; row <= mMaxRow; ++row ) {
-        for( int col = 0; col <= mMaxCol; ++col ) {
+    for( int row = 0; row <= mMaxPoint.mRow; ++row ) {
+        for( int col = 0; col <= mMaxPoint.mCol; ++col ) {
             switch( mSearchMap[row * BOARD_MAX_WIDTH + col] ) {
             case 0:          std::cout << '0'; break;
             case 1:          std::cout << '1'; break;
@@ -89,10 +88,10 @@ void PathFinder::buildPath( int col, int row )
         if ( --mPassValue < 0 ) {
             mPassValue = TRAVERSIBLE-1;
         }
-        if      ( row > 0       && mSearchMap[(row-1) * BOARD_MAX_WIDTH + col  ] == mPassValue ) { --row; direction =   0; }
-        else if ( col > 0       && mSearchMap[row     * BOARD_MAX_WIDTH + col-1] == mPassValue ) { --col; direction = 270; }
-        else if ( row < mMaxRow && mSearchMap[(row+1) * BOARD_MAX_WIDTH + col  ] == mPassValue ) { ++row; direction = 180; }
-        else if ( col < mMaxCol && mSearchMap[row     * BOARD_MAX_WIDTH + col+1] == mPassValue ) { ++col; direction =  90; }
+        if      ( row > 0              && mSearchMap[(row-1) * BOARD_MAX_WIDTH + col  ] == mPassValue ) { --row; direction =   0; }
+        else if ( col > 0              && mSearchMap[row     * BOARD_MAX_WIDTH + col-1] == mPassValue ) { --col; direction = 270; }
+        else if ( row < mMaxPoint.mRow && mSearchMap[(row+1) * BOARD_MAX_WIDTH + col  ] == mPassValue ) { ++row; direction = 180; }
+        else if ( col < mMaxPoint.mCol && mSearchMap[row     * BOARD_MAX_WIDTH + col+1] == mPassValue ) { ++col; direction =  90; }
         else {
             break;
         }
@@ -108,8 +107,8 @@ void PathFinder::buildPath( int col, int row )
 
 void PathFinder::tryAt( int col, int row )
 {
-    if ( col >= 0 && col <= mMaxCol
-      && row >= 0 && row <= mMaxRow ) {
+    if ( col >= 0 && col <= mMaxPoint.mCol
+      && row >= 0 && row <= mMaxPoint.mRow ) {
         switch( mSearchMap[row*BOARD_MAX_WIDTH + col] ) {
         case TRAVERSIBLE:
             mSearchMap[row*BOARD_MAX_WIDTH + col] = mPassValue;

@@ -1,7 +1,6 @@
 #include <iostream>
 #include "push.h"
 #include "controller/gameregistry.h"
-#include "util/renderutils.h"
 
 PushView::PushView( QObject* parent ) : QObject(parent)
 {
@@ -42,10 +41,10 @@ void PushView::start( Piece& what, int fromX, int fromY, int toX, int toY )
     emit stateChanged(QAbstractAnimation::Running, QAbstractAnimation::Stopped);
 }
 
-void PushView::render( const QRect* rect, QPainter* painter )
+void PushView::render( const QRect* rect, BoardRenderer& renderer, QPainter* painter )
 {
     if ( mType != NONE && mBoundingRect.intersects( *rect ) ) {
-        renderPiece( mType, mBoundingRect.left(), mBoundingRect.top(), mPieceAngle, painter );
+        renderer.renderPiece( mType, mBoundingRect, mPieceAngle, painter );
         mRenderedBoundingRect = mBoundingRect;
     }
 }

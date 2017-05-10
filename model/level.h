@@ -2,20 +2,25 @@
 #define LEVEL_H
 
 #include <QObject>
+#include <QWidget>
+#include <QWidgetAction>
 #include <QList>
 
 #include "modelpoint.h"
 #include "util/workerthread.h"
 
 class GameRegistry;
+class Board;
 
 /**
  * @brief Representation of a level and its attributes
  */
-class Level
+class Level : public QWidgetAction
 {
+    Q_OBJECT
+
 public:
-    Level( int getNumber );
+    explicit Level( int number, int width, int height, QObject* parent = 0 );
 
     bool operator==( const Level& other ) const;
     bool operator<( const Level& other ) const;
@@ -25,44 +30,33 @@ public:
      */
     int getNumber() const;
 
+    /**
+     * @brief Get the size for this level in model space (i.e. number of columns and rows)
+     */
+    const QSize& getSize() const;
+
+    bool onBoardLoaded( const ModelPoint& lowerRight );
+
 private:
     int mNumber;
-    ModelPoint mLowerRight;
+    QSize mSize;
 };
 
-class DirLoadRunnable;
-
-/**
- * @brief A level list container class
- */
-class LevelList : public QObject
+class LevelWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    LevelList();
+    LevelWidget( Level& source, QWidget* parent = 0 );
 
-    void init( GameRegistry* registry );
+    QSize sizeHint() const override;
 
-    /**
-     * @brief Get the number of the next available level
-     * @param curLevel The previous level
-     * @return The next level or 0 if no more levels available
-     */
-    int nextLevel( int curLevel ) const;
-
-    QList<Level> getList() const;
-
-signals:
-    /**
-     * @brief Notifies that initialization has completed
-     */
-    void initialized();
+protected:
+    void paintEvent( QPaintEvent* ) override;
 
 private:
-    QList<Level> mList;
-
-    friend class DirLoadRunnable;
+    int mNumber;
+    QSize mSize;
 };
 
 #endif // LEVEL_H

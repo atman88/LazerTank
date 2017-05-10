@@ -20,6 +20,7 @@ typedef enum {
     PieceTypeUpperBound   // must be last
 } PieceType;
 
+class BoardRenderer;
 
 class PieceView : public ModelVector
 {
@@ -45,13 +46,14 @@ public:
     {
     }
 
-    bool render( const QRect *dirty, QPainter* painter );
-
     /**
-     * @brief Gets the rectangular screen area currently occupied by this piece
-     * @param rect The rect to return the result in
+     * @brief Paint the piece
+     * @param dirty The area that requires painting
+     * @param renderer The renderer to use
+     * @param painter The painter
+     * @return true if painted or false if outside of the dirty area
      */
-    void getBounds( QRect *rect ) const;
+    bool render( const QRect *dirty, const BoardRenderer& renderer, QPainter* painter );
 
     /**
      * @brief Getters & setters

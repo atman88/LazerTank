@@ -7,54 +7,18 @@
 #include "controller/gameregistry.h"
 #include "util/workerthread.h"
 
-class LoadRunnable : Runnable
-{
-public:
-    LoadRunnable(Board& board) : mBoard(board)
-    {
-    }
-    ~LoadRunnable()
-    {
-    }
-
-    void loadFile( QString fileName, int level )
-    {
-        mFileName = fileName;
-        mLevel = level;
-        if ( GameRegistry* registry = getRegistry(&mBoard) ) {
-            emit mBoard.boardLoading();
-            registry->getWorker().doWork( this );
-        }
-    }
-
-    void run() override
-    {
-        mBoard.load( mFileName, mLevel );
-    }
-
-private:
-    Board& mBoard;
-    QString mFileName;
-    int mLevel;
-};
-
-Board::Board( QObject* parent ) : QObject(parent), mLevel(0), mWidth(6), mHeight(6), mStream(0), mRunnable(0)
+Board::Board( QObject* parent ) : QObject(parent), mLevel(0), mStream(0)
 {
     memset( mTiles, EMPTY, sizeof mTiles );
 }
 
 Board::~Board()
 {
-    delete mRunnable;
 }
 
 void Board::load( int level ) {
     QString namePattern( ":/maps/level%1.txt" );
-    QString name = namePattern.arg(level);
-    if ( !mRunnable ) {
-        mRunnable = new LoadRunnable(*this);
-    }
-    mRunnable->loadFile( name, level );\
+    load( namePattern.arg(level), level );\
 }
 
 void Board::reload()
@@ -77,7 +41,7 @@ void Board::initPiece( PieceType type, int col, int row, int angle )
     mTiles[row*BOARD_MAX_HEIGHT + col] = DIRT;
 }
 
-ModelPoint Board::getTankStartPoint() const
+const ModelPoint& Board::getTankStartPoint() const
 {
     return mTankWayPoint;
 }
@@ -87,7 +51,7 @@ ModelPoint Board::getFlagPoint() const
     return mFlagPoint;
 }
 
-bool Board::load( QString& fileName, int level )
+bool Board::load( const QString& fileName, int level )
 {
     QFile file( fileName );
     bool rc = file.open(QIODevice::ReadOnly|QIODevice::Text);
@@ -103,8 +67,7 @@ void Board::load( QTextStream& stream, int level )
 {
     int row = 0;
     unsigned char* rowp = mTiles;
-    mWidth = 0;
-    mTankWayPoint = ModelPoint(0,0);
+    mLowerRight = mTankWayPoint = ModelPoint(0,0);
     mFlagPoint.setNull();
     mPieceManager.reset();
 
@@ -170,13 +133,13 @@ void Board::load( QTextStream& stream, int level )
         if ( !col ) {
             break;
         }
-        if ( col > mWidth ) {
-            mWidth = col;
+        if ( col > mLowerRight.mCol ) {
+            mLowerRight.mCol = col-1;
         }
         rowp += BOARD_MAX_WIDTH;
     } while( ++row < BOARD_MAX_HEIGHT );
 
-    mHeight = row;
+    mLowerRight.mRow = row-1;
     mLevel = level;
     mStream = ( level < 0 ) ? &stream : 0;
 
@@ -186,8 +149,7 @@ void Board::load( QTextStream& stream, int level )
 void Board::load( const Board* source )
 {
     mLevel  = source->mLevel;
-    mWidth  = source->mWidth;
-    mHeight = source->mHeight;
+    mLowerRight  = source->mLowerRight;
     memcpy( mTiles, source->mTiles, sizeof mTiles );
     mPieceManager.reset( &source->mPieceManager );
     emit boardLoaded();
@@ -195,12 +157,17 @@ void Board::load( const Board* source )
 
 int Board::getWidth()
 {
-    return mWidth;
+    return mLowerRight.mCol+1;
 }
 
 int Board::getHeight()
 {
-    return mHeight;
+    return mLowerRight.mRow+1;
+}
+
+const ModelPoint& Board::getLowerRight() const
+{
+    return mLowerRight;
 }
 
 int Board::getLevel()
@@ -209,12 +176,12 @@ int Board::getLevel()
 }
 
 TileType Board::tileAt( int col, int row ) const {
-    return (col >= 0 && row >= 0 && col < mWidth && row < mHeight) ? ((TileType) mTiles[row*BOARD_MAX_WIDTH+col]) : STONE;
+    return (col >= 0 && row >= 0 && col <= mLowerRight.mCol && row <= mLowerRight.mRow) ? ((TileType) mTiles[row*BOARD_MAX_WIDTH+col]) : EMPTY;
 }
 
 void Board::setTileAt( TileType id, int col, int row )
 {
-    if ( col >= 0 && row >= 0 && col < mWidth && row < mHeight ) {
+    if ( col >= 0 && row >= 0 && col <= mLowerRight.mCol && row <= mLowerRight.mRow ) {
         mTiles[row*BOARD_MAX_WIDTH+col] = id;
         emit tileChangedAt( col, row );
     }

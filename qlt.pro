@@ -8,34 +8,55 @@ QT += widgets
 
 QMAKE_CXXFLAGS += -std=gnu++11
 
-# Input
 HEADERS += \
-           model/board.h \
-           model/piece.h \
-    view/shooter.h \
-    controller/pathfinder.h \
-    util/imageutils.h \
+    model/board.h \
+    model/piece.h \
     model/piecesetmanager.h \
     model/piecelistmanager.h \
+    model/modelpoint.h \
+    view/pieceview.h \
+    util/gameutils.h \
+    util/imageutils.h \
+    view/boardrenderer.h
+
+SOURCES += \
+    model/board.cpp \
+    model/piece.cpp \
+    model/piecesetmanager.cpp \
+    model/piecelistmanager.cpp \
+    model/modelpoint.cpp \
+    view/pieceview.cpp \
+    util/gameutils.cpp \
+    util/imageutils.cpp \
+    view/boardrenderer.cpp
+
+index {
+    TARGET = qltindexer
+    SOURCES +=  index/indexermain.cpp
+}
+else {
+# definitions common to app & test
+
+QT += xml
+
+HEADERS += \
+    view/shooter.h \
+    controller/pathfinder.h \
     controller/speedcontroller.h \
     model/shotmodel.h \
     view/shotview.h \
-    util/renderutils.h \
     controller/animationstateaggregator.h \
     controller/game.h \
     model/boarddelta.h \
     view/boardwindow.h \
     model/tank.h \
-    util/gameutils.h \
     view/tankview.h \
     controller/pathsearchaction.h \
     controller/pathfindercontroller.h \
     controller/pathsearchcriteria.h \
-    view/pieceview.h \
     model/futureshotpath.h \
     view/pushview.h \
     model/push.h \
-    model/modelpoint.h \
     controller/futurechange.h \
     model/tile.h \
     controller/movecontroller.h \
@@ -45,35 +66,27 @@ HEADERS += \
     util/workerthread.h \
     controller/gameinitializer.h \
     controller/gameregistry.h \
-    model/level.h
+    model/level.h \
+    view/levelchooser.h
 
 SOURCES += \
-           model/board.cpp \
-           model/piece.cpp \
     view/shooter.cpp \
     controller/pathfinder.cpp \
-    util/imageutils.cpp \
-    model/piecesetmanager.cpp \
-    model/piecelistmanager.cpp \
     controller/speedcontroller.cpp \
     model/shotmodel.cpp \
     view/shotview.cpp \
-    util/renderutils.cpp \
     controller/animationstateaggregator.cpp \
     controller/game.cpp \
     model/boarddelta.cpp \
     view/boardwindow.cpp \
     model/tank.cpp \
-    util/gameutils.cpp \
     view/tankview.cpp \
     controller/pathsearchaction.cpp \
     controller/pathfindercontroller.cpp \
     controller/pathsearchcriteria.cpp \
-    view/pieceview.cpp \
     model/futureshotpath.cpp \
     view/pushview.cpp \
     model/push.cpp \
-    model/modelpoint.cpp \
     controller/movecontroller.cpp \
     util/recorder.cpp \
     util/recorderprivate.cpp \
@@ -81,9 +94,8 @@ SOURCES += \
     util/workerthread.cpp \
     controller/gameinitializer.cpp \
     controller/gameregistry.cpp \
-    model/level.cpp
-
-RESOURCES += qml.qrc
+    model/level.cpp \
+    view/levelchooser.cpp
 
 test{
     INCLUDEPATH += test/controller
@@ -103,9 +115,18 @@ test{
         test/util/testrecorder.cpp \
         test/util/piecelistmanagerobserver.cpp \
         test/util/testworker.cpp
-}
-else{
+
+} else {
     TARGET = qlt
+    RESOURCES += qml.qrc
 
     SOURCES += main.cpp
+
+    levelindex.target = maps/levels.xml
+    levelindex.commands = qltindexer > $$levelindex.target
+    levelindex.depends = maps/*.txt
+    QMAKE_EXTRA_TARGETS += levelindex
+
+    TARGET.depends += levelindex
+}
 }

@@ -2,7 +2,8 @@
 #define WORKERTHREAD_H
 
 #include <list>
-#include <QThread>
+#include <mutex>
+#include <thread>
 
 /**
  * @brief Interface for user-defined tasks
@@ -22,8 +23,11 @@ public:
 
 /**
  * @brief Utility which queues and serially runs tasks in the background
+ * Note that this class uses the std thread (rather than Qt's thread APIs) in order to facilitate object creation free of
+ * thread affinity. This allows background creation of QObject's which are subsequently moved to the target (application)
+ * thread.
  */
-class WorkerThread : public QThread
+class WorkerThread
 {
 public:
     WorkerThread();
@@ -40,8 +44,13 @@ public:
     void shutdown();
 
 private:
-    void run() override;
+    Runnable* getCurrentRunnable();
+    void dequeueCurrentRunnable();
+
+    void run();
+    std::mutex mPendingMutex;
     std::list<Runnable*> mPending;
+    std::thread* mThread;
     bool mShuttingDown;
 };
 

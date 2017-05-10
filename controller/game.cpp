@@ -14,10 +14,46 @@
 #include "model/push.h"
 #include "model/level.h"
 #include "view/boardwindow.h"
-#include "util/renderutils.h"
+#include "view/boardrenderer.h"
 
-Game::Game() : mBoardLoaded(0)
+class BoardLoadRunnable : Runnable
 {
+public:
+    BoardLoadRunnable(Board& board) : mBoard(board)
+    {
+    }
+    ~BoardLoadRunnable()
+    {
+    }
+
+    void load( int level )
+    {
+        mLevel = level;
+        if ( GameRegistry* registry = getRegistry(&mBoard) ) {
+            emit mBoard.boardLoading();
+            registry->getWorker().doWork( this );
+        }
+    }
+
+    void run() override
+    {
+        mBoard.load( mLevel );
+    }
+
+private:
+    Board& mBoard;
+    int mLevel;
+};
+
+Game::Game() : mLoadRunnable(0), mBoardLoaded(0)
+{
+}
+
+Game::~Game()
+{
+    if ( mLoadRunnable ) {
+        delete mLoadRunnable;
+    }
 }
 
 void Game::init( GameRegistry* registry )
@@ -92,7 +128,7 @@ void Game::onBoardLoaded()
         registry->getMoveAggregate().reset();
         registry->getShotAggregate().reset();
         registry->getTank().onBoardLoaded( mBoard.getTankStartPoint() );
-        registry->getActiveCannon().reset( NullPoint );
+        registry->getActiveCannon().reset( BoardRenderer::NullPoint );
         registry->getSpeedController().setHighSpeed(false);
         registry->getMoveController().onBoardLoaded( &mBoard );
     }
@@ -244,7 +280,7 @@ void Game::onMoveAggregatorFinished()
                 QPushButton* nextButton   = msgBox.addButton( QString("&Next Level"  ), QMessageBox::AcceptRole );
                 QPushButton* exitButton   = msgBox.addButton( QString("E&xit"        ), QMessageBox::DestructiveRole );
                 msgBox.setDefaultButton( nextButton );
-                nextButton->setEnabled( registry->getLevelList().nextLevel(mBoard.getLevel()) != 0 );
+                nextButton->setEnabled( registry->getLevelChooser().nextLevel(mBoard.getLevel()) != 0 );
 
                 msgBox.exec();
 
@@ -252,8 +288,8 @@ void Game::onMoveAggregatorFinished()
                     registry->getWindow()->close();
                 } else if ( msgBox.clickedButton() == replayButton ) {
                     restartLevel( true );
-                } else if ( int i = registry->getLevelList().nextLevel( mBoard.getLevel() ) ) {
-                    mBoard.load( i );
+                } else if ( int i = registry->getLevelChooser().nextLevel( mBoard.getLevel() ) ) {
+                    loadMasterBoard( i );
                 }
             }
             return;
@@ -574,6 +610,14 @@ const PieceSet* Game::getDeltaPieces()
         return &mFutureDelta.getPieceManager().getPieces();
     }
     return 0;
+}
+
+void Game::loadMasterBoard( int level )
+{
+    if ( !mLoadRunnable ) {
+        mLoadRunnable = new BoardLoadRunnable( mBoard );
+    }
+    mLoadRunnable->load( level );
 }
 
 void Game::undoFuturePush( MovePiece* pusher )

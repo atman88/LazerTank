@@ -8,21 +8,21 @@
 #include "controller/animationstateaggregator.h"
 #include "model/tank.h"
 #include "view/shooter.h"
+#include "view/levelchooser.h"
 #include "model/push.h"
-#include "model/level.h"
 #include "util/workerthread.h"
 
 GameRegistry::GameRegistry( BoardWindow* window, Game* game,
   SpeedController* speedController, MoveController* moveController, PathFinderController* pathFinderController,
   AnimationStateAggregator* moveAggregate, AnimationStateAggregator* shotAggregate, Tank* tank, Shooter* activeCannon,
-  Push* tankPush, Push* shotPush, LevelList* levelList )
+  Push* tankPush, Push* shotPush, LevelChooser* levelChooser )
   : QObject(0), mWindow(window), mGame(game),
     mSpeedController(speedController), mMoveController(moveController), mPathFinderController(pathFinderController),
     mMoveAggregate(moveAggregate), mShotAggregate(shotAggregate), mTank(tank), mActiveCannon(activeCannon),
-    mTankPush(tankPush), mShotPush(shotPush), mLevelList(levelList)
+    mTankPush(tankPush), mShotPush(shotPush), mLevelChooser(levelChooser)
 {
     mHandle.registry = this;
-    setProperty("GameHandle", QVariant::fromValue(mHandle));
+    setProperty( GameHandleName, QVariant::fromValue(mHandle) );
 
     if ( game                  ) onInject( game );
     if ( speedController       ) onInject( speedController );
@@ -33,14 +33,19 @@ GameRegistry::GameRegistry( BoardWindow* window, Game* game,
     if ( activeCannon          ) onInject( activeCannon );
     if ( tankPush              ) onInject( tankPush );
     if ( shotPush              ) onInject( shotPush );
-    if ( levelList             ) onInject( levelList );
 
-    mWorker.setParent(this);
     mCaptureAction.setParent(this);
     mPathToAction.setParent(this);
 
+    if ( levelChooser ) {
+        mInjectionList.append( levelChooser );
+        levelChooser->setProperty( GameHandleName, property(GameHandleName) );
+    }
+
     if ( window ) {
         QObject::connect( window, &BoardWindow::destroyed, this, &GameRegistry::onWindowDestroyed );
+        window->setProperty( GameHandleName, property(GameHandleName) );
+        mWindow = window;
     }
 }
 
@@ -72,7 +77,15 @@ DECL_GETTER(Tank,Tank)
 DECL_GETTER(ActiveCannon,Shooter)
 DECL_GETTER(TankPush,Push)
 DECL_GETTER(ShotPush,Push)
-DECL_GETTER(LevelList,LevelList)
+
+LevelChooser& GameRegistry::getLevelChooser()
+{
+    if ( !mLevelChooser ) {
+        mLevelChooser = new LevelChooser();
+        mLevelChooser->setProperty( GameHandleName, property(GameHandleName) );
+    }
+    return *mLevelChooser;
+}
 
 WorkerThread&     GameRegistry::getWorker()        { return mWorker;        }
 PathSearchAction& GameRegistry::getCaptureAction() { return mCaptureAction; }

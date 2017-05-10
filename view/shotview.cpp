@@ -2,15 +2,14 @@
 #include <QPainterPath>
 #include "shotview.h"
 #include "shooter.h"
-#include "model/board.h"
+#include "boardrenderer.h"
 #include "controller/game.h"
-#include "util/renderutils.h"
-
-using namespace std;
+#include "model/board.h"
+#include "model/modelpoint.h"
 
 ShotView::ShotView(QObject *parent) : QObject(parent), mShooter(0), mTerminationAngle(-1), mKillTheTank(false)
 {
-    mLeadPoint = mTailPoint = NullPoint;
+    mLeadPoint = mTailPoint = BoardRenderer::NullPoint;
     mPen.setWidth( 2 );
 }
 
@@ -18,8 +17,8 @@ void ShotView::reset()
 {
     // dirty it if visible to erase
     QPoint curPoint = getStartPoint();
-    if ( curPoint != NullPoint ) {
-        if ( mLeadPoint != NullPoint ) {
+    if ( curPoint != BoardRenderer::NullPoint ) {
+        if ( mLeadPoint != BoardRenderer::NullPoint ) {
             for( auto it : mBendPoints ) {
                 emitDirtySegment( curPoint, it );
                 curPoint = it;
@@ -34,7 +33,7 @@ void ShotView::reset()
 
     mKillTheTank = false;
     mTerminationAngle = -1;
-    mLeadPoint = mTailPoint = NullPoint;
+    mLeadPoint = mTailPoint = BoardRenderer::NullPoint;
     releaseShooter();
     mBendPoints.clear();
 }
@@ -52,7 +51,7 @@ QPoint toStartPoint( int x, int y, int angle )
 
 QPoint ShotView::getStartPoint()
 {
-    if ( mShooter && mTailPoint == NullPoint ) {
+    if ( mShooter && mTailPoint == BoardRenderer::NullPoint ) {
         return toStartPoint( mShooter->getViewX().toInt(), mShooter->getViewY().toInt(), mShooter->getViewRotation().toInt() % 360 );
     }
     return mTailPoint;
@@ -71,10 +70,10 @@ QPoint ShotView::getLeadPoint() const
 void ShotView::render( QPainter* painter )
 {
     QPoint startPoint = getStartPoint();
-    if ( startPoint != NullPoint ) {
+    if ( !startPoint.isNull() ) {
         painter->setPen( mPen );
 
-        if ( mLeadPoint != NullPoint ) {
+        if ( !mLeadPoint.isNull() ) {
             QPainterPath painterPath;
             painterPath.moveTo( startPoint );
 
@@ -126,17 +125,17 @@ bool ShotView::hasTerminationPoint()
 void ShotView::commenceFire( Shooter* shooter )
 {
     mShooter = shooter;
-    mTailPoint = NullPoint;
+    mTailPoint = BoardRenderer::NullPoint;
     mLeadAngle = shooter->getViewRotation().toInt() % 360;
     mLeadPoint = toStartPoint( shooter->getViewX().toInt(), shooter->getViewY().toInt(), mLeadAngle );
 }
 
 void ShotView::emitDirtySegment( QPoint p1, QPoint p2 )
 {
-    int x1 = min( p1.x(), p2.x() )-1;
-    int y1 = min( p1.y(), p2.y() )-1;
-    int x2 = max( p1.x(), p2.x() )+1;
-    int y2 = max( p1.y(), p2.y() )+1;
+    int x1 = std::min( p1.x(), p2.x() )-1;
+    int y1 = std::min( p1.y(), p2.y() )-1;
+    int x2 = std::max( p1.x(), p2.x() )+1;
+    int y2 = std::max( p1.y(), p2.y() )+1;
     QRect rect( x1, y1, x2, y2 );
     emit rectDirty( rect );
 }
@@ -203,14 +202,14 @@ bool ShotView::trimToward( QPoint target )
 
 bool ShotView::shedTail()
 {
-    if ( mTailPoint == NullPoint ) {
+    if ( mTailPoint == BoardRenderer::NullPoint ) {
         mTailPoint = toStartPoint( mShooter->getViewX().toInt(), mShooter->getViewY().toInt(), mShooter->getViewRotation().toInt() % 360 );
         releaseShooter();
     }
 
     if ( mTailPoint == mLeadPoint ) {
         emitSplatDirty();
-        mTailPoint = mLeadPoint = NullPoint;
+        mTailPoint = mLeadPoint = BoardRenderer::NullPoint;
     } else {
         QPoint startTailPoint( mTailPoint );
 
@@ -233,7 +232,6 @@ bool ShotView::shedTail()
 void ShotView::releaseShooter()
 {
     if ( mShooter ) {
-        std::cout << "ShotView: shooterReleased" << std::endl;
         mShooter = 0;
         emit shooterReleased();
     }
@@ -242,7 +240,7 @@ void ShotView::releaseShooter()
 void ShotView::killTheTank()
 {
     QPoint p = mLeadPoint;
-    if ( p == NullPoint ) {
+    if ( p == BoardRenderer::NullPoint ) {
         p = mTailPoint;
     }
     mKillTheTank = true;

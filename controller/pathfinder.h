@@ -62,8 +62,7 @@ private:
     PathSearchCriteria mRunCriteria; // copy used by the background which won't be impacted by a parallel call to findPath
     bool mStopping;
     char mSearchMap[BOARD_MAX_HEIGHT*BOARD_MAX_WIDTH];
-    int mMaxCol;
-    int mMaxRow;
+    ModelPoint mMaxPoint;
     int mSearchCol[MAX_POINTS];
     int mSearchRow[MAX_POINTS];
     int mPassValue;

@@ -6,6 +6,11 @@
 class GameRegistry;
 
 /**
+ * @brief The game handle property identifier name
+ */
+extern const char* GameHandleName;
+
+/**
  * @brief The Game handle
  * The QObject property referencing this Game object
  */

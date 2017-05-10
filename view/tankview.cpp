@@ -1,8 +1,8 @@
 #include <iostream>
 #include "tankview.h"
 #include "model/piece.h"
+#include "view/boardrenderer.h"
 #include "util/imageutils.h"
-#include "util/renderutils.h"
 
 TankView::TankView(QObject *parent) : Shooter(parent)
 {
@@ -23,15 +23,13 @@ void TankView::init( GameRegistry* registry )
 void TankView::render( const QRect* rect, QPainter* painter )
 {
     if ( rect->intersects( mBoundingRect ) ) {
-        int x = mBoundingRect.left();
-        int y = mBoundingRect.top();
         if ( !(mViewRotation % 360) ) {
             mPreviousPaintRect = mBoundingRect;
         } else {
-            renderRotation( x, y, mViewRotation, painter );
+            BoardRenderer::renderRotation( mBoundingRect, mViewRotation, painter );
             mPreviousPaintRect = painter->transform().mapRect( mBoundingRect );
         }
-        drawPixmap( x, y, TANK, painter );
+        BoardRenderer::renderPixmap( mBoundingRect, TANK, painter );
         painter->resetTransform();
     }
 

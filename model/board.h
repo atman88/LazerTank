@@ -12,8 +12,6 @@
 #define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
 #define BOARD_MAX_HEIGHT PIECE_MAX_ROWCOUNT
 
-class LoadRunnable;
-
 /**
  * @brief Helper method to determine the neighbor square for the given direction
  * @param angle The direction. Legal values are 0, 90, 180, 270.
@@ -39,6 +37,11 @@ public:
      * @return The level number, or 0 if a level has not been explicitly loaded.
      */
     int getLevel();
+
+    /**
+     * @brief Get the maximum point on this board
+     */
+    const ModelPoint& getLowerRight() const;
 
     /**
      * @brief Get the total number of columns for this board
@@ -100,7 +103,7 @@ public:
      * @param level optional level number to associate with the instance or -1 if the file does not correspond to a level
      * @return true if successful
      */
-    bool load( QString& fileName, int level = -1 );
+    bool load( const QString& fileName, int level = -1 );
 
     /**
      * @brief load from the given stream
@@ -123,7 +126,7 @@ public:
      * @brief Get square that the tank was loaded at for this board
      * @return The tank way point. The point 0,0 is returned when not specified in the previously loaded board data.
      */
-    ModelPoint getTankStartPoint() const;
+    const ModelPoint& getTankStartPoint() const;
 
     /**
      * @brief roll back future board changes for this shot path
@@ -151,8 +154,7 @@ signals:
 private:
     void initPiece( PieceType type, int col, int row, int angle = 0 );
     int mLevel;
-    int mWidth;
-    int mHeight;
+    ModelPoint mLowerRight;
     ModelPoint mFlagPoint;
     ModelPoint mTankWayPoint;
 
@@ -160,7 +162,6 @@ private:
     PieceSetManager mPieceManager;
 
     QTextStream* mStream;
-    LoadRunnable* mRunnable;
 };
 
 #endif // BOARD_H

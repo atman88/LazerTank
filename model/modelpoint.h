@@ -43,13 +43,14 @@ public:
     /**
      * @brief Nullify this point
      */
-    void setNull();
+    const ModelPoint& setNull();
 
     /**
      * @brief compare equality
      */
     bool equals( const ModelPoint& other ) const;
     bool operator == ( const ModelPoint& other ) const;
+    bool operator != ( const ModelPoint& other ) const;
 
     /**
      * @brief Update the given min and max points such that the bounds min,max contain this point.

@@ -1,14 +1,17 @@
 #include "modelpoint.h"
 #include "util/gameutils.h"
 
+const ModelPoint NullPoint(-1,-1);
+
 bool ModelPoint::isNull() const
 {
     return mCol < 0 || mRow < 0;
 }
 
-void ModelPoint::setNull()
+const ModelPoint& ModelPoint::setNull()
 {
     mCol = mRow = -1;
+    return *this;
 }
 
 bool ModelPoint::equals( const ModelPoint& other ) const
@@ -19,6 +22,11 @@ bool ModelPoint::equals( const ModelPoint& other ) const
 bool ModelPoint::operator ==( const ModelPoint& other ) const
 {
     return equals(other);
+}
+
+bool ModelPoint::operator !=( const ModelPoint& other ) const
+{
+    return !equals(other);
 }
 
 void ModelPoint::minMax(ModelPoint &min, ModelPoint &max) const

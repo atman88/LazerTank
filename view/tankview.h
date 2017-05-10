@@ -2,7 +2,9 @@
 #define TANKVIEW_H
 
 #include <QObject>
+
 #include "shooter.h"
+#include "boardrenderer.h"
 #include <controller/speedcontroller.h>
 
 class TankView : public Shooter

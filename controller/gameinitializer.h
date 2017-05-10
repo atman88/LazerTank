@@ -13,6 +13,12 @@ class GameInitializer : public QObject
 {
     Q_OBJECT
 
+    typedef enum {
+        PendingPhase,
+        ChooserPhase,
+        GamePhase
+    } InitPhase;
+
 public:
     explicit GameInitializer();
     void init( GameRegistry& registry );
@@ -24,18 +30,13 @@ private slots:
     void onWindowPaintable();
 
     /**
-     * @brief Receives notification that the levels are initialized
+     * @brief Executes game initalization (2nd phase)
      */
-    void onLevelListInitialized();
-
-    /**
-     * @brief Executes game initalization
-     */
-    void resumeInitialization();
+    void resume();
 
 private:
+    InitPhase mInitPhase;
     bool mWindowPaintable;
-    bool mLevelListInitialized;
 };
 
 #endif // GAMEINITIALIZER_H

@@ -68,13 +68,3 @@ const QPixmap* getPixmap( unsigned type )
     }
     return p;
 }
-
-void drawPixmap( int x, int y, unsigned type, QPainter* painter )
-{
-    const QPixmap* pixmap = getPixmap(type);
-    if ( pixmap ) {
-        painter->drawPixmap( x, y, *pixmap );
-    } else {
-        std::cout << "*** attempt to paint unlisted pixmap " << type << std::endl;
-    }
-}

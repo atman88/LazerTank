@@ -8,7 +8,6 @@
 #include "controller/animationstateaggregator.h"
 #include "controller/speedcontroller.h"
 #include "util/imageutils.h"
-#include "util/renderutils.h"
 #include "util/gameutils.h"
 
 Tank::Tank(QObject* parent) : TankView(parent), mVector(0,0,0)
@@ -62,9 +61,7 @@ bool Tank::doMove( ModelVector& vector )
 bool Tank::fire()
 {
     if ( Shooter::fire() ) {
-        std::cout << "fire" << std::endl;
         mRecorder.recordShot();
-        std::cout << "tank: firing " << getRotation() << std::endl;
         return true;
     }
     return false;

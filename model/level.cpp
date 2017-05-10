@@ -1,11 +1,50 @@
-#include <algorithm>
-#include <QDir>
-
 #include "level.h"
+#include "view/boardrenderer.h"
 #include "controller/gameregistry.h"
+#include "controller/game.h"
+#include "util/gameutils.h"
 
-Level::Level(int number) : mNumber(number)
+#define TILE_SIZE 12
+
+LevelWidget::LevelWidget( Level& source, QWidget* parent ) : QWidget(parent), mNumber(source.getNumber()),
+  mSize( source.getSize()*TILE_SIZE )
 {
+    setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Fixed );
+    setFocusPolicy( Qt::StrongFocus );
+    setAutoFillBackground( true );
+}
+
+QSize LevelWidget::sizeHint() const
+{
+    return mSize;
+}
+
+void LevelWidget::paintEvent(QPaintEvent* event)
+{
+    QPainter painter(this);
+
+    if ( hasFocus() ) {
+        painter.fillRect( event->rect(), QColor(0,255,33) );
+        painter.setPen(QColor(Qt::white));
+    }
+
+    if ( GameRegistry* registry = getRegistry(parent()) ) {
+        Board* board = registry->getGame().getBoard();
+        if ( board->getLevel() == mNumber ) {
+            BoardRenderer renderer( TILE_SIZE );
+            renderer.render( &event->rect(), board, &painter );
+            renderer.renderInitialTank( board, &painter );
+        }
+    }
+
+    painter.drawText( rect(), Qt::AlignBottom|Qt::AlignRight|Qt::TextDontClip|Qt::TextSingleLine, QString::number(mNumber) );
+}
+
+Level::Level(int number, int width, int height, QObject* parent ) : QWidgetAction(parent), mNumber(number),
+  mSize(QSize(width,height))
+{
+    QAction::setText( QString::number( number ) );
+    QAction::setData( QVariant(number) );
 }
 
 bool Level::operator==( const Level& other ) const
@@ -23,72 +62,20 @@ int Level::getNumber() const
     return mNumber;
 }
 
-uint qHash( const Level& level )
+const QSize& Level::getSize() const
 {
-    return level.getNumber();
+    return mSize;
 }
 
-LevelList::LevelList() : QObject(0)
+bool Level::onBoardLoaded( const ModelPoint& lowerRight )
 {
-}
-
-class DirLoadRunnable : public Runnable
-{
-public:
-    DirLoadRunnable( LevelList* list ) : Runnable(true), mList(list)
-    {
-    }
-
-    ~DirLoadRunnable()
-    {
-    }
-
-    void run() override
-    {
-        QString pattern( "level*.txt" );
-        int numberStartOffset = pattern.indexOf( QChar('*') );
-        QDir dir( ":/maps", pattern, QDir::Unsorted, QDir::Files|QDir::NoDotAndDotDot|QDir::Readable );
-        QStringList entries = dir.entryList();
-        QList<Level>& list = mList->mList;
-        for( QString entry : entries ) {
-            bool ok;
-            int number = entry.mid( numberStartOffset, entry.length()-numberStartOffset-4 ).toInt( &ok );
-            if ( ok ) {
-                list.append(Level(number));
-            }
+    QSize size( lowerRight.mCol+1, lowerRight.mRow+1 );
+    if ( size != mSize ) {
+        mSize = size;
+        if ( QWidget* widget = defaultWidget() ) {
+            widget->resize( widget->sizeHint() );
         }
-        std::sort( list.begin(), list.end() );
-
-        emit mList->initialized();
+        return true;
     }
-
-private:
-    LevelList* mList;
-};
-
-void LevelList::init( GameRegistry* registry )
-{
-    registry->getWorker().doWork( new DirLoadRunnable( this ) );
-}
-
-int LevelList::nextLevel( int curLevel ) const
-{
-    int index;
-    if ( curLevel < 0 ) {
-        index = 0;
-    } else {
-        if ( (index = mList.indexOf( Level(curLevel) )) < 0 ) {
-            return 0;
-        }
-        ++index;
-    }
-    if ( index < mList.size() ) {
-        return mList.at(index).getNumber();
-    }
-    return 0;
-}
-
-QList<Level> LevelList::getList() const
-{
-    return mList;
+    return false;
 }

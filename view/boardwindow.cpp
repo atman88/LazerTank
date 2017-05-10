@@ -5,6 +5,7 @@
 #include <QTextBrowser>
 
 #include "boardwindow.h"
+#include "boardrenderer.h"
 #include "replaytext.h"
 #include "controller/gameregistry.h"
 #include "controller/game.h"
@@ -15,12 +16,11 @@
 #include "model/push.h"
 #include "model/shotmodel.h"
 #include "model/level.h"
-#include "util/renderutils.h"
-#include "util/imageutils.h"
 
+#define TILE_SIZE 24
 
-BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mBackingStore(0), mRenderedOnce(false), mFocus(MOVE),
-  mGameInitialized(false), mHelpWidget(0), mReplayText(0)
+BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mBackingStore(0), mRenderer(TILE_SIZE), mRenderedOnce(false),
+  mFocus(MOVE), mGameInitialized(false), mHelpWidget(0), mReplayText(0)
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
   , mUpdatePending(false)
 #endif
@@ -44,7 +44,7 @@ BoardWindow::~BoardWindow()
 
 void BoardWindow::setSize( int cols, int rows )
 {
-    QRect size( 0, 0, cols * 24, rows * 24 );
+    QRect size( 0, 0, cols * TILE_SIZE, rows * TILE_SIZE );
     QRect myGeometry = geometry();
     myGeometry.setSize( size.size() );
 
@@ -64,7 +64,6 @@ void BoardWindow::setSize( int cols, int rows )
 void BoardWindow::init( GameRegistry* registry )
 {
     Game& game = registry->getGame();
-    setProperty("GameHandle", registry->property("GameHandle"));
 
     Board* board = game.getBoard();
     QObject::connect( board, &Board::tileChangedAt, this, &BoardWindow::renderSquareLater );
@@ -86,7 +85,6 @@ void BoardWindow::onBoardLoaded()
     if ( GameRegistry* registry = getRegistry(this) ) {
         Board* board = registry->getGame().getBoard();
         setSize( board->getWidth(), board->getHeight() );
-
         int level = board->getLevel();
         if ( level > 0 ) {
             QString title( QString("Level %1").arg(level) );
@@ -114,14 +112,14 @@ void BoardWindow::showHelp()
 
 void BoardWindow::renderSquareLater( int col, int row )
 {
-    QRect dirty(col*24, row*24, 24, 24);
+    QRect dirty(col*TILE_SIZE, row*TILE_SIZE, TILE_SIZE, TILE_SIZE);
     renderLater( dirty );
 }
 
 void BoardWindow::renderListIn(PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter )
 {
     while( iterator != end ) {
-        if ( !(*iterator)->render( dirty, painter ) ) {
+        if ( !(*iterator)->render( dirty, mRenderer, painter ) ) {
             break;
         }
         ++iterator;
@@ -135,71 +133,21 @@ QMenu& BoardWindow::getMenu()
 
 void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* painter )
 {
+//std::cout << "render " << rect->x() << "," << rect->y() << " " << rect->width() << "x" << rect->height() << std::endl;
     Board* board = registry->getGame().getBoard();
     MoveController& moveController = registry->getMoveController();
     const PieceMultiSet* moves = moveController.getMoves().toMultiSet();
-    const PieceSet& tiles = board->getPieceManager().getPieces();
     const PieceSet* deltas = (moveController.replaying() ? 0 : registry->getGame().getDeltaPieces());
 
-    int minX = rect->left()/24;
-    int minY = rect->top() /24;
-    int maxX = (rect->right() +24-1)/24;
-    int maxY = (rect->bottom()+24-1)/24;
-
-    SimplePiece pos(MOVE, minX, minY);
+    SimplePiece pos(MOVE, rect->left()/TILE_SIZE, rect->top()/TILE_SIZE);
     PieceSet::iterator moveIterator = (moveController.replaying() ? moves->end() : moves->lower_bound( &pos ));
-    PieceSet::iterator tileIterator = tiles.lower_bound( &pos );
     PieceSet::iterator deltasIterator;
     if ( deltas ) {
         deltasIterator = deltas->lower_bound( &pos );
     }
 
-    for( int y = minY; y <= maxY; ++y ) {
-        for( int x = minX; x <= maxX; ++x ) {
-            TileType type = board->tileAt( x, y );
-            const QPixmap* pixmap = getPixmap( type );
-            if ( !pixmap->isNull() ) {
-                painter->drawPixmap( x*24, y*24, *pixmap );
-            } else {
-                int angle = 0;
-                int wx = x*24;
-                int wy = y*24;
-                switch( type ) {
-                case WATER:
-                    painter->fillRect(wx, wy, 24, 24, QColor(33,33,255));
-                    break;
-                case STONE_MIRROR__90:
-                    pixmap = getPixmap( STONE_MIRROR );
-                    angle = 90;
-                    break;
-                case STONE_MIRROR_180:
-                    pixmap = getPixmap( STONE_MIRROR );
-                    angle = 180;
-                    break;
-                case STONE_MIRROR_270:
-                    pixmap = getPixmap( STONE_MIRROR );
-                    angle = 270;
-                    break;
-                case STONE_SLIT_90:
-                    pixmap = getPixmap( STONE_SLIT );
-                    angle = 90;
-                    break;
-                case WOOD_DAMAGED:
-                    drawPixmap( wx, wy, WOOD,   painter );
-                    drawPixmap( wx, wy, DAMAGE, painter );
-                    break;
-                default: // EMPTY
-                    painter->fillRect(wx, wy, 24, 24, Qt::black);
-                    break;
-                }
-                if ( angle && pixmap ) {
-                    renderRotatedPixmap( pixmap, wx, wy, angle, painter);
-                }
-            }
-        }
-    }
+    mRenderer.render( rect, board, painter );
 
-    renderListIn( tileIterator, tiles.end(), rect, painter );
     if ( deltas ) {
         renderListIn( deltasIterator, deltas->end(), rect, painter );
     }
@@ -231,8 +179,8 @@ void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* p
         renderListIn( moveIterator, moves->end(), rect, painter );
     }
 
-    registry->getTankPush().render( rect, painter );
-    registry->getShotPush().render( rect, painter );
+    registry->getTankPush().render( rect, mRenderer, painter );
+    registry->getShotPush().render( rect, mRenderer, painter );
     registry->getTank().render( rect, painter );
     if ( mFocus == TANK ) {
         // render the moves ontop of (i.e. after) the tank and it's pushes when focus is at
@@ -387,6 +335,7 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             captureAction.setText( "&Capture Flag" );
             TO_QACTION(mReloadAction).setText( "&Restart Level" );
             TO_QACTION(mReplayAction).setText( "&Auto Replay" );
+            TO_QACTION(mChooseLevelAction).setText( "Select &Level.." );
 
             TO_QACTION(mSpeedAction).setShortcut( speedSeq );
             TO_QACTION(mSpeedAction).setCheckable(true);
@@ -395,20 +344,17 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             TO_QACTION(mClearMovesAction).setShortcut(clearSeq);
             TO_QACTION(mReplayAction).setShortcut( replaySeq );
 
+            LevelChooser& chooser = registry->getLevelChooser();
+            chooser.realize();
+            TO_QACTION(mChooseLevelAction).setMenu( &chooser );
+
             mMenu.addAction( &TO_QACTION(mSpeedAction)      );
             mMenu.addAction( &TO_QACTION(mUndoMoveAction)   );
             mMenu.addAction( &TO_QACTION(mClearMovesAction) );
             mMenu.addAction( &pathToAction );
             mMenu.addAction( &captureAction );
             mMenu.addAction( &TO_QACTION(mReloadAction)     );
-
-            QAction* action = mMenu.addAction( QString("Select &Level..") );
-            action->setMenu( &mLevelsMenu );
-            QString text( "level %1" );
-            for( Level level : registry->getLevelList().getList() ) {
-                action = mLevelsMenu.addAction( text.arg(level.getNumber()) );
-                action->setData( QVariant(level.getNumber()) );
-            }
+            mMenu.addAction( &TO_QACTION(mChooseLevelAction));
 
             mMenu.addAction( &TO_QACTION(mReplayAction) );
             mMenu.addAction( QString("&Help"), this, SLOT(showHelp()) );
@@ -439,6 +385,7 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
         TO_QACTION(mUndoMoveAction).setEnabled( movesPending );
         TO_QACTION(mClearMovesAction).setEnabled( movesPending );
         TO_QACTION(mReplayAction).setEnabled( !registry->getTank().getRecorder().isEmpty() );
+        TO_QACTION(mChooseLevelAction).setEnabled( registry->getLevelChooser().isRealized() );
 
         //
         // launch menu
@@ -459,7 +406,7 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             bool ok;
             int level = action->data().toInt( &ok );
             if ( ok && level > 0 ) {
-                registry->getGame().getBoard()->load( action->data().toInt() );
+                registry->getGame().loadMasterBoard( action->data().toInt() );
             } else {
                 action->trigger();
             }

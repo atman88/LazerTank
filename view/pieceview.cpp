@@ -1,5 +1,5 @@
 #include "pieceview.h"
-#include "util/renderutils.h"
+#include "boardrenderer.h"
 
 PieceView::PieceView( const PieceView *source )
 {
@@ -39,17 +39,12 @@ void PieceView::setAngle( int angle )
     mAngle = angle;
 }
 
-void PieceView::getBounds( QRect *rect ) const
-{
-    rect->setRect( mCol*24, mRow*24, 24, 24 );
-}
-
-bool PieceView::render( const QRect *dirty, QPainter *painter )
+bool PieceView::render( const QRect *dirty, const BoardRenderer& renderer, QPainter *painter )
 {
     QRect bounds;
-    getBounds( &bounds );
+    renderer.getBounds( *this, &bounds );
     if ( dirty->intersects( bounds ) ) {
-        renderPiece( mType, bounds.left(), bounds.top(), mAngle, painter );
+        renderer.renderPiece( mType, bounds, mAngle, painter );
         int shotCount = getShotCount();
         if ( shotCount > 1 ) {
             QPen pen;

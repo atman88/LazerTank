@@ -4,6 +4,8 @@
 #include "gameutils.h"
 #include "controller/gameregistry.h"
 
+const char* GameHandleName = "GameHandle";
+
 // find the registry from the object hierarchy:
 
 GameRegistry* getRegistry( const QObject* gameObject )
@@ -11,7 +13,7 @@ GameRegistry* getRegistry( const QObject* gameObject )
     const QObject* p = gameObject;
     QVariant v;
 
-    while( p && !(v = p->property("GameHandle")).isValid() ) {
+    while( p && !(v = p->property(GameHandleName)).isValid() ) {
         p = p->parent();
     }
 

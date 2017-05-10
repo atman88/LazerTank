@@ -8,6 +8,7 @@
 
 class GameRegistry;
 
+#include "boardrenderer.h"
 #include "controller/speedcontroller.h"
 #include "model/piece.h"
 
@@ -24,7 +25,7 @@ public:
     PushView( QObject* parent = 0 );
 
     void init( GameRegistry* registry );
-    void render( const QRect* rect, QPainter* painter );
+    void render( const QRect* rect, BoardRenderer& renderer, QPainter* painter );
 
     /**
      * @brief Get the type of piece being pushed

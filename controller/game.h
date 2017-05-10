@@ -12,6 +12,8 @@ class Shooter;
 #include "model/boarddelta.h"
 #include "model/board.h"
 
+class BoardLoadRunnable;
+
 /**
  * @brief The Game class responsible for controlling/implementing overall game logic
  */
@@ -21,6 +23,7 @@ class Game : public QObject
 
 public:
     Game();
+    ~Game();
     void init( GameRegistry* registry );
 
     /**
@@ -93,6 +96,8 @@ public:
      * @return set of future pieces or 0 if future tracking is not active
      */
     const PieceSet* getDeltaPieces();
+
+    void loadMasterBoard( int level );
 
     /**
      * @brief Query whether the board is fully loaded
@@ -196,6 +201,7 @@ private:
     bool canPlaceAt( PieceType what, ModelPoint point, int fromAngle, Board* board, Piece **pushPiece = 0 );
 
     Board mBoard;
+    BoardLoadRunnable* mLoadRunnable;
     bool mBoardLoaded;
 
     Board mFutureBoard;

@@ -13,7 +13,7 @@ class SpeedController;
 class MoveController;
 class PathFinderController;
 class AnimationStateAggregator;
-class LevelList;
+class LevelChooser;
 class Tank;
 class Shooter;
 class ShotModel;
@@ -26,7 +26,7 @@ public:
     explicit GameRegistry( BoardWindow* window = 0, Game* game = 0,
       SpeedController* speedController = 0, MoveController* moveController = 0, PathFinderController* pathFinderController = 0,
       AnimationStateAggregator* moveAggregate = 0, AnimationStateAggregator* shotAggregate = 0,
-      Tank* tank = 0, Shooter* activeCannon = 0, Push* tankPush = 0, Push* shotPush = 0, LevelList* levelList = 0 );
+      Tank* tank = 0, Shooter* activeCannon = 0, Push* tankPush = 0, Push* shotPush = 0, LevelChooser* levelChooser = 0 );
     ~GameRegistry();
     GameHandle getHandle();
 
@@ -97,7 +97,7 @@ public:
     /**
      * @brief Access the list of available levels
      */
-    LevelList& getLevelList();
+    LevelChooser& getLevelChooser();
 
     /**
      * @brief Access to the background thread
@@ -132,7 +132,7 @@ private:
     Shooter* mActiveCannon;
     Push* mTankPush;
     Push* mShotPush;
-    LevelList* mLevelList;
+    LevelChooser* mLevelChooser;
 
     WorkerThread mWorker;
     PathSearchAction mCaptureAction;
