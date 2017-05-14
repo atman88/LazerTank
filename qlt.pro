@@ -39,6 +39,8 @@ else {
 
 QT += xml
 
+RESOURCES += qml.qrc
+
 HEADERS += \
     view/shooter.h \
     controller/pathfinder.h \
@@ -67,7 +69,8 @@ HEADERS += \
     controller/gameinitializer.h \
     controller/gameregistry.h \
     model/level.h \
-    view/levelchooser.h
+    view/levelchooser.h \
+    model/boardpool.h
 
 SOURCES += \
     view/shooter.cpp \
@@ -95,7 +98,8 @@ SOURCES += \
     controller/gameinitializer.cpp \
     controller/gameregistry.cpp \
     model/level.cpp \
-    view/levelchooser.cpp
+    view/levelchooser.cpp \
+    model/boardpool.cpp
 
 test{
     INCLUDEPATH += test/controller
@@ -114,11 +118,11 @@ test{
         test/controller/testmovecontroller.cpp \
         test/util/testrecorder.cpp \
         test/util/piecelistmanagerobserver.cpp \
-        test/util/testworker.cpp
+        test/util/testworker.cpp \
+        test/model/testboardpool.cpp
 
 } else {
     TARGET = qlt
-    RESOURCES += qml.qrc
 
     SOURCES += main.cpp
 

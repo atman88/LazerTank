@@ -55,6 +55,8 @@ public:
 
     bool mInitialized;
     QList<Level*> mLevels;
+    QSize mMinSize;
+    QSize mMaxSize;
 
 signals:
     void initialized();
@@ -104,7 +106,7 @@ signals:
 
 private slots:
     void onLevelListInitialized();
-    void onBoardLoaded();
+    void onBoardLoaded( int number );
 
 private:
     LevelList mLevelList;

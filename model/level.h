@@ -35,7 +35,7 @@ public:
      */
     const QSize& getSize() const;
 
-    bool onBoardLoaded( const ModelPoint& lowerRight );
+    void onBoardLoaded();
 
 private:
     int mNumber;

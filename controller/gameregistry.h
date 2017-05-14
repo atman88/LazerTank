@@ -13,6 +13,7 @@ class SpeedController;
 class MoveController;
 class PathFinderController;
 class AnimationStateAggregator;
+class BoardPool;
 class LevelChooser;
 class Tank;
 class Shooter;
@@ -25,7 +26,7 @@ class GameRegistry : public QObject
 public:
     explicit GameRegistry( BoardWindow* window = 0, Game* game = 0,
       SpeedController* speedController = 0, MoveController* moveController = 0, PathFinderController* pathFinderController = 0,
-      AnimationStateAggregator* moveAggregate = 0, AnimationStateAggregator* shotAggregate = 0,
+      AnimationStateAggregator* moveAggregate = 0, AnimationStateAggregator* shotAggregate = 0, BoardPool* pool = 0,
       Tank* tank = 0, Shooter* activeCannon = 0, Push* tankPush = 0, Push* shotPush = 0, LevelChooser* levelChooser = 0 );
     ~GameRegistry();
     GameHandle getHandle();
@@ -71,6 +72,11 @@ public:
      * @brief Get the aggregate state tracker for any active shots including any pushes the active shots are doing
      */
     AnimationStateAggregator& getShotAggregate();
+
+    /**
+     * @brief The pool of loaded boards
+     */
+    BoardPool& getBoardPool();
 
     /**
      * @brief The game's one-and-only tank
@@ -128,6 +134,7 @@ private:
     PathFinderController* mPathFinderController;
     AnimationStateAggregator* mMoveAggregate;
     AnimationStateAggregator* mShotAggregate;
+    BoardPool* mBoardPool;
     Tank* mTank;
     Shooter* mActiveCannon;
     Push* mTankPush;

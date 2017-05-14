@@ -137,12 +137,12 @@ signals:
     /**
      * @brief Notifies that the board is being loaded in the background
      */
-    void boardLoading();
+    void boardLoading( int level );
 
     /**
      * @brief Signals that the contents of this board has been replaced (via one of its load methods)
      */
-    void boardLoaded();
+    void boardLoaded( int level );
 
     /**
      * @brief Signals that the given square has changed

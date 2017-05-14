@@ -20,6 +20,8 @@ public:
     GameRegistry* getRegistry() const;
 
 private slots:
+    void testBoardPool();
+
     void testGameMove();
     void testGameCannon();
     void testGamePush();

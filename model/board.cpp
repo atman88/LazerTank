@@ -143,7 +143,7 @@ void Board::load( QTextStream& stream, int level )
     mLevel = level;
     mStream = ( level < 0 ) ? &stream : 0;
 
-    emit boardLoaded();
+    emit boardLoaded( level );
 }
 
 void Board::load( const Board* source )
@@ -152,7 +152,7 @@ void Board::load( const Board* source )
     mLowerRight  = source->mLowerRight;
     memcpy( mTiles, source->mTiles, sizeof mTiles );
     mPieceManager.reset( &source->mPieceManager );
-    emit boardLoaded();
+    emit boardLoaded( mLevel );
 }
 
 int Board::getWidth()

@@ -2,22 +2,25 @@
 #include <QProxyStyle>
 #include <QStyleOption>
 #include <QSize>
+#include <QScreen>
 #include <QXmlSimpleReader>
 #include <QXmlDefaultHandler>
 
 #include "levelchooser.h"
 #include "boardrenderer.h"
+#include "boardwindow.h"
 #include "controller/gameregistry.h"
 #include "controller/game.h"
 #include "model/level.h"
 #include "model/board.h"
+#include "model/boardpool.h"
 
 #define TILE_SIZE 12
 
 class ChooserStyle : public QProxyStyle
 {
 public:
-    ChooserStyle() : mDefaultItemSize(QSize( TILE_SIZE*24, TILE_SIZE*2 )), mPalette(QPalette(Qt::gray,Qt::black))
+    ChooserStyle( QSize defaultItemSize ) : mDefaultItemSize(defaultItemSize), mPalette(QPalette(Qt::gray,Qt::black))
     {
     }
 
@@ -29,10 +32,15 @@ public:
     int styleHint(StyleHint hint, const QStyleOption *option = 0, const QWidget *widget = 0, QStyleHintReturn *returnData = 0)
       const
     {
-        if ( hint == QStyle::SH_Menu_Scrollable ) {
+        switch( hint ) {
+        case QStyle::SH_Menu_Scrollable:
             return 1;
+        case QStyle::SH_Menu_SelectionWrap:
+            // disable wrapping so the visible area stays contiguous (keeps the BoardPool logic simple)
+            return 0;
+        default:
+            return QProxyStyle::styleHint(hint, option, widget, returnData);
         }
-        return QProxyStyle::styleHint(hint, option, widget, returnData);
     }
 
     QSize sizeFromContents( ContentsType type, const QStyleOption* option, const QSize& size, const QWidget* widget ) const
@@ -75,6 +83,15 @@ public:
                 if ( int width = attributes.value("w").toInt() ) {
                     if ( int height = attributes.value("h").toInt() ) {
                         mLevels.addLevel( number, width, height );
+
+                        if ( mLevels.mMinSize.isNull() ) {
+                            mLevels.mMinSize = mLevels.mMaxSize = QSize( width, height );
+                        } else {
+                            if      ( width  > mLevels.mMaxSize.width()  ) mLevels.mMaxSize.setWidth(  width  );
+                            else if ( width  < mLevels.mMinSize.width()  ) mLevels.mMinSize.setWidth(  width  );
+                            if      ( height > mLevels.mMaxSize.height() ) mLevels.mMaxSize.setHeight( height );
+                            else if ( height < mLevels.mMinSize.height() ) mLevels.mMinSize.setHeight( height );
+                        }
                     }
                 }
             }
@@ -168,6 +185,7 @@ public:
         }
 
         mLevelList.mInitialized = true;
+
         emit mLevelList.initialized();
     }
 
@@ -177,7 +195,7 @@ private:
 
 LevelChooser::LevelChooser( QWidget* parent ) : QMenu(parent), mRealized(false)
 {
-    setStyle( new ChooserStyle );
+    setStyle( new ChooserStyle( QSize( mLevelList.mMaxSize.width(), mLevelList.mMinSize.height() ) * TILE_SIZE ) );
 }
 
 void LevelChooser::init( GameRegistry* registry )
@@ -195,13 +213,8 @@ void LevelChooser::realize()
                 level->setDefaultWidget( widget );
                 addAction( qobject_cast<QAction*>(level) );
             }
-            Game& game = registry->getGame();
-            QObject::connect( &game, &Game::boardLoaded, this, &LevelChooser::onBoardLoaded );
-            if ( int curNumber = game.getBoard()->getLevel() ) {
-                if ( Level* level = find( curNumber ) ) {
-                    level->onBoardLoaded( game.getBoard()->getLowerRight() );
-                }
-            }
+            BoardPool& pool = registry->getBoardPool();
+            QObject::connect( &pool, &BoardPool::boardLoaded, this, &LevelChooser::onBoardLoaded );
             mRealized = true;
         }
     }
@@ -234,18 +247,22 @@ LevelList& LevelChooser::getList()
 
 void LevelChooser::onLevelListInitialized()
 {
+    // initialize the pool
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        if ( BoardWindow* window = registry->getWindow() ) {
+            if ( QScreen* screen = window->screen() ) {
+                QSize maxSize = screen->availableSize();
+                registry->getBoardPool().init( mLevelList, maxSize.height() / TILE_SIZE );
+            }
+        }
+    }
+
     emit listInitialized();
 }
 
-void LevelChooser::onBoardLoaded()
+void LevelChooser::onBoardLoaded( int number )
 {
-    if ( GameRegistry* registry = getRegistry(this) ) {
-        Board* board = registry->getGame().getBoard();
-        int number = board->getLevel();
-        if ( number > 0 ) {
-            if ( Level* level = find( number ) ) {
-                level->onBoardLoaded( board->getLowerRight() );
-            }
-        }
+    if ( Level* level = find( number ) ) {
+        level->onBoardLoaded();
     }
 }

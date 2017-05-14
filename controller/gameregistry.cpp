@@ -6,6 +6,7 @@
 #include "controller/movecontroller.h"
 #include "controller/pathfindercontroller.h"
 #include "controller/animationstateaggregator.h"
+#include "model/boardpool.h"
 #include "model/tank.h"
 #include "view/shooter.h"
 #include "view/levelchooser.h"
@@ -14,11 +15,11 @@
 
 GameRegistry::GameRegistry( BoardWindow* window, Game* game,
   SpeedController* speedController, MoveController* moveController, PathFinderController* pathFinderController,
-  AnimationStateAggregator* moveAggregate, AnimationStateAggregator* shotAggregate, Tank* tank, Shooter* activeCannon,
-  Push* tankPush, Push* shotPush, LevelChooser* levelChooser )
+  AnimationStateAggregator* moveAggregate, AnimationStateAggregator* shotAggregate, BoardPool* pool, Tank* tank,
+  Shooter* activeCannon, Push* tankPush, Push* shotPush, LevelChooser* levelChooser )
   : QObject(0), mWindow(window), mGame(game),
     mSpeedController(speedController), mMoveController(moveController), mPathFinderController(pathFinderController),
-    mMoveAggregate(moveAggregate), mShotAggregate(shotAggregate), mTank(tank), mActiveCannon(activeCannon),
+    mMoveAggregate(moveAggregate), mShotAggregate(shotAggregate), mBoardPool(pool), mTank(tank), mActiveCannon(activeCannon),
     mTankPush(tankPush), mShotPush(shotPush), mLevelChooser(levelChooser)
 {
     mHandle.registry = this;
@@ -30,6 +31,8 @@ GameRegistry::GameRegistry( BoardWindow* window, Game* game,
     if ( pathFinderController  ) onInject( pathFinderController );
     if ( moveAggregate         ) onInject( moveAggregate );
     if ( shotAggregate         ) onInject( shotAggregate );
+    if ( pool                  ) onInject( pool );
+    if ( tank                  ) onInject( tank );
     if ( activeCannon          ) onInject( activeCannon );
     if ( tankPush              ) onInject( tankPush );
     if ( shotPush              ) onInject( shotPush );
@@ -73,6 +76,7 @@ DECL_GETTER(MoveController,MoveController)
 DECL_GETTER(PathFinderController,PathFinderController)
 DECL_GETTER(MoveAggregate,AnimationStateAggregator)
 DECL_GETTER(ShotAggregate,AnimationStateAggregator)
+DECL_GETTER(BoardPool,BoardPool)
 DECL_GETTER(Tank,Tank)
 DECL_GETTER(ActiveCannon,Shooter)
 DECL_GETTER(TankPush,Push)

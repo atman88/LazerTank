@@ -117,12 +117,12 @@ public slots:
     /**
      * @brief Notifies the game that the board is being loaded
      */
-    void onBoardLoading();
+    void onBoardLoading( int level );
 
     /**
      * @brief Receives notification that the board's map changed
      */
-    void onBoardLoaded();
+    void onBoardLoaded( int level );
 
     /**
      * @brief Receives notification that a tile on the board changed.

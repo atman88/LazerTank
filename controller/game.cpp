@@ -30,7 +30,7 @@ public:
     {
         mLevel = level;
         if ( GameRegistry* registry = getRegistry(&mBoard) ) {
-            emit mBoard.boardLoading();
+            emit mBoard.boardLoading( level );
             registry->getWorker().doWork( this );
         }
     }
@@ -111,7 +111,7 @@ void Game::init( GameRegistry* registry )
     mBoard.setParent(this);
 }
 
-void Game::onBoardLoading()
+void Game::onBoardLoading( int /*level*/ )
 {
     mBoardLoaded = false;
 }
@@ -121,7 +121,7 @@ bool Game::isBoardLoaded()
     return mBoardLoaded;
 }
 
-void Game::onBoardLoaded()
+void Game::onBoardLoaded( int /*level*/ )
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
         mFutureDelta.enable( false );
