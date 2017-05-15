@@ -141,11 +141,16 @@ Level* LevelList::find( int number ) const
 
 int LevelList::nextLevel( int curLevel ) const
 {
-    int index = std::min( curLevel+1, mLevels.size() );
-    while( --index > 0 ) {
-        if ( mLevels[index]->getNumber() <= curLevel ) {
-            ++index;
-            break;
+    int index;
+    if ( curLevel <= 0 ) {
+        index = 0;
+    } else {
+        index = std::min( curLevel+1, mLevels.size() );
+        while( --index >= 0 ) {
+            if ( mLevels[index]->getNumber() <= curLevel ) {
+                ++index;
+                break;
+            }
         }
     }
 
