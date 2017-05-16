@@ -201,6 +201,10 @@ void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* p
 
 void BoardWindow::renderNow()
 {
+    if ( mDirtyRegion.isNull() && mRenderedOnce ) {
+        return;
+    }
+
     if ( mBackingStore ) {
         if ( QPaintDevice *device = mBackingStore->paintDevice() ) {
             GameRegistry* registry = getRegistry(this);

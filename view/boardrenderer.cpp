@@ -22,7 +22,6 @@ void BoardRenderer::render( const QRect* rect, Board* board, QPainter* painter )
     int maxRow = (rect->bottom()+mTileSize-1)/mTileSize;
     QRect square( 0, 0, mTileSize, mTileSize );
 
-//std::cout << "render " << minRow << "," << minCol << "-" << maxRow << "," << maxCol << std::endl;
     for( int row = minRow; row <= maxRow; ++row ) {
         square.moveTop( row*mTileSize );
 
@@ -70,9 +69,9 @@ void BoardRenderer::render( const QRect* rect, Board* board, QPainter* painter )
         }
     }
 
-    const PieceSet& tiles = board->getPieceManager().getPieces();
-    SimplePiece pos(MOVE, minRow, minCol);
-    for( PieceSet::iterator iterator = tiles.lower_bound( &pos ); iterator != tiles.end(); ++iterator ) {
+    const PieceSet& pieces = board->getPieceManager().getPieces();
+    SimplePiece pos(MOVE, minCol, minRow);
+    for( PieceSet::iterator iterator = pieces.lower_bound( &pos ); iterator != pieces.end(); ++iterator ) {
         if ( !(*iterator)->render( rect, *this, painter ) ) {
             break;
         }

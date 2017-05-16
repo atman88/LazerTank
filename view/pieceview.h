@@ -53,7 +53,7 @@ public:
      * @param painter The painter
      * @return true if painted or false if outside of the dirty area
      */
-    bool render( const QRect *dirty, const BoardRenderer& renderer, QPainter* painter );
+    bool render( const QRect* dirty, const BoardRenderer& renderer, QPainter* painter );
 
     /**
      * @brief Getters & setters

@@ -1,3 +1,4 @@
+#include <iostream>
 #include "pieceview.h"
 #include "boardrenderer.h"
 
@@ -39,7 +40,7 @@ void PieceView::setAngle( int angle )
     mAngle = angle;
 }
 
-bool PieceView::render( const QRect *dirty, const BoardRenderer& renderer, QPainter *painter )
+bool PieceView::render( const QRect* dirty, const BoardRenderer& renderer, QPainter* painter )
 {
     QRect bounds;
     renderer.getBounds( *this, &bounds );
