@@ -25,12 +25,14 @@ void TankView::render( const QRect* rect, QPainter* painter )
     if ( rect->intersects( mBoundingRect ) ) {
         if ( !(mViewRotation % 360) ) {
             mPreviousPaintRect = mBoundingRect;
+            BoardRenderer::renderPixmap( mBoundingRect, TANK, painter );
         } else {
+            QTransform save = painter->transform();
             BoardRenderer::renderRotation( mBoundingRect, mViewRotation, painter );
             mPreviousPaintRect = painter->transform().mapRect( mBoundingRect );
+            BoardRenderer::renderPixmap( mBoundingRect, TANK, painter );
+            painter->setTransform( save );
         }
-        BoardRenderer::renderPixmap( mBoundingRect, TANK, painter );
-        painter->resetTransform();
     }
 
     getShot().render( painter );

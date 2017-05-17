@@ -59,7 +59,6 @@ void BoardRenderer::render( const QRect* rect, Board* board, QPainter* painter )
                     BoardRenderer::renderPixmap( square, DAMAGE, painter );
                     break;
                 default: // EMPTY
-                    painter->fillRect( square, Qt::black );
                     break;
                 }
                 if ( angle && pixmap ) {
@@ -99,11 +98,14 @@ void BoardRenderer::renderRotation( QRect& square, int angle, QPainter* painter 
 
 void BoardRenderer::renderRotatedPixmap( const QPixmap* pixmap, QRect& square, int angle, QPainter* painter )
 {
-    if ( angle ) {
+    if ( !angle ) {
+        painter->drawPixmap( square, *pixmap );
+    } else {
+        QTransform save = painter->transform();
         BoardRenderer::renderRotation( square, angle, painter );
+        painter->drawPixmap( square, *pixmap );
+        painter->setTransform( save );
     }
-    painter->drawPixmap( square, *pixmap );
-    painter->resetTransform();
 }
 
 void BoardRenderer::renderPiece( PieceType type, QRect& square, int angle, QPainter* painter )

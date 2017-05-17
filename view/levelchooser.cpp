@@ -7,7 +7,6 @@
 #include <QXmlDefaultHandler>
 
 #include "levelchooser.h"
-#include "boardrenderer.h"
 #include "boardwindow.h"
 #include "controller/gameregistry.h"
 #include "controller/game.h"

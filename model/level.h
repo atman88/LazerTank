@@ -56,7 +56,7 @@ protected:
 
 private:
     int mNumber;
-    QSize mSize;
+    QSize mBoardPixelSize;
 };
 
 #endif // LEVEL_H

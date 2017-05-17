@@ -6,8 +6,11 @@
 
 #define TILE_SIZE 12
 
+#define PADDING_WIDTH  3
+#define PADDING_HEIGHT 3
+
 LevelWidget::LevelWidget( Level& source, QWidget* parent ) : QWidget(parent), mNumber(source.getNumber()),
-  mSize( source.getSize()*TILE_SIZE )
+  mBoardPixelSize( source.getSize()*TILE_SIZE )
 {
     setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Fixed );
     setFocusPolicy( Qt::StrongFocus );
@@ -16,7 +19,7 @@ LevelWidget::LevelWidget( Level& source, QWidget* parent ) : QWidget(parent), mN
 
 QSize LevelWidget::sizeHint() const
 {
-    return mSize;
+    return mBoardPixelSize + QSize(PADDING_WIDTH*2,PADDING_HEIGHT*2);
 }
 
 void LevelWidget::paintEvent(QPaintEvent* event)
@@ -31,8 +34,12 @@ void LevelWidget::paintEvent(QPaintEvent* event)
     if ( GameRegistry* registry = getRegistry(parent()) ) {
         if ( Board* board = registry->getBoardPool().getBoard( mNumber ) ) {
             BoardRenderer renderer( TILE_SIZE );
+            QPoint offset( std::max( (event->rect().width()  - mBoardPixelSize.width() )/2, PADDING_WIDTH  ),
+                           std::max( (event->rect().height() - mBoardPixelSize.height())/2, PADDING_HEIGHT ) );
+            painter.translate( offset );
             renderer.render( &event->rect(), board, &painter );
             renderer.renderInitialTank( board, &painter );
+            painter.resetTransform();
         }
     }
 
