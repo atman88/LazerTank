@@ -5,6 +5,7 @@
 #include "util/gameutils.h"
 
 #define TILE_SIZE 12
+#define FONT_SIZE 15
 
 #define PADDING_WIDTH  3
 #define PADDING_HEIGHT 3
@@ -26,24 +27,30 @@ void LevelWidget::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
 
+    QFont font = painter.font();
+    font.setBold(true);
+    font.setPixelSize( FONT_SIZE );
+    painter.setFont( font );
+
     if ( hasFocus() ) {
         painter.fillRect( event->rect(), QColor(0,255,33) );
-        painter.setPen(QColor(Qt::white));
     }
 
+    QRect myRect( rect() );
     if ( GameRegistry* registry = getRegistry(parent()) ) {
         if ( Board* board = registry->getBoardPool().getBoard( mNumber ) ) {
             BoardRenderer renderer( TILE_SIZE );
-            QPoint offset( std::max( (event->rect().width()  - mBoardPixelSize.width() )/2, PADDING_WIDTH  ),
-                           std::max( (event->rect().height() - mBoardPixelSize.height())/2, PADDING_HEIGHT ) );
+            QPoint offset( std::max( (myRect.width()  - mBoardPixelSize.width() )/2, PADDING_WIDTH  ),
+                           std::max( (myRect.height() - mBoardPixelSize.height())/2, PADDING_HEIGHT ) );
             painter.translate( offset );
-            renderer.render( &event->rect(), board, &painter );
+            renderer.render( &myRect, board, &painter );
             renderer.renderInitialTank( board, &painter );
             painter.resetTransform();
         }
     }
 
-    painter.drawText( rect(), Qt::AlignBottom|Qt::AlignRight|Qt::TextDontClip|Qt::TextSingleLine, QString::number(mNumber) );
+    myRect -= QMargins(PADDING_WIDTH, PADDING_HEIGHT, PADDING_WIDTH, PADDING_HEIGHT );
+    painter.drawText( myRect, Qt::AlignBottom|Qt::AlignRight|Qt::TextDontClip|Qt::TextSingleLine, QString::number(mNumber) );
 }
 
 Level::Level(int number, int width, int height, QObject* parent ) : QWidgetAction(parent), mNumber(number),

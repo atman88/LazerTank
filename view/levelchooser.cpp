@@ -19,7 +19,7 @@
 class ChooserStyle : public QProxyStyle
 {
 public:
-    ChooserStyle( QSize defaultItemSize ) : mDefaultItemSize(defaultItemSize), mPalette(QPalette(Qt::gray,Qt::black))
+    ChooserStyle( QSize defaultItemSize ) : mDefaultItemSize(defaultItemSize), mPalette(Qt::gray,Qt::black)
     {
     }
 
@@ -199,7 +199,9 @@ private:
 
 LevelChooser::LevelChooser( QWidget* parent ) : QMenu(parent), mRealized(false)
 {
-    setStyle( new ChooserStyle( QSize( mLevelList.mMaxSize.width(), mLevelList.mMinSize.height() ) * TILE_SIZE ) );
+    ChooserStyle* style = new ChooserStyle( QSize( mLevelList.mMaxSize.width(), mLevelList.mMinSize.height() ) * TILE_SIZE );
+    setStyle( style );
+    setPalette( style->standardPalette() );
 }
 
 void LevelChooser::init( GameRegistry* registry )
