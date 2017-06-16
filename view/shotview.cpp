@@ -87,25 +87,18 @@ void ShotView::render( QPainter* painter )
         }
 
         if ( mTerminationAngle >= 0 ) {
-            int cx = mLeadPoint.x();
-            int cy = mLeadPoint.y();
-
-            if ( mTerminationAngle ) {
-                painter->translate(cx, cy);
-                painter->rotate(mTerminationAngle);
-                painter->translate(-cx, -cy);
-            }
+            painter->translate(mLeadPoint.x(), mLeadPoint.y());
+            painter->rotate(mTerminationAngle);
 
             // draw a splat:
-            --cy;
             QPen pen( mPen );
             QColor color = pen.color();
             int alpha = color.alpha();
             for( int i = 1; i <= 4; ++i ) {
-                painter->drawLine( cx-(i*2)-2,   cy, cx-(i*2),   cy );
-                painter->drawLine( cx+(i*2)-1, cy, cx+(i*2)+2+1, cy );
-                painter->drawPoint( cx-i, cy-i );
-                painter->drawPoint( cx+i, cy-i );
+                painter->drawLine( -(i*2)-2, -1, -(i*2),     -1 );
+                painter->drawLine(  (i*2)-1, -1,  (i*2)+2+1, -1 );
+                painter->drawPoint( -i, -1-i );
+                painter->drawPoint(  i, -1-i );
 
                 alpha = (alpha >> 1 ) + (alpha >> 2);
                 color.setAlpha( alpha );
