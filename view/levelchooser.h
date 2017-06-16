@@ -104,6 +104,9 @@ signals:
      */
     void listInitialized();
 
+protected:
+    void setVisible( bool visible ) override;
+
 private slots:
     void onLevelListInitialized();
     void onBoardLoaded( int number );

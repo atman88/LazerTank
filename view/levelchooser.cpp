@@ -33,6 +33,7 @@ public:
     {
         switch( hint ) {
         case QStyle::SH_Menu_Scrollable:
+        case QStyle::SH_Menu_SloppySubMenus:
             return 1;
         case QStyle::SH_Menu_SelectionWrap:
             // disable wrapping so the visible area stays contiguous (keeps the BoardPool logic simple)
@@ -60,6 +61,14 @@ public:
         }
 
         return QProxyStyle::sizeFromContents( type, option, size, widget );
+    }
+
+    void drawControl(ControlElement element, const QStyleOption* opt, QPainter* p, const QWidget* w) const
+    {
+        // inhibit drawing the scroller given it doesn't want to render nicely on the chooser
+        if ( element != ControlElement::CE_MenuScroller ) {
+            QProxyStyle::drawControl( element, opt, p, w );
+        }
     }
 
 private:
@@ -207,6 +216,7 @@ LevelChooser::LevelChooser( QWidget* parent ) : QMenu(parent), mRealized(false)
 void LevelChooser::init( GameRegistry* registry )
 {
     QObject::connect( &mLevelList, &LevelList::initialized, this, &LevelChooser::onLevelListInitialized, Qt::QueuedConnection );
+
     registry->getWorker().doWork( new ListLoadRunnable( this->mLevelList ) );
 }
 
@@ -249,6 +259,23 @@ int LevelChooser::nextLevel( int curLevel ) const
 LevelList& LevelChooser::getList()
 {
     return mLevelList;
+}
+
+void LevelChooser::setVisible( bool visible )
+{
+    if ( visible != isVisible() ) {
+        QMenu::setVisible( visible );
+        if ( visible ) {
+            if ( GameRegistry* registry = getRegistry(this) ) {
+                if ( int number = registry->getGame().getBoard()->getLevel() ) {
+                    if ( Level* level = find( number ) ) {
+                        setActiveAction( level );
+                        level->defaultWidget()->setFocus();
+                    }
+                }
+            }
+        }
+    }
 }
 
 void LevelChooser::onLevelListInitialized()
