@@ -93,7 +93,7 @@ void ShotModel::setSequence( const QVariant &sequence )
         }
 
         if ( !isTravelling && !mKillSequence ) {
-            mAnimation.stop();
+            reset(); // done
         }
     }
 }
