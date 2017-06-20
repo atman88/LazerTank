@@ -20,16 +20,30 @@ public:
     LevelList();
 
     /**
+     * @brief Obtain the list index for the given level number
+     * @param number The level's number
+     * @return the index if found, otherwise -1
+     */
+    int indexOf( int number ) const;
+
+    /**
      * @brief look up a level by number
      * @param number The level's number
      * @return the level if found, otherwise 0
      */
-    Level* find( int number ) const;
+    const Level* find( int number ) const;
 
     /**
-     * @brief Retrieve the level # at the given index
-     * @param index
-     * @return the level number or 0 if the index is does not refer to a valid Level
+     * @brief Retrieve the level for the given index
+     * @param index offset within the list
+     * @return the Level or 0 if the index is out of bounds
+     */
+    Level* at( int index ) const;
+
+    /**
+     * @brief Retrieve the level number at the given index
+     * @param index offset within the list
+     * @return the level number or 0 if the index is out of bounds
      */
     int numberAt( int index ) const;
 
@@ -71,7 +85,7 @@ class LevelChooser : public QMenu
 public:
     explicit LevelChooser( QWidget* parent = 0 );
     void init( GameRegistry* registry );
-    bool isListInitialized() const;
+    bool isInitialized() const;
     bool isRealized() const;
 
     /**
@@ -84,7 +98,7 @@ public:
      * @param number The level's number
      * @return the level if found, otherwise 0
      */
-    Level* find( int number ) const;
+    const Level* find( int number ) const;
 
     /**
      * @brief Get the number of the next available level
@@ -96,7 +110,7 @@ public:
     /**
      * @brief Obtain the underlying list of levels
      */
-    LevelList& getList();
+    const LevelList& getList();
 
 signals:
     /**
@@ -107,12 +121,17 @@ signals:
 protected:
     void setVisible( bool visible ) override;
 
+    void setActiveIndex( int index );
+    void keyPressEvent( QKeyEvent* event ) override;
+
 private slots:
     void onLevelListInitialized();
     void onBoardLoaded( int number );
 
 private:
     LevelList mLevelList;
+    int mActiveIndex;
+    bool mInitialized;
     bool mRealized;
 };
 

@@ -149,9 +149,12 @@ void Board::load( QTextStream& stream, int level )
 void Board::load( const Board* source )
 {
     mLevel  = source->mLevel;
-    mLowerRight  = source->mLowerRight;
+    mLowerRight   = source->mLowerRight;
+    mFlagPoint    = source->mFlagPoint;
+    mTankWayPoint = source->mTankWayPoint;
     memcpy( mTiles, source->mTiles, sizeof mTiles );
     mPieceManager.reset( &source->mPieceManager );
+    mStream = 0;
     emit boardLoaded( mLevel );
 }
 

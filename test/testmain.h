@@ -20,6 +20,9 @@ public:
     GameRegistry* getRegistry() const;
 
 private slots:
+    void testLevelChooserFind();
+    void testNextLevel();
+
     void testBoardPool();
 
     void testGameMove();

@@ -12,8 +12,6 @@ class Shooter;
 #include "model/boarddelta.h"
 #include "model/board.h"
 
-class BoardLoadRunnable;
-
 /**
  * @brief The Game class responsible for controlling/implementing overall game logic
  */
@@ -122,7 +120,12 @@ public slots:
     /**
      * @brief Receives notification that the board's map changed
      */
-    void onBoardLoaded( int level );
+    void onPoolLoaded( int level );
+
+    /**
+     * @brief Receives notification that the master board's map changed
+     */
+    void onBoardLoaded( int );
 
     /**
      * @brief Receives notification that a tile on the board changed.
@@ -201,8 +204,7 @@ private:
     bool canPlaceAt( PieceType what, ModelPoint point, int fromAngle, Board* board, Piece **pushPiece = 0 );
 
     Board mBoard;
-    BoardLoadRunnable* mLoadRunnable;
-    bool mBoardLoaded;
+    int mDesiredLevel;
 
     Board mFutureBoard;
     BoardDelta mFutureDelta;

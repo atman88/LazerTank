@@ -37,7 +37,7 @@ void TestMain::initGame( QTextStream& map )
     QSignalSpy loadSpy( &game, &Game::boardLoaded );
     game.init(mRegistry);
     game.getBoard()->load( map );
-    QCOMPARE( loadSpy.wait(1000), true );
+    QCOMPARE( loadSpy.count(), 1 );
 }
 
 GameRegistry* TestMain::getRegistry() const

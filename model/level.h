@@ -35,7 +35,7 @@ public:
      */
     const QSize& getSize() const;
 
-    void onBoardLoaded();
+    void onBoardLoaded() const;
 
 private:
     int mNumber;

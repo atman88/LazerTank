@@ -1,3 +1,4 @@
+#include <iostream>
 #include "workerthread.h"
 
 WorkerThread::WorkerThread() : mThread(0), mShuttingDown(false)
@@ -18,7 +19,7 @@ void WorkerThread::doWork( Runnable* runnable )
         mPending.push_back( runnable );
 
         if ( !mThread ) {
-            mThread = new std::thread( &WorkerThread::run, this );
+            mThread = new std::thread( [this] { run(); } );
         }
     }
 }

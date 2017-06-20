@@ -119,7 +119,8 @@ test{
         test/util/testrecorder.cpp \
         test/util/piecelistmanagerobserver.cpp \
         test/util/testworker.cpp \
-        test/model/testboardpool.cpp
+        test/model/testboardpool.cpp \
+        test/view/testlevelchooser.cpp
 
 } else {
     TARGET = qlt

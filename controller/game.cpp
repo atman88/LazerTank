@@ -13,47 +13,16 @@
 #include "model/tank.h"
 #include "model/push.h"
 #include "model/level.h"
+#include "model/boardpool.h"
 #include "view/boardwindow.h"
 #include "view/boardrenderer.h"
 
-class BoardLoadRunnable : Runnable
-{
-public:
-    BoardLoadRunnable(Board& board) : mBoard(board)
-    {
-    }
-    ~BoardLoadRunnable()
-    {
-    }
-
-    void load( int level )
-    {
-        mLevel = level;
-        if ( GameRegistry* registry = getRegistry(&mBoard) ) {
-            emit mBoard.boardLoading( level );
-            registry->getWorker().doWork( this );
-        }
-    }
-
-    void run() override
-    {
-        mBoard.load( mLevel );
-    }
-
-private:
-    Board& mBoard;
-    int mLevel;
-};
-
-Game::Game() : mLoadRunnable(0), mBoardLoaded(0)
+Game::Game() : mDesiredLevel(0)
 {
 }
 
 Game::~Game()
 {
-    if ( mLoadRunnable ) {
-        delete mLoadRunnable;
-    }
 }
 
 void Game::init( GameRegistry* registry )
@@ -84,7 +53,8 @@ void Game::init( GameRegistry* registry )
 
     QObject::connect( &mBoard, &Board::tileChangedAt, this, &Game::onBoardTileChanged );
     QObject::connect( &mBoard, &Board::boardLoading,  this, &Game::onBoardLoading );
-    QObject::connect( &mBoard, &Board::boardLoaded,   this, &Game::onBoardLoaded, Qt::QueuedConnection );
+    QObject::connect( &mBoard, &Board::boardLoaded,   this, &Game::onBoardLoaded );
+    QObject::connect( &registry->getBoardPool(), &BoardPool::boardLoaded, this, &Game::onPoolLoaded, Qt::QueuedConnection );
 
     if ( BoardWindow* window = registry->getWindow() ) {
         QObject::connect( window, &BoardWindow::focusChanged, &registry->getMoveController(), &MoveController::setFocus );
@@ -111,29 +81,40 @@ void Game::init( GameRegistry* registry )
     mBoard.setParent(this);
 }
 
-void Game::onBoardLoading( int /*level*/ )
+void Game::onBoardLoading( int level )
 {
-    mBoardLoaded = false;
+    mDesiredLevel = level;
 }
 
 bool Game::isBoardLoaded()
 {
-    return mBoardLoaded;
+    return mDesiredLevel && mDesiredLevel == mBoard.getLevel();
 }
 
-void Game::onBoardLoaded( int /*level*/ )
+void Game::onPoolLoaded( int level )
+{
+    if ( mDesiredLevel == level ) {
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            if ( Board* board = registry->getBoardPool().find( level ) ) {
+                mBoard.load( board );
+            }
+        }
+    }
+}
+
+void Game::onBoardLoaded( int )
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
         mFutureDelta.enable( false );
         registry->getMoveAggregate().reset();
         registry->getShotAggregate().reset();
-        registry->getTank().onBoardLoaded( mBoard.getTankStartPoint() );
         registry->getActiveCannon().reset( BoardRenderer::NullPoint );
         registry->getSpeedController().setHighSpeed(false);
+        registry->getTank().onBoardLoaded( mBoard.getTankStartPoint() );
         registry->getMoveController().onBoardLoaded( &mBoard );
+
+        emit boardLoaded();
     }
-    mBoardLoaded = true;
-    emit boardLoaded();
 }
 
 void Game::endMoveDeltaTracking()
@@ -614,10 +595,12 @@ const PieceSet* Game::getDeltaPieces()
 
 void Game::loadMasterBoard( int level )
 {
-    if ( !mLoadRunnable ) {
-        mLoadRunnable = new BoardLoadRunnable( mBoard );
+    emit mBoard.boardLoading( level );
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        if ( Board* board = registry->getBoardPool().getBoard( level ) ) {
+            mBoard.load( board );
+        }
     }
-    mLoadRunnable->load( level );
 }
 
 void Game::undoFuturePush( MovePiece* pusher )
@@ -687,10 +670,18 @@ void Game::onTankKilled()
 
 void Game::restartLevel( bool replay )
 {
-    if ( GameRegistry* registry = getRegistry(this) ) {
-        registry->getMoveController().setReplay( replay );
+    if ( int level = mBoard.getLevel() ) {
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            registry->getMoveController().setReplay( replay );
+            if ( Board* board = registry->getBoardPool().find( level ) ) {
+                mBoard.load( board );
+            } else {
+                // Not in the pool (i.e. a test board)
+                std::cout << "* reload board " << level << " not pooled" << std::endl;
+                mBoard.reload();
+            }
+        }
     }
-    mBoard.reload();
 }
 
 void Game::replayLevel()

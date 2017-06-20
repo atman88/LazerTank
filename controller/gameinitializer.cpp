@@ -53,7 +53,7 @@ void GameInitializer::resume()
     //
     if ( mWindowPaintable ) {
         if ( GameRegistry* registry = getRegistry(this) ) {
-            if ( registry->getLevelChooser().isListInitialized() ) {
+            if ( registry->getLevelChooser().isInitialized() ) {
                 mInitPhase = GamePhase;
 
                 registry->getGame().init( registry );

@@ -51,7 +51,7 @@ public:
                     bool ok;
                     int number = menuOption->text.toInt( &ok );
                     if ( ok ) {
-                        if ( Level* level = chooser->find( number ) ) {
+                        if ( const Level* level = chooser->find( number ) ) {
                             return level->getSize();
                         }
                     }
@@ -123,6 +123,14 @@ void LevelList::addLevel( int number, int width, int height )
     mLevels.append( level );
 }
 
+Level* LevelList::at( int index ) const
+{
+    if ( 0 <= index && index < mLevels.size() ) {
+        return mLevels.at( index );
+    }
+    return 0;
+}
+
 int LevelList::numberAt( int index ) const
 {
     if ( 0 <= index && index < mLevels.size() ) {
@@ -133,7 +141,7 @@ int LevelList::numberAt( int index ) const
     return 0;
 }
 
-Level* LevelList::find( int number ) const
+int LevelList::indexOf( int number ) const
 {
     for( int index = std::min( number, mLevels.size() ); --index >= 0; ) {
         if ( int delta = mLevels[index]->getNumber() - number ) {
@@ -141,8 +149,17 @@ Level* LevelList::find( int number ) const
                 break;
             }
         } else {
-            return mLevels.at(index);
+            return index;
         }
+    }
+    return -1;
+}
+
+const Level* LevelList::find( int number ) const
+{
+    int index = indexOf( number );
+    if ( index >= 0 ) {
+        return mLevels.at(index);
     }
     return 0;
 }
@@ -206,7 +223,7 @@ private:
     LevelList& mLevelList;
 };
 
-LevelChooser::LevelChooser( QWidget* parent ) : QMenu(parent), mRealized(false)
+LevelChooser::LevelChooser( QWidget* parent ) : QMenu(parent), mActiveIndex(0), mInitialized(false), mRealized(false)
 {
     ChooserStyle* style = new ChooserStyle( QSize( mLevelList.mMaxSize.width(), mLevelList.mMinSize.height() ) * TILE_SIZE );
     setStyle( style );
@@ -222,28 +239,24 @@ void LevelChooser::init( GameRegistry* registry )
 
 void LevelChooser::realize()
 {
-    if ( !mRealized && mLevelList.mInitialized ) {
-        if ( GameRegistry* registry = getRegistry(this) ) {
-            for( Level* level : mLevelList.mLevels ) {
-                LevelWidget* widget = new LevelWidget( *level );
-                level->setDefaultWidget( widget );
-                addAction( qobject_cast<QAction*>(level) );
-            }
-            BoardPool& pool = registry->getBoardPool();
-            QObject::connect( &pool, &BoardPool::boardLoaded, this, &LevelChooser::onBoardLoaded );
-            mRealized = true;
+    if ( !mRealized && mInitialized ) {
+        for( Level* level : mLevelList.mLevels ) {
+            LevelWidget* widget = new LevelWidget( *level );
+            level->setDefaultWidget( widget );
+            addAction( qobject_cast<QAction*>(level) );
         }
+        mRealized = true;
     }
 }
 
-Level* LevelChooser::find( int number ) const
+const Level* LevelChooser::find( int number ) const
 {
     return mLevelList.find( number );
 }
 
-bool LevelChooser::isListInitialized() const
+bool LevelChooser::isInitialized() const
 {
-    return mLevelList.mInitialized;
+    return mInitialized;
 }
 
 bool LevelChooser::isRealized() const
@@ -256,9 +269,20 @@ int LevelChooser::nextLevel( int curLevel ) const
     return mLevelList.nextLevel( curLevel );
 }
 
-LevelList& LevelChooser::getList()
+const LevelList& LevelChooser::getList()
 {
     return mLevelList;
+}
+
+void LevelChooser::setActiveIndex( int index )
+{
+    const LevelList& list = getList();
+    if ( index >= 0 && index < list.size() ) {
+        Level* level = list.at(index);
+        setActiveAction( level );
+        level->defaultWidget()->setFocus();
+        mActiveIndex = index;
+    }
 }
 
 void LevelChooser::setVisible( bool visible )
@@ -268,13 +292,104 @@ void LevelChooser::setVisible( bool visible )
         if ( visible ) {
             if ( GameRegistry* registry = getRegistry(this) ) {
                 if ( int number = registry->getGame().getBoard()->getLevel() ) {
-                    if ( Level* level = find( number ) ) {
-                        setActiveAction( level );
-                        level->defaultWidget()->setFocus();
-                    }
+                    setActiveIndex( getList().indexOf(number) );
                 }
             }
         }
+    }
+}
+
+void LevelChooser::keyPressEvent( QKeyEvent* event )
+{
+    switch( event->key() ) {
+    case Qt::Key_Tab:
+    case Qt::Key_Down:
+        if ( mActiveIndex < mLevelList.size()-1 ) {
+            QWidget* w = mLevelList.at(++mActiveIndex)->defaultWidget();
+            int delta = w->pos().y() - (height() - w->height());
+            if ( delta > 0 ) {
+                scroll( 0, -delta );
+            }
+            w->setFocus();
+        }
+        break;
+
+    case Qt::Key_Backtab:
+    case Qt::Key_Up:
+        if ( mActiveIndex > 0 ) {
+            QWidget* w = mLevelList.at(--mActiveIndex)->defaultWidget();
+            int y = w->pos().y();
+            if ( y < 0 ) {
+                scroll( 0, -y );
+            }
+            w->setFocus();
+        }
+        break;
+
+    case Qt::Key_PageUp:
+        if ( mActiveIndex > 0 ) {
+            int i = mActiveIndex;
+            QWidget* w = mLevelList.at(i)->defaultWidget();
+            int maxDistance = (w->pos().y() > 0) ? w->pos().y()-height() : -height();
+            while( i > 0 ) {
+                w = mLevelList.at(--i)->defaultWidget();
+                if ( w->pos().y() < maxDistance ) {
+                    w = mLevelList.at(++i)->defaultWidget();
+                    break;
+                }
+            }
+            int y = w->pos().y();
+            if ( y < 0 ) {
+                scroll( 0, -y );
+            }
+            w->setFocus();
+            mActiveIndex = i;
+        }
+        break;
+
+    case Qt::Key_PageDown:
+    {   int i = mActiveIndex;
+        int maxIndex = mLevelList.size()-1;
+        int pageHeight = height();
+        QWidget* w = mLevelList.at(i)->defaultWidget();
+        int y = (w->pos().y() + w->height() >= pageHeight) ? 0 : w->pos().y();
+        while( i < maxIndex ) {
+            if ( y + w->height() > pageHeight ) {
+                break;
+            }
+            y += w->height();
+            w = mLevelList.at(++i)->defaultWidget();
+        }
+        int delta = w->pos().y() - (height() - w->height());
+        if ( delta > 0 ) {
+            scroll( 0, -delta );
+        }
+        w->setFocus();
+        mActiveIndex = i;
+    }
+        break;
+
+    case Qt::Key_Home:
+    {   mActiveIndex = 0;
+        QWidget* w = mLevelList.at(0)->defaultWidget();
+        scroll( 0, -w->pos().y() );
+        w->setFocus();
+    }
+        break;
+
+    case Qt::Key_End:
+    {   mActiveIndex = mLevelList.size()-1;
+        QWidget* w = mLevelList.at(mActiveIndex)->defaultWidget();
+        int delta = w->pos().y() - (height() - w->height());
+        if ( delta > 0 ) {
+            scroll( 0, -delta );
+        }
+        w->setFocus();
+    }
+        break;
+
+    default:
+        QMenu::keyPressEvent( event );
     }
 }
 
@@ -284,18 +399,21 @@ void LevelChooser::onLevelListInitialized()
     if ( GameRegistry* registry = getRegistry(this) ) {
         if ( BoardWindow* window = registry->getWindow() ) {
             if ( QScreen* screen = window->screen() ) {
+                BoardPool& pool = registry->getBoardPool();
                 QSize maxSize = screen->availableSize();
-                registry->getBoardPool().init( mLevelList, maxSize.height() / TILE_SIZE );
+                pool.init( mLevelList, maxSize.height() / TILE_SIZE );
+                QObject::connect( &pool, &BoardPool::boardLoaded, this, &LevelChooser::onBoardLoaded );
             }
         }
     }
 
+    mInitialized = true;
     emit listInitialized();
 }
 
 void LevelChooser::onBoardLoaded( int number )
 {
-    if ( Level* level = find( number ) ) {
+    if ( const Level* level = find( number ) ) {
         level->onBoardLoaded();
     }
 }

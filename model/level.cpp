@@ -1,3 +1,4 @@
+#include <iostream>
 #include "level.h"
 #include "view/boardrenderer.h"
 #include "controller/gameregistry.h"
@@ -80,7 +81,7 @@ const QSize& Level::getSize() const
     return mSize;
 }
 
-void Level::onBoardLoaded()
+void Level::onBoardLoaded() const
 {
     if ( QWidget* widget = defaultWidget() ) {
         widget->update();

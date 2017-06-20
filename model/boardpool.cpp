@@ -1,3 +1,4 @@
+#include <iostream>
 #include "boardpool.h"
 #include "controller/gameregistry.h"
 #include "view/levelchooser.h"
@@ -91,7 +92,7 @@ void BoardPool::init( LevelList& levelList, int maxHeight )
         int curHeight = 0;
         int curLevel;
         for( curLevel = 1; curHeight < maxHeight && curLevel < maxLevel; ++curLevel ) {
-            if ( Level* level = levelList.find( curLevel ) ) {
+            if ( const Level* level = levelList.find( curLevel ) ) {
                 curHeight += level->getSize().height();
             }
         }
