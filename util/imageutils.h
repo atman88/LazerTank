@@ -1,8 +1,8 @@
 #ifndef IMAGEUTILS_H
 #define IMAGEUTILS_H
 
-#include <QPixmap>
-#include <QPainter>
+#include <QtGlobal>
+QT_FORWARD_DECLARE_CLASS(QPixmap)
 
 /**
  * @brief Retrieve the image for the given piece or tile type

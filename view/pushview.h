@@ -2,10 +2,9 @@
 #define PUSHVIEW_H
 
 #include <QObject>
-#include <QPropertyAnimation>
 #include <QRect>
-#include <QPainter>
 
+QT_FORWARD_DECLARE_CLASS(QPainter)
 class GameRegistry;
 
 #include "boardrenderer.h"

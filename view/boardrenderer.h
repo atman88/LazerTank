@@ -2,10 +2,11 @@
 #define BOARDRENDERER_H
 
 #include <QPoint>
-#include <QRect>
-#include <QPainter>
 #include "model/modelpoint.h"
 #include "model/piece.h"
+
+QT_FORWARD_DECLARE_CLASS(QRect)
+QT_FORWARD_DECLARE_CLASS(QPainter)
 
 class Board;
 

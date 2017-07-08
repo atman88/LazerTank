@@ -1,4 +1,5 @@
 #include <iostream>
+#include <QPainter>
 #include "movecontroller.h"
 #include "game.h"
 #include "animationstateaggregator.h"

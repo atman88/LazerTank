@@ -3,11 +3,12 @@
 
 #include <list>
 #include <QObject>
-#include <QRect>
 #include <QColor>
 #include <QPen>
 #include <QPoint>
-#include <QPainter>
+
+QT_FORWARD_DECLARE_CLASS(QRect)
+QT_FORWARD_DECLARE_CLASS(QPainter)
 
 class Shooter;
 

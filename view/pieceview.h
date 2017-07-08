@@ -1,7 +1,8 @@
 #ifndef PIECEVIEW_H
 #define PIECEVIEW_H
 
-#include <QPainter>
+#include <QtGlobal>
+QT_FORWARD_DECLARE_CLASS(QPainter)
 
 #include "tile.h"
 #include "model/modelpoint.h"

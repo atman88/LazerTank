@@ -1,4 +1,5 @@
 #include <iostream>
+#include <QPainter>
 #include "pieceview.h"
 #include "boardrenderer.h"
 

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <QPixmap>
 
 #include "imageutils.h"
 #include "model/board.h"

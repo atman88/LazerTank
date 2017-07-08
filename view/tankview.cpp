@@ -1,4 +1,5 @@
 #include <iostream>
+#include <QPainter>
 #include "tankview.h"
 #include "model/piece.h"
 #include "view/boardrenderer.h"

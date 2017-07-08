@@ -1,4 +1,7 @@
 #include <iostream>
+#include <QRect>
+#include <QPainter>
+
 #include "boardrenderer.h"
 #include "model/board.h"
 #include "util/imageutils.h"

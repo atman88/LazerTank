@@ -1,6 +1,7 @@
 #include <iostream>
 #include <QXmlSimpleReader>
 #include <QXmlDefaultHandler>
+#include <QPainter>
 
 #include "level.h"
 #include "view/boardrenderer.h"

@@ -2,7 +2,8 @@
 #define BOARD_H
 
 #include <QObject>
-#include <QTextStream>
+
+QT_FORWARD_DECLARE_CLASS(QTextStream)
 
 #include "tile.h"
 #include "model/piecesetmanager.h"

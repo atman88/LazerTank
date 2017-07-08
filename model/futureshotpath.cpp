@@ -1,3 +1,5 @@
+#include <QPainterPath>
+
 #include "futureshotpath.h"
 #include "controller/game.h"
 #include "util/gameutils.h"

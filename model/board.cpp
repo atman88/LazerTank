@@ -2,6 +2,7 @@
 #include <QVariant>
 #include <QFile>
 #include <QThread>
+#include <QTextStream>
 
 #include "board.h"
 #include "controller/gameregistry.h"

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <QPainter>
 #include "push.h"
 #include "controller/gameregistry.h"
 

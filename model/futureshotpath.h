@@ -5,7 +5,8 @@
 #include <vector>
 #include <QObject>
 #include <QRect>
-#include <QPainterPath>
+
+QT_FORWARD_DECLARE_CLASS(QPainterPath)
 
 #include "modelpoint.h"
 #include "piece.h"

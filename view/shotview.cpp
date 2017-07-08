@@ -1,4 +1,6 @@
 #include <iostream>
+#include <QRect>
+#include <QPainter>
 #include <QPainterPath>
 #include "shotview.h"
 #include "shooter.h"
