@@ -16,6 +16,7 @@
 #include "model/push.h"
 #include "model/shotmodel.h"
 #include "model/level.h"
+#include "view/levelchooser.h"
 
 #define TILE_SIZE 24
 
@@ -110,6 +111,26 @@ void BoardWindow::showHelp()
     mHelpWidget->show();
 }
 
+void BoardWindow::chooseLevel()
+{
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        LevelChooser* chooser = new LevelChooser( registry->getLevelList() );
+        chooser->setAttribute( Qt::WA_DeleteOnClose );
+        QObject::connect( chooser, &LevelChooser::levelChosen, this, &BoardWindow::loadLevel );
+
+        chooser->setVisible(true);
+        QEventLoop eventLoop;
+        eventLoop.exec( QEventLoop::DialogExec );
+    }
+}
+
+void BoardWindow::loadLevel( int number )
+{
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        registry->getGame().loadMasterBoard( number );
+    }
+}
+
 void BoardWindow::renderSquareLater( int col, int row )
 {
     QRect dirty(col*TILE_SIZE, row*TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -129,6 +150,11 @@ void BoardWindow::renderListIn(PieceSet::iterator iterator, PieceSet::iterator e
 QMenu& BoardWindow::getMenu()
 {
     return mMenu;
+}
+
+bool BoardWindow::isPaintable() const
+{
+    return mRenderedOnce;
 }
 
 void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* painter )
@@ -339,7 +365,6 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             captureAction.setText( "&Capture Flag" );
             TO_QACTION(mReloadAction).setText( "&Restart Level" );
             TO_QACTION(mReplayAction).setText( "&Auto Replay" );
-            TO_QACTION(mChooseLevelAction).setText( "Select &Level.." );
 
             TO_QACTION(mSpeedAction).setShortcut( speedSeq );
             TO_QACTION(mSpeedAction).setCheckable(true);
@@ -348,18 +373,13 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             TO_QACTION(mClearMovesAction).setShortcut(clearSeq);
             TO_QACTION(mReplayAction).setShortcut( replaySeq );
 
-            LevelChooser& chooser = registry->getLevelChooser();
-            chooser.realize();
-            TO_QACTION(mChooseLevelAction).setMenu( &chooser );
-
             mMenu.addAction( &TO_QACTION(mSpeedAction)      );
             mMenu.addAction( &TO_QACTION(mUndoMoveAction)   );
             mMenu.addAction( &TO_QACTION(mClearMovesAction) );
             mMenu.addAction( &pathToAction );
             mMenu.addAction( &captureAction );
             mMenu.addAction( &TO_QACTION(mReloadAction)     );
-            mMenu.addAction( &TO_QACTION(mChooseLevelAction));
-
+            mMenu.addAction( QString("Select &Level.."), this, SLOT(chooseLevel()));
             mMenu.addAction( &TO_QACTION(mReplayAction) );
             mMenu.addAction( QString("&Help"), this, SLOT(showHelp()) );
             mMenu.addAction( QString("E&xit"), this, SLOT(close()) );
@@ -388,8 +408,9 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
         bool movesPending = registry->getMoveController().getMoves().size() > 0;
         TO_QACTION(mUndoMoveAction).setEnabled( movesPending );
         TO_QACTION(mClearMovesAction).setEnabled( movesPending );
-        TO_QACTION(mReplayAction).setEnabled( !registry->getTank().getRecorder().isEmpty() );
-        TO_QACTION(mChooseLevelAction).setEnabled( registry->getLevelChooser().isRealized() );
+        bool modified = !registry->getTank().getRecorder().isEmpty();
+        TO_QACTION(mReplayAction).setEnabled( modified );
+        TO_QACTION(mReloadAction).setEnabled( modified );
 
         //
         // launch menu
@@ -406,14 +427,8 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             registry->getPathFinderController().doAction( &captureAction );
         } else if ( action == &pathToAction ) {
             registry->getPathFinderController().doAction( &pathToAction );
-        } else if ( action ) {
-            bool ok;
-            int level = action->data().toInt( &ok );
-            if ( ok && level > 0 ) {
-                registry->getGame().loadMasterBoard( action->data().toInt() );
-            } else {
-                action->trigger();
-            }
+        } else if ( action == &mReloadAction ) {
+            loadLevel( board->getLevel() );
         }
     }
 }

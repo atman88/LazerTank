@@ -28,7 +28,8 @@ SOURCES += \
     view/pieceview.cpp \
     util/gameutils.cpp \
     util/imageutils.cpp \
-    view/boardrenderer.cpp
+    view/boardrenderer.cpp \
+    test/model/testlevellist.cpp
 
 index {
     TARGET = qltindexer
@@ -119,8 +120,7 @@ test{
         test/util/testrecorder.cpp \
         test/util/piecelistmanagerobserver.cpp \
         test/util/testworker.cpp \
-        test/model/testboardpool.cpp \
-        test/view/testlevelchooser.cpp
+        test/model/testboardpool.cpp
 
 } else {
     TARGET = qlt

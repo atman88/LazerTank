@@ -3,8 +3,10 @@
 #include "gameregistry.h"
 #include "game.h"
 #include "model/level.h"
+#include "model/boardpool.h"
 
-GameInitializer::GameInitializer() : QObject(0), mInitPhase(PendingPhase), mWindowPaintable(false)
+
+GameInitializer::GameInitializer() : QObject(0), mInitPhase(PendingPhase)
 {
 }
 
@@ -16,51 +18,55 @@ void GameInitializer::init( GameRegistry& registry )
         std::cout << "GameInitializer::init out of phase! " << mInitPhase << "!=" << PendingPhase << std::endl;
         return;
     }
-    mInitPhase = ChooserPhase;
+    mInitPhase = LevelsPhase;
 
     //
-    // first phase: parallel execution of
-    //   1.1) window bring up
-    //   1.2) background level list initialization
+    // first phase:
+    //   background level list initialization
     //
-    if ( BoardWindow* window = registry.getWindow() ) {
-        QObject::connect( window, &BoardWindow::paintable, this, &GameInitializer::onWindowPaintable, Qt::QueuedConnection );
-        window->setVisible(true);
-    }
-    QObject::connect( &registry.getLevelChooser(), &LevelChooser::listInitialized, this, &GameInitializer::resume );
-    registry.getLevelChooser().init( &registry );
-}
-
-void GameInitializer::onWindowPaintable()
-{
-    if ( !mWindowPaintable ) {
-        mWindowPaintable = true;
-        resume();
-    }
+    QObject::connect( &registry.getLevelList(), &LevelList::initialized, this, &GameInitializer::resume );
+    registry.getLevelList().init( &registry );
 }
 
 void GameInitializer::resume()
 {
-    // currently the ChooserPhase is the only defined phase to resume from
-    if ( mInitPhase != ChooserPhase ) {
-        return;
-    }
+    if ( GameRegistry* registry = getRegistry(this) ) {
 
-    //
-    // second phase: sequential execution of:
-    //   2.1) initialization of the game & window on the foreground thread
-    //   2.2) kick off loading the first board
-    //
-    if ( mWindowPaintable ) {
-        if ( GameRegistry* registry = getRegistry(this) ) {
-            if ( registry->getLevelChooser().isInitialized() ) {
-                mInitPhase = GamePhase;
-
-                registry->getGame().init( registry );
+        if ( mInitPhase == LevelsPhase ) {
+            if ( registry->getLevelList().isInitialized()  ) {
+                //
+                // second phase:
+                //    2.1) window bringup
+                //    2.2) initialize the board pool
                 if ( BoardWindow* window = registry->getWindow() ) {
-                    window->init( registry );
+                    QObject::connect( window, &BoardWindow::paintable, this, &GameInitializer::resume, Qt::QueuedConnection );
+                    window->setVisible(true);
+
+                    if ( QScreen* screen = window->screen() ) {
+                        registry->getBoardPool().init( registry->getLevelList(), screen->availableSize().height() / 12 ); // chooser's TILE_SIZE
+                    }
                 }
-                registry->getGame().loadMasterBoard( registry->getLevelChooser().nextLevel(0) );
+
+                mInitPhase = WindowPhase;
+            }
+        }
+
+        if ( mInitPhase == WindowPhase ) {
+            if ( BoardWindow* window = registry->getWindow() ) {
+                if ( window->isPaintable() ) {
+                    //
+                    // third phase: sequential execution of:
+                    //   2.1) initialization of the game & window on the foreground thread
+                    //   2.2) kick off loading the first board
+                    //
+                    mInitPhase = GamePhase;
+
+                    registry->getGame().init( registry );
+                    if ( BoardWindow* window = registry->getWindow() ) {
+                        window->init( registry );
+                    }
+                    registry->getGame().loadMasterBoard( registry->getLevelList().nextLevel(0) );
+                }
             }
         }
     }

@@ -261,7 +261,7 @@ void Game::onMoveAggregatorFinished()
                 QPushButton* nextButton   = msgBox.addButton( QString("&Next Level"  ), QMessageBox::AcceptRole );
                 QPushButton* exitButton   = msgBox.addButton( QString("E&xit"        ), QMessageBox::DestructiveRole );
                 msgBox.setDefaultButton( nextButton );
-                nextButton->setEnabled( registry->getLevelChooser().nextLevel(mBoard.getLevel()) != 0 );
+                nextButton->setEnabled( registry->getLevelList().nextLevel(mBoard.getLevel()) != 0 );
 
                 msgBox.exec();
 
@@ -269,7 +269,7 @@ void Game::onMoveAggregatorFinished()
                     registry->getWindow()->close();
                 } else if ( msgBox.clickedButton() == replayButton ) {
                     restartLevel( true );
-                } else if ( int i = registry->getLevelChooser().nextLevel( mBoard.getLevel() ) ) {
+                } else if ( int i = registry->getLevelList().nextLevel( mBoard.getLevel() ) ) {
                     loadMasterBoard( i );
                 }
             }

@@ -16,11 +16,11 @@
 GameRegistry::GameRegistry( BoardWindow* window, Game* game,
   SpeedController* speedController, MoveController* moveController, PathFinderController* pathFinderController,
   AnimationStateAggregator* moveAggregate, AnimationStateAggregator* shotAggregate, BoardPool* pool, Tank* tank,
-  Shooter* activeCannon, Push* tankPush, Push* shotPush, LevelChooser* levelChooser )
+  Shooter* activeCannon, Push* tankPush, Push* shotPush, LevelList* levelList )
   : QObject(0), mWindow(window), mGame(game),
     mSpeedController(speedController), mMoveController(moveController), mPathFinderController(pathFinderController),
     mMoveAggregate(moveAggregate), mShotAggregate(shotAggregate), mBoardPool(pool), mTank(tank), mActiveCannon(activeCannon),
-    mTankPush(tankPush), mShotPush(shotPush), mLevelChooser(levelChooser)
+    mTankPush(tankPush), mShotPush(shotPush), mLevelList(levelList)
 {
     mHandle.registry = this;
     setProperty( GameHandleName, QVariant::fromValue(mHandle) );
@@ -39,11 +39,6 @@ GameRegistry::GameRegistry( BoardWindow* window, Game* game,
 
     mCaptureAction.setParent(this);
     mPathToAction.setParent(this);
-
-    if ( levelChooser ) {
-        mInjectionList.append( levelChooser );
-        levelChooser->setProperty( GameHandleName, property(GameHandleName) );
-    }
 
     if ( window ) {
         QObject::connect( window, &BoardWindow::destroyed, this, &GameRegistry::onWindowDestroyed );
@@ -81,15 +76,7 @@ DECL_GETTER(Tank,Tank)
 DECL_GETTER(ActiveCannon,Shooter)
 DECL_GETTER(TankPush,Push)
 DECL_GETTER(ShotPush,Push)
-
-LevelChooser& GameRegistry::getLevelChooser()
-{
-    if ( !mLevelChooser ) {
-        mLevelChooser = new LevelChooser();
-        mLevelChooser->setProperty( GameHandleName, property(GameHandleName) );
-    }
-    return *mLevelChooser;
-}
+DECL_GETTER(LevelList,LevelList)
 
 WorkerThread&     GameRegistry::getWorker()        { return mWorker;        }
 PathSearchAction& GameRegistry::getCaptureAction() { return mCaptureAction; }

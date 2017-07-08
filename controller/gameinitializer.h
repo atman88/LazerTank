@@ -15,7 +15,8 @@ class GameInitializer : public QObject
 
     typedef enum {
         PendingPhase,
-        ChooserPhase,
+        LevelsPhase,
+        WindowPhase,
         GamePhase
     } InitPhase;
 
@@ -25,18 +26,12 @@ public:
 
 private slots:
     /**
-     * @brief Receives notification that the window has begun rendering
-     */
-    void onWindowPaintable();
-
-    /**
      * @brief Executes game initalization (2nd phase)
      */
     void resume();
 
 private:
     InitPhase mInitPhase;
-    bool mWindowPaintable;
 };
 
 #endif // GAMEINITIALIZER_H
