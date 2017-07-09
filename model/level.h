@@ -2,8 +2,6 @@
 #define LEVEL_H
 
 #include <QObject>
-#include <QWidget>
-#include <QWidgetAction>
 #include <QList>
 
 #include "modelpoint.h"
@@ -15,12 +13,13 @@ class Board;
 /**
  * @brief Representation of a level and its attributes
  */
-class Level : public QWidgetAction
+class Level
 {
-    Q_OBJECT
-
 public:
-    explicit Level( int number, int width, int height, QObject* parent = 0 );
+    explicit Level( int number, int width, int height );
+    explicit Level() {}
+    Level( const Level& other );
+    ~Level() {}
 
     bool operator==( const Level& other ) const;
     bool operator<( const Level& other ) const;
@@ -35,29 +34,12 @@ public:
      */
     const QSize& getSize() const;
 
-    void onBoardLoaded() const;
-
 private:
     int mNumber;
     QSize mSize;
 };
 
-class LevelWidget : public QWidget
-{
-    Q_OBJECT
-
-public:
-    LevelWidget( Level& source, QWidget* parent = 0 );
-
-    QSize sizeHint() const override;
-
-protected:
-    void paintEvent( QPaintEvent* ) override;
-
-private:
-    int mNumber;
-    QSize mBoardPixelSize;
-};
+Q_DECLARE_METATYPE(Level)
 
 /**
  * @brief Wrapper class for the list of levels
@@ -123,15 +105,12 @@ public:
      */
     bool isInitialized() const;
 
-    // QAbstractItemModel interface
-    int rowCount( const QModelIndex& ) const;
-    QVariant data( const QModelIndex& index, int role ) const;
+    QSize visualSizeHint() const;
 
 private:
     bool mInitialized;
     QList<Level*> mLevels;
-    QSize mMinSize;
-    QSize mMaxSize;
+    QSize mVisualSizeHint;
 
 signals:
     void initialized();

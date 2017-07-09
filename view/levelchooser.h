@@ -5,19 +5,19 @@
 #include <QListView>
 #include "model/level.h"
 
-class GameRegistry;
+class BoardPool;
 
 class LevelChooser : public QListView
 {
     Q_OBJECT
 
 public:
-    explicit LevelChooser( LevelList& levels, QWidget* parent = 0 );
+    explicit LevelChooser( LevelList& levels, BoardPool& pool, QWidget* parent = 0 );
 
     /**
      * @brief Obtain the underlying list of levels
      */
-    const LevelList* getList();
+    const LevelList* getList() const;
 
 signals:
     /**
@@ -27,6 +27,8 @@ signals:
 
 private slots:
     void onActivated( const QModelIndex& index );
+
+    void onBoardLoaded( int number );
 };
 
 #endif // LEVELCHOOSER_H

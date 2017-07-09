@@ -1,21 +1,21 @@
-#include <iostream>
 #include <QSize>
-#include <QScreen>
+#include <QPainter>
+#include <QStyledItemDelegate>
 
 #include "levelchooser.h"
-#include "boardwindow.h"
-#include "controller/gameregistry.h"
-#include "controller/game.h"
-#include "model/level.h"
+#include "boardrenderer.h"
 #include "model/board.h"
 #include "model/boardpool.h"
 
 #define TILE_SIZE 12
+#define FONT_SIZE 15
+#define PADDING_WIDTH  3
+#define PADDING_HEIGHT 3
 
 class LevelModel : public QAbstractListModel
 {
 public:
-    LevelModel( LevelList& list ) : mList(list)
+    LevelModel( LevelList& list, QObject* parent = 0 ) : QAbstractListModel(parent), mList(list)
     {
     }
 
@@ -27,7 +27,7 @@ public:
     QVariant data( const QModelIndex& index, int role ) const
     {
         if ( index.row() >= 0 && index.row() < mList.size() && (role == Qt::DisplayRole || role == Qt::EditRole) ) {
-            return mList.at( index.row() )->getNumber();
+            return QVariant::fromValue( *mList.at( index.row() ) );
         }
 
         return QVariant();
@@ -42,29 +42,95 @@ private:
     LevelList& mList;
 };
 
-LevelChooser::LevelChooser( LevelList& levels, QWidget* parent ) : QListView(parent)
+class LevelPainter : public QStyledItemDelegate
+{
+public:
+    explicit LevelPainter( BoardPool& pool, QObject* parent = 0 ) : QStyledItemDelegate(parent), mPool(pool)
+    {
+    }
+
+    void paint( QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index ) const
+    {
+        painter->save();
+
+        QFont font = painter->font();
+        font.setBold(true);
+        font.setPixelSize( FONT_SIZE );
+        painter->setFont( font );
+
+        if ( option.state & QStyle::State_Selected ) {
+            painter->fillRect( option.rect, option.palette.highlight() );
+        }
+
+        painter->translate( option.rect.topLeft() );
+        QRect rect( 0, 0, option.rect.width(), option.rect.height() );
+
+        Level level = qvariant_cast<Level>( index.model()->data( index ) );
+        if ( Board* board = mPool.getBoard( level.getNumber() ) ) {
+            BoardRenderer renderer( TILE_SIZE );
+            QPoint offset( std::max( (rect.width()  - board->getWidth() *TILE_SIZE)/2, PADDING_WIDTH  ),
+                           std::max( (rect.height() - board->getHeight()*TILE_SIZE)/2, PADDING_HEIGHT ) );
+            painter->translate( offset );
+            renderer.render( &rect, board, painter );
+            renderer.renderInitialTank( board, painter );
+            painter->translate( -offset );
+//            painter->resetTransform();
+        }
+
+        painter->drawText( rect - QMargins( PADDING_WIDTH, PADDING_HEIGHT, PADDING_WIDTH, PADDING_HEIGHT ),
+          Qt::AlignBottom|Qt::AlignRight|Qt::TextDontClip|Qt::TextSingleLine, QString::number(level.getNumber()) );
+
+        painter->restore();
+    }
+
+    QSize sizeHint( const QStyleOptionViewItem& /*option*/, const QModelIndex& index ) const
+    {
+        return qvariant_cast<Level>( index.model()->data( index ) ).getSize()*TILE_SIZE + QSize(PADDING_WIDTH*2,PADDING_HEIGHT*2);
+    }
+
+private:
+    BoardPool& mPool;
+};
+
+LevelChooser::LevelChooser( LevelList& levels, BoardPool& pool, QWidget* parent ) : QListView(parent)
 {
     setWindowFlags( Qt::Dialog );
     setWindowTitle( "Select Level" );
     setWindowModality( Qt::ApplicationModal );
 
-    LevelModel* model = new LevelModel( levels );
-    model->setParent( this );
+    LevelModel* model = new LevelModel( levels, this );
     setModel( model );
 
+    LevelPainter* delegate = new LevelPainter( pool, this );
+    setItemDelegate( delegate );
+
+    QSize preferredSize = levels.visualSizeHint() * TILE_SIZE
+      + QSize(PADDING_WIDTH*2 + style()->pixelMetric(QStyle::PM_SliderThickness), levels.size()*PADDING_HEIGHT*2 );
+    setGeometry( 0, 0, preferredSize.width(), preferredSize.height() );
+
     QObject::connect( this, &LevelChooser::activated, this, &LevelChooser::onActivated );
+    QObject::connect( &pool, &BoardPool::boardLoaded, this, &LevelChooser::onBoardLoaded );
 }
 
 void LevelChooser::onActivated( const QModelIndex& index )
 {
-    if ( int number = index.model()->data( index ).toInt() ) {
+    QVariant v = index.model()->data( index );
+    if ( int number = qvariant_cast<Level>(v).getNumber() ) {
         emit levelChosen( number );
     }
 
     close();
 }
 
-const LevelList* LevelChooser::getList()
+void LevelChooser::onBoardLoaded( int number )
+{
+    if ( const LevelList* list = getList() ) {
+        QModelIndex index = model()->index( list->indexOf(number), 0 );
+        dataChanged( index, index );
+    }
+}
+
+const LevelList* LevelChooser::getList() const
 {
     if ( LevelModel* levelModel = dynamic_cast<LevelModel*>( model() ) ) {
         return &levelModel->getList();

@@ -114,9 +114,10 @@ void BoardWindow::showHelp()
 void BoardWindow::chooseLevel()
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
-        LevelChooser* chooser = new LevelChooser( registry->getLevelList() );
+        LevelChooser* chooser = new LevelChooser( registry->getLevelList(), registry->getBoardPool() );
         chooser->setAttribute( Qt::WA_DeleteOnClose );
         QObject::connect( chooser, &LevelChooser::levelChosen, this, &BoardWindow::loadLevel );
+        chooser->move( frameGeometry().right(), chooser->frameGeometry().top() );
 
         chooser->setVisible(true);
         QEventLoop eventLoop;
@@ -505,6 +506,12 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
             case Qt::Key_A:
                 if ( ev->modifiers() == Qt::AltModifier ) {
                     registry->getGame().replayLevel();
+                }
+                break;
+
+            case Qt::Key_L:
+                if ( ev->modifiers() == Qt::AltModifier ) {
+                    chooseLevel();
                 }
                 break;
 
