@@ -74,7 +74,6 @@ public:
             renderer.render( &rect, board, painter );
             renderer.renderInitialTank( board, painter );
             painter->translate( -offset );
-//            painter->resetTransform();
         }
 
         painter->drawText( rect - QMargins( PADDING_WIDTH, PADDING_HEIGHT, PADDING_WIDTH, PADDING_HEIGHT ),
@@ -104,10 +103,6 @@ LevelChooser::LevelChooser( LevelList& levels, BoardPool& pool, QWidget* parent 
     LevelPainter* delegate = new LevelPainter( pool, this );
     setItemDelegate( delegate );
 
-    QSize preferredSize = levels.visualSizeHint() * TILE_SIZE
-      + QSize(PADDING_WIDTH*2 + style()->pixelMetric(QStyle::PM_SliderThickness), levels.size()*PADDING_HEIGHT*2 );
-    setGeometry( 0, 0, preferredSize.width(), preferredSize.height() );
-
     QObject::connect( this, &LevelChooser::activated, this, &LevelChooser::onActivated );
     QObject::connect( &pool, &BoardPool::boardLoaded, this, &LevelChooser::onBoardLoaded );
 }
@@ -130,10 +125,28 @@ void LevelChooser::onBoardLoaded( int number )
     }
 }
 
+QSize LevelChooser::preferredSize() const
+{
+    if ( const LevelList* list = getList() ) {
+        return list->visualSizeHint() * TILE_SIZE
+          + QSize(PADDING_WIDTH*2 + style()->pixelMetric(QStyle::PM_SliderThickness), list->size()*PADDING_HEIGHT*2 );
+    }
+    return QListView::viewportSizeHint();
+}
+
 const LevelList* LevelChooser::getList() const
 {
     if ( LevelModel* levelModel = dynamic_cast<LevelModel*>( model() ) ) {
         return &levelModel->getList();
     }
     return 0;
+}
+
+void LevelChooser::setSelectedLevel( int number )
+{
+    if ( const LevelList* list = getList() ) {
+        QModelIndex index = model()->index( list->indexOf(number), 0 );
+        setCurrentIndex( index );
+        scrollTo( index, EnsureVisible );
+    }
 }

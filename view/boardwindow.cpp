@@ -117,9 +117,15 @@ void BoardWindow::chooseLevel()
         LevelChooser* chooser = new LevelChooser( registry->getLevelList(), registry->getBoardPool() );
         chooser->setAttribute( Qt::WA_DeleteOnClose );
         QObject::connect( chooser, &LevelChooser::levelChosen, this, &BoardWindow::loadLevel );
+
+        if ( QScreen* myScreen = screen() ) {
+            QSize s = chooser->preferredSize();
+            chooser->setGeometry( 0, 0, s.width(), std::min( myScreen->availableGeometry().height(), s.height() ) );
+        }
         chooser->move( frameGeometry().right(), chooser->frameGeometry().top() );
 
         chooser->setVisible(true);
+        chooser->setSelectedLevel( registry->getGame().getBoard()->getLevel() );
         QEventLoop eventLoop;
         eventLoop.exec( QEventLoop::DialogExec );
     }

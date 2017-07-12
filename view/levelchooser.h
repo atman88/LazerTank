@@ -19,11 +19,24 @@ public:
      */
     const LevelList* getList() const;
 
+    /**
+     * @brief Query the display size of the list contents
+     * @return
+     */
+    QSize preferredSize() const;
+
 signals:
     /**
      * @brief Notifies that the user has selected a level
      */
     int levelChosen( int number );
+
+public slots:
+    /**
+     * @brief Set selection to the given level
+     * @param number
+     */
+    void setSelectedLevel( int number );
 
 private slots:
     void onActivated( const QModelIndex& index );
