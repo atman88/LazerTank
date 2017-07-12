@@ -150,3 +150,14 @@ void LevelChooser::setSelectedLevel( int number )
         scrollTo( index, EnsureVisible );
     }
 }
+
+void LevelChooser::keyPressEvent(QKeyEvent* event)
+{
+    // Unfortunately QAbstractItemView loses QWidget's cancel handing, so adding it back here:
+    if ( event->matches(QKeySequence::Cancel) ) {
+        event->accept();
+        close();
+    } else {
+        QListView::keyPressEvent( event );
+    }
+}

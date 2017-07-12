@@ -42,6 +42,9 @@ private slots:
     void onActivated( const QModelIndex& index );
 
     void onBoardLoaded( int number );
+
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
 };
 
 #endif // LEVELCHOOSER_H
