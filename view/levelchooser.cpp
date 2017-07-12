@@ -8,7 +8,6 @@
 #include "model/boardpool.h"
 
 #define TILE_SIZE 12
-#define FONT_SIZE 15
 #define PADDING_WIDTH  3
 #define PADDING_HEIGHT 3
 
@@ -54,8 +53,6 @@ public:
         painter->save();
 
         QFont font = painter->font();
-        font.setBold(true);
-        font.setPixelSize( FONT_SIZE );
         painter->setFont( font );
 
         if ( option.state & QStyle::State_Selected ) {
@@ -96,6 +93,14 @@ LevelChooser::LevelChooser( LevelList& levels, BoardPool& pool, QWidget* parent 
     setWindowFlags( Qt::Dialog );
     setWindowTitle( "Select Level" );
     setWindowModality( Qt::ApplicationModal );
+    setStyleSheet(
+      "QListView {"
+        "background-color: black;"
+        "color: white;"
+        "selection-background-color: rgb(0,255,33);"
+        "font: bold 15px;"
+      "}"
+    );
 
     LevelModel* model = new LevelModel( levels, this );
     setModel( model );
