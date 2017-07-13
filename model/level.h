@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QList>
+#include <QAbstractListModel>
 
 #include "modelpoint.h"
 #include "util/workerthread.h"
@@ -44,13 +45,16 @@ Q_DECLARE_METATYPE(Level)
 /**
  * @brief Wrapper class for the list of levels
  */
-class LevelList : public QObject
+class LevelList : public QAbstractListModel
 {
     Q_OBJECT
 
 public:
     LevelList();
     void init( GameRegistry* registry );
+
+    int rowCount( const QModelIndex& ) const override;
+    QVariant data( const QModelIndex& index, int role ) const override;
 
     /**
      * @brief Obtain the list index for the given level number

@@ -11,36 +11,6 @@
 #define PADDING_WIDTH  3
 #define PADDING_HEIGHT 3
 
-class LevelModel : public QAbstractListModel
-{
-public:
-    LevelModel( LevelList& list, QObject* parent = 0 ) : QAbstractListModel(parent), mList(list)
-    {
-    }
-
-    int rowCount( const QModelIndex& ) const
-    {
-        return mList.size();
-    }
-
-    QVariant data( const QModelIndex& index, int role ) const
-    {
-        if ( index.row() >= 0 && index.row() < mList.size() && (role == Qt::DisplayRole || role == Qt::EditRole) ) {
-            return QVariant::fromValue( *mList.at( index.row() ) );
-        }
-
-        return QVariant();
-    }
-
-    LevelList& getList()
-    {
-        return mList;
-    }
-
-private:
-    LevelList& mList;
-};
-
 class LevelPainter : public QStyledItemDelegate
 {
 public:
@@ -102,11 +72,9 @@ LevelChooser::LevelChooser( LevelList& levels, BoardPool& pool, QWidget* parent 
       "}"
     );
 
-    LevelModel* model = new LevelModel( levels, this );
-    setModel( model );
+    setModel( &levels );
 
-    LevelPainter* delegate = new LevelPainter( pool, this );
-    setItemDelegate( delegate );
+    setItemDelegate( new LevelPainter( pool, this ) );
 
     QObject::connect( this, &LevelChooser::activated, this, &LevelChooser::onActivated );
     QObject::connect( &pool, &BoardPool::boardLoaded, this, &LevelChooser::onBoardLoaded );
@@ -124,7 +92,7 @@ void LevelChooser::onActivated( const QModelIndex& index )
 
 void LevelChooser::onBoardLoaded( int number )
 {
-    if ( const LevelList* list = getList() ) {
+    if ( const LevelList* list = dynamic_cast<LevelList*>( model() ) ) {
         QModelIndex index = model()->index( list->indexOf(number), 0 );
         dataChanged( index, index );
     }
@@ -132,24 +100,16 @@ void LevelChooser::onBoardLoaded( int number )
 
 QSize LevelChooser::preferredSize() const
 {
-    if ( const LevelList* list = getList() ) {
+    if ( const LevelList* list = dynamic_cast<LevelList*>( model() ) ) {
         return list->visualSizeHint() * TILE_SIZE
           + QSize(PADDING_WIDTH*2 + style()->pixelMetric(QStyle::PM_SliderThickness), list->size()*PADDING_HEIGHT*2 );
     }
     return QListView::viewportSizeHint();
 }
 
-const LevelList* LevelChooser::getList() const
-{
-    if ( LevelModel* levelModel = dynamic_cast<LevelModel*>( model() ) ) {
-        return &levelModel->getList();
-    }
-    return 0;
-}
-
 void LevelChooser::setSelectedLevel( int number )
 {
-    if ( const LevelList* list = getList() ) {
+    if ( const LevelList* list = dynamic_cast<LevelList*>( model() ) ) {
         QModelIndex index = model()->index( list->indexOf(number), 0 );
         setCurrentIndex( index );
         scrollTo( index, EnsureVisible );

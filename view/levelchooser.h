@@ -15,11 +15,6 @@ public:
     explicit LevelChooser( LevelList& levels, BoardPool& pool, QWidget* parent = 0 );
 
     /**
-     * @brief Obtain the underlying list of levels
-     */
-    const LevelList* getList() const;
-
-    /**
      * @brief Query the display size of the list contents
      * @return
      */
