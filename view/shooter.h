@@ -27,7 +27,7 @@ public:
     virtual ~Shooter() {}
     void init( GameRegistry* registry, PieceType type, QColor color );
 
-    void reset( QPoint p );
+    void reset( ModelVector v );
 
     /**
      * @brief fire this shooters shot

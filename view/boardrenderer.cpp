@@ -125,7 +125,8 @@ void BoardRenderer::renderPiece( PieceType type, QRect& square, int angle, QPain
 void BoardRenderer::renderInitialTank( Board* board, QPainter* painter )
 {
     QRect square;
-    BoardRenderer::renderPixmap( *getBounds( board->getTankStartPoint(), &square ), TANK, painter );
+    const ModelVector& v = board->getTankStartVector();
+    BoardRenderer::renderPiece( TANK, *getBounds( v, &square ), v.mAngle, painter );
 }
 
 QRect* BoardRenderer::getBounds( const ModelPoint& forPoint, QRect* rect ) const

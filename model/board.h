@@ -127,7 +127,7 @@ public:
      * @brief Get square that the tank was loaded at for this board
      * @return The tank way point. The point 0,0 is returned when not specified in the previously loaded board data.
      */
-    const ModelPoint& getTankStartPoint() const;
+    const ModelVector& getTankStartVector() const;
 
     /**
      * @brief roll back future board changes for this shot path
@@ -157,7 +157,7 @@ private:
     int mLevel;
     ModelPoint mLowerRight;
     ModelPoint mFlagPoint;
-    ModelPoint mTankWayPoint;
+    ModelVector mTankWayPoint;
 
     unsigned char mTiles[BOARD_MAX_WIDTH*BOARD_MAX_HEIGHT];
     PieceSetManager mPieceManager;

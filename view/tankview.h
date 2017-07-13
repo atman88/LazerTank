@@ -28,7 +28,7 @@ public slots:
     void setViewRotation( const QVariant& angle ) override;
 
 protected:
-    void reset(const QPoint& p );
+    void reset(const ModelVector& v );
     virtual void onMoved( int col, int row, int angle ) = 0;
 
     RotateSpeedControlledAnimation mRotateAnimation;

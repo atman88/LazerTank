@@ -25,7 +25,7 @@ void MoveController::init( GameRegistry* registry )
 
 void MoveController::onBoardLoaded( Board* board )
 {
-    mToVector = ModelVector( board->getTankStartPoint(), 0 );
+    mToVector = board->getTankStartVector();
 
     mFutureShots.reset();
     mMoves.reset();

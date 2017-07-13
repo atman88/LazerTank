@@ -137,7 +137,7 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
                 previousChange = ret;
 
                 // need to resume without advancing the lead point in the case of a tile decay:
-                if ( curChange.changeType == TILE_CHANGE && curChange.u.tileType == WOOD ) {
+                if ( curChange.changeType == TILE_CHANGE && (curChange.u.tileType == WOOD || curChange.u.tileType == WOOD_DAMAGED) ) {
                     leadVector = path.mLeadVector;
                 }
                 ++path.mShotCount;

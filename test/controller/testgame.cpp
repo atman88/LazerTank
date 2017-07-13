@@ -28,7 +28,7 @@ void TestMain::testGameMove()
     QCOMPARE( game.canPlaceAt(TANK,ModelPoint(-1, 0),270), false );
     QCOMPARE( game.canPlaceAt(TANK,ModelPoint( 0,-1),  0), false );
 
-    QCOMPARE( game.canPlaceAt( TANK, board->getTankStartPoint(), 0 ), true );
+    QCOMPARE( game.canPlaceAt( TANK, board->getTankStartVector(), 0 ), true );
 }
 
 void testCannonAt( int tankCol, int tankRow, GameRegistry* registry )

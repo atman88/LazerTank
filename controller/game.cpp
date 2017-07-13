@@ -108,9 +108,9 @@ void Game::onBoardLoaded( int )
         mFutureDelta.enable( false );
         registry->getMoveAggregate().reset();
         registry->getShotAggregate().reset();
-        registry->getActiveCannon().reset( BoardRenderer::NullPoint );
+        registry->getActiveCannon().reset( ModelVector(0,0) );
         registry->getSpeedController().setHighSpeed(false);
-        registry->getTank().onBoardLoaded( mBoard.getTankStartPoint() );
+        registry->getTank().onBoardLoaded( mBoard.getTankStartVector() );
         registry->getMoveController().onBoardLoaded( &mBoard );
 
         emit boardLoaded();

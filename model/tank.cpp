@@ -38,11 +38,11 @@ const ModelVector& Tank::getVector() const
     return mVector;
 }
 
-void Tank::onBoardLoaded( ModelPoint point )
+void Tank::onBoardLoaded( ModelVector startVector )
 {
-    mVector.setPoint( point );
+    mVector = startVector;
     mVector.mAngle = 0;
-    TankView::reset( point.toViewUpperLeft() );
+    TankView::reset( startVector );
     mRecorder.onBoardLoaded();
 }
 

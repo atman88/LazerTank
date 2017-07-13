@@ -69,10 +69,10 @@ void TankView::resume()
     }
 }
 
-void TankView::reset( const QPoint& p )
+void TankView::reset( const ModelVector& v )
 {
     stop();
-    Shooter::reset( p );
+    Shooter::reset( v );
 }
 
 void TankView::setViewX( const QVariant& x )

@@ -1,16 +1,16 @@
-S.. . . ww  . [\Mw w . .  . .S
-.ww . M Mw  M  M w M M .  w w.
-..S w M .w  w  w w . M w  S ww
-... S w .M  M  M M . w S [S/ww
-wMM . S ww  w  w w w S w  w ww
-wM. . . S.  .  . . S[S/.  M wM
-ww. M w .S [S\[/SS . w w  w ww
-wMw M w .[\SS  S[S/. . M  w Mw
-wMw M w .[/SS  S[S\. . M  w .w
-ww. M w . S[S/[\SS . w w  w ww
-wM. . . S . w  M w S[S\.  M .w
-.MM . S . . w  . w . S w  w ww
-... S[S/. . w  . w .[\SS  w ww
-..S[S/. . w w  . w . .[\S[S\ww
-.wT M . . . .  w . . . .[\S SF
-S.. . w w . .  w S[S\w w[/S wS
+S. . . . ww  . [\Mw w . .  . .S
+.w w . M Mw  M  M w M M .  w w.
+.. S w M .w  w  w w . M w  S ww
+.. . S w .M  M  M M . w S [S/ww
+wM M . S ww  w  w w w S w  w ww
+wM . . . S.  .  . . S[S/.  M wM
+ww . M w .S [S\[/SS . w w  w ww
+wM w M w .[\SS  S[S/. . M  w Mw
+wM w M w .[/SS  S[S\. . M  w .w
+ww . M w . S[S/[\SS . w w  w ww
+wM . . . S . w  M w S[S\.  M .w
+.M M . S . . w  . w . S w  w ww
+.. . S[S/. . w  . w .[\SS  w ww
+.. S[S/. . w w  . w . .[\S[S\ww
+.w[T>M . . . .  w . . . .[\S SF
+S. . . w w . .  w S[S\w w[/S wS

@@ -24,10 +24,10 @@ void Shooter::init( GameRegistry* registry, PieceType type, QColor color )
     mShot.init( registry->getShotAggregate() );
 }
 
-void Shooter::reset( QPoint p )
+void Shooter::reset( ModelVector v )
 {
-    mViewRotation = 0;
-    mBoundingRect.moveTopLeft( p );
+    mViewRotation = v.mAngle;
+    mBoundingRect.moveTopLeft( v.toViewUpperLeft() );
     mShot.reset();
 }
 

@@ -63,9 +63,9 @@ public:
 public slots:
     /**
      * @brief Restores the tank to its idle state as appropriate after a board change
-     * @param point The square to position the tank in
+     * @param startVector The initial tank position
      */
-    void onBoardLoaded( ModelPoint point );
+    void onBoardLoaded( ModelVector startVector );
 
 protected:
     /**

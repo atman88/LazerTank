@@ -42,7 +42,7 @@ void Board::initPiece( PieceType type, int col, int row, int angle )
     mTiles[row*BOARD_MAX_HEIGHT + col] = DIRT;
 }
 
-const ModelPoint& Board::getTankStartPoint() const
+const ModelVector& Board::getTankStartVector() const
 {
     return mTankWayPoint;
 }
@@ -68,7 +68,8 @@ void Board::load( QTextStream& stream, int level )
 {
     int row = 0;
     unsigned char* rowp = mTiles;
-    mLowerRight = mTankWayPoint = ModelPoint(0,0);
+    mLowerRight = ModelPoint(0,0);
+    mTankWayPoint = ModelVector(0,0);
     mFlagPoint.setNull();
     mPieceManager.reset();
 
@@ -116,6 +117,10 @@ void Board::load( QTextStream& stream, int level )
                     case ('\\'<<8)|'M':  initPiece( TILE_MIRROR, col++, row,  90 ); break;
                     case ('/' <<8)|'M':  initPiece( TILE_MIRROR, col++, row, 180 ); break;
                     case ('M' <<8)|'\\': initPiece( TILE_MIRROR, col++, row, 270 ); break;
+                    case ('T' << 8)|'^': mTankWayPoint = ModelVector( col, row,   0 ); rowp[col++] = DIRT;  break;
+                    case ('T' << 8)|'>': mTankWayPoint = ModelVector( col, row,  90 ); rowp[col++] = DIRT;  break;
+                    case ('T' << 8)|'v': mTankWayPoint = ModelVector( col, row, 180 ); rowp[col++] = DIRT;  break;
+                    case ('T' << 8)|'<': mTankWayPoint = ModelVector( col, row, 270 ); rowp[col++] = DIRT;  break;
                     default:
                         ;
                     }
@@ -123,8 +128,7 @@ void Board::load( QTextStream& stream, int level )
                 break;
 
             case 'T':
-                mTankWayPoint.mCol = col;
-                mTankWayPoint.mRow = row;
+                mTankWayPoint = ModelVector( col, row );
 
                 // fall through
 
