@@ -120,8 +120,7 @@ void LevelList::init( GameRegistry* registry )
 
 void LevelList::addLevel( int number, int width, int height )
 {
-    Level* level = new Level( number, width, height );
-    mLevels.append( level );
+    mLevels.append( Level( number, width, height ) );
 }
 
 int LevelList::rowCount( const QModelIndex& ) const
@@ -138,10 +137,10 @@ QVariant LevelList::data( const QModelIndex& index, int role ) const
     return QVariant();
 }
 
-Level* LevelList::at( int index ) const
+const Level* LevelList::at( int index ) const
 {
     if ( 0 <= index && index < mLevels.size() ) {
-        return mLevels.at( index );
+        return &mLevels.at( index );
     }
     return 0;
 }
@@ -149,9 +148,7 @@ Level* LevelList::at( int index ) const
 int LevelList::numberAt( int index ) const
 {
     if ( 0 <= index && index < mLevels.size() ) {
-        if ( Level* level = mLevels.at( index ) ) {
-            return level->getNumber();
-        }
+        return mLevels.at( index ).getNumber();
     }
     return 0;
 }
@@ -159,7 +156,7 @@ int LevelList::numberAt( int index ) const
 int LevelList::indexOf( int number ) const
 {
     for( int index = std::min( number, mLevels.size() ); --index >= 0; ) {
-        if ( int delta = mLevels[index]->getNumber() - number ) {
+        if ( int delta = mLevels[index].getNumber() - number ) {
             if ( delta < 0 ) {
                 break;
             }
@@ -174,7 +171,7 @@ const Level* LevelList::find( int number ) const
 {
     int index = indexOf( number );
     if ( index >= 0 ) {
-        return mLevels.at(index);
+        return &mLevels.at(index);
     }
     return 0;
 }
@@ -187,7 +184,7 @@ int LevelList::nextLevel( int curLevel ) const
     } else {
         index = std::min( curLevel+1, mLevels.size() );
         while( --index >= 0 ) {
-            if ( mLevels[index]->getNumber() <= curLevel ) {
+            if ( mLevels[index].getNumber() <= curLevel ) {
                 ++index;
                 break;
             }

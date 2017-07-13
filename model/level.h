@@ -75,7 +75,7 @@ public:
      * @param index offset within the list
      * @return the Level or 0 if the index is out of bounds
      */
-    Level* at( int index ) const;
+    const Level* at( int index ) const;
 
     /**
      * @brief Retrieve the level number at the given index
@@ -89,6 +89,7 @@ public:
      * @param number The number for the level
      * @param width the number of columns that this level's board occupies
      * @param height the number of rows that this level's board occupies
+     * NOTE that levels should only be added in numerically increasing order.
      */
     void addLevel( int number, int width, int height );
 
@@ -113,7 +114,7 @@ public:
 
 private:
     bool mInitialized;
-    QList<Level*> mLevels;
+    QList<Level> mLevels;
     QSize mVisualSizeHint;
 
 signals:

@@ -52,6 +52,9 @@ BoardPool::BoardPool( int visibleCount, int size ) : QObject(0), mFirstVisible(0
 
 BoardPool::~BoardPool()
 {
+    if ( mRunnable ) {
+        delete mRunnable;
+    }
 }
 
 Board* BoardPool::find( int level )
