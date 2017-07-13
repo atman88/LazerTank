@@ -1,16 +1,12 @@
-S S  S [S/[\SSFS[S/[\SS S  S  S S
-S S [S/ .  . ... .  . .[S-[S-[\SS
-S S [S| .  . ... .  . . S  S [S|S
-S S [S\ .  . ... .  . .[\S S [S|S
-S S [S/ .  M ... .  . .[/S S [S|S
-S S [S\ .  M ... .  . .[\S S [S|S
-S S [S/ .  M ... .  . .[/S S [S|S
-S S [S\ .  M ... .  . .[\S S [S|S
-S S [S/ .  . ... .  . .[/S S [S|S
-S S [S| w  w www w  w w S  S [S|S
-S S [S| w  w www w  w w S  S [S|S
-S S [S\ w  w www w  w w[\S S [S|S
-S S  .  w  w www w  w w .  S [S|S
-S[S/ .  w  w www w  w w . [S-[/SS
-S[S\ .  .  . ... .  . .[/S S  S S
-S S  S  .  . .T. .  . . .  S  S S
+eeeeeSSSSSSS
+SSSSSS..SFwS
+S....MM.SSwS
+S.SM..M.SSwS
+S.S..SM.SSwS
+S...SS..SSwS
+SSSM.S.SSSwS
+SSS...M.wwwS
+S...M.MTS..S
+S.S.SSSSSSSS
+S...Seeeeeee
+SSSSSeeeeeee

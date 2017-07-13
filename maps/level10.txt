@@ -1,12 +1,16 @@
- S  S  v S S  S  v SS S  v SS S  vF
- w  w  w w w  w  w ww w  w ww w  ww
- .  w  M w M  w  M wM w  M wM w  Mw
- . [/S[S\M w  w  w ww w  w ww w  wM
- . [\S[S/w w [/S[S\Mw w  w ww w  ww
- .  < [M\w w [\S[S/ww[/S[S\Mw w  wM
- w  w  . M w  < [M\ww[\S[S/ww[/S[S\.
-[/S[S\ w w w  w  . Mw < [M\ww[\S[S/T
- S  S  w w[/S[S\ w ww w  . Mw . [M\.
- S  S  w w S  S  w w [/S[S\ww w  . .M
- S  S  ^ w S  S  ^ w  S  S ^w[/S[S\..
- S  S  S S S  S  S S  S  S SS S  S SS
+SSSSSSSSS S SS S SSS
+SF.v....S S SS S SSS
+S..W.M..S S SS S SSS
+S>WW....S S SS S SSS
+S.......S S SS S SSS
+S........ . WW W W.S
+S.......S . SS S S.S
+S........[/MSS S S.S
+S........ . .. . ..S
+S........ . .. . ..S
+S........ . SS S .^S
+S........ . SS S SSS
+S........ . SS S SSS
+S........ . ..[T<..S
+SM....... . .. . ..S
+SSSSSSSSS S SS S SSS

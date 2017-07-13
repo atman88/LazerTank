@@ -4,17 +4,17 @@
     <level n="1" w="6" h="6"/>
     <level n="2" w="12" h="7"/>
     <level n="3" w="9" h="8"/>
-    <level n="4" w="12" h="10"/>
-    <level n="5" w="12" h="12"/>
-    <level n="6" w="12" h="11"/>
-    <level n="7" w="7" h="11"/>
-    <level n="8" w="16" h="15"/>
+    <level n="4" w="12" h="11"/>
+    <level n="5" w="7" h="11"/>
+    <level n="6" w="16" h="15"/>
+    <level n="7" w="16" h="16"/>
+    <level n="8" w="16" h="12"/>
     <level n="9" w="16" h="16"/>
-    <level n="10" w="16" h="12"/>
+    <level n="10" w="16" h="16"/>
     <level n="11" w="16" h="16"/>
-    <level n="12" w="16" h="16"/>
-    <level n="13" w="16" h="16"/>
-    <level n="14" w="15" h="16"/>
+    <level n="12" w="15" h="16"/>
+    <level n="13" w="12" h="10"/>
+    <level n="14" w="12" h="12"/>
     <level n="15" w="14" h="14"/>
     <level n="16" w="14" h="14"/>
     <level n="17" w="16" h="16"/>

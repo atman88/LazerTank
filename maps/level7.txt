@@ -1,11 +1,16 @@
-e e S S S
-S S S[TvS S S
-S W W W W W S
-S[S\M w W[\SS
-S[S/W w M[/SS
-S[S\M w W[\SS
-S[S/W w M[/SS
-S[S\M w W[\SS
-S S W w M[/SS
-S S S F S S S
-e e S S S
+eeeeeeeeeSSSSS
+eeeeeeeeeS...SSS
+eeeeeeeeeS.M...S
+eeeeeeSSSSS.SS.S
+eeeeeeS...S..S.S
+eeeeeeS.M..M.S.S
+eeeSSSSS.SS..S.S
+eeeS...S..SSSS.S
+eeeS.M..M.S....S
+eSSSS.SS..S.SSSS
+eS..S..SSSS.SSFS
+eS...M.S....SSmS
+S..SS..S.SSSSSmS
+S..SSSSS.SSSSSmS
+S.......TwwwwwwS
+SSSSSSSSSSSSSSSS
