@@ -2,7 +2,7 @@
 #include "controller/gameregistry.h"
 #include "controller/game.h"
 
-Push::Push( QObject* parent ) : PushView(parent)
+Push::Push( QObject* parent ) : PushView(parent), mTargetCol(-1), mTargetRow(-1)
 {
 }
 

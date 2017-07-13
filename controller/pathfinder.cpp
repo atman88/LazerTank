@@ -12,7 +12,7 @@
 #define BLOCKED     4
 #define TARGET      5
 
-PathFinder::PathFinder(QObject *parent) : QThread(parent)
+PathFinder::PathFinder(QObject *parent) : QThread(parent), mStopping(false), mPassValue(0), mPushIndex(0), mPushDirection(0), mTestOnly(false)
 {
 }
 

@@ -5,7 +5,7 @@
 #include "game.h"
 
 
-PathFinderController::PathFinderController(QObject *parent) : QObject(parent)
+PathFinderController::PathFinderController(QObject *parent) : QObject(parent), mCurAction(0)
 {
 }
 

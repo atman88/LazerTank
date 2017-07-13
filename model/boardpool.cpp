@@ -7,7 +7,7 @@
 class PoolLoadRunnable : Runnable
 {
 public:
-    PoolLoadRunnable() : mBoard(0)
+    PoolLoadRunnable() : mBoard(0), mLevel(0)
     {
     }
 

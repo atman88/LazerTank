@@ -9,7 +9,7 @@
 #include "model/board.h"
 #include "model/modelpoint.h"
 
-ShotView::ShotView(QObject *parent) : QObject(parent), mShooter(0), mTerminationAngle(-1), mKillTheTank(false)
+ShotView::ShotView(QObject *parent) : QObject(parent), mShooter(0), mLeadAngle(-1), mTerminationAngle(-1), mKillTheTank(false)
 {
     mLeadPoint = mTailPoint = BoardRenderer::NullPoint;
     mPen.setWidth( 2 );

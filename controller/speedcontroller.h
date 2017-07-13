@@ -58,7 +58,7 @@ class SpeedControlledAnimation : public QPropertyAnimation
     Q_OBJECT
 
 public:
-    SpeedControlledAnimation( QObject* parent = 0 ) : QPropertyAnimation(parent)
+    SpeedControlledAnimation( QObject* parent = 0 ) : QPropertyAnimation(parent), mController(0)
     {
     }
 
