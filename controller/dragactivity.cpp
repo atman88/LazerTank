@@ -46,27 +46,35 @@ void DragActivity::onDragTo( ModelPoint p )
     } else if ( GameRegistry* registry = getRegistry(this) ) {
         Game& game = registry->getGame();
 
-        for( int angle : { 0, 90, 180, 270 } ) {
+        for( int angle = 0; angle < 360; angle += 90 ) {
             ModelPoint toPoint( mFocusPoint );
-            if ( game.canMoveFrom( TANK, angle, &toPoint, true ) ) {
+            Piece* pushPiece = 0;
+            if ( game.canMoveFrom( TANK, angle, &toPoint, true, &pushPiece ) ) {
                 if ( toPoint == p ) {
-                    PieceListManager& moves = registry->getMoveController().getMoves();
+                    MoveController& moveController = registry->getMoveController();
+                    PieceListManager& moves = moveController.getMoves();
                     Piece* lastMove = moves.getBack();
-                    Piece* prevMove = moves.getBack(1);
-                    if ( lastMove && mFocusPoint.equals( *lastMove ) && prevMove && toPoint.equals( *prevMove ) ) {
-                        moves.eraseBack();
-                        moves.replaceBack( MOVE_HIGHLIGHT );
+                    const ModelPoint* prevMovePoint;
+                    if ( Piece* prevMove = moves.getBack(1) ) {
+                        prevMovePoint = prevMove;
                     } else {
-                        if ( moves.size() ) {
-                            moves.replaceBack( MOVE, angle );
-                        } else {
-                            // insert an initial rotation if appropriate:
-                            Tank& tank = registry->getTank();
-                            if ( tank.getRotation() != angle ) {
-                                moves.append( MOVE, tank.getPoint(), angle );
+                        prevMovePoint = &registry->getTank().getPoint();
+                    }
+                    if ( lastMove && mFocusPoint.equals( *lastMove ) && prevMovePoint->equals( toPoint ) ) {
+                        game.undoLastMove();
+                        // if only a simple rotation remains then remove it too:
+                        if ( moves.size() == 1 ) {
+                            lastMove = moves.getBack();
+                            if ( registry->getTank().getPoint().equals( *lastMove ) ) {
+                                game.undoLastMove();
                             }
                         }
-                        moves.append( MOVE_HIGHLIGHT, toPoint, angle );
+                    } else {
+                        moveController.move( angle, false );
+                        lastMove = moves.getBack();
+                        if ( lastMove && !p.equals( *lastMove) ) {
+                            moveController.move( angle, false );
+                        }
                     }
                     mFocusPoint = toPoint;
                     mChanged = true;
