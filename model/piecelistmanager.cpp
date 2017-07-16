@@ -125,12 +125,24 @@ bool PieceListManager::eraseFront()
     return eraseInternal( mPieces.begin() );
 }
 
-Piece *PieceListManager::getBack() const
+Piece* PieceListManager::getBack() const
 {
     if ( mPieces.empty() ) {
         return 0;
     }
     return mPieces.back();
+}
+
+Piece* PieceListManager::getBack( int index ) const
+{
+    if ( 0 <= index && ((unsigned) index) < mPieces.size() ) {
+        auto it = mPieces.cend();
+        do {
+            --it;
+        } while( --index >= 0 );
+        return *it;
+    }
+    return 0;
 }
 
 Piece *PieceListManager::getFront() const

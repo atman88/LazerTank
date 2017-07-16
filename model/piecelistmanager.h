@@ -66,6 +66,13 @@ public:
     Piece* getBack() const;
 
     /**
+     * @brief Get the nth piece from the back of the list
+     * @param index The reverse offset of the piece from the back of the list
+     * @return The selected piece or 0 if not present
+     */
+    Piece* getBack( int index ) const;
+
+    /**
      * @brief removes the first element
      * @return true if the element was removed
      */

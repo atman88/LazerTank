@@ -70,7 +70,8 @@ HEADERS += \
     controller/gameregistry.h \
     model/level.h \
     view/levelchooser.h \
-    model/boardpool.h
+    model/boardpool.h \
+    controller/dragactivity.h
 
 SOURCES += \
     view/shooter.cpp \
@@ -99,7 +100,8 @@ SOURCES += \
     controller/gameregistry.cpp \
     model/level.cpp \
     view/levelchooser.cpp \
-    model/boardpool.cpp
+    model/boardpool.cpp \
+    controller/dragactivity.cpp
 
 test{
     INCLUDEPATH += test/controller

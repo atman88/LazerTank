@@ -12,9 +12,12 @@ QT_FORWARD_DECLARE_CLASS(QTextBrowser)
 class Board;
 class GameRegistry;
 class Game;
+class PieceListManager;
+class PathSearchAction;
 class ReplayText;
 
 #include "boardrenderer.h"
+#include "controller/dragactivity.h"
 #include "model/piece.h"
 
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 7, 0))
@@ -133,6 +136,16 @@ private slots:
      */
     void loadLevel( int number );
 
+    /**
+     * @brief Listens to path events for the purpose of starting drag activities on them as appropriate
+     */
+    void onPathFound( PieceListManager* path, PathSearchAction* action );
+
+    /**
+     * @brief Listens to the state of its drag activity for display purposes
+     */
+    void onDragStateChange();
+
 signals:
     /**
      * @brief Notifies that the user has moved the focus
@@ -154,6 +167,7 @@ protected:
     void keyReleaseEvent(QKeyEvent *ev) override;
     void mousePressEvent( QMouseEvent* event ) override;
     void mouseReleaseEvent( QMouseEvent* event ) override;
+    void mouseMoveEvent( QMouseEvent* event ) override;
     void showEvent(QShowEvent*) override;
     void resizeEvent(QResizeEvent *event) override;
     void exposeEvent(QExposeEvent *event) override;
@@ -216,6 +230,8 @@ private:
     QTextBrowser* mHelpWidget;
 
     ReplayText* mReplayText;
+    DragActivity mDragActivity;
+    bool mMouseLeftDown;
 
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
     void requestUpdate();

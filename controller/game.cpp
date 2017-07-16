@@ -57,18 +57,18 @@ void Game::init( GameRegistry* registry )
     QObject::connect( &registry->getBoardPool(), &BoardPool::boardLoaded, this, &Game::onPoolLoaded, Qt::QueuedConnection );
 
     if ( BoardWindow* window = registry->getWindow() ) {
-        QObject::connect( window, &BoardWindow::focusChanged, &registry->getMoveController(), &MoveController::setFocus );
+        QObject::connect( window, &BoardWindow::focusChanged, &moveController, &MoveController::setFocus );
         QObject::connect( &registry->getTankPush(), &Push::rectDirty, window, &BoardWindow::renderLater );
         QObject::connect( &registry->getShotPush(), &Push::rectDirty, window, &BoardWindow::renderLater );
 
         QObject::connect( &registry->getTank(), &Tank::changed, window, &BoardWindow::renderLater );
-        QObject::connect( &registry->getMoveController().getFutureShots(), &FutureShotPathManager::dirtyRect, window, &BoardWindow::renderLater );
+        QObject::connect( &moveController.getFutureShots(), &FutureShotPathManager::dirtyRect, window, &BoardWindow::renderLater );
 
         QMenu& menu = window->getMenu();
         QObject::connect( &menu, &QMenu::aboutToShow, &registry->getTank(), &Tank::pause  );
         QObject::connect( &menu, &QMenu::aboutToHide, &registry->getTank(), &Tank::resume );
 
-        PieceListManager& moveManager = registry->getMoveController().getMoves();
+        PieceListManager& moveManager = moveController.getMoves();
         QObject::connect( &moveManager, &PieceListManager::appended, window, &BoardWindow::renderSquareLater );
         QObject::connect( &moveManager, &PieceListManager::erased,   window, &BoardWindow::renderSquareLater );
         QObject::connect( &moveManager, &PieceListManager::changed,  window, &BoardWindow::renderSquareLater );

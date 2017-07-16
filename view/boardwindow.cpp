@@ -21,7 +21,7 @@
 #define TILE_SIZE 24
 
 BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mBackingStore(0), mRenderer(TILE_SIZE), mRenderedOnce(false),
-  mFocus(MOVE), mGameInitialized(false), mHelpWidget(0), mReplayText(0)
+  mFocus(MOVE), mGameInitialized(false), mHelpWidget(0), mReplayText(0), mDragActivity(0), mMouseLeftDown(false)
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
   , mUpdatePending(false)
 #endif
@@ -77,6 +77,11 @@ void BoardWindow::init( GameRegistry* registry )
     QObject::connect( &TO_QACTION(mUndoMoveAction),  &QAction::triggered, &game, &Game::undoLastMove );
     QObject::connect( &TO_QACTION(mClearMovesAction),&QAction::triggered, &registry->getMoveController(), &MoveController::clearMoves );
     QObject::connect( &TO_QACTION(mReplayAction),    &QAction::triggered, &game, &Game::replayLevel );
+
+    QObject::connect( &registry->getPathFinderController(), &PathFinderController::pathFound, this, &BoardWindow::onPathFound );
+
+    mDragActivity.setParent( this );
+    QObject::connect( &mDragActivity, &DragActivity::stateChanged, this, &BoardWindow::onDragStateChange );
 
     QObject::connect( &game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded );
 }
@@ -554,10 +559,16 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
             break;
 
         case Qt::LeftButton:
+            mMouseLeftDown = true;
             if ( !checkForReplay() )  {
                 PathSearchAction& pathToAction = registry->getPathToAction();
-                pathToAction.setCriteria( mFocus, ModelPoint( event->pos() ), false );
-                registry->getPathFinderController().doAction( &pathToAction );
+                ModelPoint p( event->pos() );
+                if ( p.equals( registry->getTank().getPoint() ) ) {
+                    mDragActivity.start( p );
+                } else {
+                    pathToAction.setCriteria( mFocus, p, false );
+                    registry->getPathFinderController().doAction( &pathToAction );
+                }
             }
             break;
 
@@ -572,6 +583,8 @@ void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
     if ( GameRegistry* registry = getRegistry(this) ) {
         switch( event->button() ) {
         case Qt::LeftButton:
+            mMouseLeftDown = false;
+            mDragActivity.stop();
             if ( !checkForReplay() )  {
                 registry->getMoveController().wakeup();
             }
@@ -582,10 +595,31 @@ void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
     }
 }
 
+void BoardWindow::mouseMoveEvent(QMouseEvent* event)
+{
+    mDragActivity.onDragTo( ModelPoint( event->pos() ) );
+}
+
+void BoardWindow::onPathFound( PieceListManager* /*path*/, PathSearchAction* action )
+{
+    if ( mMouseLeftDown && !action->getCriteria()->getMoveWhenFound() ) {
+        mDragActivity.start( action->getCriteria()->getTargetPoint() );
+    }
+}
+
 void BoardWindow::moveFocus( PieceType what )
 {
     mFocus = what;
     emit focusChanged( what );
+}
+
+void BoardWindow::onDragStateChange()
+{
+    if ( const QCursor* cursor = mDragActivity.getCursor() ) {
+        setCursor( *cursor );
+    } else {
+        unsetCursor();
+    }
 }
 
 int BoardWindow::checkForReplay()
