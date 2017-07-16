@@ -233,6 +233,8 @@ private:
     DragActivity mDragActivity;
     bool mMouseLeftDown;
 
+    QCursor* mForbiddenCursor;
+
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
     void requestUpdate();
     bool mUpdatePending;

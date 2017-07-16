@@ -21,7 +21,8 @@
 #define TILE_SIZE 24
 
 BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mBackingStore(0), mRenderer(TILE_SIZE), mRenderedOnce(false),
-  mFocus(MOVE), mGameInitialized(false), mHelpWidget(0), mReplayText(0), mDragActivity(0), mMouseLeftDown(false)
+  mFocus(MOVE), mGameInitialized(false), mHelpWidget(0), mReplayText(0), mDragActivity(0), mMouseLeftDown(false),
+  mForbiddenCursor(0)
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
   , mUpdatePending(false)
 #endif
@@ -39,6 +40,9 @@ BoardWindow::~BoardWindow()
     }
     if ( mReplayText ) {
         delete mReplayText;
+    }
+    if ( mForbiddenCursor ) {
+        delete mForbiddenCursor;
     }
     delete mBackingStore;
 }
@@ -613,6 +617,16 @@ void BoardWindow::moveFocus( PieceType what )
     emit focusChanged( what );
 }
 
+static void drawForbidden( QBitmap* b, QPen& pen )
+{
+    QPainter painter(b);
+    painter.setPen( pen );
+    int w = b->width() -2;
+    int h = b->height()-2;
+    painter.drawArc( 1, 1, w, h, 0, 360*16 );
+    painter.drawLine( 1,h, w,1 );
+}
+
 void BoardWindow::onDragStateChange()
 {
     switch( mDragActivity.getState() ) {
@@ -620,7 +634,27 @@ void BoardWindow::onDragStateChange()
         setCursor( Qt::CrossCursor );
         break;
     case Forbidden:
-        setCursor( Qt::ForbiddenCursor );
+        if ( !mForbiddenCursor ) {
+            QSize cursorSize(TILE_SIZE-4,TILE_SIZE-4);
+            QPen pen;
+
+            QBitmap bitmap(cursorSize);
+            bitmap.clear();
+            pen.setWidth(5);
+            drawForbidden( &bitmap, pen );
+            pen.setWidth(2);
+            pen.setColor( Qt::color0 );
+            drawForbidden( &bitmap, pen );
+
+            QBitmap mask(cursorSize);
+            mask.clear();
+            pen.setWidth(5);
+            pen.setColor( Qt::color1 );
+            drawForbidden( &mask, pen );
+
+            mForbiddenCursor = new QCursor( bitmap, mask, cursorSize.width()/2, cursorSize.height()/2 );
+        }
+        setCursor( *mForbiddenCursor );
         break;
     default:
         unsetCursor();
