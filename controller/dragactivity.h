@@ -2,9 +2,14 @@
 #define DRAGACTIVITY_H
 
 #include <QObject>
-#include <QCursor>
 
 #include "modelpoint.h"
+
+typedef enum {
+    Inactive,
+    Selecting,
+    Forbidden
+} DragState;
 
 class DragActivity : public QObject
 {
@@ -16,7 +21,7 @@ public:
      * @brief Retrieve the currsor associated with the current state
      * @return The current cursor or 0 if not started
      */
-    const QCursor* getCursor() const;
+    DragState getState() const;
 
     /**
      * @brief Retrieve the current drag point
@@ -49,10 +54,10 @@ public slots:
     void stop();
 
 private:
-    void setState( Qt::CursorShape shape );
+    void setState( DragState state );
 
     ModelPoint mFocusPoint;
-    QCursor mCursor;
+    DragState mState;
     bool mChanged;
 };
 

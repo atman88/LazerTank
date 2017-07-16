@@ -615,9 +615,14 @@ void BoardWindow::moveFocus( PieceType what )
 
 void BoardWindow::onDragStateChange()
 {
-    if ( const QCursor* cursor = mDragActivity.getCursor() ) {
-        setCursor( *cursor );
-    } else {
+    switch( mDragActivity.getState() ) {
+    case Selecting:
+        setCursor( Qt::CrossCursor );
+        break;
+    case Forbidden:
+        setCursor( Qt::ForbiddenCursor );
+        break;
+    default:
         unsetCursor();
     }
 }

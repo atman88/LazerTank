@@ -5,7 +5,7 @@
 #include "model/piecelistmanager.h"
 #include "model/tank.h"
 
-DragActivity::DragActivity( QObject *parent ) : QObject(parent), mChanged(false)
+DragActivity::DragActivity( QObject *parent ) : QObject(parent), mState(Inactive), mChanged(false)
 {
 }
 
@@ -13,23 +13,21 @@ void DragActivity::start( ModelPoint startPoint )
 {
     mFocusPoint = startPoint;
     mChanged = false;
-    setState( Qt::CrossCursor );
+    setState( Selecting );
 }
 
-void DragActivity::setState( Qt::CursorShape shape )
+void DragActivity::setState(DragState state )
 {
-    if ( mCursor.shape() != shape ) {
-        mCursor.setShape( shape );
+
+    if ( mState != state ) {
+        mState = state;
         emit stateChanged();
     }
 }
 
-const QCursor* DragActivity::getCursor() const
+DragState DragActivity::getState() const
 {
-    if ( mFocusPoint.isNull() || mCursor.shape() == Qt::ArrowCursor ) {
-        return 0;
-    }
-    return &mCursor;
+    return mState;
 }
 
 ModelPoint DragActivity::getFocusPoint() const
@@ -40,9 +38,9 @@ ModelPoint DragActivity::getFocusPoint() const
 void DragActivity::onDragTo( ModelPoint p )
 {
     if ( mFocusPoint.isNull() ) {
-        setState( Qt::ArrowCursor );
+        setState( Inactive );
     } else if ( p == mFocusPoint ) {
-        setState( Qt::CrossCursor );
+        setState( Selecting );
     } else if ( GameRegistry* registry = getRegistry(this) ) {
         Game& game = registry->getGame();
 
@@ -78,12 +76,12 @@ void DragActivity::onDragTo( ModelPoint p )
                     }
                     mFocusPoint = toPoint;
                     mChanged = true;
-                    setState( Qt::CrossCursor );
+                    setState( Selecting );
                     return;
                 }
             }
         }
-        setState( Qt::ForbiddenCursor );
+        setState( Forbidden );
     }
 }
 
@@ -100,5 +98,5 @@ void DragActivity::stop()
         }
     }
     mFocusPoint.setNull();
-    setState( Qt::ArrowCursor );
+    setState( Inactive );
 }
