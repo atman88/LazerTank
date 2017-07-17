@@ -54,7 +54,7 @@ bool PathFinder::findPath( PathSearchCriteria* criteria, bool testOnly )
 void PathFinder::addPush( Push& push )
 {
     if ( push.getType() != NONE ) {
-        mSearchMap[ push.getTargetRow()*BOARD_MAX_WIDTH + push.getTargetCol() ] = BLOCKED;
+        mSearchMap[ push.getTargetPoint().mRow*BOARD_MAX_WIDTH + push.getTargetPoint().mCol ] = BLOCKED;
     }
 }
 

@@ -5,6 +5,8 @@
 
 class PieceListManager;
 
+#include "model/modelpoint.h"
+
 
 class PieceListManagerObserver : public QObject
 {
@@ -16,9 +18,9 @@ public:
     }
 
 public slots:
-    void appended( int col, int row );
-    void erased( int col, int row );
-    void changed( int col, int row );
+    void appended( ModelPoint point );
+    void erased( ModelPoint point );
+    void changed( ModelPoint point );
 
     void printCounts();
 

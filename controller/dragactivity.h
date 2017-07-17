@@ -39,7 +39,7 @@ signals:
     /**
      * @brief Indicates that a change of state occured
      */
-    void stateChanged();
+    void stateChanged( DragState state );
 
 public slots:
     /**

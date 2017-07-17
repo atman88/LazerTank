@@ -125,7 +125,7 @@ void MoveController::wakeup()
                     mToVector = *move;
 
                     if ( move->hasPush() ) {
-                        emit pushingInto( move->getCol(), move->getRow(), move->getAngle() );
+                        emit pushingInto( *move, move->getAngle() );
                     }
 
                     if ( tank.doMove( *move ) && (hasRotation || move->hasPush()) ) {

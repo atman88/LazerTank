@@ -2,30 +2,24 @@
 #include "controller/gameregistry.h"
 #include "controller/game.h"
 
-Push::Push( QObject* parent ) : PushView(parent), mTargetCol(-1), mTargetRow(-1)
+Push::Push( QObject* parent ) : PushView(parent)
 {
 }
 
-void Push::start( Piece& what, int fromCol, int fromRow, int toCol, int toRow )
+void Push::start( Piece& what, ModelPoint fromPoint, ModelPoint toPoint )
 {
-    mTargetCol = toCol;
-    mTargetRow = toRow;
-    PushView::start( what, fromCol*24, fromRow*24, toCol*24, toRow*24 );
+    mTargetPoint = toPoint;
+    PushView::start( what, fromPoint.mCol*24, fromPoint.mRow*24, toPoint.mCol*24, toPoint.mRow*24 );
 }
 
-int Push::getTargetCol() const
+ModelPoint Push::getTargetPoint() const
 {
-    return mTargetCol;
-}
-
-int Push::getTargetRow() const
-{
-    return mTargetRow;
+    return mTargetPoint;
 }
 
 void Push::stopping()
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
-        registry->getGame().onPushed( getType(), mTargetCol, mTargetRow, getPieceAngle() );
+        registry->getGame().onPushed( getType(), mTargetPoint, getPieceAngle() );
     }
 }

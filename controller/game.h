@@ -49,15 +49,14 @@ public:
 
     /**
      * @brief Determines the outcome of a laser shot through the given square
-     * @param col The column of the lazer end point
-     * @param row The row of the lazer end point
+     * @param point The square of the lazer end point
      * @param angle Inputs the laser direction as it enters the square; outputs the direction the laser exits the square
      * @param change Apply to the future board if non-zero, otherwise uses the master board. Returns future hit details if non-zero.
      * @param source The producer of laser beam or 0
      * @param hitPoint If non-zero, input as the square's center view coordinate, outputs the hit coordinate (if any)
      * @return true if the the shot is continuing to advance past the square or false if the shot hit something
      */
-    bool canShootThru( int col, int row, int *angle, FutureChange *change, Shooter* source = 0, QPoint *hitPoint = 0 );
+    bool canShootThru( ModelPoint point, int *angle, FutureChange *change, Shooter* source = 0, QPoint *hitPoint = 0 );
 
     /**
      * @brief Determines whether the given piece can move to the given square. Pending moves are not considered.
@@ -106,11 +105,10 @@ public:
 public slots:
     /**
      * @brief Receives notification that the tank is about to move toward the identified square
-     * @param col The column of the target square
-     * @param row The column of the target square
+     * @param point The target square
      * @param fromAngle The direction the tank will move in
      */
-    void onTankPushingInto( int col, int row, int fromAngle );
+    void onTankPushingInto( ModelPoint point, int fromAngle );
 
     /**
      * @brief Notifies the game that the board is being loaded
@@ -129,19 +127,17 @@ public slots:
 
     /**
      * @brief Receives notification that a tile on the board changed.
-     * @param col The identifying row where the change occurred
-     * @param row The identifying column where the change occurred
+     * @param point The square where the change occurred
      */
-    void onBoardTileChanged( int col, int row );
+    void onBoardTileChanged( ModelPoint point );
 
     /**
      * @brief Recieves notification that a push has completed
      * @param type The type of piece being pushed
-     * @param col The column pushed into
-     * @param row The row pushed into
+     * @param point The square pushed into
      * @param pieceAngle The orientation of the piece
      */
-    void onPushed( PieceType type, int col, int row, int pieceAngle );
+    void onPushed(PieceType type, ModelPoint point, int pieceAngle );
 
     /**
      * @brief Internal slot for disabling future deltas

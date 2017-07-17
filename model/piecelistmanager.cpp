@@ -55,7 +55,7 @@ Piece* PieceListManager::appendInternal( Piece* piece )
     if ( mMultiSet ) {
         mMultiSet->insert( piece );
     }
-    emit appended( piece->getCol(), piece->getRow() );
+    emit appended( *piece );
     return piece;
 }
 
@@ -98,8 +98,7 @@ bool PieceListManager::eraseInternal( PieceList::iterator it )
     Piece* piece = *it;
     mPieces.erase( it );
 
-    int col = piece->getCol();
-    int row = piece->getRow();
+    ModelPoint point = *piece;
 
     if ( mSet ) {
         mSet->erase( piece );
@@ -116,7 +115,7 @@ bool PieceListManager::eraseInternal( PieceList::iterator it )
     }
 
     delete piece;
-    emit erased( col, row );
+    emit erased( point );
     return true;
 }
 
@@ -168,7 +167,7 @@ void PieceListManager::replaceInternal( Piece* piece, PieceType type, int newAng
     if ( newAngle >= 0 ) {
         piece->setAngle( newAngle );
     }
-    emit changed( piece->getCol(), piece->getRow() );
+    emit changed( *piece );
 }
 
 bool PieceListManager::replaceFront( PieceType type, int newAngle )
@@ -210,7 +209,7 @@ MovePiece* PieceListManager::setShotCountBack( int count )
                 }
             }
             if ( move->setShotCount( count ) ) {
-                emit changed( piece->getCol(), piece->getRow() );
+                emit changed( *piece );
             }
             return move;
         }

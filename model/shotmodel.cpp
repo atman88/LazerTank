@@ -78,7 +78,7 @@ void ShotModel::setSequence( const QVariant &sequence )
             if ( getAdjacentPosition( mLeadingDirection, &mLeadingPoint ) ) {
                 QPoint hitPoint = mLeadingPoint.toViewCenterSquare();
                 int entryDirection = mLeadingDirection;
-                if ( registry->getGame().canShootThru( mLeadingPoint.mCol, mLeadingPoint.mRow, &mLeadingDirection, 0, getShooter(), &hitPoint ) ) {
+                if ( registry->getGame().canShootThru( mLeadingPoint, &mLeadingDirection, 0, getShooter(), &hitPoint ) ) {
                     grow( mLeadingPoint.toViewCenterSquare(), entryDirection );
                 } else {
                     addTermination( entryDirection, hitPoint );

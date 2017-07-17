@@ -16,20 +16,20 @@ const PieceSet& PieceSetManager::getPieces() const
     return mPieces;
 }
 
-void PieceSetManager::insert( PieceType type, int col, int row, int angle )
+void PieceSetManager::insert(PieceType type, ModelPoint point, int angle )
 {
-    mPieces.insert( new SimplePiece( type, col, row, angle ) );
-    emit insertedAt( col, row );
+    mPieces.insert( new SimplePiece( type, point, angle ) );
+    emit insertedAt( point );
 }
 
 void PieceSetManager::insert( Piece* piece )
 {
-    insert( piece->getType(), piece->getCol(), piece->getRow(), piece->getAngle() );
+    insert( piece->getType(), *piece, piece->getAngle() );
 }
 
-PieceType PieceSetManager::typeAt( int col, int row )
+PieceType PieceSetManager::typeAt( ModelPoint point )
 {
-    SimplePiece pos( NONE, col, row );
+    SimplePiece pos( NONE, point );
     PieceSet::iterator it = mPieces.find( &pos );
     if ( it != mPieces.end() ) {
         return (*it)->getType();
@@ -37,9 +37,9 @@ PieceType PieceSetManager::typeAt( int col, int row )
     return NONE;
 }
 
-Piece* PieceSetManager::pieceAt( int col, int row ) const
+Piece* PieceSetManager::pieceAt( ModelPoint point ) const
 {
-    SimplePiece pos( NONE, col, row );
+    SimplePiece pos( NONE, point );
     PieceSet::iterator it = mPieces.find( &pos );
     if ( it != mPieces.end() ) {
         return *it;
@@ -52,29 +52,28 @@ bool PieceSetManager::erase( Piece* key )
     PieceSet::iterator it = mPieces.find( key );
     if ( it != mPieces.end() ) {
         Piece* piece = *it;
-        int col = piece->getCol();
-        int row = piece->getRow();
+        ModelPoint point = *piece;
 
         mPieces.erase( it );
         delete piece;
 
-        emit erasedAt( col, row );
+        emit erasedAt( point );
         return true;
     }
     return false;
 }
 
-bool PieceSetManager::eraseAt( int col, int row )
+bool PieceSetManager::eraseAt( ModelPoint point )
 {
-    SimplePiece pos( NONE, col, row );
+    SimplePiece pos( NONE, point );
     return erase( &pos );
 }
 
-void PieceSetManager::setAt( PieceType type, int col, int row, int angle )
+void PieceSetManager::setAt(PieceType type, ModelPoint point, int angle )
 {
     bool changed = false;
 
-    if ( Piece* piece = pieceAt( col, row ) ) {
+    if ( Piece* piece = pieceAt( point ) ) {
         if ( piece->getType() != type ) {
             piece->setType( type );
             changed = true;
@@ -84,12 +83,12 @@ void PieceSetManager::setAt( PieceType type, int col, int row, int angle )
             changed = true;
         }
     } else {
-        insert( type, col, row, angle );
+        insert( type, point, angle );
         changed = true;
     }
 
     if ( changed ) {
-        emit changedAt( col, row );
+        emit changedAt( point );
     }
 }
 
@@ -98,17 +97,16 @@ void PieceSetManager::reset(const PieceSetManager* source)
     while( !mPieces.empty() ) {
         PieceSet::iterator it = mPieces.end();
         Piece* piece = *--it;
-        int col = piece->getCol();
-        int row = piece->getRow();
+        ModelPoint point = *piece;
         mPieces.erase( it );
         delete piece;
-        emit erasedAt( col, row );
+        emit erasedAt( point );
     }
 
     if ( source != 0 ) {
         const PieceSet& sourceSet = source->getPieces();
         for( auto it : sourceSet ) {
-            insert( it->getType(), it->getCol(), it->getRow(), it->getAngle() );
+            insert( it );
         }
     }
 }

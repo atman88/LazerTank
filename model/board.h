@@ -58,18 +58,16 @@ public:
 
     /**
      * @brief Query what the given square is
-     * @param col The column for the square of interest
-     * @param row The row for the square of interest
+     * @param point The square of interest
      * @return The type of square
      */
-    TileType tileAt( int col, int row ) const;
+    TileType tileAt( ModelPoint point ) const;
 
     /**
      * @brief Change the type for a given square
-     * @param col The column for the square to change
-     * @param row The row for the square to change
+     * @param point The square to change
      */
-    void setTileAt( TileType, int col, int row );
+    void setTileAt( TileType, ModelPoint point );
 
     /**
      * @brief Get managed access to the pieces on this board
@@ -80,12 +78,11 @@ public:
     /**
      * @brief Update the board as a result of the given push
      * @param mType The type of piece being pushed
-     * @param col The columnn that the piece is being pushed to
-     * @param row The row that the piece is being pushed to
+     * @param point The square that the piece is being pushed to
      * @param pieceAngle The piece's current rotation
      * @return true if the push resulted in a change to the board
      */
-    bool applyPushResult( PieceType mType, int col, int row, int pieceAngle );
+    bool applyPushResult(PieceType mType, ModelPoint point, int pieceAngle );
 
     /**
      * @brief load a level
@@ -147,10 +144,9 @@ signals:
 
     /**
      * @brief Signals that the given square has changed
-     * @param col The square's column
-     * @param row The square's row
+     * @param point The square's model coordinates
      */
-    void tileChangedAt( int col, int row ) const;
+    void tileChangedAt( ModelPoint point ) const;
 
 private:
     void initPiece( PieceType type, int col, int row, int angle = 0 );

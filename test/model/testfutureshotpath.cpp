@@ -26,15 +26,15 @@ void TestMain::testFutureShotPath()
     // verify that this is the future board:
     QCOMPARE(game.isMasterBoard(futureBoard), false);
 
-    QCOMPARE( futureBoard->getPieceManager().typeAt( 2, 3 ), CANNON );
+    QCOMPARE( futureBoard->getPieceManager().typeAt( ModelPoint(2,3) ), CANNON );
 
     move.setShotCount( 5 );
     manager.updatePath(&move);
-    QCOMPARE( futureBoard->getPieceManager().typeAt( 2, 3 ), CANNON );
+    QCOMPARE( futureBoard->getPieceManager().typeAt( ModelPoint(2,3) ), CANNON );
 
     move.setShotCount( 4 );
     manager.updatePath(&move);
-    QCOMPARE( futureBoard->getPieceManager().typeAt( 2, 3 ), NONE );
+    QCOMPARE( futureBoard->getPieceManager().typeAt( ModelPoint(2,3) ), NONE );
 
     move.setShotCount( 0 );
     manager.updatePath(&move);
@@ -55,5 +55,5 @@ void TestMain::testFutureShotThruMasterTank()
     moveController.move(180); // move down -> 0,2
     moveController.move(  0); // rotate up
     moveController.fire();
-    QCOMPARE( mRegistry->getGame().getBoard(true)->tileAt( 0, 0 ), WOOD_DAMAGED );
+    QCOMPARE( mRegistry->getGame().getBoard(true)->tileAt( ModelPoint(0,0) ), WOOD_DAMAGED );
 }

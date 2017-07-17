@@ -49,10 +49,9 @@ public:
 public slots:
     /**
      * @brief Receives changes from the two boards
-     * @param col The column associated with the change
-     * @param row The row associated with the change
+     * @param point The square associated with the change
      */
-    void onChangeAt( int col, int row );
+    void onChangeAt( ModelPoint point );
 
 private:
     PieceSetManager   mPieceManager;

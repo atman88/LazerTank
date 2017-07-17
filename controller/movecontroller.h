@@ -52,11 +52,10 @@ public:
 signals:
     /**
      * @brief Notifies the tank is about to push into an occupied square
-     * @param col The column of the new square
-     * @param row The row of the new square
+     * @param point The new square
      * @param curRotation The direction of the move
      */
-    void pushingInto( int col, int row, int curRotation );
+    void pushingInto( ModelPoint point, int curRotation );
 
     /**
      * @brief Notifies that the tank has completed all it's outstanding moves

@@ -8,26 +8,28 @@ using namespace std;
 PieceListManagerObserver::PieceListManagerObserver(PieceListManager& list, int maxAppendCount, int maxEraseCount)
     : QObject(0), mAppendCount(0), mEraseCount(0), mMaxAppendCount(maxAppendCount), mMaxEraseCount(maxEraseCount)
 {
-    QObject::connect( &list, &PieceListManager::appended, this, &PieceListManagerObserver::appended );
+    if ( !QObject::connect( &list, &PieceListManager::appended, this, &PieceListManagerObserver::appended ) ) {
+        std::cout << "*** PieceListManagerObserver: connect failed!" << std::endl;
+    }
     QObject::connect( &list, &PieceListManager::erased,   this, &PieceListManagerObserver::erased   );
     QObject::connect( &list, &PieceListManager::changed,  this, &PieceListManagerObserver::changed  );
 }
 
-void PieceListManagerObserver::appended(int col, int row)
+void PieceListManagerObserver::appended( ModelPoint point )
 {
-    cout << "MoveObserver: appended " << col << "," << row << endl;
+    cout << "MoveObserver: appended " << point.mCol << "," << point.mRow << endl;
     QVERIFY( ++mAppendCount <= mMaxAppendCount );
 }
 
-void PieceListManagerObserver::erased(int col, int row)
+void PieceListManagerObserver::erased( ModelPoint point )
 {
-    cout << "MoveObserver: erased " << col << "," << row << endl;
+    cout << "MoveObserver: erased " << point.mCol << "," << point.mRow << endl;
     QVERIFY( ++mEraseCount <= mMaxEraseCount );
 }
 
-void PieceListManagerObserver::changed(int col, int row)
+void PieceListManagerObserver::changed( ModelPoint point )
 {
-    cout << "MoveObserver: changed " << col << "," << row << endl;
+    cout << "MoveObserver: changed " << point.mCol << "," << point.mRow << endl;
 }
 
 void PieceListManagerObserver::printCounts()

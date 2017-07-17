@@ -120,7 +120,7 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
 
             FutureChange curChange;
             curChange.changeType = NO_CHANGE;
-            if ( !registry->getGame().canShootThru( leadVector.mCol, leadVector.mRow, &leadVector.mAngle, &curChange ) ) {
+            if ( !registry->getGame().canShootThru( leadVector, &leadVector.mAngle, &curChange ) ) {
                 if ( curChange.changeType == NO_CHANGE ) {
                     break;
                 }

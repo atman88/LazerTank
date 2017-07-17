@@ -21,7 +21,7 @@ void DragActivity::setState(DragState state )
 
     if ( mState != state ) {
         mState = state;
-        emit stateChanged();
+        emit stateChanged( state );
     }
 }
 

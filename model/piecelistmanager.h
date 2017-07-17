@@ -111,22 +111,19 @@ public:
 signals:
     /**
      * @brief Notifies that a new piece was added at the end of the list
-     * @param col The column of the new piece
-     * @param row The row of the new piece
+     * @param point The associated square of the new piece
      */
-    void appended( int col, int row );
+    void appended( ModelPoint point );
     /**
      * @brief Notifies that a piece was deleted from the list
-     * @param col The column of the deleted piece
-     * @param row The row of the deleted piece
+     * @param point The square of the deleted piece
      */
-    void erased( int col, int row );
+    void erased( ModelPoint point );
     /**
      * @brief Notifies that a piece in the list was modified
-     * @param col The column of the modified piece
-     * @param row The row of the modified piece
+     * @param point The square of the modified piece
      */
-    void changed( int col, int row );
+    void changed( ModelPoint point );
 
 public slots:
     /**

@@ -38,7 +38,7 @@ PieceSetManager& Board::getPieceManager()
 
 void Board::initPiece( PieceType type, int col, int row, int angle )
 {
-    mPieceManager.insert( type, col, row, angle );
+    mPieceManager.insert( type, ModelPoint(col,row), angle );
     mTiles[row*BOARD_MAX_HEIGHT + col] = DIRT;
 }
 
@@ -183,27 +183,29 @@ int Board::getLevel()
     return mLevel;
 }
 
-TileType Board::tileAt( int col, int row ) const {
-    return (col >= 0 && row >= 0 && col <= mLowerRight.mCol && row <= mLowerRight.mRow) ? ((TileType) mTiles[row*BOARD_MAX_WIDTH+col]) : EMPTY;
+TileType Board::tileAt( ModelPoint point ) const {
+    return (point.mCol >= 0 && point.mRow >= 0
+         && point.mCol <= mLowerRight.mCol && point.mRow <= mLowerRight.mRow)
+      ? ((TileType) mTiles[point.mRow*BOARD_MAX_WIDTH+point.mCol]) : EMPTY;
 }
 
-void Board::setTileAt( TileType id, int col, int row )
+void Board::setTileAt( TileType id, ModelPoint point )
 {
-    if ( col >= 0 && row >= 0 && col <= mLowerRight.mCol && row <= mLowerRight.mRow ) {
-        mTiles[row*BOARD_MAX_WIDTH+col] = id;
-        emit tileChangedAt( col, row );
+    if ( point.mCol >= 0 && point.mRow >= 0 && point.mCol <= mLowerRight.mCol && point.mRow <= mLowerRight.mRow ) {
+        mTiles[point.mRow*BOARD_MAX_WIDTH+point.mCol] = id;
+        emit tileChangedAt( point );
     }
 }
 
-bool Board::applyPushResult( PieceType mType, int col, int row, int pieceAngle )
+bool Board::applyPushResult( PieceType mType, ModelPoint point, int pieceAngle )
 {
-    if ( tileAt(col,row) != WATER ) {
-        mPieceManager.insert( mType, col, row, pieceAngle );
+    if ( tileAt( point ) != WATER ) {
+        mPieceManager.insert( mType, point, pieceAngle );
         return true;
     }
 
     if ( mType == TILE ) {
-        setTileAt( TILE_SUNK, col, row );
+        setTileAt( TILE_SUNK, point );
         return true;
     }
 
@@ -229,21 +231,21 @@ void Board::undoChanges( std::vector<FutureChange> changes )
         --it;
         switch( it->changeType ) {
         case TILE_CHANGE:
-            setTileAt( it->u.tileType, it->point.mCol, it->point.mRow );
+            setTileAt( it->u.tileType, it->point );
             break;
 
         case PIECE_ERASED:
-            mPieceManager.insert( it->u.erase.pieceType, it->point.mCol, it->point.mRow, it->u.erase.pieceAngle );
+            mPieceManager.insert( it->u.erase.pieceType, it->point, it->u.erase.pieceAngle );
             break;
 
         case PIECE_PUSHED:
         {   int reverseDirection = (it->u.multiPush.direction + 180) % 360;
             ModelPoint p = it->point;
-            if ( !mPieceManager.eraseAt( it->point.mCol, it->point.mRow ) ) {
+            if ( !mPieceManager.eraseAt( it->point ) ) {
                 if ( it->u.multiPush.pieceType != TILE ) {
                     std::cout << "** undo PIECE_PUSHED didn't erase @ (" << p.mCol << "," << p.mRow << ")" << std::endl;
-                } else if ( tileAt( it->point.mCol, it->point.mRow ) == TILE_SUNK ) {
-                    setTileAt( WATER, it->point.mCol, it->point.mRow );
+                } else if ( tileAt( it->point ) == TILE_SUNK ) {
+                    setTileAt( WATER, it->point );
                 } else {
                     std::cout << "** undo PIECE_PUSHED didn't erase @ non-sunk (" << p.mCol << "," << p.mRow << ")" << std::endl;
                 }
@@ -255,7 +257,7 @@ void Board::undoChanges( std::vector<FutureChange> changes )
                     break;
                 }
             }
-            mPieceManager.insert( it->u.multiPush.pieceType, p.mCol, p.mRow, it->u.multiPush.pieceAngle );
+            mPieceManager.insert( it->u.multiPush.pieceType, p, it->u.multiPush.pieceAngle );
         }
             break;
 

@@ -31,7 +31,7 @@ void BoardRenderer::render( const QRect* rect, Board* board, QPainter* painter )
         for( int col = minCol; col <= maxCol; ++col ) {
             square.moveLeft( col * mTileSize );
 
-            TileType type = board->tileAt( col, row );
+            TileType type = board->tileAt( ModelPoint(col,row) );
             const QPixmap* pixmap = getPixmap( type );
             if ( !pixmap->isNull() ) {
                 painter->drawPixmap( square, *pixmap );

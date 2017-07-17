@@ -24,7 +24,7 @@ public:
     /**
      * @brief Creates a new piece from the given values and adds it to this set
      */
-    void insert( PieceType type, int col, int row, int angle = 0 );
+    void insert( PieceType type, ModelPoint point, int angle = 0 );
 
     /**
      * @brief Creates a copy of the given piece and adds it to this set
@@ -33,19 +33,17 @@ public:
 
     /**
      * @brief Searches for a piece in this set that has the given position
-     * @param col Column position to search for
-     * @param row Row position to search for
+     * @param point The position to search for
      * @return The type of piece at the given position, or NONE if not found
      */
-    PieceType typeAt( int col, int row );
+    PieceType typeAt( ModelPoint point );
 
     /**
      * @brief Searches for a piece in this set that has the given position
-     * @param col Column position to search for
-     * @param row Row position to search for
+     * @param point position to search for
      * @return The piece at the given position, or 0 if not found
      */
-    Piece* pieceAt(int col, int row ) const;
+    Piece* pieceAt( ModelPoint point ) const;
 
     /**
      * @brief removes any piece from the set at the postion specified by key
@@ -57,17 +55,16 @@ public:
      * @brief removes any piece from the set at the specified postion
      * @return true if the piece was removed
      */
-    bool eraseAt( int col, int row );
+    bool eraseAt( ModelPoint point );
 
     /**
      * @brief Add or change the piece at the given square
      * Any existing piece at the given square is changed, otherwise a piece is added.
-     * @param col The target column
-     * @param row The target row
+     * @param point The target square
      * @param type The type to set or add
      * @param angle The piece rotation to set or add
      */
-    void setAt( PieceType type, int col, int row, int angle = 0 );
+    void setAt( PieceType type, ModelPoint point, int angle = 0 );
 
     /**
      * @brief Re-initialize the set
@@ -84,24 +81,22 @@ public:
 signals:
     /**
      * @brief Notifies that a new piece was added to the set
-     * @param col The column of the new piece
+     * @param point The square of the new piece
      * @param row The row of the new piece
      */
-    void insertedAt( int col, int row );
+    void insertedAt( ModelPoint point );
 
     /**
      * @brief Notifies that a piece was deleted from the set
-     * @param col The column of the deleted piece
-     * @param row The row of the deleted piece
+     * @param point The square of the deleted piece
      */
-    void erasedAt( int col, int row );
+    void erasedAt( ModelPoint point );
 
     /**
-     * @brief Notifies that a piece was deleted from the set
-     * @param col The column of the deleted piece
-     * @param row The row of the deleted piece
+     * @brief Notifies that a piece was changed
+     * @param point The square of the changed piece
      */
-    void changedAt( int col, int row );
+    void changedAt( ModelPoint point );
 
 private:
     PieceSet mPieces;

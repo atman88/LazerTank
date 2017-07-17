@@ -104,10 +104,8 @@ public slots:
 
     /**
      * @brief mark a given square as dirty
-     * @param col The square's column
-     * @param row The square's row
      */
-    void renderSquareLater( int col, int row );
+    void renderSquareLater( ModelPoint point );
 
 private slots:
     /**
@@ -142,9 +140,9 @@ private slots:
     void onPathFound( PieceListManager* path, PathSearchAction* action );
 
     /**
-     * @brief Listens to the state of its drag activity for display purposes
+     * @brief Update the cursor to depict the given drag state
      */
-    void onDragStateChange();
+    void setCursorDragState( DragState state );
 
 signals:
     /**

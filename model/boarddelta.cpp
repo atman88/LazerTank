@@ -54,34 +54,34 @@ void BoardDelta::enable( bool newValue )
     }
 }
 
-void BoardDelta::onChangeAt( int col, int row )
+void BoardDelta::onChangeAt( ModelPoint point )
 {
-    const Piece* masterPiece = mMasterBoard->getPieceManager().pieceAt( col, row );
-    const Piece* futurePiece = mFutureBoard->getPieceManager().pieceAt( col, row );
+    const Piece* masterPiece = mMasterBoard->getPieceManager().pieceAt( point );
+    const Piece* futurePiece = mFutureBoard->getPieceManager().pieceAt( point );
 
     if ( !masterPiece ) {
         if ( !futurePiece ) {
-            if ( mMasterBoard->tileAt(col,row) == mFutureBoard->tileAt(col,row) ) {
+            if ( mMasterBoard->tileAt(point) == mFutureBoard->tileAt(point) ) {
                 // No discerned differences; Remove any existing delta:
-                mPieceManager.eraseAt( col, row );
+                mPieceManager.eraseAt( point );
             } else {
                 // No pieces, but tiles differ; indicate an erase:
-                mPieceManager.setAt( TILE_FUTURE_ERASE, col, row );
+                mPieceManager.setAt( TILE_FUTURE_ERASE, point );
             }
         } else {
             // master=no future=yes; indicate an insert:
-            mPieceManager.setAt( TILE_FUTURE_INSERT, col, row);
+            mPieceManager.setAt( TILE_FUTURE_INSERT, point );
         }
     } else if ( !futurePiece ) {
         // master=yes future=no; indicate an erase:
-        mPieceManager.setAt( TILE_FUTURE_ERASE, col, row );
+        mPieceManager.setAt( TILE_FUTURE_ERASE, point );
     } else {
-        if ( mMasterBoard->tileAt(col,row) == mFutureBoard->tileAt(col,row) ) {
+        if ( mMasterBoard->tileAt(point) == mFutureBoard->tileAt(point) ) {
             // No notable differences; Remove any existing delta:
-            mPieceManager.eraseAt( col, row );
+            mPieceManager.eraseAt( point );
         } else {
             // tiles differ; indicate an erase:
-            mPieceManager.setAt( TILE_FUTURE_ERASE, col, row);
+            mPieceManager.setAt( TILE_FUTURE_ERASE, point );
         }
     }
 }

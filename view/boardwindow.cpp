@@ -85,7 +85,7 @@ void BoardWindow::init( GameRegistry* registry )
     QObject::connect( &registry->getPathFinderController(), &PathFinderController::pathFound, this, &BoardWindow::onPathFound );
 
     mDragActivity.setParent( this );
-    QObject::connect( &mDragActivity, &DragActivity::stateChanged, this, &BoardWindow::onDragStateChange );
+    QObject::connect( &mDragActivity, &DragActivity::stateChanged, this, &BoardWindow::setCursorDragState );
 
     QObject::connect( &game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded );
 }
@@ -147,9 +147,9 @@ void BoardWindow::loadLevel( int number )
     }
 }
 
-void BoardWindow::renderSquareLater( int col, int row )
+void BoardWindow::renderSquareLater( ModelPoint point )
 {
-    QRect dirty(col*TILE_SIZE, row*TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    QRect dirty(point.mCol*TILE_SIZE, point.mRow*TILE_SIZE, TILE_SIZE, TILE_SIZE);
     renderLater( dirty );
 }
 
@@ -569,9 +569,17 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
                 ModelPoint p( event->pos() );
                 if ( p.equals( registry->getTank().getPoint() ) ) {
                     mDragActivity.start( p );
-                } else {
+                } else if ( /*Piece* piece =*/ registry->getGame().getBoard(true)->getPieceManager().pieceAt( p ) ) {
+                    setCursorDragState( Forbidden );
+                } else switch( registry->getGame().getBoard()->tileAt( p ) ) {
+                case DIRT:
+                case TILE_SUNK:
+                case FLAG:
                     pathToAction.setCriteria( mFocus, p, false );
                     registry->getPathFinderController().doAction( &pathToAction );
+                    break;
+                default:
+                    setCursorDragState( Forbidden );
                 }
             }
             break;
@@ -592,6 +600,7 @@ void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
             if ( !checkForReplay() )  {
                 registry->getMoveController().wakeup();
             }
+            setCursorDragState( Inactive );
             break;
         default:
             ;
@@ -627,9 +636,9 @@ static void drawForbidden( QBitmap* b, QPen& pen )
     painter.drawLine( 1,h, w,1 );
 }
 
-void BoardWindow::onDragStateChange()
+void BoardWindow::setCursorDragState( DragState state )
 {
-    switch( mDragActivity.getState() ) {
+    switch( state) {
     case Selecting:
         setCursor( Qt::CrossCursor );
         break;
