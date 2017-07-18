@@ -454,6 +454,9 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
             switch( ev->key() ) {
             case Qt::Key_Escape:
                 if ( !ev->modifiers() && !checkForReplay() )  {
+                    if ( mDragActivity.getState() != Inactive ) {
+                        mDragActivity.stop();
+                    }
                     showMenu();
                 }
                 break;
