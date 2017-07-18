@@ -161,14 +161,20 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
     return 0;
 }
 
-void FutureShotPathManager::removePath( Piece* piece )
+void FutureShotPathManager::removePath(Piece* piece , bool undo )
 {
     if ( MovePiece* move = dynamic_cast<MovePiece*>(piece) ) {
         FutureShotPath key( move );
         auto it = mPaths.find( key );
         if ( it != mPaths.end() ) {
-            emit dirtyRect( it->mBounds );
+            QRect bounds( it->mBounds );
+            if ( undo ) {
+                if ( GameRegistry* registry = getRegistry(this) ) {
+                    registry->getGame().getBoard(true)->undoChanges( it->mChanges );
+                }
+            }
             mPaths.erase( it );
+            emit dirtyRect( bounds );
         }
     }
 }

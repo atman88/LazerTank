@@ -156,7 +156,7 @@ void MoveController::wakeup()
             }
 
             // nothing waiting on this move; advance to next move
-            mFutureShots.removePath( move );
+            mFutureShots.removePath( move, false );
             mMoves.eraseFront();
             transitionState( IdlingStage );
             move = mMoves.getFront();
@@ -169,7 +169,7 @@ void MoveController::wakeup()
 void MoveController::eraseLastMove()
 {
     if ( Piece* piece = mMoves.getBack() ) {
-        mFutureShots.removePath( piece );
+        mFutureShots.removePath( piece, true );
         mMoves.eraseBack();
         mMoves.replaceBack( MOVE_HIGHLIGHT );
     }
