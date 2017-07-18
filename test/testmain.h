@@ -46,6 +46,9 @@ private slots:
 
     void testWorker();
 
+    void testDragTank();
+    void testDragPoint();
+
 private:
     QTextStream* mStream;
     GameRegistry* mRegistry;

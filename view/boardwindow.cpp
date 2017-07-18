@@ -21,8 +21,7 @@
 #define TILE_SIZE 24
 
 BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mBackingStore(0), mRenderer(TILE_SIZE), mRenderedOnce(false),
-  mFocus(MOVE), mGameInitialized(false), mHelpWidget(0), mReplayText(0), mDragActivity(0), mMouseLeftDown(false),
-  mForbiddenCursor(0)
+  mFocus(MOVE), mGameInitialized(false), mHelpWidget(0), mReplayText(0), mDragActivity(0), mForbiddenCursor(0)
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
   , mUpdatePending(false)
 #endif
@@ -82,9 +81,8 @@ void BoardWindow::init( GameRegistry* registry )
     QObject::connect( &TO_QACTION(mClearMovesAction),&QAction::triggered, &registry->getMoveController(), &MoveController::clearMoves );
     QObject::connect( &TO_QACTION(mReplayAction),    &QAction::triggered, &game, &Game::replayLevel );
 
-    QObject::connect( &registry->getPathFinderController(), &PathFinderController::pathFound, this, &BoardWindow::onPathFound );
-
     mDragActivity.setParent( this );
+    mDragActivity.init( registry );
     QObject::connect( &mDragActivity, &DragActivity::stateChanged, this, &BoardWindow::setCursorDragState );
 
     QObject::connect( &game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded );
@@ -553,40 +551,22 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
 
 void BoardWindow::mousePressEvent( QMouseEvent* event )
 {
-    if ( GameRegistry* registry = getRegistry(this) ) {
-        switch( event->button() ) {
-        case Qt::RightButton:
-            if ( !checkForReplay() )  {
-                QPoint globalPos = event->globalPos();
-                showMenu( &globalPos, ModelPoint( event->pos() ) );
-            }
-            break;
-
-        case Qt::LeftButton:
-            mMouseLeftDown = true;
-            if ( !checkForReplay() )  {
-                PathSearchAction& pathToAction = registry->getPathToAction();
-                ModelPoint p( event->pos() );
-                if ( p.equals( registry->getTank().getPoint() ) ) {
-                    mDragActivity.start( p );
-                } else if ( /*Piece* piece =*/ registry->getGame().getBoard(true)->getPieceManager().pieceAt( p ) ) {
-                    setCursorDragState( Forbidden );
-                } else switch( registry->getGame().getBoard()->tileAt( p ) ) {
-                case DIRT:
-                case TILE_SUNK:
-                case FLAG:
-                    pathToAction.setCriteria( mFocus, p, false );
-                    registry->getPathFinderController().doAction( &pathToAction );
-                    break;
-                default:
-                    setCursorDragState( Forbidden );
-                }
-            }
-            break;
-
-        default:
-            ;
+    switch( event->button() ) {
+    case Qt::RightButton:
+        if ( !checkForReplay() )  {
+            QPoint globalPos = event->globalPos();
+            showMenu( &globalPos, ModelPoint( event->pos() ) );
         }
+        break;
+
+    case Qt::LeftButton:
+        if ( !checkForReplay() )  {
+            mDragActivity.start( ModelPoint( event->pos() ), mFocus );
+        }
+        break;
+
+    default:
+        ;
     }
 }
 
@@ -595,12 +575,10 @@ void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
     if ( GameRegistry* registry = getRegistry(this) ) {
         switch( event->button() ) {
         case Qt::LeftButton:
-            mMouseLeftDown = false;
             mDragActivity.stop();
             if ( !checkForReplay() )  {
                 registry->getMoveController().wakeup();
             }
-            setCursorDragState( Inactive );
             break;
         default:
             ;
@@ -611,13 +589,6 @@ void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
 void BoardWindow::mouseMoveEvent(QMouseEvent* event)
 {
     mDragActivity.onDragTo( ModelPoint( event->pos() ) );
-}
-
-void BoardWindow::onPathFound( PieceListManager* /*path*/, PathSearchAction* action )
-{
-    if ( mMouseLeftDown && !action->getCriteria()->getMoveWhenFound() ) {
-        mDragActivity.start( action->getCriteria()->getTargetPoint() );
-    }
 }
 
 void BoardWindow::moveFocus( PieceType what )

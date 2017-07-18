@@ -12,8 +12,6 @@ QT_FORWARD_DECLARE_CLASS(QTextBrowser)
 class Board;
 class GameRegistry;
 class Game;
-class PieceListManager;
-class PathSearchAction;
 class ReplayText;
 
 #include "boardrenderer.h"
@@ -135,11 +133,6 @@ private slots:
     void loadLevel( int number );
 
     /**
-     * @brief Listens to path events for the purpose of starting drag activities on them as appropriate
-     */
-    void onPathFound( PieceListManager* path, PathSearchAction* action );
-
-    /**
      * @brief Update the cursor to depict the given drag state
      */
     void setCursorDragState( DragState state );
@@ -229,7 +222,6 @@ private:
 
     ReplayText* mReplayText;
     DragActivity mDragActivity;
-    bool mMouseLeftDown;
 
     QCursor* mForbiddenCursor;
 

@@ -122,7 +122,8 @@ test{
         test/util/piecelistmanagerobserver.cpp \
         test/util/testworker.cpp \
         test/model/testboardpool.cpp \
-        test/model/testlevellist.cpp
+        test/model/testlevellist.cpp \
+        test/controller/testdrag.cpp
 
 } else {
     TARGET = qlt

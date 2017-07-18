@@ -1,7 +1,8 @@
 #include "dragactivity.h"
-#include "controller/gameregistry.h"
-#include "controller/game.h"
-#include "controller/movecontroller.h"
+#include "gameregistry.h"
+#include "game.h"
+#include "movecontroller.h"
+#include "pathfindercontroller.h"
 #include "model/piecelistmanager.h"
 #include "model/tank.h"
 
@@ -9,16 +10,48 @@ DragActivity::DragActivity( QObject *parent ) : QObject(parent), mState(Inactive
 {
 }
 
-void DragActivity::start( ModelPoint startPoint )
+void DragActivity::init( GameRegistry* registry )
 {
-    mFocusPoint = startPoint;
-    mChanged = false;
-    setState( Selecting );
+    QObject::connect( &registry->getPathFinderController(), &PathFinderController::pathFound, this, &DragActivity::onPathFound );
+}
+
+void DragActivity::start( ModelPoint selectedPoint, PieceType focus )
+{
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        mFocusPoint = selectedPoint;
+        mChanged = false;
+
+        ModelPoint startPoint = registry->getTank().getPoint();
+        if ( focus == MOVE ) {
+            if ( Piece* move = registry->getMoveController().getMoves().getBack() ) {
+                startPoint = *move;
+            }
+        }
+
+        PathSearchAction& pathToAction = registry->getPathToAction();
+        if ( selectedPoint.equals( startPoint ) ) {
+            setState( Selecting );
+        } else {
+            Board* board = registry->getGame().getBoard(true);
+            if ( /*Piece* piece =*/ board->getPieceManager().pieceAt( selectedPoint ) ) {
+                setState( Forbidden );
+            } else switch( board->tileAt( selectedPoint ) ) {
+            case DIRT:
+            case TILE_SUNK:
+            case FLAG:
+                pathToAction.setCriteria( focus, selectedPoint, false );
+                registry->getPathFinderController().doAction( &pathToAction );
+                setState( Searching );
+                break;
+            default:
+                setState( Forbidden );
+            }
+        }
+    }
 }
 
 void DragActivity::setState(DragState state )
 {
-
     if ( mState != state ) {
         mState = state;
         emit stateChanged( state );
@@ -33,6 +66,14 @@ DragState DragActivity::getState() const
 ModelPoint DragActivity::getFocusPoint() const
 {
     return mFocusPoint;
+}
+
+void DragActivity::onPathFound( PieceListManager* /*path*/, PathSearchAction* action )
+{
+    if ( mState == Searching && !action->getCriteria()->getMoveWhenFound() ) {
+        mFocusPoint = action->getCriteria()->getTargetPoint();
+        setState( Selecting );
+    }
 }
 
 void DragActivity::onDragTo( ModelPoint p )

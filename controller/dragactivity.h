@@ -3,10 +3,16 @@
 
 #include <QObject>
 
-#include "modelpoint.h"
+class GameRegistry;
+class PieceListManager;
+class PathSearchAction;
+
+#include "model/modelpoint.h"
+#include "model/piece.h"
 
 typedef enum {
     Inactive,
+    Searching,
     Selecting,
     Forbidden
 } DragState;
@@ -16,6 +22,7 @@ class DragActivity : public QObject
     Q_OBJECT
 public:
     explicit DragActivity( QObject* parent = 0 );
+    void init( GameRegistry* registry );
 
     /**
      * @brief Retrieve the currsor associated with the current state
@@ -35,6 +42,13 @@ public:
      */
     void onDragTo( ModelPoint p );
 
+    /**
+     * @brief Begin a drag activity
+     * @param startPoint The initial point of the drag
+     * @param focus Either MOVE to append any outstanding future moves or TANK to replace future moves
+     */
+    void start( ModelPoint startPoint, PieceType focus = MOVE );
+
 signals:
     /**
      * @brief Indicates that a change of state occured
@@ -43,15 +57,15 @@ signals:
 
 public slots:
     /**
-     * @brief Begin a drag activity
-     * @param startPoint The initial point of the drag
-     */
-    void start( ModelPoint startPoint );
-
-    /**
      * @brief Completes the outstanding drag activity if any
      */
     void stop();
+
+private slots:
+    /**
+     * @brief Listens to path events for starting drag activities when self-initiated
+     */
+    void onPathFound( PieceListManager* path, PathSearchAction* action );
 
 private:
     void setState( DragState state );
