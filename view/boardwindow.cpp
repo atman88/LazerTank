@@ -469,7 +469,7 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
                 break;
 
             case Qt::Key_C: // attempt to capture the flag
-                if ( !checkForReplay() )  {
+                if ( !checkForReplay() && mDragActivity.getState() == Inactive )  {
                     PathSearchAction& captureAction = registry->getCaptureAction();
                     Board* board = registry->getGame().getBoard();
                     captureAction.setCriteria( mFocus, board->getFlagPoint(), false );
@@ -511,7 +511,7 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
                 break;
 
             case Qt::Key_C:
-                if ( !checkForReplay() )  {
+                if ( !checkForReplay() && mDragActivity.getState() == Inactive )  {
                     registry->getMoveController().wakeup();
                 }
                 break;
