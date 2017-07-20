@@ -9,19 +9,19 @@ void TestMain::testPieceListManager()
     manager.append( MOVE, ModelPoint(1, 2), 270 );
     manager.append( MOVE, ModelPoint(3, 4),   0 );
     manager.append( MOVE, ModelPoint(3, 4), 180 );
-    QCOMPARE( manager.toSet()->size(), 2UL );
-    QCOMPARE( manager.toMultiSet()->size(), 4UL );
+    QCOMPARE( (int) manager.toSet()->size(), 2 );
+    QCOMPARE( (int) manager.toMultiSet()->size(), 4 );
     manager.eraseBack();
-    QCOMPARE( manager.toSet()->size(), 1UL );
-    QCOMPARE( manager.toMultiSet()->size(), 3UL );
+    QCOMPARE( (int) manager.toSet()->size(), 1 );
+    QCOMPARE( (int) manager.toMultiSet()->size(), 3 );
     manager.eraseBack();
-    QCOMPARE( manager.toSet()->size(), 1UL );
-    QCOMPARE( manager.toMultiSet()->size(), 2UL );
+    QCOMPARE( (int) manager.toSet()->size(), 1 );
+    QCOMPARE( (int) manager.toMultiSet()->size(), 2 );
 
     manager.eraseFront();
-    QCOMPARE( manager.toSet()->size(), 0UL );
-    QCOMPARE( manager.toMultiSet()->size(), 1UL );
+    QCOMPARE( (int) manager.toSet()->size(), 0 );
+    QCOMPARE( (int) manager.toMultiSet()->size(), 1 );
     manager.eraseBack();
-    QCOMPARE( manager.toSet()->size(), 0UL );
-    QCOMPARE( manager.toMultiSet()->size(), 0UL );
+    QCOMPARE( (int) manager.toSet()->size(), 0 );
+    QCOMPARE( (int) manager.toMultiSet()->size(), 0 );
 }

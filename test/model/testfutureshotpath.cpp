@@ -38,7 +38,7 @@ void TestMain::testFutureShotPath()
 
     move.setShotCount( 0 );
     manager.updatePath(&move);
-    QCOMPARE( game.getDeltaPieces()->size(), 0UL );
+    QCOMPARE( (int) game.getDeltaPieces()->size(), 0 );
 }
 
 /**

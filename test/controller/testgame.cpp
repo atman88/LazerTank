@@ -21,7 +21,7 @@ void TestMain::testGameMove()
     cout << "board " << board->getWidth() << "x" << board->getHeight() << endl;
 
     const PieceSet& tiles = board->getPieceManager().getPieces();
-    QCOMPARE( tiles.size(), 1UL );
+    QCOMPARE( (int) tiles.size(), 1 );
     QCOMPARE( (*tiles.begin())->encodedPos(), Piece::encodePos(1,2));
 
     // check off-board values;
@@ -78,7 +78,7 @@ void testFuturePushToward( int direction, GameRegistry* registry )
     Game& game = registry->getGame();
     QVERIFY( game.getDeltaPieces()->size() > 0 );
     game.undoLastMove();
-    QCOMPARE( game.getDeltaPieces()->size(), 0UL );
+    QCOMPARE( (int) game.getDeltaPieces()->size(), 0 );
 }
 
 void TestMain::testGamePush()
