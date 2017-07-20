@@ -236,26 +236,49 @@ PieceType MoveBaseController::getFocus() const
 
 void MoveBaseController::setFocus( PieceType what )
 {
-    if ( mMoves.size() > 1 ) {
-        mMoves.replaceBack( what == TANK ? MOVE : MOVE_HIGHLIGHT );
-        mMoves.replaceFront(what == TANK ? MOVE_HIGHLIGHT : MOVE );
-    }
-
     if ( GameRegistry* registry = getRegistry(this) ) {
-        if ( what == TANK ) {
-            registry->getTank().pause();
-        } else {
-            registry->getTank().resume();
-        }
-    }
+        Tank& tank = registry->getTank();
+        bool highlighted = false;
 
-    mFocus = what;
+        if ( mMoves.size() ) {
+            if ( mState == Idle ) {
+                if ( Piece* front = mMoves.getFront() ) {
+                    if ( !tank.getPoint().equals(*front) ) {
+                        // This model is optimized - injecting a move for a proper visual:
+                        mMoves.push_front( MOVE_HIGHLIGHT, tank.getVector() );
+                        highlighted = true;
+                    }
+                }
+            }
+        }
+
+        if ( mMoves.size() > 1 ) {
+            mMoves.replaceBack( what == TANK ? MOVE : MOVE_HIGHLIGHT );
+            if ( !highlighted ) {
+                mMoves.replaceFront(what == TANK ? MOVE_HIGHLIGHT : MOVE );
+            }
+        }
+
+        if ( what == TANK ) {
+            tank.pause();
+        } else {
+            tank.resume();
+        }
+
+        mFocus = what;
+    }
 }
 
 ModelVector MoveBaseController::getFocusVector() const
 {
-    if ( Piece* move = mMoves.getBack() ) {
-        return *move;
+    if ( mFocus == MOVE ) {
+        if ( Piece* move = mMoves.getBack() ) {
+            return *move;
+        }
+    } else if ( mState != Idle ) {
+        if ( Piece* move = mMoves.getFront() ) {
+            return *move;
+        }
     }
     if ( GameRegistry* registry = getRegistry(this) ) {
         return registry->getTank().getVector();

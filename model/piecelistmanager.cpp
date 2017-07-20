@@ -46,40 +46,44 @@ const PieceMultiSet* PieceListManager::toMultiSet()
     return mMultiSet;
 }
 
-Piece* PieceListManager::appendInternal( Piece* piece )
+Piece* PieceListManager::addInternal( Piece* piece , bool pushFront )
 {
-    mPieces.push_back( piece );
+    if ( pushFront ) {
+        mPieces.push_front( piece );
+    } else {
+        mPieces.push_back( piece );
+    }
     if ( mSet ) {
         mSet->insert( piece );
     }
     if ( mMultiSet ) {
         mMultiSet->insert( piece );
     }
-    emit appended( *piece );
+    emit added( *piece );
     return piece;
 }
 
 Piece* PieceListManager::append( PieceType type, ModelPoint point, int angle )
 {
-    return appendInternal( new SimplePiece( type, point, angle ) );
+    return addInternal( new SimplePiece( type, point, angle ) );
 }
 
-Piece* PieceListManager::append( PieceType type, ModelPoint point, int angle, int shotCount, Piece* pushPiece )
+Piece* PieceListManager::append( PieceType type, ModelPoint point, int angle, int shotCount, const Piece* pushPiece )
 {
-    return appendInternal( new MovePiece( type, point, angle, shotCount, pushPiece ) );
+    return addInternal( new MovePiece( type, point, angle, shotCount, pushPiece ) );
 }
 
-Piece* PieceListManager::append( PieceType type, ModelVector vector, int shotCount, Piece* pushPiece )
+Piece* PieceListManager::append( PieceType type, ModelVector vector, int shotCount, const Piece* pushPiece )
 {
-    return appendInternal( new MovePiece( type, vector, shotCount, pushPiece ) );
+    return addInternal( new MovePiece( type, vector, shotCount, pushPiece ) );
 }
 
 Piece* PieceListManager::append( const Piece* source )
 {
     if ( const MovePiece* move = dynamic_cast<const MovePiece*>(source) ) {
-        return appendInternal( new MovePiece(move) );
+        return addInternal( new MovePiece(move) );
     }
-    return appendInternal( new SimplePiece(source) );
+    return addInternal( new SimplePiece(source) );
 }
 
 void PieceListManager::append( const PieceList& source )
@@ -87,6 +91,11 @@ void PieceListManager::append( const PieceList& source )
     for( auto it : source ) {
         append( it );
     }
+}
+
+Piece* PieceListManager::push_front( PieceType type, ModelVector vector, int shotCount, const Piece* pushPiece )
+{
+    return addInternal( new MovePiece( type, vector, shotCount, pushPiece ), true );
 }
 
 bool PieceListManager::eraseInternal( PieceList::iterator it )

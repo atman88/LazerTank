@@ -38,8 +38,8 @@ public:
      * @brief Adds a new piece to the end of this list from the given values
      */
     Piece* append( PieceType type, ModelPoint point, int angle = 0 );
-    Piece* append( PieceType type, ModelPoint point, int angle, int shotCount, Piece* pushPiece = 0 );
-    Piece* append( PieceType type, ModelVector vector, int shotCount, Piece* pushPiece = 0 );
+    Piece* append( PieceType type, ModelPoint point, int angle, int shotCount, const Piece* pushPiece = 0 );
+    Piece* append( PieceType type, ModelVector vector, int shotCount, const Piece* pushPiece = 0 );
 
     /**
      * @brief Adds a copy of the given piece to the end of this list
@@ -52,6 +52,11 @@ public:
      * @param source The pieces to append
      */
     void append( const PieceList& source );
+
+    /**
+     * @brief Adds a new piece to the beginning of this list from the given values
+     */
+    Piece* push_front( PieceType type, ModelVector vector, int shotCount = 0, const Piece* pushPiece = 0 );
 
     /**
      * @brief get the first element
@@ -113,7 +118,7 @@ signals:
      * @brief Notifies that a new piece was added at the end of the list
      * @param point The associated square of the new piece
      */
-    void appended( ModelPoint point );
+    void added( ModelPoint point );
     /**
      * @brief Notifies that a piece was deleted from the list
      * @param point The square of the deleted piece
@@ -133,7 +138,7 @@ public slots:
     void reset( PieceListManager* source = 0 );
 
 private:
-    Piece* appendInternal( Piece* piece );
+    Piece* addInternal( Piece* piece, bool pushFront = false );
     bool eraseInternal(PieceList::iterator it );
     void replaceInternal( Piece* piece, PieceType type, int newAngle );
 

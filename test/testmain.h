@@ -43,6 +43,7 @@ private slots:
     void testMultiShotShooterRelease();
     void testMultiShotShotFinished();
     void testReplay();
+    void testMoveFocus();
 
     void testWorker();
 

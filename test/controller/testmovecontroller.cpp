@@ -134,3 +134,23 @@ void TestMain::testReplay()
     }
     QVERIFY( boardPieces.typeAt(ModelPoint(1,2)) == TILE );
 }
+
+void TestMain::testMoveFocus()
+{
+    QTextStream map(
+      "[T>..\n"
+      " . ..\n" );
+    initGame( map );
+
+    MoveController& moveController = mRegistry->getMoveController();
+    Tank& tank = mRegistry->getTank();
+    moveController.move(90, false);
+    QVERIFY( !tank.getVector().equals( moveController.getFocusVector() ) );
+    moveController.setFocus( TANK );
+    QCOMPARE( moveController.getFocus(), TANK );
+    QCOMPARE( tank.getVector(), moveController.getFocusVector() );
+    QVERIFY2( moveController.getMoves().size()==2, "Expected 2 moves: focus inject at (0,0), (1,0) " );
+
+    moveController.setFocus( MOVE );
+    QVERIFY( !tank.getVector().equals( moveController.getFocusVector() ) );
+}

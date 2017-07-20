@@ -115,7 +115,7 @@ public:
 class MovePiece : public SimplePiece
 {
 public:
-    MovePiece( PieceType type = MOVE, int col = 0, int row = 0, int angle = 0, int shotCount = 0, Piece* pushPiece = 0 )
+    MovePiece( PieceType type = MOVE, int col = 0, int row = 0, int angle = 0, int shotCount = 0, const Piece* pushPiece = 0 )
         : SimplePiece(type,col,row,angle),
           mPushPieceType( pushPiece ? pushPiece->mType  : NONE),
           mPushPieceAngle(pushPiece ? pushPiece->mAngle : 0),
@@ -123,7 +123,7 @@ public:
     {
     }
 
-    MovePiece( PieceType type, ModelPoint point, int angle = 0,  int shotCount = 0, Piece* pushPiece = 0 )
+    MovePiece( PieceType type, ModelPoint point, int angle = 0,  int shotCount = 0, const Piece* pushPiece = 0 )
       : SimplePiece( type, point, angle ),
         mPushPieceType( pushPiece ? pushPiece->mType  : NONE),
         mPushPieceAngle(pushPiece ? pushPiece->mAngle : 0),
@@ -131,7 +131,7 @@ public:
     {
     }
 
-    MovePiece( PieceType type, ModelVector vector, int shotCount = 0, Piece* pushPiece = 0 )
+    MovePiece( PieceType type, ModelVector vector, int shotCount = 0, const Piece* pushPiece = 0 )
       : SimplePiece( type, vector ),
         mPushPieceType( pushPiece ? pushPiece->mType  : NONE),
         mPushPieceAngle(pushPiece ? pushPiece->mAngle : 0),
