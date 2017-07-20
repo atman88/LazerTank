@@ -33,6 +33,7 @@ private slots:
 
     void testFutureShotPath();
     void testFutureShotThruMasterTank();
+    void testFutureMultiShotThruTank();
 
     void testRecorderBitFields();
     void testRecorderRecordSize();

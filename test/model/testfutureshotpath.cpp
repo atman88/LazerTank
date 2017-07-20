@@ -57,3 +57,24 @@ void TestMain::testFutureShotThruMasterTank()
     moveController.fire();
     QCOMPARE( mRegistry->getGame().getBoard(true)->tileAt( ModelPoint(0,0) ), WOOD_DAMAGED );
 }
+
+void TestMain::testFutureMultiShotThruTank()
+{
+    QTextStream map(
+      ". . .\n"
+      ". M .\n"
+      ".[T<.\n"
+      ". . .\n" );
+    initGame( map );
+
+    MoveController& moveController = mRegistry->getMoveController();
+    moveController.move(270);
+    moveController.move(0);
+    moveController.move(0);
+    moveController.move(0);
+    moveController.move(90);
+    moveController.move(90);
+    moveController.move(180);
+    moveController.fire(2);
+    QCOMPARE( TILE, mRegistry->getGame().getBoard(true)->getPieceManager().pieceAt(ModelPoint(1,3))->getType() );
+}
