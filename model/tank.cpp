@@ -41,9 +41,8 @@ const ModelVector& Tank::getVector() const
 void Tank::onBoardLoaded( ModelVector startVector )
 {
     mVector = startVector;
-    mVector.mAngle = 0;
     TankView::reset( startVector );
-    mRecorder.onBoardLoaded();
+    mRecorder.onBoardLoaded( startVector.mAngle );
 }
 
 bool Tank::doMove( ModelVector& vector )

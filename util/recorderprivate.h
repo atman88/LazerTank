@@ -61,7 +61,7 @@ public:
     /**
      * @brief Reset as appropriate on a board change
      */
-    void onBoardLoaded();
+    void onBoardLoaded( int initialDirection );
 
     /**
      * @brief Query whether anything has been recorded yet
@@ -109,6 +109,7 @@ private:
      */
     bool commitCurMove();
 
+    int mStartDirection;              // the initial tank direction
     EncodedMove mCurMove;             // the primary record for the current move being assembled
     EncodedMove mCurContinuation;     // companion to mCurMove, uses lazy initialization- in use if mCurMove's shotCount at max
 

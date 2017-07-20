@@ -33,7 +33,6 @@ void Game::init( GameRegistry* registry )
     moveController.init( registry );
     QObject::connect( &moveController, &MoveController::pushingInto, this, &Game::onTankPushingInto );
     QObject::connect( &moveController, &MoveController::idle, this, &Game::endMoveDeltaTracking );
-    QObject::connect( &registry->getPathFinderController(), &PathFinderController::pathFound, &moveController, &MoveController::onPathFound );
 
     registry->getActiveCannon().init( registry, CANNON, QColor(255,50,83) );
 
@@ -57,7 +56,6 @@ void Game::init( GameRegistry* registry )
     QObject::connect( &registry->getBoardPool(), &BoardPool::boardLoaded, this, &Game::onPoolLoaded, Qt::QueuedConnection );
 
     if ( BoardWindow* window = registry->getWindow() ) {
-        QObject::connect( window, &BoardWindow::focusChanged, &moveController, &MoveController::setFocus );
         QObject::connect( &registry->getTankPush(), &Push::rectDirty, window, &BoardWindow::renderLater );
         QObject::connect( &registry->getShotPush(), &Push::rectDirty, window, &BoardWindow::renderLater );
 

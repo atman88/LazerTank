@@ -1,13 +1,12 @@
 #include <iostream>
 #include "pathsearchcriteria.h"
 
-PathSearchCriteria::PathSearchCriteria() : mStartDirection(0), mFocus(MOVE), mMoveWhenFound(false)
+PathSearchCriteria::PathSearchCriteria() : mStartDirection(0), mFocus(MOVE)
 {
 }
 
 PathSearchCriteria::PathSearchCriteria( const PathSearchCriteria& source ) : mStartPoint(source.mStartPoint),
-  mStartDirection(source.mStartDirection), mTargetPoint(source.mTargetPoint), mFocus(source.mFocus),
-  mMoveWhenFound(source.mMoveWhenFound)
+  mStartDirection(source.mStartDirection), mTargetPoint(source.mTargetPoint), mFocus(source.mFocus)
 {
 }
 
@@ -17,8 +16,6 @@ PathSearchCriteria& PathSearchCriteria::operator =(const PathSearchCriteria othe
     mStartDirection = other.mStartDirection;
     mTargetPoint    = other.mTargetPoint;
     mFocus          = other.mFocus;
-    mMoveWhenFound  = other.mMoveWhenFound;
-
     return *this;
 }
 
@@ -27,8 +24,7 @@ bool PathSearchCriteria::operator ==(const PathSearchCriteria other)
     return mStartPoint     == other.mStartPoint
         && mStartDirection == other.mStartDirection
         && mTargetPoint    == other.mTargetPoint
-        && mFocus          == other.mFocus
-        && mMoveWhenFound  == other.mMoveWhenFound;
+        && mFocus          == other.mFocus;
 }
 
 ModelPoint PathSearchCriteria::getTargetPoint() const
@@ -43,11 +39,6 @@ int PathSearchCriteria::getTargetCol() const
 int PathSearchCriteria::getTargetRow() const
 {
     return mTargetPoint.mRow;
-}
-
-bool PathSearchCriteria::getMoveWhenFound() const
-{
-    return mMoveWhenFound;
 }
 
 ModelPoint PathSearchCriteria::getStartPoint() const

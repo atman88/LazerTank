@@ -12,9 +12,9 @@ Recorder::~Recorder()
     delete mPrivate;
 }
 
-void Recorder::onBoardLoaded()
+void Recorder::onBoardLoaded( int initialDirection )
 {
-    mPrivate->onBoardLoaded();
+    mPrivate->onBoardLoaded( initialDirection );
 }
 
 bool Recorder::isEmpty() const
@@ -52,7 +52,7 @@ void Recorder::recordShot()
     mPrivate->recordShot();
 }
 
-RecorderReader::RecorderReader( RecorderPrivate *source ) : mOffset(0), mLastDirection(0)
+RecorderReader::RecorderReader( RecorderPrivate* source ) : mOffset(0), mLastDirection(source->mStartDirection)
 {
     mRecordedCount = source->storeCurMove();
     mSource = source;

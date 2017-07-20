@@ -70,8 +70,7 @@ HEADERS += \
     controller/gameregistry.h \
     model/level.h \
     view/levelchooser.h \
-    model/boardpool.h \
-    controller/dragactivity.h
+    model/boardpool.h
 
 SOURCES += \
     view/shooter.cpp \
@@ -91,7 +90,9 @@ SOURCES += \
     model/futureshotpath.cpp \
     view/pushview.cpp \
     model/push.cpp \
-    controller/movecontroller.cpp \
+    controller/movecontrol/movecontroller.cpp \
+    controller/movecontrol/movebasecontroller.cpp \
+    controller/movecontrol/movedragcontroller.cpp \
     util/recorder.cpp \
     util/recorderprivate.cpp \
     view/replaytext.cpp \
@@ -100,8 +101,7 @@ SOURCES += \
     controller/gameregistry.cpp \
     model/level.cpp \
     view/levelchooser.cpp \
-    model/boardpool.cpp \
-    controller/dragactivity.cpp
+    model/boardpool.cpp
 
 test{
     INCLUDEPATH += test/controller

@@ -15,7 +15,7 @@ class Game;
 class ReplayText;
 
 #include "boardrenderer.h"
-#include "controller/dragactivity.h"
+#include "controller/movecontroller.h"
 #include "model/piece.h"
 
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 7, 0))
@@ -139,12 +139,6 @@ private slots:
 
 signals:
     /**
-     * @brief Notifies that the user has moved the focus
-     * @param what MOVE if the focus is on the future moves or TANK if the focus is on the present
-     */
-    void focusChanged( PieceType what );
-
-    /**
      * @brief Emitted the first time the window has a paintable surface
      */
     void paintable();
@@ -195,13 +189,6 @@ private:
      */
     void renderListIn( PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter );
 
-    /**
-     * @brief Move the focus between focal points of interest
-     * @param what Either MOVE to focus on the last move (future perspective) or TANK to focus on the first move
-     * (present perspective)
-     */
-    void moveFocus( PieceType what );
-
     QBackingStore *mBackingStore;
     BoardRenderer mRenderer;
     QMenu mMenu;
@@ -215,13 +202,10 @@ private:
     QRegion mRenderRegion;
     bool mRenderedOnce;
 
-    PieceType mFocus;
-
     bool mGameInitialized;
     QTextBrowser* mHelpWidget;
 
     ReplayText* mReplayText;
-    DragActivity mDragActivity;
 
     QCursor* mForbiddenCursor;
 

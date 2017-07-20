@@ -24,7 +24,6 @@ public:
     int getTargetCol() const;
     int getTargetRow() const;
     PieceType getFocus() const;
-    bool getMoveWhenFound() const;
 
     /**
      * @brief query whether this applies to the future
@@ -37,7 +36,6 @@ protected:
     int mStartDirection;
     ModelPoint mTargetPoint;
     PieceType mFocus;
-    bool mMoveWhenFound;
 };
 
 #endif // PATHSEARCHCRITERIA_H

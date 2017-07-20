@@ -9,11 +9,10 @@ PathSearchAction::PathSearchAction( QObject*parent ) : QAction(parent)
 {
 }
 
-bool PathSearchAction::setCriteria( PieceType focus, const ModelPoint& target, bool moveWhenFound )
+bool PathSearchAction::setCriteria( PieceType focus, const ModelPoint& target )
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
         mTargetPoint = target;
-        mMoveWhenFound = moveWhenFound;
 
         MoveController& moveController = registry->getMoveController();
 

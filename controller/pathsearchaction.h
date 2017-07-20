@@ -23,10 +23,9 @@ public:
      * The the game's tank position is always used for the search starting coordinate
      * @param focus The focus of the starting point. Either TANK or MOVE.
      * @param target The square to find a path to.
-     * @param moveWhenFound
      * @return true if successful
      */
-    bool setCriteria( PieceType focus, const ModelPoint& target, bool moveWhenFound );
+    bool setCriteria( PieceType focus, const ModelPoint& target );
 
     PathSearchCriteria* getCriteria();
 };

@@ -1,20 +1,19 @@
-#include <iostream>
-#include <QPainter>
-#include "movecontroller.h"
-#include "game.h"
-#include "animationstateaggregator.h"
-#include "pathsearchaction.h"
-#include "model/tank.h"
-#include "model/shotmodel.h"
-#include "model/push.h"
-#include "util/recorder.h"
+#include "../movecontroller.h"
+#include "../gameregistry.h"
+#include "../game.h"
+#include "../animationstateaggregator.h"
+#include "../pathsearchaction.h"
+#include "../model/tank.h"
+#include "../model/shotmodel.h"
+#include "../model/push.h"
+#include "../model/board.h"
 
 
-MoveController::MoveController(QObject *parent) : QObject(parent), mState(Idle), mReplaySource(0)
+MoveBaseController::MoveBaseController( QObject* parent ) : QObject(parent), mState(Idle), mFocus(MOVE)
 {
 }
 
-void MoveController::init( GameRegistry* registry )
+void MoveBaseController::init( GameRegistry* registry )
 {
     setParent(registry);
     mFutureShots.setParent(registry);
@@ -23,7 +22,7 @@ void MoveController::init( GameRegistry* registry )
     QObject::connect( &registry->getShotAggregate(), &AnimationStateAggregator::finished, this, &MoveController::wakeup, Qt::QueuedConnection );
 }
 
-void MoveController::onBoardLoaded( Board* board )
+void MoveBaseController::onBoardLoaded( Board* board )
 {
     mToVector = board->getTankStartVector();
 
@@ -35,7 +34,7 @@ void MoveController::onBoardLoaded( Board* board )
     emit idle();
 }
 
-void MoveController::move( int direction, bool doWakeup )
+void MoveBaseController::move( int direction, bool doWakeup )
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
         Piece* lastMove = mMoves.getBack();
@@ -64,7 +63,7 @@ void MoveController::move( int direction, bool doWakeup )
     }
 }
 
-void MoveController::fire( int count )
+void MoveBaseController::fire( int count )
 {
     if ( int nMoves = mMoves.size() ) {
         // -1 signifies an increment
@@ -72,10 +71,7 @@ void MoveController::fire( int count )
             count = mMoves.getBack()->getShotCount() + 1;
         }
         MovePiece* move = mMoves.setShotCountBack( count );
-        // show its future if we expect it won't animate immediately:
-//        if ( count > 1 || mState == RotateStage ) {
-            mFutureShots.updatePath( move );
-//        }
+        mFutureShots.updatePath( move );
         if ( nMoves == 1 && mState == FiringStage ) {
             wakeup();
         }
@@ -97,13 +93,17 @@ void MoveController::fire( int count )
     }
 }
 
-void MoveController::clearMoves()
+void MoveBaseController::clearMoves()
 {
     mMoves.reset();
 }
 
-void MoveController::wakeup()
+void MoveBaseController::wakeup()
 {
+    if ( !canWakeup() ) {
+        return;
+    }
+
     if ( GameRegistry* registry = getRegistry(this) ) {
         Tank& tank = registry->getTank();
 
@@ -166,7 +166,7 @@ void MoveController::wakeup()
     transitionState( Idle );
 }
 
-void MoveController::eraseLastMove()
+void MoveBaseController::eraseLastMove()
 {
     if ( Piece* piece = mMoves.getBack() ) {
         mFutureShots.removePath( piece, true );
@@ -175,17 +175,22 @@ void MoveController::eraseLastMove()
     }
 }
 
-FutureShotPathManager& MoveController::getFutureShots()
+FutureShotPathManager& MoveBaseController::getFutureShots()
 {
     return mFutureShots;
 }
 
-PieceListManager& MoveController::getMoves()
+bool MoveBaseController::canWakeup()
+{
+    return mFocus == MOVE;
+}
+
+PieceListManager& MoveBaseController::getMoves()
 {
     return mMoves;
 }
 
-void MoveController::onPathFound( PieceListManager* path, PathSearchAction* action )
+void MoveBaseController::onPathFound( PieceListManager* path, PathSearchAction* action )
 {
     if ( action->getFocus() == TANK ) {
         mMoves.reset( path );
@@ -195,42 +200,16 @@ void MoveController::onPathFound( PieceListManager* path, PathSearchAction* acti
     }
     mMoves.replaceBack( MOVE_HIGHLIGHT );
 
-    if ( action->getMoveWhenFound() ) {
-        wakeup();
-    }
+    wakeup();
 }
 
-void MoveController::setReplay( bool on )
-{
-    if ( on ) {
-        if ( !mReplaySource ) {
-            if ( GameRegistry* registry = getRegistry(this) ) {
-                mReplaySource = registry->getTank().getRecorder().getReader();
-            }
-            QObject::connect( this, &MoveController::idle, this, &MoveController::replayPlayback, Qt::QueuedConnection );
-        }
-    } else if ( mReplaySource ) {
-        QObject::disconnect( this, &MoveController::idle, this, &MoveController::replayPlayback );
-        if ( GameRegistry* registry = getRegistry(this) ) {
-            registry->getTank().getRecorder().closeReader();
-        }
-        mReplaySource = 0;
-        emit replayFinished();
-    }
-}
-
-bool MoveController::replaying() const
-{
-    return mReplaySource != 0;
-}
-
-void MoveController::appendMove( ModelVector vector, Piece* pushPiece )
+void MoveBaseController::appendMove( ModelVector vector, Piece* pushPiece )
 {
     mMoves.replaceBack( MOVE ); // erase highlight
     mMoves.append( MOVE_HIGHLIGHT, vector, 0, pushPiece );
 }
 
-void MoveController::transitionState(MoveState newState)
+void MoveBaseController::transitionState(MoveState newState)
 {
     if ( newState != mState ) {
 //        std::cout << "moveController ";
@@ -250,7 +229,12 @@ void MoveController::transitionState(MoveState newState)
     }
 }
 
-void MoveController::setFocus( PieceType what )
+PieceType MoveBaseController::getFocus() const
+{
+    return mFocus;
+}
+
+void MoveBaseController::setFocus( PieceType what )
 {
     if ( mMoves.size() > 1 ) {
         mMoves.replaceBack( what == TANK ? MOVE : MOVE_HIGHLIGHT );
@@ -264,11 +248,17 @@ void MoveController::setFocus( PieceType what )
             registry->getTank().resume();
         }
     }
+
+    mFocus = what;
 }
 
-void MoveController::replayPlayback()
+ModelVector MoveBaseController::getFocusVector() const
 {
-    if ( mReplaySource && mState == Idle ) {
-        mReplaySource->readNext( this );
+    if ( Piece* move = mMoves.getBack() ) {
+        return *move;
     }
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        return registry->getTank().getVector();
+    }
+    return ModelVector();
 }

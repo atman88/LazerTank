@@ -5,7 +5,7 @@
 // In a spirit of friendly memory consumption stewardship, this class grows its recording buffer as needed in chunks of size:
 #define ALLOCATION_CHUNK_SIZE 1000
 
-RecorderPrivate::RecorderPrivate(int capacity) : mRecordedCount(0), mCapacity(capacity), mReader(0)
+RecorderPrivate::RecorderPrivate( int capacity ) : mStartDirection(0), mRecordedCount(0), mCapacity(capacity), mReader(0)
 {
     mCurMove.clear();
 
@@ -29,8 +29,9 @@ RecorderPrivate::~RecorderPrivate()
     std::free( mRecorded );
 }
 
-void RecorderPrivate::onBoardLoaded()
+void RecorderPrivate::onBoardLoaded( int initialDirection )
 {
+    mStartDirection = initialDirection;
     // reset if not playing back
     if ( !mReader ) {
         mCurMove.u.value = 0;

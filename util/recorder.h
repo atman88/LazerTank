@@ -85,7 +85,7 @@ public:
     /**
      * @brief Reset as appropriate on a board change
      */
-    void onBoardLoaded();
+    void onBoardLoaded( int initialDirection );
 
     /**
      * @brief record a change in direction

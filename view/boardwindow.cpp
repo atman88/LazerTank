@@ -21,7 +21,7 @@
 #define TILE_SIZE 24
 
 BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mBackingStore(0), mRenderer(TILE_SIZE), mRenderedOnce(false),
-  mFocus(MOVE), mGameInitialized(false), mHelpWidget(0), mReplayText(0), mDragActivity(0), mForbiddenCursor(0)
+  mGameInitialized(false), mHelpWidget(0), mReplayText(0), mForbiddenCursor(0)
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
   , mUpdatePending(false)
 #endif
@@ -81,9 +81,7 @@ void BoardWindow::init( GameRegistry* registry )
     QObject::connect( &TO_QACTION(mClearMovesAction),&QAction::triggered, &registry->getMoveController(), &MoveController::clearMoves );
     QObject::connect( &TO_QACTION(mReplayAction),    &QAction::triggered, &game, &Game::replayLevel );
 
-    mDragActivity.setParent( this );
-    mDragActivity.init( registry );
-    QObject::connect( &mDragActivity, &DragActivity::stateChanged, this, &BoardWindow::setCursorDragState );
+    QObject::connect( &registry->getMoveController(), &MoveController::dragStateChanged, this, &BoardWindow::setCursorDragState );
 
     QObject::connect( &game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded );
 }
@@ -213,7 +211,8 @@ void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* p
         }
     }
 
-    if ( mFocus != TANK ) {
+    PieceType focus = moveController.getFocus();
+    if ( focus != TANK ) {
         // render the moves beneath (i.e. before) the tank and it's pushes when not focused on
         // the tank:
         renderListIn( moveIterator, moves->end(), rect, painter );
@@ -222,7 +221,7 @@ void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* p
     registry->getTankPush().render( rect, mRenderer, painter );
     registry->getShotPush().render( rect, mRenderer, painter );
     registry->getTank().render( rect, painter );
-    if ( mFocus == TANK ) {
+    if ( focus == TANK ) {
         // render the moves ontop of (i.e. after) the tank and it's pushes when focus is at
         // the tank:
         renderListIn( moveIterator, moves->end(), rect, painter );
@@ -408,12 +407,13 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
 
         PathSearchAction* actions[2];
         int nActions = 0;
-        if ( captureAction.setCriteria( mFocus, board->getFlagPoint(), true ) ) {
+        PieceType focus = registry->getMoveController().getFocus();
+        if ( captureAction.setCriteria( focus, board->getFlagPoint() ) ) {
             actions[nActions++] = &captureAction;
         }
         if ( p.mCol < 0 ) {
             pathToAction.setVisible( false );
-        } else if ( pathToAction.setCriteria( mFocus, p, true ) ) {
+        } else if ( pathToAction.setCriteria( focus, p ) ) {
             actions[nActions++] = &pathToAction;
             pathToAction.setVisible( true );
         }
@@ -454,15 +454,13 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
             switch( ev->key() ) {
             case Qt::Key_Escape:
                 if ( !ev->modifiers() && !checkForReplay() )  {
-                    if ( mDragActivity.getState() != Inactive ) {
-                        mDragActivity.stop();
-                    }
+                    registry->getMoveController().dragStop();
                     showMenu();
                 }
                 break;
 
             case Qt::Key_Control:
-                moveFocus( TANK );
+                registry->getMoveController().setFocus( TANK );
                 break;
 
             case Qt::Key_Space:
@@ -472,10 +470,10 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
                 break;
 
             case Qt::Key_C: // attempt to capture the flag
-                if ( !checkForReplay() && mDragActivity.getState() == Inactive )  {
+                if ( !checkForReplay() && registry->getMoveController().getDragState() == Inactive )  {
                     PathSearchAction& captureAction = registry->getCaptureAction();
                     Board* board = registry->getGame().getBoard();
-                    captureAction.setCriteria( mFocus, board->getFlagPoint(), false );
+                    captureAction.setCriteria( registry->getMoveController().getFocus(), board->getFlagPoint() );
                     registry->getPathFinderController().doAction( &captureAction );
                 }
                 break;
@@ -483,7 +481,7 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
             default:
                 if ( !ev->modifiers() ) {
                     int rotation = keyToAngle(ev->key());
-                    if ( rotation >= 0 && !checkForReplay() ) {
+                    if ( rotation >= 0 ) {
                         registry->getMoveController().move( rotation );
                     } else if ( ev->key() >= Qt::Key_0 && ev->key() <= Qt::Key_9 && !checkForReplay() ) {
                         registry->getMoveController().fire( ev->key() - Qt::Key_0 );
@@ -494,7 +492,7 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
     }
 }
 
-void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
+void BoardWindow::keyReleaseEvent( QKeyEvent* ev )
 {
     if ( !ev->isAutoRepeat() ) {
         if ( GameRegistry* registry = getRegistry(this) ) {
@@ -506,7 +504,7 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
                 break;
 
             case Qt::Key_Control:
-                moveFocus( MOVE );
+                registry->getMoveController().setFocus( MOVE );
                 break;
 
             case Qt::Key_S:
@@ -514,9 +512,7 @@ void BoardWindow::keyReleaseEvent(QKeyEvent *ev)
                 break;
 
             case Qt::Key_C:
-                if ( !checkForReplay() && mDragActivity.getState() == Inactive )  {
-                    registry->getMoveController().wakeup();
-                }
+                registry->getMoveController().wakeup();
                 break;
 
             case Qt::Key_A:
@@ -564,7 +560,9 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
 
     case Qt::LeftButton:
         if ( !checkForReplay() )  {
-            mDragActivity.start( ModelPoint( event->pos() ), mFocus );
+            if ( GameRegistry* registry = getRegistry(this) ) {
+                registry->getMoveController().dragStart( ModelPoint( event->pos() ) );
+            }
         }
         break;
 
@@ -578,10 +576,7 @@ void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
     if ( GameRegistry* registry = getRegistry(this) ) {
         switch( event->button() ) {
         case Qt::LeftButton:
-            mDragActivity.stop();
-            if ( !checkForReplay() )  {
-                registry->getMoveController().wakeup();
-            }
+            registry->getMoveController().dragStop();
             break;
         default:
             ;
@@ -591,13 +586,9 @@ void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
 
 void BoardWindow::mouseMoveEvent(QMouseEvent* event)
 {
-    mDragActivity.onDragTo( ModelPoint( event->pos() ) );
-}
-
-void BoardWindow::moveFocus( PieceType what )
-{
-    mFocus = what;
-    emit focusChanged( what );
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        registry->getMoveController().onDragTo( ModelPoint( event->pos() ) );
+    }
 }
 
 static void drawForbidden( QBitmap* b, QPen& pen )
@@ -647,15 +638,18 @@ void BoardWindow::setCursorDragState( DragState state )
 int BoardWindow::checkForReplay()
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
-        if ( registry->getMoveController().replaying() ) {
+        MoveController& moveController = registry->getMoveController();
+        if ( moveController.replaying() ) {
             registry->getTank().pause();
 
             QMessageBox::StandardButton button = QMessageBox::question( 0, "Auto Replay", "Play from here?",
                                                                         QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes );
             if ( button == QMessageBox::Yes ) {
-                registry->getMoveController().setReplay( false );
+                moveController.setReplay( false );
             }
-            registry->getTank().resume();
+            if ( moveController.canWakeup() ) {
+                registry->getTank().resume();
+            }
 
             return (button == QMessageBox::Yes) ? -1 /* indicate changed to inactive */ : 1 /* indicate replay is active */;
         }

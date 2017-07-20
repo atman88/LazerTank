@@ -48,6 +48,7 @@ private slots:
 
     void testDragTank();
     void testDragPoint();
+    void testDragWithMove();
 
 private:
     QTextStream* mStream;
