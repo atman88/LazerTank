@@ -1,4 +1,3 @@
-#include <iostream>
 #include <QMenu>
 #include <QAction>
 #include <QMessageBox>
@@ -591,6 +590,7 @@ void BoardWindow::mouseMoveEvent(QMouseEvent* event)
     }
 }
 
+#ifndef Q_OS_WIN
 static void drawForbidden( QBitmap* b, QPen& pen )
 {
     QPainter painter(b);
@@ -600,6 +600,7 @@ static void drawForbidden( QBitmap* b, QPen& pen )
     painter.drawArc( 1, 1, w, h, 0, 360*16 );
     painter.drawLine( 1,h, w,1 );
 }
+#endif // Q_OS_WIN
 
 void BoardWindow::setCursorDragState( DragState state )
 {
@@ -609,6 +610,9 @@ void BoardWindow::setCursorDragState( DragState state )
         break;
     case Forbidden:
         if ( !mForbiddenCursor ) {
+#ifdef Q_OS_WIN
+        mForbiddenCursor = new QCursor( Qt::ForbiddenCursor );
+#else
             QSize cursorSize(TILE_SIZE-4,TILE_SIZE-4);
             QPen pen;
 
@@ -627,6 +631,7 @@ void BoardWindow::setCursorDragState( DragState state )
             drawForbidden( &mask, pen );
 
             mForbiddenCursor = new QCursor( bitmap, mask, cursorSize.width()/2, cursorSize.height()/2 );
+#endif // Q_OS_WIN
         }
         setCursor( *mForbiddenCursor );
         break;
