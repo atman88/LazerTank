@@ -243,7 +243,7 @@ void BoardWindow::renderNow()
         return;
     }
 
-    if ( mBackingStore ) {
+    if ( mBackingStore && isExposed() ) {
         if ( QPaintDevice *device = mBackingStore->paintDevice() ) {
             GameRegistry* registry = getRegistry(this);
             bool boardLoaded = registry ? registry->getGame().isBoardLoaded() : false;
