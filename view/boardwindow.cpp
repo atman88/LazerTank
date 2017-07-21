@@ -260,9 +260,8 @@ void BoardWindow::renderNow()
             mBackingStore->beginPaint( mRenderRegion );
             QPainter painter( device );
 
-            if ( !boardLoaded ) {
-                painter.fillRect( rect, Qt::black );
-            } else {
+            painter.fillRect( rect, Qt::black );
+            if ( boardLoaded ) {
                 render( &rect, registry, &painter );
             }
 
