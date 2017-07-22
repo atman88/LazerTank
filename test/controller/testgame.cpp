@@ -77,7 +77,7 @@ void testFuturePushToward( int direction, GameRegistry* registry )
     moveController.move( direction );
     Game& game = registry->getGame();
     QVERIFY( game.getDeltaPieces()->size() > 0 );
-    game.undoLastMove();
+    moveController.undoLastMove();
     QCOMPARE( (int) game.getDeltaPieces()->size(), 0 );
 }
 

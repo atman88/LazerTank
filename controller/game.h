@@ -83,11 +83,6 @@ public:
     void undoFuturePush( MovePiece* pusher );
 
     /**
-     * @brief undoes the last future move if safe to do so
-     */
-    void undoLastMove();
-
-    /**
      * @brief Obtain the set of pieces representing differences between the current board and
      * what the board will be as a result of applying outstanding moves
      * @return set of future pieces or 0 if future tracking is not active

@@ -627,29 +627,6 @@ void Game::undoFuturePush( MovePiece* pusher )
     }
 }
 
-void Game::undoLastMove()
-{
-    if ( GameRegistry* registry = getRegistry(this) ) {
-        PieceListManager& moveManager = registry->getMoveController().getMoves();
-        switch( moveManager.size() ) {
-        case 0: // empty
-            return;
-        case 1: // allow if not doing this move
-            if ( registry->getMoveAggregate().active() ) {
-                return;
-            }
-        }
-
-        Piece* piece = moveManager.getBack();
-        if ( piece ) {
-            if ( piece->hasPush() ) {
-                undoFuturePush( dynamic_cast<MovePiece*>(piece) );
-            }
-            registry->getMoveController().eraseLastMove();
-        }
-    }
-}
-
 void Game::onTankKilled()
 {
     if ( GameRegistry* registry = getRegistry(this) ) {

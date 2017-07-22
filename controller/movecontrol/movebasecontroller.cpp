@@ -93,13 +93,44 @@ void MoveBaseController::fire( int count )
     }
 }
 
-void MoveBaseController::clearMoves()
+void MoveBaseController::undoLastMoveInternal()
 {
-    for( auto it : mMoves.getList() ) {
-        mFutureShots.removePath( it, true );
+    if ( Piece* piece = mMoves.getBack() ) {
+        if ( piece->hasPush() ) {
+            if ( GameRegistry* registry = getRegistry(this) ) {
+                registry->getGame().undoFuturePush( dynamic_cast<MovePiece*>(piece) );
+            }
+        }
+        mFutureShots.removePath( piece, true );
+        mMoves.eraseBack();
+    }
+}
+
+void MoveBaseController::undoLastMove()
+{
+    switch( mMoves.size() ) {
+    case 0: // empty
+        return;
+    case 1: // allow if not doing this move
+        switch( mState ) {
+        case MovingStage:
+        case FiringStage:
+            return;
+        default:
+            ;
+        }
     }
 
-    mMoves.reset();
+    undoLastMoveInternal();
+    mMoves.replaceBack( MOVE_HIGHLIGHT );
+}
+
+void MoveBaseController::undoMoves()
+{
+    while( mMoves.size() > 1 ) {
+        undoLastMoveInternal();
+    }
+    undoLastMove();
 }
 
 void MoveBaseController::wakeup()
@@ -168,15 +199,6 @@ void MoveBaseController::wakeup()
     }
 
     transitionState( Idle );
-}
-
-void MoveBaseController::eraseLastMove()
-{
-    if ( Piece* piece = mMoves.getBack() ) {
-        mFutureShots.removePath( piece, true );
-        mMoves.eraseBack();
-        mMoves.replaceBack( MOVE_HIGHLIGHT );
-    }
 }
 
 FutureShotPathManager& MoveBaseController::getFutureShots()

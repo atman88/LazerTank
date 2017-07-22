@@ -67,6 +67,7 @@ void BoardWindow::setSize( int cols, int rows )
 void BoardWindow::init( GameRegistry* registry )
 {
     Game& game = registry->getGame();
+    MoveController& moveController = registry->getMoveController();
 
     Board* board = game.getBoard();
     QObject::connect( board, &Board::tileChangedAt, this, &BoardWindow::renderSquareLater );
@@ -76,11 +77,11 @@ void BoardWindow::init( GameRegistry* registry )
     QObject::connect( &pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
 
     QObject::connect( &TO_QACTION(mSpeedAction), &QAction::toggled, &registry->getSpeedController(), &SpeedController::setHighSpeed );
-    QObject::connect( &TO_QACTION(mUndoMoveAction),  &QAction::triggered, &game, &Game::undoLastMove );
-    QObject::connect( &TO_QACTION(mClearMovesAction),&QAction::triggered, &registry->getMoveController(), &MoveController::clearMoves );
+    QObject::connect( &TO_QACTION(mUndoMoveAction),  &QAction::triggered, &moveController, &MoveController::undoLastMove );
+    QObject::connect( &TO_QACTION(mClearMovesAction),&QAction::triggered, &moveController, &MoveController::undoMoves );
     QObject::connect( &TO_QACTION(mReplayAction),    &QAction::triggered, &game, &Game::replayLevel );
 
-    QObject::connect( &registry->getMoveController(), &MoveController::dragStateChanged, this, &BoardWindow::setCursorDragState );
+    QObject::connect( &moveController, &MoveController::dragStateChanged, this, &BoardWindow::setCursorDragState );
 
     QObject::connect( &game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded );
 }
@@ -528,9 +529,9 @@ void BoardWindow::keyReleaseEvent( QKeyEvent* ev )
             case Qt::Key_Backspace:
                 if ( !checkForReplay() )  {
                     if ( ev->modifiers() == Qt::ControlModifier ) {
-                        registry->getMoveController().clearMoves();
+                        registry->getMoveController().undoMoves();
                     } else {
-                        registry->getGame().undoLastMove();
+                        registry->getMoveController().undoLastMove();
                     }
                 }
                 break;

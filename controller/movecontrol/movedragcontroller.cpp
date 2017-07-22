@@ -121,12 +121,12 @@ void MoveDragController::onDragTo( ModelPoint p )
                     }
                     setDragState( Selecting );
                     if ( lastMove && focusPoint.equals( *lastMove ) && prevMovePoint->equals( toPoint ) ) {
-                        game.undoLastMove();
+                        undoLastMove();
                         // if only a simple rotation remains then remove it too:
                         if ( mMoves.size() == 1 ) {
                             lastMove = mMoves.getBack();
                             if ( registry->getTank().getPoint().equals( *lastMove ) ) {
-                                game.undoLastMove();
+                                undoLastMove();
                             }
                         }
                     } else {

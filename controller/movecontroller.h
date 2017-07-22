@@ -45,9 +45,9 @@ public:
     PieceListManager& getMoves();
 
     /**
-     * @brief Method to erase (undo) the last move. (Provides highlight-awareness)
+     * @brief undoes the last future move if safe to do so
      */
-    void eraseLastMove();
+    void undoLastMove();
 
     /**
      * @brief Access the pending tank shots
@@ -88,7 +88,7 @@ public slots:
     /**
      * @brief Cancel any pending (future) moves
      */
-    void clearMoves();
+    void undoMoves();
 
     /**
      * @brief Retrieve the current focus state
@@ -118,6 +118,11 @@ protected:
      * @param pushPiece The piece that this move pushes or 0 if it doesn't cause a push
      */
     void appendMove(ModelVector vector, Piece* pushPiece = 0 );
+
+    /**
+     * @brief Undoes the last move assuming state checking and highlight awareness is handled by the caller
+     */
+    void undoLastMoveInternal();
 
     /**
      * @brief change the move state
