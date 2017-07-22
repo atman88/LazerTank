@@ -95,6 +95,10 @@ void MoveBaseController::fire( int count )
 
 void MoveBaseController::clearMoves()
 {
+    for( auto it : mMoves.getList() ) {
+        mFutureShots.removePath( it, true );
+    }
+
     mMoves.reset();
 }
 

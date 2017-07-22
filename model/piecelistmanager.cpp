@@ -105,9 +105,9 @@ bool PieceListManager::eraseInternal( PieceList::iterator it )
     }
 
     Piece* piece = *it;
-    mPieces.erase( it );
-
     ModelPoint point = *piece;
+
+    mPieces.erase( it );
 
     if ( mSet ) {
         mSet->erase( piece );
