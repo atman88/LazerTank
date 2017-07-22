@@ -1,4 +1,5 @@
 #include <QMenu>
+#include <QApplication>
 #include <QAction>
 #include <QMessageBox>
 #include <QTextBrowser>
@@ -394,6 +395,7 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             mMenu.addAction( QString("Select &Level.."), this, SLOT(chooseLevel()));
             mMenu.addAction( &TO_QACTION(mReplayAction) );
             mMenu.addAction( QString("&Help"), this, SLOT(showHelp()) );
+            mMenu.addAction( QString("About Qt"), qApp, &QApplication::aboutQt );
             mMenu.addAction( QString("E&xit"), this, SLOT(close()) );
         }
 
