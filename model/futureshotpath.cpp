@@ -75,7 +75,7 @@ const QPainterPath* FutureShotPath::toQPath()
         for( auto it : mBendPoints ) {
             mPainterPath->lineTo( it.toViewCenterSquare() );
         }
-        mPainterPath->lineTo( mLeadVector.toViewExitPoint() );
+        mPainterPath->lineTo( mLeadVector.toViewEntryPoint() );
     }
     return mPainterPath;
 }

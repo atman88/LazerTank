@@ -29,14 +29,6 @@ Q_DECLARE_METATYPE(GameHandle)
 extern GameRegistry* getRegistry( const QObject* gameObject );
 
 /**
- * @brief convert a model coordinate into a view center point
- * @param col
- * @param row
- * @return The view center point
- */
-extern QPoint modelToViewCenterSquare( int col, int row );
-
-/**
  * @brief Convert a view point that currently represents the center of a square to a the point where a shot would
  * the square
  * @param angle Entry direction

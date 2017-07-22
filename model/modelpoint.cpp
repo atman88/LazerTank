@@ -37,17 +37,17 @@ void ModelPoint::minMax(ModelPoint &min, ModelPoint &max) const
 
 QPoint ModelPoint::toViewCenterSquare() const
 {
-    return modelToViewCenterSquare( mCol, mRow );
+    return QPoint( mCol*24+24/2, mRow*24+24/2 );
 }
 
-QPoint ModelVector::toViewExitPoint() const
+QPoint ModelVector::toViewEntryPoint() const
 {
     QPoint point = this->toViewCenterSquare();
     switch( mAngle ) {
-    case   0: point.setY( point.y()-24/2 ); break;
-    case  90: point.setX( point.x()+24/2 ); break;
-    case 180: point.setY( point.y()+24/2 ); break;
-    case 270: point.setX( point.x()-24/2 ); break;
+    case   0: point.setY( point.y()+24/2 ); break;
+    case  90: point.setX( point.x()-24/2 ); break;
+    case 180: point.setY( point.y()-24/2 ); break;
+    case 270: point.setX( point.x()+24/2 ); break;
     }
     return point;
 }

@@ -20,11 +20,6 @@ GameRegistry* getRegistry( const QObject* gameObject )
     return v.value<GameHandle>().registry;
 }
 
-QPoint modelToViewCenterSquare( int col, int row )
-{
-    return QPoint( col*24+24/2, row*24+24/2 );
-}
-
 void centerToEntryPoint( int angle, QPoint *point )
 {
     switch( angle ) {

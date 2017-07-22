@@ -109,9 +109,9 @@ public:
     bool equals( const ModelVector& other ) const;
 
     /**
-     * @brief Obtain the view point corresponding to the point where a shot would exit this square for this vector
+     * @brief Obtain the view point corresponding to the point where a shot would enter this square for this vector
      */
-    QPoint toViewExitPoint() const;
+    QPoint toViewEntryPoint() const;
 
     int mAngle;
 };
