@@ -113,6 +113,11 @@ public:
      */
     QPoint toViewEntryPoint() const;
 
+    /**
+     * @brief Obtain the view point corresponding to the point where a shot would exit this square for this vector
+     */
+    QPoint toViewExitPoint() const;
+
     int mAngle;
 };
 

@@ -59,7 +59,6 @@ private:
      */
     const QRect& initBounds();
 
-    const MovePiece* mMove;
     int mShotCount;
     ModelPoint mTailPoint;
     std::vector<ModelPoint> mBendPoints;

@@ -4,7 +4,7 @@
 #include "controller/game.h"
 #include "util/gameutils.h"
 
-FutureShotPath::FutureShotPath( MovePiece* move ) : mMove(move), mShotCount(0), mTailPoint(*move), mLeadVector(*move),
+FutureShotPath::FutureShotPath( MovePiece* move ) : mShotCount(0), mTailPoint(*move), mLeadVector(*move),
   mUID(move->getShotPathUID()), mPainterPath(0)
 {
     if ( !mUID ) {
@@ -14,7 +14,7 @@ FutureShotPath::FutureShotPath( MovePiece* move ) : mMove(move), mShotCount(0), 
     }
 }
 
-FutureShotPath::FutureShotPath( const FutureShotPath& source ) : mMove(source.mMove), mShotCount(source.mShotCount),
+FutureShotPath::FutureShotPath( const FutureShotPath& source ) : mShotCount(source.mShotCount),
   mTailPoint(source.mTailPoint), mBendPoints(source.mBendPoints), mLeadVector(source.mLeadVector),
   mUID(source.mUID), mChanges(source.mChanges), mBounds(source.mBounds), mPainterPath(0)
 {
@@ -55,12 +55,12 @@ const QRect& FutureShotPath::getBounds() const
 
 FutureShotPath &FutureShotPath::operator =( const FutureShotPath &other )
 {
-    mMove             = other.mMove;
     mShotCount        = other.mShotCount;
     mTailPoint        = other.mTailPoint;
     mBendPoints       = other.mBendPoints;
     mLeadVector        = other.mLeadVector;
     mUID              = other.mUID;
+    mChanges          = other.mChanges;
     mBounds           = other.mBounds;
     mPainterPath      = 0;
 
@@ -75,7 +75,20 @@ const QPainterPath* FutureShotPath::toQPath()
         for( auto it : mBendPoints ) {
             mPainterPath->lineTo( it.toViewCenterSquare() );
         }
-        mPainterPath->lineTo( mLeadVector.toViewEntryPoint() );
+        bool lastShotHasPush = false;
+        if ( mChanges.size() ) {
+            FutureChange lastChange = mChanges.back();\
+            if ( lastChange.changeType == PIECE_PUSHED && lastChange.point.equals( mLeadVector ) ) {
+                int totalPushCount = 0;
+                for( auto it : mChanges ) {
+                    if ( it.changeType == PIECE_PUSHED ) {
+                        totalPushCount += it.u.multiPush.count;
+                    }
+                }
+                lastShotHasPush = (totalPushCount == mShotCount);
+            }
+        }
+        mPainterPath->lineTo( lastShotHasPush ? mLeadVector.toViewExitPoint() : mLeadVector.toViewEntryPoint() );
     }
     return mPainterPath;
 }
@@ -93,12 +106,8 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
         FutureShotPath path(move);
         FutureShotPathSet::iterator it = mPaths.find( path );
         if ( it != mPaths.end() ) {
-            if ( it->mShotCount <= shotCount ) {
-                path = *it;
-            } else {
-                registry->getGame().getBoard(true)->undoChanges( it->mChanges );
-                emit dirtyRect( it->getBounds() );
-            }
+            registry->getGame().getBoard(true)->undoChanges( it->mChanges );
+            emit dirtyRect( it->getBounds() );
             mPaths.erase( it );
         }
 
