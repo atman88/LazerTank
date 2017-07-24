@@ -1,14 +1,16 @@
-eeeeSSSSS
-eeeeS...SSSS
-eeeeSTS....S
-eeeeS..SSS.S
-eeSSS.M..S.S
-eeS.MM.S.S.S
-eeS...MM.S.SSS
-eeS.MS...S...S
-eeS.M.MM.S...S
-eeS......M.M.S
-SSSSSSSSSSSMSS
-SFSSSSSSSSSw.S
-Swwwwwwwwwww.S
-SSSSSSSSSSSSSS
+...S..SS. F S
+..M...SS. S S
+SSSS...S. S SS
+..M....S. w .S
+...S.SSw^ ^ .SS
+SSSS.SSSS[S\..S
+.....SSvS[S/vwS
+.MSS.SS.S . ..S
+S.SS..S.S . ..SSSS
+S........ . WSS..S
+S.SS.SSS. w ww...S
+S.S..SSSS S SwS.MS
+S..M.SSSS S SwSS.S
+..SS.SSSS S SwS...
+......... . ....M.
+SSSSSSSST . ..SSSS
