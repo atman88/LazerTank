@@ -32,6 +32,7 @@ private slots:
     void testPieceListManager();
 
     void testFutureShotPath();
+    void testFutureShotThruStationaryTank();
     void testFutureShotThruMasterTank();
     void testFutureMultiShotThruTank();
 

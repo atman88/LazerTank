@@ -139,24 +139,24 @@ bool Game::canMoveFrom( PieceType what, int angle, ModelPoint *point, Board* boa
 
 bool Game::canMoveFrom( PieceType what, int angle, ModelPoint *point, bool futuristic, Piece **pushPiece )
 {
-    if ( what != TANK ) {
-        if ( GameRegistry* registry = getRegistry(this) ) {
-            bool futureTank = false;
-            if ( futuristic ) {
-                if ( Piece* piece = registry->getMoveController().getMoves().getBack() ) {
-                    if ( point->equals( *piece ) ) {
-                        return false;
+    if ( getAdjacentPosition( angle, point ) ) {
+        if ( what != TANK ) {
+            if ( GameRegistry* registry = getRegistry(this) ) {
+                bool futureTank = false;
+                if ( futuristic ) {
+                    if ( Piece* piece = registry->getMoveController().getMoves().getBack() ) {
+                        if ( point->equals( *piece ) ) {
+                            return false;
+                        }
+                        futureTank = true;
                     }
-                    futureTank = true;
+                }
+                if ( !futureTank && point->equals( registry->getTank().getPoint() ) ) {
+                    return false;
                 }
             }
-            if ( !futureTank && point->equals( registry->getTank().getPoint() ) ) {
-                return false;
-            }
         }
-    }
 
-    if ( getAdjacentPosition( angle, point ) ) {
         return canPlaceAt( what, *point, angle, getBoard(futuristic), pushPiece );
     }
     return false;

@@ -41,6 +41,16 @@ void TestMain::testFutureShotPath()
     QCOMPARE( (int) game.getDeltaPieces()->size(), 0 );
 }
 
+void TestMain::testFutureShotThruStationaryTank()
+{
+    initGame(
+      "[S/ M[T<\n"
+      "[S\\.[/S" );
+    mRegistry->getMoveController().move(180);
+    mRegistry->getMoveController().fire();
+    QVERIFY( !mRegistry->getGame().getDeltaPieces() );
+}
+
 /**
  * @brief Verify that the master tank point doesn't cause a false positive hit detection
  */
