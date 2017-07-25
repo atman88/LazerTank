@@ -127,6 +127,7 @@ test{
 
 } else {
     TARGET = qlt
+    RC_ICONS = icons/tank.ico
 
     SOURCES += main.cpp
 

@@ -65,5 +65,6 @@
         <file>maps/level46.txt</file>
         <file>maps/level47.txt</file>
         <file>maps/levels.xml</file>
+        <file>icons/tank.ico</file>
     </qresource>
 </RCC>
