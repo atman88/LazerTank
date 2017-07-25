@@ -118,8 +118,8 @@ bool RecorderReader::readNext( RecorderConsumer* consumer )
         empty = false;
     }
 
-    // let's sanity-check while we're here:
-    if ( empty ) {
+    // let's sanity-check while we're here. Only the first move can fire only:
+    if ( empty && mOffset > 1 ) {
         std::cout << "** readNext: Non-move read unexpectedly" << std::endl;
         abort();
         consumer->setReplay( false );
