@@ -178,9 +178,9 @@ public:
 
     /**
      * @brief Handles a drag to the given point
-     * @param p The point dragged to
+     * @param coord The pixel coordinate dragged to
      */
-    void onDragTo( ModelPoint p );
+    void onDragTo( QPoint coord );
 
     /**
      * @brief Begin a drag activity
@@ -219,6 +219,7 @@ private:
     void setDragState( DragState state );
 
     DragState mDragState;
+    QPoint mPreviousCoord;
     bool mChanged;
 };
 

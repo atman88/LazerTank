@@ -26,6 +26,7 @@ void MoveDragController::dragStart( ModelPoint selectedPoint )
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
         mChanged = false;
+        mPreviousCoord = QPoint();
         ModelPoint startPoint = getFocusVector();
 
         PathSearchAction& pathToAction = registry->getPathToAction();
@@ -93,22 +94,47 @@ void MoveDragController::onPathFound( PieceListManager* path, PathSearchAction* 
     }
 }
 
-void MoveDragController::onDragTo( ModelPoint p )
+/**
+ * @brief Determine whether the given coordinate is leaning toward a direction relative to the given square
+ * @param coord The pixel coordinate to check
+ * @param square The model square to check against
+ * @return The angle (0,90,180 or 270) the point is leaning toward or -1 if no angle is favored
+ */
+static int coordLeaning( QPoint coord, ModelPoint square )
+{
+    int rotation = -1;
+    QPoint relative( coord );
+    relative -= square.toViewCenterSquare();
+    if ( std::abs(relative.x()) < 24/4 ) {
+        if ( std::abs(relative.y()) >= 24/4 ) {
+            rotation = (relative.y() > 0) ? 180 : 0;
+        }
+    } else if ( std::abs(relative.y()) < 24/4 ) {
+        rotation = (relative.x() > 0) ? 90 : 270;
+    }
+    return rotation;
+}
+
+void MoveDragController::onDragTo( QPoint coord )
 {
     if ( mDragState == Inactive || mDragState == Searching ) {
         return;
     }
 
-    ModelPoint focusPoint = getFocusVector();
-    if ( focusPoint.isNull() ) {
+    ModelPoint p( coord );
+    ModelVector focusVector = getFocusVector();
+    if ( focusVector.isNull() ) {
         setDragState( Inactive );
-    } else if ( p == focusPoint ) {
+        return;
+    }
+
+    if ( p == focusVector ) {
         setDragState( Selecting );
     } else if ( GameRegistry* registry = getRegistry(this) ) {
         Game& game = registry->getGame();
 
         for( int angle = 0; angle < 360; angle += 90 ) {
-            ModelPoint toPoint( focusPoint );
+            ModelPoint toPoint( focusVector );
             Piece* pushPiece = 0;
             if ( game.canMoveFrom( TANK, angle, &toPoint, true, &pushPiece ) ) {
                 if ( toPoint == p ) {
@@ -120,12 +146,12 @@ void MoveDragController::onDragTo( ModelPoint p )
                         prevMovePoint = &registry->getTank().getPoint();
                     }
                     setDragState( Selecting );
-                    if ( lastMove && focusPoint.equals( *lastMove ) && prevMovePoint->equals( toPoint ) ) {
+                    if ( lastMove && !lastMove->getShotCount()
+                      && focusVector.ModelPoint::equals( *lastMove ) && prevMovePoint->equals( toPoint ) ) {
                         undoLastMove();
                         // if only a simple rotation remains then remove it too:
-                        if ( mMoves.size() == 1 ) {
-                            lastMove = mMoves.getBack();
-                            if ( registry->getTank().getPoint().equals( *lastMove ) ) {
+                        if ( (lastMove = mMoves.getBack()) ) {
+                            if ( !lastMove->getShotCount() && registry->getTank().getPoint().equals( *lastMove ) ) {
                                 undoLastMove();
                             }
                         }
@@ -143,6 +169,14 @@ void MoveDragController::onDragTo( ModelPoint p )
         }
         setDragState( Forbidden );
     }
+
+    // check for rotation change:
+    int rotation = coordLeaning( coord, focusVector );
+    if ( rotation >= 0 && rotation != focusVector.mAngle && rotation != coordLeaning( mPreviousCoord, focusVector ) ) {
+        MoveBaseController::move( rotation );
+    }
+
+    mPreviousCoord = coord;
 }
 
 void MoveDragController::dragStop()
@@ -150,10 +184,14 @@ void MoveDragController::dragStop()
     if ( mDragState != Inactive ) {
         // If we've changed it by dragging and effectively cancelled the moves by erasing up to the tank square, then
         // erase any single move given it is only a left-over rotation:
-        if ( mChanged && mMoves.size() == 1 ) {
-            if ( GameRegistry* registry = getRegistry(this) ) {
-                if ( registry->getTank().getPoint().equals( *mMoves.getBack() ) ) {
-                    mMoves.eraseBack();
+        if ( mChanged ) {
+            if ( Piece* piece = mMoves.getBack() ) {
+                if ( !piece->getShotCount() ) {
+                    if ( GameRegistry* registry = getRegistry(this) ) {
+                        if ( registry->getTank().getPoint().equals( *mMoves.getBack() ) ) {
+                            mMoves.eraseBack();
+                        }
+                    }
                 }
             }
         }

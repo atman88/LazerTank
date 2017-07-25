@@ -24,33 +24,43 @@ void TestMain::testDragTank()
     QCOMPARE( moveController.getFocusVector(), mRegistry->getTank().getVector() );
 
     // test off-board:
-    moveController.onDragTo( ModelPoint(3,2) );
+    moveController.onDragTo( ModelPoint(3,2).toViewCenterSquare() );
     QCOMPARE( moveController.getDragState(), Forbidden );
-    QCOMPARE( moveController.getMoves().size(), 0 );
+    if ( ModelPoint* point = moveController.getMoves().getBack() ) {
+        QVERIFY( mRegistry->getTank().getPoint().equals(*point) );
+    }
 
     // test valid drag:
-    moveController.onDragTo( ModelPoint(2,1) );
+    moveController.onDragTo( ModelPoint(2,1).toViewCenterSquare() );
     QCOMPARE( moveController.getDragState(), Selecting );
-    QCOMPARE( moveController.getMoves().size(), 1 );
+    if ( ModelVector* vector = moveController.getMoves().getBack() ) {
+        QVERIFY( ModelVector(2,1,0).equals( *vector ) );
+    } else {
+        QFAIL( "vaid drag has no moves" );
+    }
 
     // test drag over stone:
-    moveController.onDragTo( ModelPoint(2,0) );
+    moveController.onDragTo( ModelPoint(2,0).toViewCenterSquare() );
     QCOMPARE( moveController.getDragState(), Forbidden );
-    QCOMPARE( moveController.getMoves().size(), 1 );
+    if ( ModelVector* vector = moveController.getMoves().getBack() ) {
+        QVERIFY( ModelVector(2,1,0).equals( *vector ) );
+    } else {
+        QFAIL( "drag over stone has no moves" );
+    }
 
     // test drag undo:
-    moveController.onDragTo( mRegistry->getTank().getPoint() );
+    moveController.onDragTo( mRegistry->getTank().getPoint().toViewCenterSquare() );
     QCOMPARE( moveController.getDragState(), Selecting );
-    QCOMPARE( moveController.getMoves().size(), 0 );
+    QVERIFY( moveController.getMoves().size() <= 1 );
 
     // test drag with initial rotate:
-    moveController.onDragTo( ModelPoint(2,3) );
+    moveController.onDragTo( ModelPoint(2,3).toViewCenterSquare() );
     QCOMPARE( moveController.getDragState(), Selecting );
     QCOMPARE( moveController.getMoves().size(), 2 );
     // undo it:
-    moveController.onDragTo( mRegistry->getTank().getPoint() );
+    moveController.onDragTo( mRegistry->getTank().getPoint().toViewCenterSquare() );
     QCOMPARE( moveController.getDragState(), Selecting );
-    QCOMPARE( moveController.getMoves().size(), 0 );
+    QVERIFY( moveController.getMoves().size() <= 1 );
 
     // test stop:
     moveController.dragStop();
@@ -110,7 +120,7 @@ void TestMain::testDragPoint()
     QCOMPARE( moveController.getMoves().size(), 2 ); // rotation + move
 
     // undo
-    moveController.onDragTo( mRegistry->getTank().getPoint() );
+    moveController.onDragTo( mRegistry->getTank().getPoint().toViewCenterSquare() );
     QCOMPARE( moveController.getMoves().size(), 0 );
 #endif // NOTDEF
 }

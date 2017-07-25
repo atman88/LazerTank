@@ -174,6 +174,7 @@ void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* p
 {
 //std::cout << "render " << rect->x() << "," << rect->y() << " " << rect->width() << "x" << rect->height() << std::endl;
     Board* board = registry->getGame().getBoard();
+    Tank& tank = registry->getTank();
     MoveController& moveController = registry->getMoveController();
     const PieceMultiSet* moves = moveController.getMoves().toMultiSet();
     const PieceSet* deltas = (moveController.replaying() ? 0 : registry->getGame().getDeltaPieces());
@@ -196,7 +197,7 @@ void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* p
         for( auto it : moveController.getFutureShots().getPaths() ) {
             if ( rect->intersects( it.getBounds() ) ) {
                 if ( !usingFutureShotPen ) {
-                    QPen pen( registry->getTank().getShot().getPen() );
+                    QPen pen( tank.getShot().getPen() );
 
                     // dim it's color to contrast future shots from actual shots:
                     QColor color = pen.color();
@@ -212,19 +213,23 @@ void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* p
         }
     }
 
-    PieceType focus = moveController.getFocus();
-    if ( focus != TANK ) {
-        // render the moves beneath (i.e. before) the tank and it's pushes when not focused on
-        // the tank:
+    bool tankIsProminent = moveController.getFocus() != TANK;
+    if ( tankIsProminent ) {
+        if ( Piece* piece = moveController.getMoves().getBack() ) {
+            tankIsProminent = !tank.getPoint().equals( *piece );
+        }
+    }
+
+    if ( tankIsProminent ) {
+        // render the moves beneath (i.e. before) the tank :
         renderListIn( moveIterator, moves->end(), rect, painter );
     }
 
     registry->getTankPush().render( rect, mRenderer, painter );
     registry->getShotPush().render( rect, mRenderer, painter );
-    registry->getTank().render( rect, painter );
-    if ( focus == TANK ) {
-        // render the moves ontop of (i.e. after) the tank and it's pushes when focus is at
-        // the tank:
+    tank.render( rect, painter );
+    if ( !tankIsProminent ) {
+        // render the moves ontop of (i.e. after) the tank:
         renderListIn( moveIterator, moves->end(), rect, painter );
     }
     registry->getCannonShot().render( painter );
@@ -588,7 +593,7 @@ void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
 void BoardWindow::mouseMoveEvent(QMouseEvent* event)
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
-        registry->getMoveController().onDragTo( ModelPoint( event->pos() ) );
+        registry->getMoveController().onDragTo( event->pos() );
     }
 }
 
