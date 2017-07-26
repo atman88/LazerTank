@@ -26,6 +26,7 @@ public slots:
     void setViewX(const QVariant &x ) override;
     void setViewY(const QVariant &y ) override;
     void setViewRotation( const QVariant& angle ) override;
+    void onHighSpeedChanged( int speed );
 
 protected:
     void reset(const ModelVector& v );
@@ -37,6 +38,7 @@ protected:
 
 private:
     QRect mPreviousPaintRect;
+    unsigned mPixmapType;
 };
 
 #endif // TANKVIEW_H

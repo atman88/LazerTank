@@ -4,11 +4,18 @@
 #include <QtGlobal>
 QT_FORWARD_DECLARE_CLASS(QPixmap)
 
+#include "view/pieceview.h"
+
+typedef enum {
+    TANK_FAST = PieceTypeUpperBound,
+    PixmapTypeUpperBound // must be last
+} PixmapType;
+
 /**
  * @brief Retrieve the image for the given piece or tile type
- * @param type The PieceType or TileType to retrieve
+ * @param type Identifier. Can be a PieceType, TileType or PixmapType value.
  * @return The associated pixmap. An empty pixmap is returned for unregistered types.
  */
-extern const QPixmap *getPixmap( unsigned type );
+extern const QPixmap* getPixmap( unsigned type );
 
 #endif // IMAGEUTILS_H

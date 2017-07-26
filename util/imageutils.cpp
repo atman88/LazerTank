@@ -42,9 +42,10 @@ const QPixmap* getPixmap( unsigned type )
         { CANNON,            { "cannon"             } },
         { TANK,              { "tank"               } },
         { TILE_FUTURE_ERASE, { "tile-future-erase"  } },
-        { TILE_FUTURE_INSERT,{ "tile-future-insert" } }
+        { TILE_FUTURE_INSERT,{ "tile-future-insert" } },
+        { TANK_FAST,         { "tank-fast"          } }
     };
-    static NamedPixmap* nameArray[PieceTypeUpperBound] = { 0 };
+    static NamedPixmap* nameArray[PixmapTypeUpperBound] = { 0 };
     static QString pathFormat( ":/images/%1.png" );
     static NamedPixmap NullPixmap( "null" );
 

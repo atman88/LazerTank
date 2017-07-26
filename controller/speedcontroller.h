@@ -14,6 +14,10 @@ class SpeedController : public QObject
     Q_OBJECT
 
 public:
+    // movement speed in milliseconds per square
+    static const int NORMAL_SPEED = 800;
+    static const int HIGH_SPEED   = 300;
+
     explicit SpeedController(QObject *parent = 0);
 
     /**

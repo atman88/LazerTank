@@ -77,6 +77,8 @@ void BoardWindow::init( GameRegistry* registry )
     QObject::connect( &pm, &PieceSetManager::erasedAt,   this, &BoardWindow::renderSquareLater );
     QObject::connect( &pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
 
+    TO_QACTION(mSpeedAction).setCheckable(true);
+
     QObject::connect( &TO_QACTION(mSpeedAction), &QAction::toggled, &registry->getSpeedController(), &SpeedController::setHighSpeed );
     QObject::connect( &TO_QACTION(mUndoMoveAction),  &QAction::triggered, &moveController, &MoveController::undoLastMove );
     QObject::connect( &TO_QACTION(mClearMovesAction),&QAction::triggered, &moveController, &MoveController::undoMoves );
@@ -385,7 +387,6 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             TO_QACTION(mReplayAction).setText( "&Auto Replay" );
 
             TO_QACTION(mSpeedAction).setShortcut( speedSeq );
-            TO_QACTION(mSpeedAction).setCheckable(true);
             captureAction.setShortcut( captureSeq );
             TO_QACTION(mUndoMoveAction).setShortcut( undoSeq );
             TO_QACTION(mClearMovesAction).setShortcut(clearSeq);

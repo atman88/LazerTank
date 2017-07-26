@@ -1,11 +1,13 @@
 #include <iostream>
 #include <QPainter>
 #include "tankview.h"
+#include "boardrenderer.h"
+#include "controller/gameregistry.h"
+#include "controller/speedcontroller.h"
 #include "model/piece.h"
-#include "view/boardrenderer.h"
 #include "util/imageutils.h"
 
-TankView::TankView(QObject *parent) : Shooter(parent)
+TankView::TankView(QObject *parent) : Shooter(parent), mPixmapType(TANK)
 {
 }
 
@@ -18,6 +20,8 @@ void TankView::init( GameRegistry* registry )
     mVerticalAnimation.setTargetObject(this);
     mVerticalAnimation.setPropertyName("y");
 
+    QObject::connect( &registry->getSpeedController(), &SpeedController::highSpeedChanged, this, &TankView::onHighSpeedChanged );
+
     Shooter::init( registry, TANK, QColor(0,255,33) );
 }
 
@@ -26,12 +30,12 @@ void TankView::render( const QRect* rect, QPainter* painter )
     if ( rect->intersects( mBoundingRect ) ) {
         if ( !(mViewRotation % 360) ) {
             mPreviousPaintRect = mBoundingRect;
-            BoardRenderer::renderPixmap( mBoundingRect, TANK, painter );
+            BoardRenderer::renderPixmap( mBoundingRect, mPixmapType, painter );
         } else {
             QTransform save = painter->transform();
             BoardRenderer::renderRotation( mBoundingRect, mViewRotation, painter );
             mPreviousPaintRect = painter->transform().mapRect( mBoundingRect );
-            BoardRenderer::renderPixmap( mBoundingRect, TANK, painter );
+            BoardRenderer::renderPixmap( mBoundingRect, mPixmapType, painter );
             painter->setTransform( save );
         }
     }
@@ -114,5 +118,14 @@ void TankView::setViewRotation( const QVariant& angle )
         if ( !(mBoundingRect.left() % 24) && !(mBoundingRect.top() % 24) && !(mViewRotation % 90) ) {
             onMoved( mBoundingRect.left()/24, mBoundingRect.top()/24, mViewRotation % 360 );
         }
+    }
+}
+
+void TankView::onHighSpeedChanged( int speed )
+{
+    unsigned type = (speed == SpeedController::HIGH_SPEED) ? (unsigned) TANK_FAST : (unsigned) TANK;
+    if ( type != mPixmapType ) {
+        mPixmapType = type;
+        emit changed( mBoundingRect );
     }
 }

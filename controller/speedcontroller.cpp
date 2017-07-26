@@ -5,12 +5,9 @@
 #include "gameregistry.h"
 #include "movecontroller.h"
 
-// movement speed in milliseconds per square
-const int NORMAL_SPEED = 800;
-const int HIGH_SPEED   = 300;
-const int NSPEED_STEPS  = (NORMAL_SPEED- HIGH_SPEED)/100;
+const int NSPEED_STEPS  = (SpeedController::NORMAL_SPEED - SpeedController::HIGH_SPEED)/100;
 
-SpeedController::SpeedController(QObject *parent) : QObject(parent), mHighSpeed(false), mStepPending(false), mSpeed(NORMAL_SPEED)
+SpeedController::SpeedController(QObject* parent) : QObject(parent), mHighSpeed(false), mStepPending(false), mSpeed(NORMAL_SPEED)
 {
 }
 
