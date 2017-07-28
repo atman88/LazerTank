@@ -216,7 +216,7 @@ void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* p
     }
 
     bool tankIsProminent = moveController.getFocus() != TANK;
-    if ( tankIsProminent ) {
+    if ( tankIsProminent && moveController.getDragState() != Inactive ) {
         if ( Piece* piece = moveController.getMoves().getBack() ) {
             tankIsProminent = !tank.getPoint().equals( *piece );
         }
