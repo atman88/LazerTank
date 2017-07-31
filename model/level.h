@@ -35,9 +35,13 @@ public:
      */
     const QSize& getSize() const;
 
+    bool getCompleted() const;
+    void setCompleted( bool completed );
+
 private:
     int mNumber;
     QSize mSize;
+    bool mCompleted;
 };
 
 Q_DECLARE_METATYPE(Level)
@@ -110,15 +114,22 @@ public:
      */
     bool isInitialized() const;
 
+    /**
+     * @brief Mark that the user has completed this level
+     * @param number The level to mark
+     */
+    void setCompleted( int number );
+
     QSize visualSizeHint() const;
+
+signals:
+    void initialized();
+    void levelUpdated( const QModelIndex& index );
 
 private:
     bool mInitialized;
     QList<Level> mLevels;
     QSize mVisualSizeHint;
-
-signals:
-    void initialized();
 
     friend class LevelXmlHandler;
     friend class ListLoadRunnable;

@@ -8,6 +8,7 @@ QT_FORWARD_DECLARE_CLASS(QPixmap)
 
 typedef enum {
     TANK_FAST = PieceTypeUpperBound,
+    COMPLETE_CHECKMARK,
     PixmapTypeUpperBound // must be last
 } PixmapType;
 

@@ -34,3 +34,14 @@ void TestMain::testLevelFind()
     verifyFind( list, 11 );
     verifyFind( list, 12 );
 }
+
+void TestMain::testLevelCompleted()
+{
+    LevelList list;
+    list.addLevel( 1, 10, 10 );
+    QVERIFY( list.at(0)->getCompleted() == false );
+    QSignalSpy levelSpy( &list, SIGNAL(levelUpdated(const QModelIndex&)) );
+    list.setCompleted( 1 );
+    QVERIFY( list.at(0)->getCompleted() );
+    QVERIFY( levelSpy.size() == 1 );
+}

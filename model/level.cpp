@@ -9,11 +9,11 @@
 #include "util/gameutils.h"
 
 
-Level::Level( int number, int width, int height ) : mNumber(number), mSize(QSize(width,height))
+Level::Level( int number, int width, int height ) : mNumber(number), mSize(QSize(width,height)), mCompleted(false)
 {
 }
 
-Level::Level( const Level& other) : mNumber(other.mNumber), mSize(other.mSize)
+Level::Level( const Level& other) : mNumber(other.mNumber), mSize(other.mSize), mCompleted(other.mCompleted)
 {
 }
 
@@ -35,6 +35,16 @@ int Level::getNumber() const
 const QSize& Level::getSize() const
 {
     return mSize;
+}
+
+bool Level::getCompleted() const
+{
+    return mCompleted;
+}
+
+void Level::setCompleted(bool completed)
+{
+    mCompleted = completed;
 }
 
 
@@ -110,11 +120,11 @@ private:
 
 LevelList::LevelList() : mInitialized(false)
 {
-    qRegisterMetaType<Level>("Level");
 }
 
 void LevelList::init( GameRegistry* registry )
 {
+    qRegisterMetaType<Level>("Level");
     registry->getWorker().doWork( new ListLoadRunnable( *this ) );
 }
 
@@ -202,6 +212,15 @@ int LevelList::size() const
 bool LevelList::isInitialized() const
 {
     return mInitialized;
+}
+
+void LevelList::setCompleted( int number )
+{
+    int i = indexOf( number );
+    if ( i >= 0 ) {
+        mLevels[i].setCompleted( true );
+        emit levelUpdated( index(i) );
+    }
 }
 
 QSize LevelList::visualSizeHint() const

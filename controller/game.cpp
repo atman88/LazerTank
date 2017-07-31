@@ -263,6 +263,8 @@ void Game::onMoveAggregatorFinished()
                 // ensure this is off now to remove it from the display:
                 registry->getMoveController().setReplay( false );
 
+                registry->getLevelList().setCompleted( mBoard.getLevel() );
+
                 QMessageBox msgBox;
                 msgBox.setWindowTitle( "Level completed!");
                 msgBox.setText( QString("%1 total moves").arg( tank.getRecorder().getCount() ) );

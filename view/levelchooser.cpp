@@ -1,11 +1,14 @@
 #include <QSize>
 #include <QPainter>
 #include <QStyledItemDelegate>
+#include <QStyle>
+#include <QApplication>
 
 #include "levelchooser.h"
 #include "boardrenderer.h"
 #include "model/board.h"
 #include "model/boardpool.h"
+#include "util/imageutils.h"
 
 #define TILE_SIZE 12
 #define PADDING_WIDTH  3
@@ -46,6 +49,10 @@ public:
         painter->drawText( rect - QMargins( PADDING_WIDTH, PADDING_HEIGHT, PADDING_WIDTH, PADDING_HEIGHT ),
           Qt::AlignBottom|Qt::AlignRight|Qt::TextDontClip|Qt::TextSingleLine, QString::number(level.getNumber()) );
 
+        if ( level.getCompleted() ) {
+            painter->drawPixmap( PADDING_WIDTH, 0, *getPixmap(COMPLETE_CHECKMARK) );
+        }
+
         painter->restore();
     }
 
@@ -78,6 +85,7 @@ LevelChooser::LevelChooser( LevelList& levels, BoardPool& pool, QWidget* parent 
 
     QObject::connect( this, &LevelChooser::activated, this, &LevelChooser::onActivated );
     QObject::connect( &pool, &BoardPool::boardLoaded, this, &LevelChooser::onBoardLoaded );
+    QObject::connect( &levels, SIGNAL(levelUpdated(const QModelIndex&)), this, SLOT(update(const QModelIndex&)), Qt::QueuedConnection );
 }
 
 void LevelChooser::onActivated( const QModelIndex& index )

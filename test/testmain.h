@@ -22,6 +22,7 @@ public:
 private slots:
     void testLevelFind();
     void testNextLevel();
+    void testLevelCompleted();
 
     void testBoardPool();
 

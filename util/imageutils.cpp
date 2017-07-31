@@ -43,7 +43,8 @@ const QPixmap* getPixmap( unsigned type )
         { TANK,              { "tank"               } },
         { TILE_FUTURE_ERASE, { "tile-future-erase"  } },
         { TILE_FUTURE_INSERT,{ "tile-future-insert" } },
-        { TANK_FAST,         { "tank-fast"          } }
+        { TANK_FAST,         { "tank-fast"          } },
+        { COMPLETE_CHECKMARK,{"complete-checkmark"  } }
     };
     static NamedPixmap* nameArray[PixmapTypeUpperBound] = { 0 };
     static QString pathFormat( ":/images/%1.png" );
