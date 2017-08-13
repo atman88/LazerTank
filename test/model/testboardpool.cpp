@@ -72,24 +72,24 @@ public:
 
 void TestMain::testBoardPool()
 {
-    TestPool testPool( 2, 3 );
-    GameRegistry registry(0,0,0,0,0,0,0,&testPool);
+    TestPool* testPool = new TestPool( 2, 3 );
+    mRegistry.injectBoardPool( testPool );
 
-    QVERIFY( !testPool.find(10) );
+    QVERIFY( !testPool->find(10) );
 
-    testPool.testLoadNew( 10, 10 );
-    if ( Board* board = testPool.getBoard(10) ) {
+    testPool->testLoadNew( 10, 10 );
+    if ( Board* board = testPool->getBoard(10) ) {
         QVERIFY( board->getLevel() == 10 );
     } else {
         QFAIL( "getBoard returned null" );
     }
 
-    testPool.testLoadNew( 11, 10 );
-    testPool.testLoadNew(  9,  9 );
-    testPool.verifyContents( { 9, 10, 11 } );
+    testPool->testLoadNew( 11, 10 );
+    testPool->testLoadNew(  9,  9 );
+    testPool->verifyContents( { 9, 10, 11 } );
 
     // now that it's at capacity, test recycling:
-    testPool.testLoadNew( 12, 11 );
+    testPool->testLoadNew( 12, 11 );
 
-    testPool.verifyContents( { 10, 11, 12 } );
+    testPool->verifyContents( { 10, 11, 12 } );
 }

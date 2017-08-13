@@ -4,6 +4,7 @@
 #include <list>
 #include <mutex>
 #include <thread>
+#include <csetjmp>
 
 /**
  * @brief Interface for user-defined tasks
@@ -11,14 +12,69 @@
 class Runnable
 {
 public:
-    Runnable( bool deleteWhenDone = false ) : mDeleteWhenDone(deleteWhenDone)
-    {
-    }
-
     virtual ~Runnable() {}
+
     virtual void run() = 0;
 
+    virtual void runInternal() = 0;
+
+    virtual bool deleteWhenDone() = 0;
+};
+
+class BasicRunnable : public Runnable
+{
+public:
+    BasicRunnable( bool deleteWhenDone = false ) : mDeleteWhenDone(deleteWhenDone)
+    {
+    }
+    virtual ~BasicRunnable() {}
+
+protected:
+    virtual void runInternal()
+    {
+        run();
+    }
+
+    bool deleteWhenDone() override
+    {
+        return mDeleteWhenDone;
+    }
+
+private:
     bool mDeleteWhenDone;
+};
+
+/**
+ * @brief A task with error handling hooks
+ */
+class ErrorableRunnable : public BasicRunnable
+{
+public:
+    ErrorableRunnable( bool deleteWhenDone = false ) : BasicRunnable(deleteWhenDone), mLastError(0)
+    {
+    }
+    virtual ~ErrorableRunnable() {}
+
+    virtual void onError( int errorCode ) = 0;
+
+    void error( int errorCode )
+    {
+        mLastError = errorCode;
+        std::longjmp( mJmpBuf, errorCode );
+    }
+
+    void runInternal() override
+    {
+        if ( setjmp( mJmpBuf ) ) {
+            onError( mLastError );
+        } else {
+            run();
+        }
+    }
+
+private:
+    std::jmp_buf mJmpBuf;
+    int mLastError;
 };
 
 /**
@@ -42,6 +98,11 @@ public:
      * @brief Inform this class that the app is shutting down
      */
     void shutdown();
+
+    /**
+     * @brief Forcibly return this thread to it's initial state
+     */
+    void purge();
 
 private:
     Runnable* getCurrentRunnable();

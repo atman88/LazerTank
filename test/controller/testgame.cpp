@@ -16,7 +16,7 @@ void TestMain::testGameMove()
       ".M........\n"
       "..........\n"
       "..........\n" );
-    Game& game = mRegistry->getGame();
+    Game& game = mRegistry.getGame();
     Board* board = game.getBoard();
     cout << "board " << board->getWidth() << "x" << board->getHeight() << endl;
 
@@ -31,16 +31,25 @@ void TestMain::testGameMove()
     QCOMPARE( game.canPlaceAt( TANK, board->getTankStartVector(), 0 ), true );
 }
 
-void testCannonAt( int tankCol, int tankRow, GameRegistry* registry )
+class TestTank : public Tank
 {
-    cout << "testCannonAt " << tankCol << "," << tankRow << endl;
-    registry->getTank().onBoardLoaded( ModelPoint(tankCol,tankRow) );
-    registry->getCannonShot().reset();
+public:
+    void gotoVector( ModelVector v )
+    {
+        mVector = v;
+        TankView::reset( v );
+    }
+};
 
-    registry->getGame().sightCannons();
+void testCannon( GameRegistry& registry )
+{
+    cout << "testCannonAt " << registry.getTank().getCol() << "," << registry.getTank().getRow() << endl;
+    registry.getCannonShot().reset();
+
+    registry.getGame().sightCannons();
 
     SignalReceptor killedReceptor;
-    ShotModel& shot = registry->getCannonShot();
+    ShotModel& shot = registry.getCannonShot();
     QObject::connect( &shot, &ShotModel::tankKilled, &killedReceptor, &SignalReceptor::receive );
     for( int seq = shot.getSequence().toInt(); seq < 5 && !killedReceptor.mReceived; ++seq ) {
         shot.setSequence( QVariant(seq) );
@@ -52,6 +61,8 @@ void testCannonAt( int tankCol, int tankRow, GameRegistry* registry )
 
 void TestMain::testGameCannon()
 {
+    TestTank* tank = new TestTank();
+    mRegistry.injectTank( tank );
     initGame(
       "v...<\n"
       ".....\n"
@@ -59,23 +70,23 @@ void TestMain::testGameCannon()
       ".....\n"
       ">...^\n" );
 
-    testCannonAt( 2, 0, mRegistry );
-    testCannonAt( 4, 2, mRegistry );
-    testCannonAt( 2, 4, mRegistry );
-    testCannonAt( 0, 2, mRegistry );
+    tank->gotoVector( ModelVector( 2, 0 ) ); testCannon( mRegistry );
+    tank->gotoVector( ModelVector( 4, 2 ) ); testCannon( mRegistry );
+    tank->gotoVector( ModelVector( 2, 4 ) ); testCannon( mRegistry );
+    tank->gotoVector( ModelVector( 0, 2 ) ); testCannon( mRegistry );
 }
 
-void testFuturePushToward( int direction, GameRegistry* registry )
+void testFuturePushToward( int direction, GameRegistry& registry )
 {
     cout << "testFuturePushToward " << direction << endl;
 
-    MoveController& moveController = registry->getMoveController();
+    MoveController& moveController = registry.getMoveController();
     moveController.getMoves().reset();
 
     // move twice; first may merely rotate the tank but more importantly primes the move list:
     moveController.move( direction );
     moveController.move( direction );
-    Game& game = registry->getGame();
+    Game& game = registry.getGame();
     QVERIFY( game.getDeltaPieces()->size() > 0 );
     moveController.undoLastMove();
     QCOMPARE( (int) game.getDeltaPieces()->size(), 0 );
@@ -92,7 +103,7 @@ void TestMain::testGamePush()
         ".. w ..\n" );
 
     // force the move aggregate active so the tank won't be woken up:
-    mRegistry->getMoveAggregate().onStateChanged( QAbstractAnimation::Running, QAbstractAnimation::Stopped );
+    mRegistry.getMoveAggregate().onStateChanged( QAbstractAnimation::Running, QAbstractAnimation::Stopped );
 
     testFuturePushToward(  90, mRegistry );
     testFuturePushToward( 180, mRegistry );

@@ -46,6 +46,34 @@ typedef struct EncodedMove {
     } u;
 } EncodedMove;
 
+class BufferSource : public QObject, public RecorderSource
+{
+    Q_OBJECT
+    Q_INTERFACES(RecorderSource)
+
+public:
+    BufferSource( RecorderPrivate& recorder, QObject* parent = 0 );
+    virtual ~BufferSource()
+    {
+    }
+
+    // RecorderSource interface
+    //
+    ReadState getReadState();
+    int getCount();
+    int pos();
+    unsigned char get();
+    void unget();
+    void rewind();
+    int seekEnd();
+signals:
+    void dataReady();
+
+private:
+    RecorderPrivate& mRecorder;
+    int mOffset;
+};
+
 class RecorderPrivate
 {
 public:
@@ -59,9 +87,11 @@ public:
     ~RecorderPrivate();
 
     /**
-     * @brief Reset as appropriate on a board change
+     * @brief Associates subsequent recording with the given level number
+     * If current buffered data is associated with a different level then buffered data is cleared otherwise a
+     * non-destructive rewind is performed.
      */
-    void onBoardLoaded( int initialDirection );
+    void onBoardLoaded( Board& board );
 
     /**
      * @brief Query whether anything has been recorded yet
@@ -75,14 +105,14 @@ public:
     int getCount() const;
 
     /**
+     * @brief Obtain a raw data reader for this recording
+     */
+    RecorderSource* source();
+
+    /**
      * @brief Obtain a reader for playback of this recording
      */
     RecorderReader* getReader();
-
-    /**
-     * @brief Release the reader resource
-     */
-    void closeReader();
 
     /**
      * @brief record a change in direction
@@ -96,10 +126,39 @@ public:
      */
     void recordShot();
 
+    /**
+     * @brief copy the raw recording data
+     * @param buf The destination to copy the data to. Must be at least getCount() bytes in size.
+     * @return The number of bytes copied
+     */
+    int getData( unsigned char *data );
+
+    /**
+     * @brief Preloads the recorder with recording data
+     * @param count The size of the data
+     * @param data raw recording data
+     * @return true if sucessful
+     */
+    bool setData( int count, const unsigned char *data );
+
+    /**
+     * @brief Query which level is being recorded
+     * @return The level number
+     */
+    int getLevel() const;
+
 private:
     /**
-     * @brief store the current move in the mRecorded records without committing the write offset
-     * @return the offset past the written move. mRecordedCount is returned if unsuccessful.
+     * @brief Save the move at the given position with detection of overwrite of any prerecorded data
+     * @param move The value to save
+     * @param pos The offset to save
+     * @return The updated offset
+     */
+    int storeInternal( EncodedMove move, int pos );
+
+    /**
+     * @brief Save the current move in the mRecorded records without committing the write offset
+     * @return the offset past the written move. mWritePos is returned if unsuccessful.
      */
     int storeCurMove();
 
@@ -109,18 +168,19 @@ private:
      */
     bool commitCurMove();
 
+    int mLevel;                       // the game level being recorded
     int mStartDirection;              // the initial tank direction
     EncodedMove mCurMove;             // the primary record for the current move being assembled
     EncodedMove mCurContinuation;     // companion to mCurMove, uses lazy initialization- in use if mCurMove's shotCount at max
 
-    int mRecordedCount;               // number of records currently saved in the buffer
+    int mWritePos;                    // offset into mRecorded where moves are being saved
+    int mPreRecordedCount;            // if nonzero, holds the number moves preserved (in mRecorded). (Moves are preserved during playback.)
     EncodedMove* mRecorded;           // the recording buffer
     int mCapacity;                    // Configured recording limit
     int mRecordedAllocationWaterMark; // tracks allocations
-    RecorderReader* mReader;          // the single active reader or 0 if not currently reading
 
     friend class Recorder;
-    friend class RecorderReader;
+    friend class BufferSource;
 };
 
 #endif // RECORDERPRIVATE_H

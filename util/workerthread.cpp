@@ -8,12 +8,16 @@ WorkerThread::WorkerThread() : mThread(0), mShuttingDown(false)
 void WorkerThread::doWork( Runnable* runnable )
 {
     if ( !mShuttingDown ) {
-        std::lock_guard<std::mutex> guard(mPendingMutex);
+        mPendingMutex.lock();
 
         if ( !mPending.size() && mThread && mThread->joinable() ) {
-            mThread->join();
-            delete mThread;
+            std::thread* t = mThread;
             mThread = 0;
+
+            mPendingMutex.unlock();
+            t->join();
+            delete t;
+            mPendingMutex.lock();
         }
 
         mPending.push_back( runnable );
@@ -21,21 +25,30 @@ void WorkerThread::doWork( Runnable* runnable )
         if ( !mThread ) {
             mThread = new std::thread( [this] { run(); } );
         }
+        mPendingMutex.unlock();
     }
 }
 
 void WorkerThread::shutdown()
 {
-    mShuttingDown = true;
-    {   std::lock_guard<std::mutex> guard(mPendingMutex); }
+    if ( !mShuttingDown ) {
+        mShuttingDown = true;
+        {   std::lock_guard<std::mutex> guard(mPendingMutex); }
 
-    if ( mThread ) {
-        if ( mThread->joinable() ) {
-            mThread->join();
+        if ( mThread ) {
+            if ( mThread->joinable() ) {
+                mThread->join();
+            }
+            delete mThread;
+            mThread = 0;
         }
-        delete mThread;
-        mThread = 0;
     }
+}
+
+void WorkerThread::purge()
+{
+    shutdown();
+    mShuttingDown = false;
 }
 
 Runnable* WorkerThread::getCurrentRunnable()
@@ -59,11 +72,11 @@ void WorkerThread::run()
 {
     while( Runnable* runnable = getCurrentRunnable() ) {
         if ( !mShuttingDown ) {
-            runnable->run();
+            runnable->runInternal();
         }
         dequeueCurrentRunnable();
 
-        if ( runnable->mDeleteWhenDone ) {
+        if ( runnable->deleteWhenDone() ) {
             delete runnable;
         }
     }

@@ -14,13 +14,13 @@ void TestMain::testFutureShotPath()
       " T m .\n" );
 
     FutureShotPathManager manager;
-    manager.setParent( mRegistry );
+    manager.setParent( &mRegistry );
 
-    MovePiece move( MOVE, mRegistry->getTank().getCol(), mRegistry->getTank().getRow(), 0, 6 );
+    MovePiece move( MOVE, mRegistry.getTank().getCol(), mRegistry.getTank().getRow(), 0, 6 );
     const FutureShotPath* path = manager.updatePath(&move);
     QCOMPARE( path->getUID(), move.getShotPathUID() );
 
-    Game& game = mRegistry->getGame();
+    Game& game = mRegistry.getGame();
     Board* futureBoard = game.getBoard(true);
 
     // verify that this is the future board:
@@ -46,9 +46,9 @@ void TestMain::testFutureShotThruStationaryTank()
     initGame(
       "[S/ M[T<\n"
       "[S\\.[/S" );
-    mRegistry->getMoveController().move(180);
-    mRegistry->getMoveController().fire();
-    QVERIFY( !mRegistry->getGame().getDeltaPieces() );
+    mRegistry.getMoveController().move(180);
+    mRegistry.getMoveController().fire();
+    QVERIFY( !mRegistry.getGame().getDeltaPieces() );
 }
 
 /**
@@ -60,12 +60,12 @@ void TestMain::testFutureShotThruMasterTank()
       "W\n"
       "T\n"
       ".\n" );
-    MoveController& moveController = mRegistry->getMoveController();
+    MoveController& moveController = mRegistry.getMoveController();
     moveController.move(180); // rotate down
     moveController.move(180); // move down -> 0,2
     moveController.move(  0); // rotate up
     moveController.fire();
-    QCOMPARE( mRegistry->getGame().getBoard(true)->tileAt( ModelPoint(0,0) ), WOOD_DAMAGED );
+    QCOMPARE( mRegistry.getGame().getBoard(true)->tileAt( ModelPoint(0,0) ), WOOD_DAMAGED );
 }
 
 void TestMain::testFutureMultiShotThruTank()
@@ -77,7 +77,7 @@ void TestMain::testFutureMultiShotThruTank()
       ". . .\n" );
     initGame( map );
 
-    MoveController& moveController = mRegistry->getMoveController();
+    MoveController& moveController = mRegistry.getMoveController();
     moveController.move(270);
     moveController.move(0);
     moveController.move(0);
@@ -86,5 +86,5 @@ void TestMain::testFutureMultiShotThruTank()
     moveController.move(90);
     moveController.move(180);
     moveController.fire(2);
-    QCOMPARE( TILE, mRegistry->getGame().getBoard(true)->getPieceManager().pieceAt(ModelPoint(1,3))->getType() );
+    QCOMPARE( TILE, mRegistry.getGame().getBoard(true)->getPieceManager().pieceAt(ModelPoint(1,3))->getType() );
 }

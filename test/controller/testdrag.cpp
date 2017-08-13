@@ -16,18 +16,18 @@ void TestMain::testDragTank()
       ".MT\n"
       "...\n" );
 
-    MoveController& moveController = mRegistry->getMoveController();
+    MoveController& moveController = mRegistry.getMoveController();
     QCOMPARE( moveController.getDragState(), Inactive );
 
-    moveController.dragStart( mRegistry->getTank().getPoint() );
+    moveController.dragStart( mRegistry.getTank().getPoint() );
     QCOMPARE( moveController.getDragState(), Selecting );
-    QCOMPARE( moveController.getFocusVector(), mRegistry->getTank().getVector() );
+    QCOMPARE( moveController.getFocusVector(), mRegistry.getTank().getVector() );
 
     // test off-board:
     moveController.onDragTo( ModelPoint(3,2).toViewCenterSquare() );
     QCOMPARE( moveController.getDragState(), Forbidden );
     if ( ModelPoint* point = moveController.getMoves().getBack() ) {
-        QVERIFY( mRegistry->getTank().getPoint().equals(*point) );
+        QVERIFY( mRegistry.getTank().getPoint().equals(*point) );
     }
 
     // test valid drag:
@@ -49,7 +49,7 @@ void TestMain::testDragTank()
     }
 
     // test drag undo:
-    moveController.onDragTo( mRegistry->getTank().getPoint().toViewCenterSquare() );
+    moveController.onDragTo( mRegistry.getTank().getPoint().toViewCenterSquare() );
     QCOMPARE( moveController.getDragState(), Selecting );
     QVERIFY( moveController.getMoves().size() <= 1 );
 
@@ -58,7 +58,7 @@ void TestMain::testDragTank()
     QCOMPARE( moveController.getDragState(), Selecting );
     QCOMPARE( moveController.getMoves().size(), 2 );
     // undo it:
-    moveController.onDragTo( mRegistry->getTank().getPoint().toViewCenterSquare() );
+    moveController.onDragTo( mRegistry.getTank().getPoint().toViewCenterSquare() );
     QCOMPARE( moveController.getDragState(), Selecting );
     QVERIFY( moveController.getMoves().size() <= 1 );
 
@@ -74,9 +74,9 @@ void TestMain::testDragWithMove()
       "T..\n"
       "...\n" );
 
-    MoveController& moveController = mRegistry->getMoveController();
+    MoveController& moveController = mRegistry.getMoveController();
 
-    ModelVector v( mRegistry->getTank().getVector() );
+    ModelVector v( mRegistry.getTank().getVector() );
     moveController.dragStart( v );
 
     // test direction change:
@@ -97,7 +97,7 @@ void TestMain::testDragPoint()
       ".MT\n"
       "...\n" );
 
-    MoveController& moveController = mRegistry->getMoveController();
+    MoveController& moveController = mRegistry.getMoveController();
 
     // select forbidden (stone):
     moveController.dragStart( ModelPoint(0,0) );
@@ -120,7 +120,7 @@ void TestMain::testDragPoint()
     QCOMPARE( moveController.getMoves().size(), 2 ); // rotation + move
 
     // undo
-    moveController.onDragTo( mRegistry->getTank().getPoint().toViewCenterSquare() );
+    moveController.onDragTo( mRegistry.getTank().getPoint().toViewCenterSquare() );
     QCOMPARE( moveController.getMoves().size(), 0 );
 #endif // NOTDEF
 }

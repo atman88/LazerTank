@@ -38,11 +38,11 @@ const ModelVector& Tank::getVector() const
     return mVector;
 }
 
-void Tank::onBoardLoaded( ModelVector startVector )
+void Tank::onBoardLoaded( Board& board )
 {
-    mVector = startVector;
-    TankView::reset( startVector );
-    mRecorder.onBoardLoaded( startVector.mAngle );
+    mVector = board.getTankStartVector();
+    TankView::reset( mVector );
+    mRecorder.onBoardLoaded( board );
 }
 
 bool Tank::doMove( ModelVector& vector )

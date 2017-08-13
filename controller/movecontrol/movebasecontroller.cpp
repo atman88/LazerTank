@@ -22,9 +22,9 @@ void MoveBaseController::init( GameRegistry* registry )
     QObject::connect( &registry->getShotAggregate(), &AnimationStateAggregator::finished, this, &MoveController::wakeup, Qt::QueuedConnection );
 }
 
-void MoveBaseController::onBoardLoaded( Board* board )
+void MoveBaseController::onBoardLoaded( Board& board )
 {
-    mToVector = board->getTankStartVector();
+    mToVector = board.getTankStartVector();
 
     mFutureShots.reset();
     mMoves.reset();

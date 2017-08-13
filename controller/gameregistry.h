@@ -19,15 +19,13 @@ class Tank;
 class Shooter;
 class ShotModel;
 class Push;
+class Persist;
 
 class GameRegistry : public QObject
 {
     Q_OBJECT
 public:
-    explicit GameRegistry( BoardWindow* window = 0, Game* game = 0,
-      SpeedController* speedController = 0, MoveController* moveController = 0, PathFinderController* pathFinderController = 0,
-      AnimationStateAggregator* moveAggregate = 0, AnimationStateAggregator* shotAggregate = 0, BoardPool* pool = 0,
-      Tank* tank = 0, Shooter* activeCannon = 0, Push* tankPush = 0, Push* shotPush = 0, LevelList* levelList = 0 );
+    explicit GameRegistry( BoardWindow* window = 0 );
     ~GameRegistry();
     GameHandle getHandle();
 
@@ -106,6 +104,11 @@ public:
     LevelList& getLevelList();
 
     /**
+     * @brief Get the persistent storage utility
+     */
+    Persist& getPersist();
+
+    /**
      * @brief Access to the background thread
      */
     WorkerThread& getWorker();
@@ -123,9 +126,7 @@ public:
 private slots:
     void onWindowDestroyed();
 
-private:
-    void onInject( QObject* object );
-
+protected:
     GameHandle mHandle;
     BoardWindow* mWindow;
     Game* mGame;
@@ -140,12 +141,11 @@ private:
     Push* mTankPush;
     Push* mShotPush;
     LevelList* mLevelList;
+    Persist* mPersist;
 
     WorkerThread mWorker;
     PathSearchAction mCaptureAction;
     PathSearchAction mPathToAction;
-
-    QObjectList mInjectionList;
 };
 
 #endif // GAMEREGISTRY_H

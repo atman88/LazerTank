@@ -17,7 +17,8 @@ HEADERS += \
     view/pieceview.h \
     util/gameutils.h \
     util/imageutils.h \
-    view/boardrenderer.h
+    view/boardrenderer.h \
+    util/persist.h
 
 SOURCES += \
     model/board.cpp \
@@ -28,7 +29,8 @@ SOURCES += \
     view/pieceview.cpp \
     util/gameutils.cpp \
     util/imageutils.cpp \
-    view/boardrenderer.cpp
+    view/boardrenderer.cpp \
+    util/persist.cpp
 
 index {
     TARGET = qltindexer
@@ -123,7 +125,8 @@ test{
         test/util/testworker.cpp \
         test/model/testboardpool.cpp \
         test/model/testlevellist.cpp \
-        test/controller/testdrag.cpp
+        test/controller/testdrag.cpp \
+        test/util/testpersist.cpp
 
 } else {
     TARGET = qlt

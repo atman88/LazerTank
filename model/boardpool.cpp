@@ -4,7 +4,7 @@
 #include "view/levelchooser.h"
 #include "util/workerthread.h"
 
-class PoolLoadRunnable : Runnable
+class PoolLoadRunnable : BasicRunnable
 {
 public:
     PoolLoadRunnable() : mBoard(0), mLevel(0)

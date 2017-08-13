@@ -65,7 +65,7 @@ public slots:
      * @brief Restores the tank to its idle state as appropriate after a board change
      * @param startVector The initial tank position
      */
-    void onBoardLoaded( ModelVector startVector );
+    void onBoardLoaded( Board& board );
 
 protected:
     /**
@@ -73,7 +73,6 @@ protected:
      */
     void onMoved( int col, int row, int rotation ) override;
 
-private:
     ModelVector mVector;
     Recorder mRecorder;
 };

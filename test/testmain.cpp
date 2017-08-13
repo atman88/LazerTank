@@ -1,4 +1,5 @@
 #include <iostream>
+#include <set>
 #include <QSignalSpy>
 #include <QString>
 
@@ -7,21 +8,44 @@
 #include "controller/game.h"
 #include "util/workerthread.h"
 
+TestRegistry::TestRegistry()
+{
+}
 
-QTEST_MAIN(TestMain)
+TestRegistry::~TestRegistry()
+{
+    cleanup();
+}
 
-TestMain::TestMain() : mStream(0), mRegistry(0)
+void TestRegistry::cleanup()
+{
+    mWorker.purge();
+
+#define DECL_CLEAN(name) { if ( m##name != 0 ) { delete m##name; m##name=0; } }
+    DECL_CLEAN(Game)
+    DECL_CLEAN(SpeedController)
+    DECL_CLEAN(MoveController)
+    DECL_CLEAN(PathFinderController)
+    DECL_CLEAN(MoveAggregate)
+    DECL_CLEAN(ShotAggregate)
+    DECL_CLEAN(BoardPool)
+    DECL_CLEAN(Tank)
+    DECL_CLEAN(ActiveCannon)
+    DECL_CLEAN(TankPush)
+    DECL_CLEAN(ShotPush)
+    DECL_CLEAN(LevelList)
+    DECL_CLEAN(Persist)
+}
+
+QTEST_GUILESS_MAIN(TestMain)
+
+TestMain::TestMain() : mStream(0)
 {
 }
 
 TestMain::~TestMain()
 {
-    if ( mRegistry ) {
-        delete mRegistry;
-    }
-    if ( mStream ) {
-        delete mStream;
-    }
+    cleanup();
 }
 
 void TestMain::initGame( const char* map )
@@ -32,17 +56,25 @@ void TestMain::initGame( const char* map )
 
 void TestMain::initGame( QTextStream& map )
 {
-    mRegistry = new GameRegistry();
-    Game& game = mRegistry->getGame();
+    Game& game = mRegistry.getGame();
     QSignalSpy loadSpy( &game, &Game::boardLoaded );
-    game.init(mRegistry);
+    game.init(&mRegistry);
     game.getBoard()->load( map );
     QCOMPARE( loadSpy.count(), 1 );
 }
 
-GameRegistry* TestMain::getRegistry() const
+TestRegistry* TestMain::getRegistry()
 {
-    return mRegistry;
+    return &mRegistry;
+}
+
+void TestMain::cleanup()
+{
+    mRegistry.cleanup();
+    if ( mStream ) {
+        delete mStream;
+        mStream = 0;
+    }
 }
 
 DirtySpy::DirtySpy(QObject* object) : QObject(0)

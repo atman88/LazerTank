@@ -9,9 +9,8 @@ PathFinderController::PathFinderController(QObject *parent) : QObject(parent), m
 {
 }
 
-void PathFinderController::init( Game* game )
+void PathFinderController::init()
 {
-    setParent( game );
     mPathFinder.setParent(this);
     qRegisterMetaType<PathSearchCriteria>("PathSearchCriteria");
     QObject::connect( &mPathFinder, &PathFinder::testResult, this, &PathFinderController::onResult, Qt::QueuedConnection );

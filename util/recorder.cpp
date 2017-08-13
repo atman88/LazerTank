@@ -12,9 +12,9 @@ Recorder::~Recorder()
     delete mPrivate;
 }
 
-void Recorder::onBoardLoaded( int initialDirection )
+void Recorder::onBoardLoaded( Board& board )
 {
-    mPrivate->onBoardLoaded( initialDirection );
+    mPrivate->onBoardLoaded( board );
 }
 
 bool Recorder::isEmpty() const
@@ -27,19 +27,37 @@ int Recorder::getCount() const
     return mPrivate->getCount();
 }
 
+int Recorder::getLevel() const
+{
+    return mPrivate->getLevel();
+}
+
 RecorderReader* Recorder::getReader()
 {
     return mPrivate->getReader();
 }
 
-void Recorder::closeReader()
+int Recorder::getData( unsigned char *data )
 {
-    mPrivate->closeReader();
+    if ( data ) {
+        return mPrivate->getData( data );
+    }
+    return mPrivate->getCount();
+}
+
+bool Recorder::setData( int count, const unsigned char* data )
+{
+    return mPrivate->setData( count, data );
 }
 
 int Recorder::getCapacity() const
 {
     return mPrivate->mCapacity;
+}
+
+RecorderSource* Recorder::source()
+{
+    return mPrivate->source();
 }
 
 void Recorder::recordMove( bool adjacent, int rotation )
@@ -52,52 +70,53 @@ void Recorder::recordShot()
     mPrivate->recordShot();
 }
 
-RecorderReader::RecorderReader( RecorderPrivate* source ) : mOffset(0), mLastDirection(source->mStartDirection)
+RecorderReader::RecorderReader( int startDirection, RecorderSource& source ) : mLastDirection(startDirection), mSource(source)
 {
-    mRecordedCount = source->storeCurMove();
-    mSource = source;
+}
+
+RecorderReader::~RecorderReader()
+{
+    delete &mSource;
 }
 
 void RecorderReader::rewind()
 {
-    mOffset = 0;
+    mSource.rewind();
 }
 
-EncodedMove RecorderReader::readInternal()
+int RecorderReader::pos() const
 {
-    if ( mOffset < mRecordedCount ) {
-        return mSource->mRecorded[mOffset++];
-    }
-
-    // reached the end
-    EncodedMove empty;
-    empty.clear();
-    return empty;
-}
-
-int RecorderReader::getOffset() const
-{
-    return mOffset;
+    return mSource.pos();
 }
 
 void RecorderReader::abort()
 {
     // inhibit future reading by seeking to the end
-    mOffset = mRecordedCount;
+    mSource.seekEnd();
 }
 
-bool RecorderReader::readNext( RecorderConsumer* consumer )
+bool RecorderReader::consumeNext( RecorderPlayer* player )
 {
-    EncodedMove encoded = readInternal();
-    if ( encoded.isEmpty() ) {
-        // reached end
-        consumer->setReplay( false );
+    EncodedMove encoded;
+
+    switch( mSource.getReadState() ) {
+    case RecorderSource::Ready:
+        encoded.u.value = mSource.get();
+        if ( !encoded.isEmpty() ) {
+            break;
+        }
+        // fall through
+    case RecorderSource::Finished:
+        player->setReplay( false );
+        // fall through
+    case RecorderSource::Pending:
         return false;
     }
 
     bool empty = true;
     if ( encoded.u.move.adjacent ) {
-        consumer->move( mLastDirection, !encoded.u.move.rotate );
+std::cout << "RecorderReader::consumeNext move " << mLastDirection << std::endl;
+        player->move( mLastDirection, !encoded.u.move.rotate );
         empty = false;
     }
 
@@ -109,42 +128,44 @@ bool RecorderReader::readNext( RecorderConsumer* consumer )
         case 3: mLastDirection = 270; break;
         default:
             // this should be impossible given the bit field is two bits but let's see if the implementation proves that wrong
-            std::cout << "**CORRUPT decoded angle at " << mOffset << std::endl;
-            consumer->setReplay( false );
+            std::cout << "**CORRUPT decoded angle at " << (mSource.pos()-1) << std::endl;
+            player->setReplay( false );
             abort();
             return false;
         }
-        consumer->move( mLastDirection );
+std::cout << "RecorderReader::consumeNext move " << mLastDirection << std::endl;
+        player->move( mLastDirection );
         empty = false;
     }
 
     // let's sanity-check while we're here. Only the first move can fire only:
-    if ( empty && mOffset > 1 ) {
-        std::cout << "** readNext: Non-move read unexpectedly" << std::endl;
+    if ( empty && mSource.pos() > 1 ) {
+        std::cout << "** consumeNext: Non-move read unexpectedly" << std::endl;
         abort();
-        consumer->setReplay( false );
+        player->setReplay( false );
         return false;
     }
 
     if ( int shotCount = encoded.u.move.shotCount ) {
         if ( shotCount == MAX_MOVE_SHOT_COUNT ) {
             // check for a possible continuation
-            encoded = readInternal();
+            encoded.u.value = mSource.get();
             if ( encoded.u.continuation.header ) {
                 // Not a continuation - undo this read (just peeking)
-                --mOffset;
+                mSource.unget();
             } else {
                 shotCount += encoded.u.continuation.shotCount;
                 // Let's sanity-check while we're here:
                 if ( shotCount == 7 ) {
-                    std::cout << "**readNext: unexpected empty continuation encountered" << std::endl;
-                    consumer->setReplay( false );
+                    std::cout << "**consumeNext: unexpected empty continuation encountered" << std::endl;
+                    player->setReplay( false );
                     abort();
                     return false;
                 }
             }
         }
-        consumer->fire( shotCount );
+std::cout << "RecorderReader::consumeNext fire " << shotCount << std::endl;
+        player->fire( shotCount );
     }
     return true;
 }

@@ -17,7 +17,8 @@ class GameInitializer : public QObject
         PendingPhase,
         LevelsPhase,
         WindowPhase,
-        GamePhase
+        GamePhase,
+        PersistPhase
     } InitPhase;
 
 public:

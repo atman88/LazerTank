@@ -5,7 +5,51 @@
 #include <QTest>
 #include <QSignalSpy>
 
-class GameRegistry;
+#include "controller/gameregistry.h"
+#include "controller/game.h"
+#include "controller/speedcontroller.h"
+#include "controller/movecontroller.h"
+#include "controller/pathfindercontroller.h"
+#include "controller/animationstateaggregator.h"
+#include "model/boardpool.h"
+#include "model/tank.h"
+#include "view/shooter.h"
+#include "model/push.h"
+#include "model/level.h"
+#include "util/persist.h"
+
+class TestRegistry : public GameRegistry
+{
+public:
+    TestRegistry();
+    ~TestRegistry();
+
+    /**
+     * @brief reset the registry (used to cleanup after each test is run)
+     */
+    void cleanup();
+
+#define DECL_INJECT(name,type)\
+    void inject##name(type* p##name) {\
+      QVERIFY(m##name == 0);\
+      m##name=p##name;\
+      p##name->setParent(this);\
+    }
+
+DECL_INJECT(Game,Game)
+DECL_INJECT(SpeedController,SpeedController)
+DECL_INJECT(MoveController,MoveController)
+DECL_INJECT(PathFinderController,PathFinderController)
+DECL_INJECT(MoveAggregate,AnimationStateAggregator)
+DECL_INJECT(ShotAggregate,AnimationStateAggregator)
+DECL_INJECT(BoardPool,BoardPool)
+DECL_INJECT(Tank,Tank)
+DECL_INJECT(ActiveCannon,Shooter)
+DECL_INJECT(TankPush,Push)
+DECL_INJECT(ShotPush,Push)
+DECL_INJECT(LevelList,LevelList)
+DECL_INJECT(Persist,Persist)
+};
 
 class TestMain : public QObject
 {
@@ -17,9 +61,14 @@ public:
     void initGame( const char* map );
     void initGame( QTextStream& map );
 
-    GameRegistry* getRegistry() const;
+    Persist& setupTestPersist();
+
+    TestRegistry* getRegistry();
 
 private slots:
+    void testPersistNew();
+    void testPersistReplace();
+
     void testLevelFind();
     void testNextLevel();
     void testLevelCompleted();
@@ -54,9 +103,11 @@ private slots:
     void testDragPoint();
     void testDragWithMove();
 
+    void cleanup();
+
 private:
     QTextStream* mStream;
-    GameRegistry* mRegistry;
+    TestRegistry mRegistry;
 };
 
 /**

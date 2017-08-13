@@ -4,7 +4,7 @@
 #include "game.h"
 #include "model/level.h"
 #include "model/boardpool.h"
-
+#include "util/persist.h"
 
 GameInitializer::GameInitializer() : QObject(0), mInitPhase(PendingPhase)
 {
@@ -49,7 +49,10 @@ void GameInitializer::resume()
 
                 mInitPhase = WindowPhase;
             }
+            return;
         }
+
+        Game& game = registry->getGame();
 
         if ( mInitPhase == WindowPhase ) {
             if ( BoardWindow* window = registry->getWindow() ) {
@@ -61,13 +64,26 @@ void GameInitializer::resume()
                     //
                     mInitPhase = GamePhase;
 
-                    registry->getGame().init( registry );
-                    if ( BoardWindow* window = registry->getWindow() ) {
-                        window->init( registry );
-                    }
-                    registry->getGame().loadMasterBoard( registry->getLevelList().nextLevel(0) );
+                    game.init( registry );
+                    window->init( registry );
+                    QObject::connect( &game, &Game::boardLoaded, this, &GameInitializer::resume, Qt::QueuedConnection );
+                    game.loadMasterBoard( registry->getLevelList().nextLevel(0) );
                 }
             }
+            return;
+        }
+
+        if ( mInitPhase == GamePhase ) {
+            //
+            // forth phase:
+            //   initialize persistent storage
+            mInitPhase = PersistPhase;
+
+            QObject::disconnect( &game, &Game::boardLoaded, this, &GameInitializer::resume );
+
+            Persist& persist = registry->getPersist();
+            QObject::connect( &persist, &Persist::levelSetComplete, &registry->getLevelList(), &LevelList::setCompleted );
+            persist.init( registry );
         }
     }
 }

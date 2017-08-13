@@ -114,13 +114,14 @@ public:
      */
     bool isInitialized() const;
 
+    QSize visualSizeHint() const;
+
+public slots:
     /**
      * @brief Mark that the user has completed this level
      * @param number The level to mark
      */
     void setCompleted( int number );
-
-    QSize visualSizeHint() const;
 
 signals:
     void initialized();

@@ -81,10 +81,10 @@ private:
 };
 
 
-class ListLoadRunnable : public Runnable
+class ListLoadRunnable : public BasicRunnable
 {
 public:
-    ListLoadRunnable( LevelList& levelList ) : Runnable(true), mLevelList(levelList)
+    ListLoadRunnable( LevelList& levelList ) : BasicRunnable(true), mLevelList(levelList)
     {
     }
 

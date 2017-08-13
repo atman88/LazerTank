@@ -16,7 +16,7 @@ class PathFinderController : public QObject
     Q_OBJECT
 public:
     explicit PathFinderController(QObject *parent = 0);
-    void init( Game* game );
+    void init();
 
     /**
      * @brief Perform a search

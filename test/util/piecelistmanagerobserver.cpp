@@ -6,7 +6,7 @@
 using namespace std;
 
 PieceListManagerObserver::PieceListManagerObserver( PieceListManager& list, int maxAddCount, int maxEraseCount )
-    : QObject(0), mAddCount(0), mEraseCount(0), mMaxAddCount(maxAddCount), mMaxEraseCount(maxEraseCount)
+    : QObject(&list), mAddCount(0), mEraseCount(0), mMaxAddCount(maxAddCount), mMaxEraseCount(maxEraseCount)
 {
     if ( !QObject::connect( &list, &PieceListManager::added, this, &PieceListManagerObserver::added ) ) {
         std::cout << "*** PieceListManagerObserver: connect failed!" << std::endl;

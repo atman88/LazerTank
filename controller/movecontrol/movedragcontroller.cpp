@@ -16,7 +16,7 @@ void MoveDragController::init( GameRegistry* registry )
     QObject::connect( &registry->getPathFinderController(), &PathFinderController::pathFound, this, &MoveDragController::onPathFound );
 }
 
-void MoveDragController::onBoardLoaded( Board* board )
+void MoveDragController::onBoardLoaded( Board& board )
 {
     MoveBaseController::onBoardLoaded( board );
     setDragState( Inactive );

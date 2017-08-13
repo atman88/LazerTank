@@ -4,31 +4,31 @@
 
 using namespace std;
 
-class TestRecorderConsumer : public RecorderConsumer
+class TestRecorderPlayer : public RecorderPlayer
 {
 public:
-    TestRecorderConsumer() : mMoveCallCount(0), mFireCallCount(0), mReplayOnCallCount(0), mLastMoveDirection(0),
+    TestRecorderPlayer() : mMoveCallCount(0), mFireCallCount(0), mReplayOnCallCount(0), mLastMoveDirection(0),
       mLastFireCount(0), mLastReplayOn(false)
     {
     }
 
     void move( int direction, bool doWakeup = true )
     {
-        cout << "TestRecordConsumer: move(" << direction << "," << doWakeup << ")" << endl;
+        cout << "TestRecorderPlayer: move(" << direction << "," << doWakeup << ")" << endl;
         ++mMoveCallCount;
         mLastMoveDirection = direction;
     }
 
     void fire( int count )
     {
-        cout << "TestRecordConsumer: fire(" << count << ")" << endl;
+        cout << "TestRecorderPlayer: fire(" << count << ")" << endl;
         ++mFireCallCount;
         mLastFireCount = count;
     }
 
     void setReplay( bool on )
     {
-        cout << "TestRecordConsumer: setReplay(" << on << ")" << endl;
+        cout << "TestRecorderPlayer: setReplay(" << on << ")" << endl;
         ++mReplayOnCallCount;
         mLastReplayOn = on;
     }
@@ -100,13 +100,15 @@ void TestMain::testRecorderOverflow()
     QVERIFY2( recorder.getCount() == count, "count overflowed" );
 
     RecorderReader* reader = recorder.getReader();
-    TestRecorderConsumer consumer;
-    QVERIFY( reader->readNext( &consumer ) );
-    QVERIFY( consumer.mLastMoveDirection == 180 );
+    TestRecorderPlayer player;
+    QVERIFY( reader->consumeNext( &player ) );
+    QVERIFY( player.mLastMoveDirection == 180 );
 
-    QVERIFY( reader->readNext( &consumer ) );
-    QVERIFY( consumer.mLastMoveDirection == 180 );
-    QVERIFY( consumer.mLastFireCount == shotCount );
+    QVERIFY( reader->consumeNext( &player ) );
+    QVERIFY( player.mLastMoveDirection == 180 );
+    QVERIFY( player.mLastFireCount == shotCount );
 
-    QVERIFY2( reader->readNext( &consumer ) == false, "didn't hit expected end" );
+    QVERIFY2( reader->consumeNext( &player ) == false, "didn't hit expected end" );
+
+    delete reader;
 }

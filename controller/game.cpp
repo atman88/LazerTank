@@ -16,6 +16,7 @@
 #include "model/boardpool.h"
 #include "view/boardwindow.h"
 #include "view/boardrenderer.h"
+#include "util/persist.h"
 
 Game::Game() : mDesiredLevel(0)
 {
@@ -36,7 +37,7 @@ void Game::init( GameRegistry* registry )
 
     registry->getActiveCannon().init( registry, CANNON, QColor(255,50,83) );
 
-    registry->getPathFinderController().init(this);
+    registry->getPathFinderController().init();
 
     registry->getMoveAggregate().setObjectName("MoveAggregate");
     registry->getShotAggregate().setObjectName("ShotAggregate");
@@ -108,8 +109,8 @@ void Game::onBoardLoaded( int )
         registry->getShotAggregate().reset();
         registry->getActiveCannon().reset( ModelVector(0,0) );
         registry->getSpeedController().setHighSpeed(false);
-        registry->getTank().onBoardLoaded( mBoard.getTankStartVector() );
-        registry->getMoveController().onBoardLoaded( &mBoard );
+        registry->getTank().onBoardLoaded( mBoard );
+        registry->getMoveController().onBoardLoaded( mBoard );
 
         emit boardLoaded();
     }
@@ -263,7 +264,7 @@ void Game::onMoveAggregatorFinished()
                 // ensure this is off now to remove it from the display:
                 registry->getMoveController().setReplay( false );
 
-                registry->getLevelList().setCompleted( mBoard.getLevel() );
+                registry->getPersist().onLevelUpdated( mBoard.getLevel() );
 
                 QMessageBox msgBox;
                 msgBox.setWindowTitle( "Level completed!");

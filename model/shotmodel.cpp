@@ -4,7 +4,7 @@
 #include "view/shooter.h"
 #include "util/gameutils.h"
 
-ShotModel::ShotModel(QObject *parent) : ShotView(parent), mDistance(0), mShedding(false),
+ShotModel::ShotModel(QObject *parent) : ShotView(parent), mLeadingDirection(0), mDistance(0), mShedding(false),
   mKillSequence(0)
 {
     mAnimation.setTargetObject(this);

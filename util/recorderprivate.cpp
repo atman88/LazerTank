@@ -1,11 +1,62 @@
 #include <iostream>
 #include <malloc.h>
+#include <cstring>
+
 #include "recorderprivate.h"
+#include "model/board.h"
 
 // In a spirit of friendly memory consumption stewardship, this class grows its recording buffer as needed in chunks of size:
 #define ALLOCATION_CHUNK_SIZE 1000
 
-RecorderPrivate::RecorderPrivate( int capacity ) : mStartDirection(0), mRecordedCount(0), mCapacity(capacity), mReader(0)
+BufferSource::BufferSource( RecorderPrivate& recorder, QObject* parent ) : QObject(parent), mRecorder(recorder), mOffset(0)
+{
+}
+
+BufferSource::ReadState BufferSource::getReadState()
+{
+    return (mOffset < mRecorder.getCount()) ? Ready : Finished;
+}
+
+int BufferSource::getCount()
+{
+    return mRecorder.getCount();
+}
+
+int BufferSource::pos()
+{
+    return mOffset;
+}
+
+unsigned char BufferSource::get()
+{
+    if ( mOffset < mRecorder.getCount() ) {
+        return mRecorder.mRecorded[mOffset++].u.value;
+    }
+
+    // reached the end
+    return 0;
+}
+
+void BufferSource::unget()
+{
+    if ( --mOffset < 0 ) {
+        mOffset = 0;
+    }
+}
+
+void BufferSource::rewind()
+{
+    mOffset = 0;
+}
+
+int BufferSource::seekEnd()
+{
+    mOffset = mRecorder.getCount();
+    return mOffset;
+}
+
+RecorderPrivate::RecorderPrivate( int capacity ) : mLevel(0), mStartDirection(0), mWritePos(0), mPreRecordedCount(0),
+  mCapacity(capacity)
 {
     mCurMove.clear();
 
@@ -23,30 +74,36 @@ RecorderPrivate::RecorderPrivate( int capacity ) : mStartDirection(0), mRecorded
 
 RecorderPrivate::~RecorderPrivate()
 {
-    if ( mReader ) {
-        delete mReader;
-    }
     std::free( mRecorded );
 }
 
-void RecorderPrivate::onBoardLoaded( int initialDirection )
+void RecorderPrivate::onBoardLoaded( Board& board )
 {
-    mStartDirection = initialDirection;
-    // reset if not playing back
-    if ( !mReader ) {
+    if ( board.getLevel() == mLevel ) {
+        // non-destructive rewind
+        mPreRecordedCount = mWritePos;
+        mWritePos = 0;
+    } else {
+        // reset
+        mLevel = board.getLevel();
+        mStartDirection = board.getTankStartVector().mAngle;
         mCurMove.u.value = 0;
-        mRecordedCount = 0;
+        mWritePos = mPreRecordedCount = 0;
     }
 }
 
 bool RecorderPrivate::isEmpty() const
 {
-    return mCurMove.isEmpty() && mRecordedCount == 0;
+    return mCurMove.isEmpty() && !mWritePos && !mPreRecordedCount;
 }
 
 int RecorderPrivate::getCount() const
 {
-    int count = mRecordedCount;
+    if ( mPreRecordedCount ) {
+        return mPreRecordedCount;
+    }
+
+    int count = mWritePos;
     if ( !mCurMove.isEmpty() ) {
         ++count;
         if ( mCurMove.u.move.shotCount == MAX_MOVE_SHOT_COUNT && !mCurContinuation.isEmpty() ) {
@@ -56,33 +113,39 @@ int RecorderPrivate::getCount() const
     return count;
 }
 
-RecorderReader*RecorderPrivate::getReader()
+int RecorderPrivate::storeInternal( EncodedMove move, int pos )
 {
-    if ( !mReader ) {
-        mReader = new RecorderReader( this );
+    if ( mPreRecordedCount ) {
+        if ( pos < mPreRecordedCount && mRecorded[pos].u.value == move.u.value ) {
+            return pos+1;
+        }
+        mPreRecordedCount = 0;
     }
-    return mReader;
+
+    mRecorded[pos] = move;
+    return pos+1;
 }
 
-void RecorderPrivate::closeReader()
+RecorderSource* RecorderPrivate::source()
 {
-    if ( mReader ) {
-        // Update our state so that recording resumes where the reader stopped:
-        mRecordedCount = mReader->getOffset();
-        mCurMove.clear(); // discard any lazy commit
-
-        delete mReader;
-        mReader = 0;
+    // flush any lazy write
+    if ( !mCurMove.isEmpty() ) {
+        mWritePos = storeInternal( mCurMove, mWritePos );
+        if ( mCurMove.u.move.shotCount == MAX_MOVE_SHOT_COUNT && !mCurContinuation.isEmpty() ) {
+            mWritePos = storeInternal( mCurContinuation, mWritePos );
+        }
+        mCurMove.clear();
     }
+    return new BufferSource(*this);
 }
 
-void RecorderPrivate::recordMove(bool adjacent, int rotation)
+RecorderReader* RecorderPrivate::getReader()
 {
-    // inhibit writes when reading
-    if ( mReader ) {
-        return;
-    }
+    return new RecorderReader( mStartDirection, *source() );
+}
 
+void RecorderPrivate::recordMove( bool adjacent, int rotation )
+{
     // Starting a new move so finish the outstanding lazy write now if pending
     if ( !mCurMove.isEmpty() ) {
         if ( !commitCurMove() ) {
@@ -111,11 +174,6 @@ void RecorderPrivate::recordMove(bool adjacent, int rotation)
 
 void RecorderPrivate::recordShot()
 {
-    // inhibit writes when reading
-    if ( mReader ) {
-        return;
-    }
-
     if ( mCurMove.u.move.shotCount < MAX_MOVE_SHOT_COUNT ) {
         if ( ++mCurMove.u.move.shotCount == MAX_MOVE_SHOT_COUNT ) {
             // lazy clear
@@ -132,17 +190,54 @@ void RecorderPrivate::recordShot()
     }
 }
 
+int RecorderPrivate::getData( unsigned char *data )
+{
+    int count = mWritePos;
+    std::memcpy( data, mRecorded, count );
+    if ( !mCurMove.isEmpty() ) {
+        data[count++] = mCurMove.u.value;
+        if ( mCurMove.u.move.shotCount == MAX_MOVE_SHOT_COUNT && !mCurContinuation.isEmpty() ) {
+            data[count++] = mCurContinuation.u.value;
+        }
+    }
+    return count;
+}
+
+bool RecorderPrivate::setData( int count, const unsigned char* data )
+{
+    if ( count <= mCapacity ) {
+        if ( count > mRecordedAllocationWaterMark ) {
+            if ( void* p = std::realloc( mRecorded, count ) ) {
+                mRecorded = (EncodedMove*) p;
+                mRecordedAllocationWaterMark = (count-3) / sizeof(EncodedMove);
+            } else {
+                return false;
+            }
+        }
+        std::memcpy( mRecorded, data, count );
+        mWritePos = count;
+        mPreRecordedCount = 0;
+        mCurMove.clear();
+    }
+    return true;
+}
+
+int RecorderPrivate::getLevel() const
+{
+    return mLevel;
+}
+
 int RecorderPrivate::storeCurMove()
 {
-    int count = mRecordedCount;
+    int count = mWritePos;
 
     // confirm recording has not been inhibited
     if ( mRecordedAllocationWaterMark ) {
 
         // store unconditionally. Note this relies on mRecorded being sized +3.
-        mRecorded[count++] = mCurMove;
+        count = storeInternal( mCurMove, count );
         if ( mCurMove.u.move.shotCount == MAX_MOVE_SHOT_COUNT && !mCurContinuation.isEmpty() ) {
-            mRecorded[count++] = mCurContinuation;
+            count = storeInternal( mCurContinuation, count );
         }
     }
 
@@ -174,6 +269,6 @@ bool RecorderPrivate::commitCurMove()
             return false;
         }
     }
-    mRecordedCount = count;
+    mWritePos = count;
     return true;
 }

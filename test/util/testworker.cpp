@@ -4,10 +4,10 @@
 
 using namespace std;
 
-class TestRunnable : public Runnable
+class TestRunnable : public BasicRunnable
 {
 public:
-    TestRunnable()
+    TestRunnable() : mStarted(0)
     {
     }
 

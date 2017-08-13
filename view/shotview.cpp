@@ -197,7 +197,7 @@ bool ShotView::trimToward( QPoint target )
 
 bool ShotView::shedTail()
 {
-    if ( mTailPoint == BoardRenderer::NullPoint ) {
+    if ( mShooter && mTailPoint == BoardRenderer::NullPoint ) {
         mTailPoint = toStartPoint( mShooter->getViewX().toInt(), mShooter->getViewY().toInt(), mShooter->getViewRotation().toInt() % 360 );
         releaseShooter();
     }

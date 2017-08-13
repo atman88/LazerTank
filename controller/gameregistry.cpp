@@ -12,30 +12,26 @@
 #include "view/levelchooser.h"
 #include "model/push.h"
 #include "util/workerthread.h"
+#include "util/persist.h"
 
-GameRegistry::GameRegistry( BoardWindow* window, Game* game,
-  SpeedController* speedController, MoveController* moveController, PathFinderController* pathFinderController,
-  AnimationStateAggregator* moveAggregate, AnimationStateAggregator* shotAggregate, BoardPool* pool, Tank* tank,
-  Shooter* activeCannon, Push* tankPush, Push* shotPush, LevelList* levelList )
-  : QObject(0), mWindow(window), mGame(game),
-    mSpeedController(speedController), mMoveController(moveController), mPathFinderController(pathFinderController),
-    mMoveAggregate(moveAggregate), mShotAggregate(shotAggregate), mBoardPool(pool), mTank(tank), mActiveCannon(activeCannon),
-    mTankPush(tankPush), mShotPush(shotPush), mLevelList(levelList)
+GameRegistry::GameRegistry( BoardWindow* window ) : QObject(0), mWindow(window)
+#define DECL_NULL_INIT(o) ,m##o(0)
+  DECL_NULL_INIT(Game)
+  DECL_NULL_INIT(SpeedController)
+  DECL_NULL_INIT(MoveController)
+  DECL_NULL_INIT(PathFinderController)
+  DECL_NULL_INIT(MoveAggregate)
+  DECL_NULL_INIT(ShotAggregate)
+  DECL_NULL_INIT(BoardPool)
+  DECL_NULL_INIT(Tank)
+  DECL_NULL_INIT(ActiveCannon)
+  DECL_NULL_INIT(TankPush)
+  DECL_NULL_INIT(ShotPush)
+  DECL_NULL_INIT(LevelList)
+  DECL_NULL_INIT(Persist)
 {
     mHandle.registry = this;
     setProperty( GameHandleName, QVariant::fromValue(mHandle) );
-
-    if ( game                  ) onInject( game );
-    if ( speedController       ) onInject( speedController );
-    if ( moveController        ) onInject( moveController );
-    if ( pathFinderController  ) onInject( pathFinderController );
-    if ( moveAggregate         ) onInject( moveAggregate );
-    if ( shotAggregate         ) onInject( shotAggregate );
-    if ( pool                  ) onInject( pool );
-    if ( tank                  ) onInject( tank );
-    if ( activeCannon          ) onInject( activeCannon );
-    if ( tankPush              ) onInject( tankPush );
-    if ( shotPush              ) onInject( shotPush );
 
     mCaptureAction.setParent(this);
     mPathToAction.setParent(this);
@@ -47,11 +43,6 @@ GameRegistry::GameRegistry( BoardWindow* window, Game* game,
     }
 }
 
-ShotModel& GameRegistry::getCannonShot()
-{
-    return getActiveCannon().getShot();
-}
-
 void GameRegistry::onWindowDestroyed()
 {
     mWindow = 0;
@@ -60,6 +51,11 @@ void GameRegistry::onWindowDestroyed()
 BoardWindow*GameRegistry::getWindow()
 {
     return mWindow;
+}
+
+ShotModel& GameRegistry::getCannonShot()
+{
+    return getActiveCannon().getShot();
 }
 
 #define DECL_GETTER(name,type) \
@@ -77,23 +73,13 @@ DECL_GETTER(ActiveCannon,Shooter)
 DECL_GETTER(TankPush,Push)
 DECL_GETTER(ShotPush,Push)
 DECL_GETTER(LevelList,LevelList)
+DECL_GETTER(Persist,Persist)
 
 WorkerThread&     GameRegistry::getWorker()        { return mWorker;        }
 PathSearchAction& GameRegistry::getCaptureAction() { return mCaptureAction; }
 PathSearchAction& GameRegistry::getPathToAction()  { return mPathToAction;  }
 
-void GameRegistry::onInject( QObject* object )
-{
-    mInjectionList.append( object );
-    object->setParent( this );
-}
-
 GameRegistry::~GameRegistry()
 {
-    // for injection support, disassociate the children of this class to inhibit deleting
-    for( QObject* object : mInjectionList ) {
-        object->setParent(0);
-    }
-
     mWorker.shutdown();
 }

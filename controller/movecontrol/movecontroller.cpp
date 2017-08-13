@@ -1,3 +1,4 @@
+#include <iostream>
 #include "movecontroller.h"
 #include "gameregistry.h"
 #include "model/tank.h"
@@ -5,6 +6,14 @@
 
 MoveController::MoveController(QObject *parent) : MoveDragController(parent), mReplaySource(0)
 {
+}
+
+MoveController::~MoveController()
+{
+    std::cout << "~MoveController mReplaySource=" << (mReplaySource ? "set" : "null") << std::endl;
+    if ( mReplaySource ) {
+        delete mReplaySource;
+    }
 }
 
 bool MoveController::canWakeup()
@@ -26,9 +35,7 @@ void MoveController::setReplay( bool on )
         }
     } else if ( mReplaySource ) {
         QObject::disconnect( this, &MoveController::idle, this, &MoveController::replayPlayback );
-        if ( GameRegistry* registry = getRegistry(this) ) {
-            registry->getTank().getRecorder().closeReader();
-        }
+        delete mReplaySource;
         mReplaySource = 0;
         emit replayFinished();
     }
@@ -42,6 +49,6 @@ bool MoveController::replaying() const
 void MoveController::replayPlayback()
 {
     if ( mReplaySource && mState == Idle ) {
-        mReplaySource->readNext( this );
+        mReplaySource->consumeNext( this );
     }
 }

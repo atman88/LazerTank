@@ -20,13 +20,14 @@ typedef enum {
     IdlingStage
 } MoveState;
 
-class MoveBaseController : public QObject, public RecorderConsumer
+class MoveBaseController : public QObject, public RecorderPlayer
 {
     Q_OBJECT
 public:
     explicit MoveBaseController( QObject* parent = 0 );
+
     virtual void init( GameRegistry* registry );
-    virtual void onBoardLoaded( Board* board );
+    virtual void onBoardLoaded( Board& board );
 
     /**
      * @brief move the tank one square
@@ -161,8 +162,9 @@ class MoveDragController : public MoveBaseController
     Q_OBJECT
 public:
     explicit MoveDragController( QObject* parent = 0 );
+
     void init( GameRegistry* registry ) override;
-    void onBoardLoaded( Board* board ) override;
+    void onBoardLoaded( Board& board ) override;
 
     /**
      * @brief Returns whether movement should occur
@@ -228,12 +230,19 @@ class MoveController : public MoveDragController
     Q_OBJECT
 public:
     explicit MoveController( QObject* parent = 0 );
+    ~MoveController();
 
     /**
      * @brief Returns whether movement should occur
      * @return true if paused otherwise false
      */
     bool canWakeup() override;
+
+    /**
+     * @brief Query whether automatic replay is enabled
+     * @return true if enabled otherwise false
+     */
+    bool replaying() const;
 
 signals:
     /**
@@ -247,12 +256,6 @@ public slots:
      * @param on
      */
     void setReplay( bool on ) override;
-
-    /**
-     * @brief Query whether automatic replay is enabled
-     * @return true if enabled otherwise false
-     */
-    bool replaying() const;
 
 private slots:
     void replayPlayback();
