@@ -99,7 +99,7 @@ void TestMain::testRecorderOverflow()
     recorder.recordMove( true, -1 );
     QVERIFY2( recorder.getCount() == count, "count overflowed" );
 
-    RecorderReader* reader = recorder.getReader();
+    RecorderReader* reader = new RecorderReader( 0, *recorder.source() );
     TestRecorderPlayer player;
     QVERIFY( reader->consumeNext( &player ) );
     QVERIFY( player.mLastMoveDirection == 180 );

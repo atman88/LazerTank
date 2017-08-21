@@ -46,34 +46,6 @@ typedef struct EncodedMove {
     } u;
 } EncodedMove;
 
-class BufferSource : public QObject, public RecorderSource
-{
-    Q_OBJECT
-    Q_INTERFACES(RecorderSource)
-
-public:
-    BufferSource( RecorderPrivate& recorder, QObject* parent = 0 );
-    virtual ~BufferSource()
-    {
-    }
-
-    // RecorderSource interface
-    //
-    ReadState getReadState();
-    int getCount();
-    int pos();
-    unsigned char get();
-    void unget();
-    void rewind();
-    int seekEnd();
-signals:
-    void dataReady();
-
-private:
-    RecorderPrivate& mRecorder;
-    int mOffset;
-};
-
 class RecorderPrivate
 {
 public:
@@ -91,7 +63,7 @@ public:
      * If current buffered data is associated with a different level then buffered data is cleared otherwise a
      * non-destructive rewind is performed.
      */
-    void onBoardLoaded( Board& board );
+    void onBoardLoaded( int level );
 
     /**
      * @brief Query whether anything has been recorded yet
@@ -110,11 +82,6 @@ public:
     RecorderSource* source();
 
     /**
-     * @brief Obtain a reader for playback of this recording
-     */
-    RecorderReader* getReader();
-
-    /**
      * @brief record a change in direction
      * @param adjacent Indicates if moving into the adjacent square identified by the last recorded tank position
      * @param rotation A value of 0, 90, 180 or 270 indicates a rotation to that angle. -1 indicates no rotation
@@ -125,13 +92,6 @@ public:
      * @brief record a single shot
      */
     void recordShot();
-
-    /**
-     * @brief copy the raw recording data
-     * @param buf The destination to copy the data to. Must be at least getCount() bytes in size.
-     * @return The number of bytes copied
-     */
-    int getData( unsigned char *data );
 
     /**
      * @brief Preloads the recorder with recording data
@@ -169,7 +129,6 @@ private:
     bool commitCurMove();
 
     int mLevel;                       // the game level being recorded
-    int mStartDirection;              // the initial tank direction
     EncodedMove mCurMove;             // the primary record for the current move being assembled
     EncodedMove mCurContinuation;     // companion to mCurMove, uses lazy initialization- in use if mCurMove's shotCount at max
 
@@ -180,7 +139,7 @@ private:
     int mRecordedAllocationWaterMark; // tracks allocations
 
     friend class Recorder;
-    friend class BufferSource;
+    friend class RecorderSource;
 };
 
 #endif // RECORDERPRIVATE_H

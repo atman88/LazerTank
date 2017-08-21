@@ -7,6 +7,7 @@
 #include "controller/pathsearchaction.h"
 #include "controller/animationstateaggregator.h"
 #include "controller/speedcontroller.h"
+#include "util/recorder.h"
 #include "util/imageutils.h"
 #include "util/gameutils.h"
 
@@ -42,7 +43,6 @@ void Tank::onBoardLoaded( Board& board )
 {
     mVector = board.getTankStartVector();
     TankView::reset( mVector );
-    mRecorder.onBoardLoaded( board );
 }
 
 bool Tank::doMove( ModelVector& vector )
@@ -51,7 +51,9 @@ bool Tank::doMove( ModelVector& vector )
                 || mVerticalAnimation.animateBetween(   getViewY().toInt(), vector.mRow*24 );
     bool rotating = mRotateAnimation.animateBetween( mViewRotation, vector.mAngle );
     if ( moving || rotating ) {
-        mRecorder.recordMove( moving, rotating ? vector.mAngle : -1 );
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            registry->getRecorder().recordMove( moving, rotating ? vector.mAngle : -1 );
+        }
         return true;
     }
     return false;
@@ -60,7 +62,9 @@ bool Tank::doMove( ModelVector& vector )
 bool Tank::fire()
 {
     if ( Shooter::fire() ) {
-        mRecorder.recordShot();
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            registry->getRecorder().recordShot();
+        }
         return true;
     }
     return false;
@@ -86,9 +90,4 @@ void Tank::onMoved( int col , int row, int rotation )
     mVector.mCol   = col;
     mVector.mRow   = row;
     mVector.mAngle = rotation;
-}
-
-Recorder& Tank::getRecorder()
-{
-    return mRecorder;
 }

@@ -118,7 +118,7 @@ public slots:
     /**
      * @brief Receives notification that the master board's map changed
      */
-    void onBoardLoaded( int );
+    void onBoardLoaded( int level );
 
     /**
      * @brief Receives notification that a tile on the board changed.

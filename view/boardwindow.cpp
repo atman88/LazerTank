@@ -17,6 +17,7 @@
 #include "model/shotmodel.h"
 #include "model/level.h"
 #include "view/levelchooser.h"
+#include "util/recorder.h"
 
 #define TILE_SIZE 24
 
@@ -429,7 +430,7 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
         bool movesPending = registry->getMoveController().getMoves().size() > 0;
         TO_QACTION(mUndoMoveAction).setEnabled( movesPending );
         TO_QACTION(mClearMovesAction).setEnabled( movesPending );
-        bool modified = !registry->getTank().getRecorder().isEmpty();
+        bool modified = !registry->getRecorder().isEmpty();
         TO_QACTION(mReplayAction).setEnabled( modified );
         TO_QACTION(mReloadAction).setEnabled( modified );
 

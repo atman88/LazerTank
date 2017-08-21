@@ -61,11 +61,12 @@ public:
     void initGame( const char* map );
     void initGame( QTextStream& map );
 
-    Persist& setupTestPersist();
+    Persist* setupTestPersist();
 
     TestRegistry* getRegistry();
 
 private slots:
+    void testPersistSizes();
     void testPersistNew();
     void testPersistReplace();
 

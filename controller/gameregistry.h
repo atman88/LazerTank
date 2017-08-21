@@ -19,6 +19,7 @@ class Tank;
 class Shooter;
 class ShotModel;
 class Push;
+class Recorder;
 class Persist;
 
 class GameRegistry : public QObject
@@ -104,6 +105,11 @@ public:
     LevelList& getLevelList();
 
     /**
+     * @brief Access the game recorder
+     */
+    Recorder& getRecorder();
+
+    /**
      * @brief Get the persistent storage utility
      */
     Persist& getPersist();
@@ -141,6 +147,7 @@ protected:
     Push* mTankPush;
     Push* mShotPush;
     LevelList* mLevelList;
+    Recorder* mRecorder;
     Persist* mPersist;
 
     WorkerThread mWorker;

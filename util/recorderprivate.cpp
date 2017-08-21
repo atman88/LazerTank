@@ -8,26 +8,26 @@
 // In a spirit of friendly memory consumption stewardship, this class grows its recording buffer as needed in chunks of size:
 #define ALLOCATION_CHUNK_SIZE 1000
 
-BufferSource::BufferSource( RecorderPrivate& recorder, QObject* parent ) : QObject(parent), mRecorder(recorder), mOffset(0)
+RecorderSource::RecorderSource( RecorderPrivate& recorder, QObject* parent ) : QObject(parent), mRecorder(recorder), mOffset(0)
 {
 }
 
-BufferSource::ReadState BufferSource::getReadState()
+RecorderSource::ReadState RecorderSource::getReadState()
 {
     return (mOffset < mRecorder.getCount()) ? Ready : Finished;
 }
 
-int BufferSource::getCount()
+int RecorderSource::getCount()
 {
     return mRecorder.getCount();
 }
 
-int BufferSource::pos()
+int RecorderSource::pos()
 {
     return mOffset;
 }
 
-unsigned char BufferSource::get()
+unsigned char RecorderSource::get()
 {
     if ( mOffset < mRecorder.getCount() ) {
         return mRecorder.mRecorded[mOffset++].u.value;
@@ -37,25 +37,25 @@ unsigned char BufferSource::get()
     return 0;
 }
 
-void BufferSource::unget()
+void RecorderSource::unget()
 {
     if ( --mOffset < 0 ) {
         mOffset = 0;
     }
 }
 
-void BufferSource::rewind()
+void RecorderSource::rewind()
 {
     mOffset = 0;
 }
 
-int BufferSource::seekEnd()
+int RecorderSource::seekEnd()
 {
     mOffset = mRecorder.getCount();
     return mOffset;
 }
 
-RecorderPrivate::RecorderPrivate( int capacity ) : mLevel(0), mStartDirection(0), mWritePos(0), mPreRecordedCount(0),
+RecorderPrivate::RecorderPrivate( int capacity ) : mLevel(0), mWritePos(0), mPreRecordedCount(0),
   mCapacity(capacity)
 {
     mCurMove.clear();
@@ -77,16 +77,15 @@ RecorderPrivate::~RecorderPrivate()
     std::free( mRecorded );
 }
 
-void RecorderPrivate::onBoardLoaded( Board& board )
+void RecorderPrivate::onBoardLoaded( int level )
 {
-    if ( board.getLevel() == mLevel ) {
+    if ( level == mLevel ) {
         // non-destructive rewind
         mPreRecordedCount = mWritePos;
         mWritePos = 0;
     } else {
         // reset
-        mLevel = board.getLevel();
-        mStartDirection = board.getTankStartVector().mAngle;
+        mLevel = level;
         mCurMove.u.value = 0;
         mWritePos = mPreRecordedCount = 0;
     }
@@ -136,12 +135,7 @@ RecorderSource* RecorderPrivate::source()
         }
         mCurMove.clear();
     }
-    return new BufferSource(*this);
-}
-
-RecorderReader* RecorderPrivate::getReader()
-{
-    return new RecorderReader( mStartDirection, *source() );
+    return new RecorderSource(*this);
 }
 
 void RecorderPrivate::recordMove( bool adjacent, int rotation )
@@ -188,19 +182,6 @@ void RecorderPrivate::recordShot()
         // handle this case by logging & ignoring:
         std::cout << "** recordShot: capping excessive shot count " << (MAX_MOVE_SHOT_COUNT+MAX_CONTINUATION_SHOT_COUNT) << std::endl;
     }
-}
-
-int RecorderPrivate::getData( unsigned char *data )
-{
-    int count = mWritePos;
-    std::memcpy( data, mRecorded, count );
-    if ( !mCurMove.isEmpty() ) {
-        data[count++] = mCurMove.u.value;
-        if ( mCurMove.u.move.shotCount == MAX_MOVE_SHOT_COUNT && !mCurContinuation.isEmpty() ) {
-            data[count++] = mCurContinuation.u.value;
-        }
-    }
-    return count;
 }
 
 bool RecorderPrivate::setData( int count, const unsigned char* data )

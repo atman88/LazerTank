@@ -31,9 +31,10 @@ public:
  */
 void TestMain::testWorker()
 {
-    TestRunnable runnable;
-    GameRegistry registry;
-    registry.getWorker().doWork( &runnable );
+    TestRunnable* runnable = new TestRunnable;
+    mRegistry.getWorker().doWork( runnable );
     QThread::currentThread()->msleep(10);
-    QVERIFY2( runnable.mStarted, "test runnable didn't run" );
+    QVERIFY2( runnable->mStarted, "test runnable didn't run" );
+    mRegistry.getWorker().shutdown();
+    delete runnable;
 }

@@ -1,7 +1,7 @@
 #include <iostream>
 #include "movecontroller.h"
 #include "gameregistry.h"
-#include "model/tank.h"
+#include "util/recorder.h"
 #include "util/gameutils.h"
 
 MoveController::MoveController(QObject *parent) : MoveDragController(parent), mReplaySource(0)
@@ -29,7 +29,7 @@ void MoveController::setReplay( bool on )
     if ( on ) {
         if ( !mReplaySource ) {
             if ( GameRegistry* registry = getRegistry(this) ) {
-                mReplaySource = registry->getTank().getRecorder().getReader();
+                mReplaySource = registry->getRecorder().getReader();
             }
             QObject::connect( this, &MoveController::idle, this, &MoveController::replayPlayback, Qt::QueuedConnection );
         }

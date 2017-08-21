@@ -118,14 +118,14 @@ void TestMain::testReplay()
     }
     QVERIFY( boardPieces.typeAt(ModelPoint(1,2)) == TILE );
 
-    std::cout << "testmovecontroller: start replay #moves=" << tank.getRecorder().getCount() << std::endl;
+    std::cout << "testmovecontroller: start replay #moves=" << mRegistry.getRecorder().getCount() << std::endl;
 
     mRegistry.getGame().replayLevel();
     QVERIFY( boardPieces.typeAt(ModelPoint(3,0)) == NONE );
     QVERIFY( boardPieces.typeAt(ModelPoint(1,2)) == NONE );
 
     QSignalSpy replaySpy( &moveController, &MoveController::replayFinished );
-    QVERIFY( replaySpy.wait( 4000 ) );
+    QVERIFY( replaySpy.wait() );
     QVERIFY( boardPieces.typeAt(ModelPoint(3,0)) == TILE );
 
     if ( mRegistry.getShotAggregate().active() ) {

@@ -1,14 +1,15 @@
 #ifndef RECORDER_H
 #define RECORDER_H
 
-#include <QtPlugin>
+#include <QObject>
 
+class GameRegistry;
 class Recorder;
 class RecorderPrivate;
 class Board;
 
 /**
- * @brief The RecorderReader interface
+ * @brief The RecorderPlayer interface
  */
 class RecorderPlayer
 {
@@ -32,8 +33,10 @@ public:
     virtual void fire( int count ) = 0;
 };
 
-class RecorderSource
+class RecorderSource : public QObject
 {
+    Q_OBJECT
+
 public:
     typedef enum {
         Ready,
@@ -41,52 +44,55 @@ public:
         Finished
     } ReadState;
 
-    virtual ~RecorderSource(){}
+    RecorderSource( RecorderPrivate& recorder, QObject* parent = 0 );
 
     /**
      * @brief Query whether data is ready to read
      */
-    virtual ReadState getReadState() = 0;
+    ReadState getReadState();
 
     /**
-     * @brief Query the total count of moves that can be read
+     * @brief Query the total count of buffered moves
      */
-    virtual int getCount() = 0;
+    int getCount();
 
     /**
      * @brief Get the current read position
      */
-    virtual int pos() = 0;
+    int pos();
 
     /**
      * @brief Read the next available data value
      * @return The next move or an empty move is returned if no more moves ready to read.
      */
-    virtual unsigned char get() = 0;
+    unsigned char get();
 
     /**
      * @brief Undo the last get
      */
-    virtual void unget() = 0;
+    void unget();
 
     /**
      * @brief Reposition to the beginning of the data
      */
-    virtual void rewind() = 0;
+    void rewind();
 
     /**
      * @brief Reposition to the end of the data
      * @return The end position
      */
-    virtual int seekEnd() = 0;
+    int seekEnd();
 
 signals:
     /**
-     * @brief Notifies that data is ready to read
+     * @brief Notifies that the data is now ready to read
      */
-    virtual void dataReady() = 0;
+    void dataReady();
+
+private:
+    RecorderPrivate& mRecorder;
+    int mOffset;
 };
-Q_DECLARE_INTERFACE(RecorderSource,"RecorderSource")
 
 class RecorderReader
 {
@@ -121,8 +127,10 @@ private:
     RecorderSource& mSource;
 };
 
-class Recorder
+class Recorder : public QObject
 {
+    Q_OBJECT
+
 public:
     static const int SaneMaxCapacity = 8000;
 
@@ -132,13 +140,13 @@ public:
      * sequences that can be recorded. It should default to a generous number needed to complete any one of the
      * available levels.
      */
-    Recorder( int capacity = SaneMaxCapacity );
+    Recorder( int capacity = SaneMaxCapacity, QObject* parent = 0 );
     ~Recorder();
 
     /**
      * @brief React as appropriate on a board change
      */
-    void onBoardLoaded( Board& board );
+    void onBoardLoaded( int level );
 
     /**
      * @brief record a change in direction
@@ -185,13 +193,6 @@ public:
     RecorderReader* getReader();
 
     /**
-     * @brief copy the raw recording data
-     * @param buf The destination to copy the data to or 0 to query the required size without copying.
-     * @return The size of the data
-     */
-    int getData( unsigned char *data );
-
-    /**
      * @brief Preloads the recorder with recording data
      * @param count The size of the data
      * @param data raw recording data
@@ -201,6 +202,7 @@ public:
 
 private:
     RecorderPrivate* mPrivate;
+    int mStartDirection; // the initial tank direction
 };
 
 #endif // RECORDER_H

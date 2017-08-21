@@ -12,6 +12,7 @@
 #include "view/levelchooser.h"
 #include "model/push.h"
 #include "util/workerthread.h"
+#include "util/recorder.h"
 #include "util/persist.h"
 
 GameRegistry::GameRegistry( BoardWindow* window ) : QObject(0), mWindow(window)
@@ -28,6 +29,7 @@ GameRegistry::GameRegistry( BoardWindow* window ) : QObject(0), mWindow(window)
   DECL_NULL_INIT(TankPush)
   DECL_NULL_INIT(ShotPush)
   DECL_NULL_INIT(LevelList)
+  DECL_NULL_INIT(Recorder)
   DECL_NULL_INIT(Persist)
 {
     mHandle.registry = this;
@@ -73,6 +75,7 @@ DECL_GETTER(ActiveCannon,Shooter)
 DECL_GETTER(TankPush,Push)
 DECL_GETTER(ShotPush,Push)
 DECL_GETTER(LevelList,LevelList)
+DECL_GETTER(Recorder,Recorder)
 DECL_GETTER(Persist,Persist)
 
 WorkerThread&     GameRegistry::getWorker()        { return mWorker;        }

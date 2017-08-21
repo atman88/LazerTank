@@ -6,8 +6,14 @@
 #include <QString>
 #include <QTime>
 
+class Runnable;
+class Persist;
+class PersistentUpdateRunnable;
 class GameRegistry;
-class InitRunnable;
+class RecorderSource;
+class LoadLevelRunnable;
+
+#include "recorder.h"
 
 typedef struct PersistedLevelIndexFooter {
     static const unsigned char MajorVersionValue = 1;
@@ -37,6 +43,36 @@ typedef struct PersistedLevelRecord {
     unsigned char moves[0];
 } PersistedLevelRecord;
 
+class PersistLevelLoader : public QObject
+{
+    Q_OBJECT
+
+public:
+    PersistLevelLoader( Persist& persist, PersistedLevelIndex index, QObject* parent = 0 );
+    virtual ~PersistLevelLoader()
+    {
+    }
+
+    int getCount();
+    bool load( char *buf, int count );
+
+signals:
+    void dataReadyInternal();
+    void dataReady();
+
+private slots:
+    void onDataReadyInternal();
+
+private:
+    void onLoaded();
+
+    Persist& mPersist;
+    PersistedLevelIndex mIndex;
+    LoadLevelRunnable* mRunnable;
+
+    friend class LoadLevelRunnable;
+};
+
 class Persist : public QObject
 {
     Q_OBJECT
@@ -46,14 +82,19 @@ public:
     ~Persist();
     void init( GameRegistry* registry );
 
-    int getFileSize() const;
-
     QString getPath() const;
 
     QTime lastUpdateTime() const;
 
+    PersistLevelLoader* getLevelLoader( int level );
+
+    bool isUnusable() const;
+
+    bool updateInProgress() const;
+
 public slots:
     void onLevelUpdated( int number );
+    void setUnusable();
 
 signals:
     /**
@@ -61,16 +102,43 @@ signals:
      */
     void levelSetComplete( int level );
 
+    /**
+     * @brief Internal signal from background to foreground when the indices have been read or changed
+     */
+    void indexReadyQueued();
+
+private slots:
+    /**
+     * @brief Recieves new indexes from its current runnable
+     */
+    void onIndexReadyQueued();
+
 private:
-    void onIndexRead( PersistedLevelIndex index );
+    /**
+     * @brief Managed running of a runnable
+     * @param runnable The runnable to run
+     * @param registry The registry if known (optimizes case where already known)
+     */
+    void doUpdate( PersistentUpdateRunnable* runnable, GameRegistry* registry = 0 );
+
+    /**
+     * @brief Called by the background to notify that an update is completed
+     * @param level
+     */
+    void onPersistentUpdateResult();
+
+    static const int UnusableFileSize = -2;
 
     QString mPath;
-    int mFileSize;
+    bool mFileUnusable;
     std::map<int,PersistedLevelIndex> mRecords;
     PersistedLevelIndexFooter mFooter;
     QTime mLastUpdateTime;
+    PersistentUpdateRunnable* mUpdateRunnable;
+    std::shared_ptr<Runnable> mSharedRunnable;
 
     friend class PersistentRunnable;
+    friend class PersistentUpdateRunnable;
     friend class InitRunnable;
     friend class UpdateRunnable;
 };

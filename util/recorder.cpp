@@ -1,8 +1,10 @@
 #include <iostream>
 #include "recorderprivate.h"
+#include "persist.h"
+#include "controller/gameregistry.h"
 #include "controller/game.h"
 
-Recorder::Recorder( int capacity )
+Recorder::Recorder( int capacity, QObject* parent ) : QObject(parent), mStartDirection(0)
 {
     mPrivate = new RecorderPrivate( capacity );
 }
@@ -12,9 +14,12 @@ Recorder::~Recorder()
     delete mPrivate;
 }
 
-void Recorder::onBoardLoaded( Board& board )
+void Recorder::onBoardLoaded( int level )
 {
-    mPrivate->onBoardLoaded( board );
+    mPrivate->onBoardLoaded( level );
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        mStartDirection = registry->getGame().getBoard()->getTankStartVector().mAngle;
+    }
 }
 
 bool Recorder::isEmpty() const
@@ -34,15 +39,7 @@ int Recorder::getLevel() const
 
 RecorderReader* Recorder::getReader()
 {
-    return mPrivate->getReader();
-}
-
-int Recorder::getData( unsigned char *data )
-{
-    if ( data ) {
-        return mPrivate->getData( data );
-    }
-    return mPrivate->getCount();
+    return new RecorderReader( mStartDirection, *mPrivate->source() );
 }
 
 bool Recorder::setData( int count, const unsigned char* data )

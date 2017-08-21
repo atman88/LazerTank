@@ -1,6 +1,27 @@
 #include <iostream>
 #include "workerthread.h"
 
+class SharedRunnableWrapper : public BasicRunnable
+{
+public:
+    SharedRunnableWrapper( std::shared_ptr<Runnable> sharedRunnable ) : mSharedRunnable(sharedRunnable)
+    {
+    }
+
+    void run()
+    {
+        mSharedRunnable.get()->runInternal();
+    }
+
+    bool deleteWhenDone()
+    {
+        return true;
+    }
+
+private:
+    std::shared_ptr<Runnable> mSharedRunnable;
+};
+
 WorkerThread::WorkerThread() : mThread(0), mShuttingDown(false)
 {
 }
@@ -27,6 +48,11 @@ void WorkerThread::doWork( Runnable* runnable )
         }
         mPendingMutex.unlock();
     }
+}
+
+void WorkerThread::doWork(std::shared_ptr<Runnable> sharedRunnable)
+{
+    doWork( new SharedRunnableWrapper(sharedRunnable) );
 }
 
 void WorkerThread::shutdown()

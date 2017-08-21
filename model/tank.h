@@ -1,7 +1,6 @@
 #ifndef TANK_H
 #define TANK_H
 
-#include "util/recorder.h"
 #include "view/tankview.h"
 
 class Game;
@@ -58,8 +57,6 @@ public:
 
     bool fire();
 
-    Recorder& getRecorder();
-
 public slots:
     /**
      * @brief Restores the tank to its idle state as appropriate after a board change
@@ -74,7 +71,6 @@ protected:
     void onMoved( int col, int row, int rotation ) override;
 
     ModelVector mVector;
-    Recorder mRecorder;
 };
 
 #endif // TANK_H

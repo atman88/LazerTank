@@ -109,13 +109,15 @@ test{
     INCLUDEPATH += test/controller
 
     HEADERS += test/testmain.h \
-      test/util/piecelistmanagerobserver.h
+      test/util/piecelistmanagerobserver.h \
+      test/util/testasync.h
 
     TARGET = qlttest
 
     QT += testlib
 
     SOURCES += test/testmain.cpp \
+        test/util/testasync.cpp \
         test/controller/testgame.cpp \
         test/model/testpiecelistmanager.cpp \
         test/model/testfutureshotpath.cpp \

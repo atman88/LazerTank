@@ -5,6 +5,7 @@
 #include <mutex>
 #include <thread>
 #include <csetjmp>
+#include <memory>
 
 /**
  * @brief Interface for user-defined tasks
@@ -59,15 +60,15 @@ public:
 
     void error( int errorCode )
     {
+        onError( mLastError );
         mLastError = errorCode;
         std::longjmp( mJmpBuf, errorCode );
     }
 
+protected:
     void runInternal() override
     {
-        if ( setjmp( mJmpBuf ) ) {
-            onError( mLastError );
-        } else {
+        if ( !setjmp( mJmpBuf ) ) {
             run();
         }
     }
@@ -93,6 +94,12 @@ public:
      * @param runnable The task to queue
      */
     void doWork( Runnable* runnable );
+
+    /**
+     * @brief Queue a shared task for execution
+     * @param sharedRunnable
+     */
+    void doWork( std::shared_ptr<Runnable> sharedRunnable );
 
     /**
      * @brief Inform this class that the app is shutting down
