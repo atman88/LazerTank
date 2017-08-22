@@ -42,6 +42,7 @@ public:
         RecordLevelCode,
         RecordSizeCode,
         ReadLevelCode,
+        NullSourceCode,
         ErrorCodeUpperBound // must be last
     } ErrorCode;
 
@@ -89,6 +90,7 @@ public:
         case RecordLevelCode: msg = "record level mismatch";                                                  break;
         case RecordSizeCode:  msg = "record size mismatch";                                                   break;
         case ReadLevelCode:   msg = "could't read level";                                                     break;
+        case NullSourceCode:  msg = "null source";                                                            break;
         default:
             if ( errorCode & SilenceErrorFlag ) {
                 return;
@@ -219,6 +221,9 @@ public:
         newIndex.rec.size = sizeof(PersistedLevelRecord) + mSourceRecorder.getCount();
 
         mSource = mSourceRecorder.source();
+        if ( !mSource ) {
+            error( NullSourceCode );
+        }
 
         bool simplyOverwrite = false;
         if ( !mFile.exists() ) {
@@ -476,6 +481,12 @@ QTime Persist::lastUpdateTime() const
     return mLastUpdateTime;
 }
 
+bool Persist::isPersisted( int level ) const
+{
+    auto it = mRecords.find( level );
+    return it != mRecords.end();
+}
+
 PersistLevelLoader* Persist::getLevelLoader( int level )
 {
     auto it = mRecords.find( level );
@@ -498,8 +509,8 @@ bool Persist::updateInProgress() const
 class LoadLevelRunnable : public PersistentRunnable
 {
 public:
-    LoadLevelRunnable( PersistLevelLoader& loader, char *buf, int count ) : PersistentRunnable(loader.mPersist),
-      mLoader(loader), mWorking(false), mReadBuf(buf), mReadCount(count)
+    LoadLevelRunnable( PersistLevelLoader& loader, Loadable& loadable ) : PersistentRunnable(loader.mPersist),
+      mLoader(loader), mWorking(false), mLoadable(loadable)
     {
     }
 
@@ -540,8 +551,20 @@ std::cout << "persist: running LoadLevelRunnable\n";
         if ( record.count != mLoader.mIndex.size - (int) sizeof(PersistedLevelRecord) ) {
             error( RecordSizeCode );
         }
-        eRead( mReadBuf, mReadCount, ReadLevelCode );
-        mFile.close();
+        if ( char* data = mLoadable.getLoadableDestination( record.level, record.count ) ) {
+            int nRead = mFile.read( data, record.count );
+            mLoadable.releaseLoadableDestination( record.level, nRead );
+            if ( nRead != record.count ) {
+                warn( QString("LoadLevelRunnable: level %1: read %2. %3 expected").arg(record.level).arg(nRead).arg(record.count) );
+            }
+        } else {
+            warn( QString("LoadLevelRunnable: getLoadableDestination(%1,%2) returned 0").arg(record.level).arg(record.count) );
+        }
+    }
+
+    void runInternal() override
+    {
+        PersistentRunnable::runInternal();
         mWorking = false;
         mLoader.onLoaded();
     }
@@ -549,8 +572,7 @@ std::cout << "persist: running LoadLevelRunnable\n";
 private:
     PersistLevelLoader& mLoader;
     bool mWorking;
-    char *mReadBuf;
-    int mReadCount;
+    Loadable& mLoadable;
 };
 
 PersistLevelLoader::PersistLevelLoader( Persist& persist, PersistedLevelIndex index, QObject* parent )
@@ -566,13 +588,13 @@ int PersistLevelLoader::getCount()
     return mIndex.size - sizeof(PersistedLevelRecord);
 }
 
-bool PersistLevelLoader::load( char *buf, int count )
+bool PersistLevelLoader::load( Loadable& loadable )
 {
     if ( mRunnable ) {
         return false; // already called
     }
 
-    mRunnable = new LoadLevelRunnable( *this, buf, count );
+    mRunnable = new LoadLevelRunnable( *this, loadable );
     return mRunnable->doLoad();
 }
 

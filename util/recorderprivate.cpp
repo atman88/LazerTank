@@ -3,18 +3,35 @@
 #include <cstring>
 
 #include "recorderprivate.h"
-#include "model/board.h"
+#include "util/persist.h"
 
 // In a spirit of friendly memory consumption stewardship, this class grows its recording buffer as needed in chunks of size:
 #define ALLOCATION_CHUNK_SIZE 1000
 
-RecorderSource::RecorderSource( RecorderPrivate& recorder, QObject* parent ) : QObject(parent), mRecorder(recorder), mOffset(0)
+RecorderSource::RecorderSource( RecorderPrivate& recorder, Persist& persist ) : QObject(0), mRecorder(recorder),
+  mPersist(persist), mOffset(0), mLoadSequence(0)
 {
 }
 
-RecorderSource::ReadState RecorderSource::getReadState()
+RecorderSource::ReadState RecorderSource::getReadState() const
 {
-    return (mOffset < mRecorder.getCount()) ? Ready : Finished;
+    if ( mOffset < mRecorder.getCount() ) {
+        return Ready;
+    }
+
+    switch( mLoadSequence ) {
+    case 0:
+        if ( !mOffset && mPersist.isPersisted( mRecorder.getLevel() ) ) {
+            return Pending;
+        }
+        return Finished;
+
+    case 1:
+        return Pending;
+
+    default:
+        return Finished;
+    }
 }
 
 int RecorderSource::getCount()
@@ -33,7 +50,17 @@ unsigned char RecorderSource::get()
         return mRecorder.mRecorded[mOffset++].u.value;
     }
 
-    // reached the end
+    if ( mLoadSequence == 0 ) {
+        if ( PersistLevelLoader* loader = mPersist.getLevelLoader( mRecorder.getLevel() ) ) {
+            if ( mRecorder.setData( *loader ) ) {
+                QObject::connect( loader, &PersistLevelLoader::dataReady, this, &RecorderSource::onDataReady );
+                mLoadSequence = 1;
+                return 0;
+            }
+        }
+        mLoadSequence = 2;
+    }
+
     return 0;
 }
 
@@ -53,6 +80,13 @@ int RecorderSource::seekEnd()
 {
     mOffset = mRecorder.getCount();
     return mOffset;
+}
+
+void RecorderSource::onDataReady()
+{
+    disconnect( 0, 0, this, SIGNAL(onDataReady) );
+    mLoadSequence = 2;
+    emit dataReady();
 }
 
 RecorderPrivate::RecorderPrivate( int capacity ) : mLevel(0), mWritePos(0), mPreRecordedCount(0),
@@ -125,7 +159,7 @@ int RecorderPrivate::storeInternal( EncodedMove move, int pos )
     return pos+1;
 }
 
-RecorderSource* RecorderPrivate::source()
+void RecorderPrivate::lazyFlush()
 {
     // flush any lazy write
     if ( !mCurMove.isEmpty() ) {
@@ -135,7 +169,6 @@ RecorderSource* RecorderPrivate::source()
         }
         mCurMove.clear();
     }
-    return new RecorderSource(*this);
 }
 
 void RecorderPrivate::recordMove( bool adjacent, int rotation )
@@ -184,23 +217,31 @@ void RecorderPrivate::recordShot()
     }
 }
 
-bool RecorderPrivate::setData( int count, const unsigned char* data )
+bool RecorderPrivate::ensureCapacity( int count )
 {
     if ( count <= mCapacity ) {
         if ( count > mRecordedAllocationWaterMark ) {
-            if ( void* p = std::realloc( mRecorded, count ) ) {
+            if ( void* p = std::realloc( mRecorded, count+3 ) ) {
                 mRecorded = (EncodedMove*) p;
-                mRecordedAllocationWaterMark = (count-3) / sizeof(EncodedMove);
+                mRecordedAllocationWaterMark = count;
             } else {
                 return false;
             }
         }
-        std::memcpy( mRecorded, data, count );
-        mWritePos = count;
-        mPreRecordedCount = 0;
-        mCurMove.clear();
     }
     return true;
+}
+
+bool RecorderPrivate::setData( PersistLevelLoader& loader )
+{
+    if ( int count = loader.getCount() ) {
+        if ( ensureCapacity( count ) ) {
+            if ( loader.load( *this ) ) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 int RecorderPrivate::getLevel() const
@@ -252,4 +293,21 @@ bool RecorderPrivate::commitCurMove()
     }
     mWritePos = count;
     return true;
+}
+
+char* RecorderPrivate::getLoadableDestination( int forLevel, int count )
+{
+    if ( forLevel == mLevel ) {
+        if ( count <= mRecordedAllocationWaterMark ) {
+            return (char*) mRecorded;
+        }
+    }
+    return 0;
+}
+
+void RecorderPrivate::releaseLoadableDestination( int forLevel, int actualCount )
+{
+    if ( forLevel == mLevel ) {
+        mWritePos = std::max( actualCount, 0 );
+    }
 }

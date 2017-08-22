@@ -1,7 +1,10 @@
 #ifndef RECORDERPRIVATE_H
 #define RECORDERPRIVATE_H
 
+class PersistLevelLoader;
+
 #include "recorder.h"
+#include "loadable.h"
 
 #define MAX_BITFIELD_VALUE(nbits) ((1<<nbits)-1)
 
@@ -46,7 +49,7 @@ typedef struct EncodedMove {
     } u;
 } EncodedMove;
 
-class RecorderPrivate
+class RecorderPrivate : public Loadable
 {
 public:
     /**
@@ -77,9 +80,9 @@ public:
     int getCount() const;
 
     /**
-     * @brief Obtain a raw data reader for this recording
+     * @brief Flush any outstanding lazy write
      */
-    RecorderSource* source();
+    void lazyFlush();
 
     /**
      * @brief record a change in direction
@@ -93,19 +96,24 @@ public:
      */
     void recordShot();
 
+    bool ensureCapacity( int count );
+
     /**
      * @brief Preloads the recorder with recording data
-     * @param count The size of the data
-     * @param data raw recording data
+     * @param loader The data source
      * @return true if sucessful
      */
-    bool setData( int count, const unsigned char *data );
+    bool setData( PersistLevelLoader& loader );
 
     /**
      * @brief Query which level is being recorded
      * @return The level number
      */
     int getLevel() const;
+
+    // Loadable interface
+    char*getLoadableDestination(int forLevel, int count);
+    void releaseLoadableDestination(int forLevel, int actualCount);
 
 private:
     /**

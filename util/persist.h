@@ -10,10 +10,9 @@ class Runnable;
 class Persist;
 class PersistentUpdateRunnable;
 class GameRegistry;
-class RecorderSource;
 class LoadLevelRunnable;
 
-#include "recorder.h"
+#include "loadable.h"
 
 typedef struct PersistedLevelIndexFooter {
     static const unsigned char MajorVersionValue = 1;
@@ -54,7 +53,7 @@ public:
     }
 
     int getCount();
-    bool load( char *buf, int count );
+    bool load( Loadable& loadable );
 
 signals:
     void dataReadyInternal();
@@ -86,6 +85,8 @@ public:
 
     QTime lastUpdateTime() const;
 
+    bool isPersisted( int level ) const;
+
     PersistLevelLoader* getLevelLoader( int level );
 
     bool isUnusable() const;
@@ -98,7 +99,7 @@ public slots:
 
 signals:
     /**
-     * @brief Notify that the level is known to have completed
+     * @brief Notifies that the level is known to have completed
      */
     void levelSetComplete( int level );
 

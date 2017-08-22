@@ -114,6 +114,13 @@ public:
      */
     bool isInitialized() const;
 
+    /**
+     * @brief Query if the given level has been completed
+     * @param number The level number
+     * @return true if known to be completed otherwise false
+     */
+    bool isLevelCompleted( int number ) const;
+
     QSize visualSizeHint() const;
 
 public slots:

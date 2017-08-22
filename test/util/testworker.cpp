@@ -1,6 +1,7 @@
 #include <iostream>
 #include "../testmain.h"
 #include "controller/gameregistry.h"
+#include "../util/testasync.h"
 
 using namespace std;
 
@@ -19,11 +20,25 @@ public:
     {
         cout << "worker starting" << endl;
         mStarted = true;
-        QThread::currentThread()->msleep(1000);
+        QThread::currentThread()->msleep(10);
         cout << "worker exiting" << endl;
     }
 
     bool mStarted;
+};
+
+class TestWorker : public TestAsync
+{
+public:
+    TestWorker( TestRunnable& runnable ) : mRunnable(runnable)
+    {
+    }
+
+    bool condition() {
+        return mRunnable.mStarted;
+    }
+
+    TestRunnable& mRunnable;
 };
 
 /**
@@ -31,10 +46,11 @@ public:
  */
 void TestMain::testWorker()
 {
-    TestRunnable* runnable = new TestRunnable;
-    mRegistry.getWorker().doWork( runnable );
-    QThread::currentThread()->msleep(10);
-    QVERIFY2( runnable->mStarted, "test runnable didn't run" );
+    std::shared_ptr<Runnable> sharedRunnable;
+    TestRunnable* runnable = new TestRunnable();
+    sharedRunnable.reset( runnable );
+    TestWorker testWorker( *runnable );
+    mRegistry.getWorker().doWork( sharedRunnable );
+    QVERIFY( testWorker.test() );
     mRegistry.getWorker().shutdown();
-    delete runnable;
 }

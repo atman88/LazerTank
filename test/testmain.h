@@ -16,6 +16,7 @@
 #include "view/shooter.h"
 #include "model/push.h"
 #include "model/level.h"
+#include "util/recorder.h"
 #include "util/persist.h"
 
 class TestRegistry : public GameRegistry
@@ -48,6 +49,7 @@ DECL_INJECT(ActiveCannon,Shooter)
 DECL_INJECT(TankPush,Push)
 DECL_INJECT(ShotPush,Push)
 DECL_INJECT(LevelList,LevelList)
+DECL_INJECT(Recorder,Recorder)
 DECL_INJECT(Persist,Persist)
 };
 

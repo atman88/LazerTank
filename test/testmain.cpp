@@ -34,6 +34,7 @@ void TestRegistry::cleanup()
     DECL_CLEAN(TankPush)
     DECL_CLEAN(ShotPush)
     DECL_CLEAN(LevelList)
+    DECL_CLEAN(Recorder)
     DECL_CLEAN(Persist)
 }
 

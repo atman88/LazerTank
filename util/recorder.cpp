@@ -2,11 +2,13 @@
 #include "recorderprivate.h"
 #include "persist.h"
 #include "controller/gameregistry.h"
-#include "controller/game.h"
 
-Recorder::Recorder( int capacity, QObject* parent ) : QObject(parent), mStartDirection(0)
+Recorder::Recorder( int capacity ) : QObject(0), mPrivate(new RecorderPrivate( capacity ))
 {
-    mPrivate = new RecorderPrivate( capacity );
+}
+
+Recorder::Recorder( RecorderPrivate* p ) : QObject(0), mPrivate(p)
+{
 }
 
 Recorder::~Recorder()
@@ -17,9 +19,6 @@ Recorder::~Recorder()
 void Recorder::onBoardLoaded( int level )
 {
     mPrivate->onBoardLoaded( level );
-    if ( GameRegistry* registry = getRegistry(this) ) {
-        mStartDirection = registry->getGame().getBoard()->getTankStartVector().mAngle;
-    }
 }
 
 bool Recorder::isEmpty() const
@@ -37,16 +36,6 @@ int Recorder::getLevel() const
     return mPrivate->getLevel();
 }
 
-RecorderReader* Recorder::getReader()
-{
-    return new RecorderReader( mStartDirection, *mPrivate->source() );
-}
-
-bool Recorder::setData( int count, const unsigned char* data )
-{
-    return mPrivate->setData( count, data );
-}
-
 int Recorder::getCapacity() const
 {
     return mPrivate->mCapacity;
@@ -54,7 +43,11 @@ int Recorder::getCapacity() const
 
 RecorderSource* Recorder::source()
 {
-    return mPrivate->source();
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        mPrivate->lazyFlush();
+        return new RecorderSource( *mPrivate, registry->getPersist() );
+    }
+    return 0;
 }
 
 void Recorder::recordMove( bool adjacent, int rotation )
@@ -96,18 +89,15 @@ bool RecorderReader::consumeNext( RecorderPlayer* player )
 {
     EncodedMove encoded;
 
-    switch( mSource.getReadState() ) {
-    case RecorderSource::Ready:
-        encoded.u.value = mSource.get();
-        if ( !encoded.isEmpty() ) {
-            break;
+    encoded.u.value = mSource.get();
+    if ( encoded.isEmpty() ) {
+        if ( mSource.getReadState() == RecorderSource::Finished ) {
+            player->setReplay( false );
+            return false;
         }
-        // fall through
-    case RecorderSource::Finished:
-        player->setReplay( false );
-        // fall through
-    case RecorderSource::Pending:
-        return false;
+
+        // pending
+        return true;
     }
 
     bool empty = true;

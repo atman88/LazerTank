@@ -60,7 +60,7 @@ public:
 
     void error( int errorCode )
     {
-        onError( mLastError );
+        onError( errorCode );
         mLastError = errorCode;
         std::longjmp( mJmpBuf, errorCode );
     }

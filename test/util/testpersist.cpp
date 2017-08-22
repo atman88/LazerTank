@@ -6,6 +6,7 @@
 #include "../test/util/testasync.h"
 #include "util/persist.h"
 #include "util/recorder.h"
+#include "util/recorderprivate.h"
 #include "controller/gameregistry.h"
 
 class TestPersistUpdate : public TestAsync
@@ -60,8 +61,7 @@ void TestMain::testPersistNew()
         mStream = new QTextStream( "T" );
         mRegistry.getGame().getBoard()->load(*mStream,2);
         recorder.onBoardLoaded( 2 );
-        unsigned char data[] = { 80 };
-        recorder.setData( sizeof data, data );
+        recorder.recordMove(true,90);
         QSignalSpy persistSpy( persist, SIGNAL(levelSetComplete(int)) );
         persist->onLevelUpdated( 2 );
         QVERIFY(persistSpy.wait(2000));
@@ -92,21 +92,22 @@ void persistLevel( Recorder& recorder, int level, int count, Persist& persist )
 void TestMain::testPersistReplace()
 {
     if ( Persist* persist = setupTestPersist() ) {
+        RecorderPrivate* recorder_p = new RecorderPrivate( 2 );
+        mRegistry.injectRecorder( new Recorder(recorder_p) );
         Recorder& recorder = mRegistry.getRecorder();
         persistLevel( recorder, 3, 3, *persist );
         persistLevel( recorder, 2, 2, *persist );
         persistLevel( recorder, 3, 1, *persist );
 
-        // read them back
-        TestPersistUpdate testPersistAsync( *persist );
-        persist->init( &mRegistry );
-        QVERIFY( testPersistAsync.test() );
-
+        // read back level 2
+        recorder.onBoardLoaded( 2 );
+        RecorderSource* source = recorder.source();
+        QCOMPARE( source->getCount(), 0 );
         PersistLevelLoader* loader = persist->getLevelLoader(2);
-        char buf[2];
         QSignalSpy loaderSpy( loader, SIGNAL(dataReady()) );
-        loader->load( buf, sizeof buf );
+        loader->load( *recorder_p );
         QVERIFY( loaderSpy.wait(1000) );
+        QCOMPARE( source->getCount(), 2 );
     } else {
         QFAIL( "init failure" );
     }

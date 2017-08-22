@@ -263,9 +263,12 @@ void Game::onMoveAggregatorFinished()
             // if we don't have a window then we're headless (i.e. testing); don't show message boxes for the headless case
             if ( registry->getWindow() ) {
                 // ensure this is off now to remove it from the display:
-                registry->getMoveController().setReplay( false );
+                bool wasReplaying = registry->getMoveController().setReplay( false );
 
-                registry->getPersist().onLevelUpdated( mBoard.getLevel() );
+                // persist it if wasn't a replay:
+                if ( !wasReplaying ) {
+                    registry->getPersist().onLevelUpdated( mBoard.getLevel() );
+                }
 
                 QMessageBox msgBox;
                 msgBox.setWindowTitle( "Level completed!");
@@ -676,9 +679,5 @@ void Game::restartLevel( bool replay )
 
 void Game::replayLevel()
 {
-    if ( GameRegistry* registry = getRegistry(this) ) {
-        if ( !registry->getRecorder().isEmpty() ) {
-            restartLevel( true );
-        }
-    }
+    restartLevel( true );
 }

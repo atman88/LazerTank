@@ -26,11 +26,13 @@ public:
         mLastFireCount = count;
     }
 
-    void setReplay( bool on )
+    bool setReplay( bool on )
     {
+        bool rc = mLastReplayOn;
         cout << "TestRecorderPlayer: setReplay(" << on << ")" << endl;
         ++mReplayOnCallCount;
         mLastReplayOn = on;
+        return rc;
     }
 
     int mMoveCallCount;
@@ -81,23 +83,26 @@ void TestMain::testRecorderRecordSize()
  */
 void TestMain::testRecorderOverflow()
 {
-    RecorderPrivate recorder( 2 );
-    QVERIFY( recorder.isEmpty() );
-    QVERIFY( recorder.getCount() == 0 );
+    RecorderPrivate& recorder_p = *new RecorderPrivate( 2 );
+    QVERIFY( recorder_p.isEmpty() );
+    QVERIFY( recorder_p.getCount() == 0 );
+
+    Recorder& recorder = *new Recorder( &recorder_p );
+    mRegistry.injectRecorder( &recorder );
 
     // fill to the overflow point:
-    recorder.recordMove( true, 180 );
-    recorder.recordMove( true, -1 );
+    recorder_p.recordMove( true, 180 );
+    recorder_p.recordMove( true, -1 );
     // cause a shot continuation (worst case):
     int shotCount;
     for( shotCount = 0; shotCount <= MAX_MOVE_SHOT_COUNT; ++shotCount ) {
-        recorder.recordShot();
+        recorder_p.recordShot();
     }
 
-    int count = recorder.getCount();
+    int count = recorder_p.getCount();
     // it should discover the overflow with this:
-    recorder.recordMove( true, -1 );
-    QVERIFY2( recorder.getCount() == count, "count overflowed" );
+    recorder_p.recordMove( true, -1 );
+    QVERIFY2( recorder_p.getCount() == count, "count overflowed" );
 
     RecorderReader* reader = new RecorderReader( 0, *recorder.source() );
     TestRecorderPlayer player;

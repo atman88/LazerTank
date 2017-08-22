@@ -3,8 +3,8 @@
 
 #include <QObject>
 
-class GameRegistry;
 class Recorder;
+class Persist;
 class RecorderPrivate;
 class Board;
 
@@ -21,10 +21,11 @@ public:
     virtual void move( int direction, bool doWakeup = true ) = 0;
 
     /**
-     * @brief Updates the consumer on the replay state
-     * @param on
+     * @brief Updates the consumer's replay state
+     * @param on Replay is enabled if true otherwise replay is disabled
+     * @return The previous replay on/off state
      */
-    virtual void setReplay( bool on ) = 0;
+    virtual bool setReplay( bool on ) = 0;
 
     /**
      * @brief Serves a shot to the consumer
@@ -44,12 +45,12 @@ public:
         Finished
     } ReadState;
 
-    RecorderSource( RecorderPrivate& recorder, QObject* parent = 0 );
+    RecorderSource( RecorderPrivate& recorder, Persist& persist );
 
     /**
      * @brief Query whether data is ready to read
      */
-    ReadState getReadState();
+    ReadState getReadState() const;
 
     /**
      * @brief Query the total count of buffered moves
@@ -89,9 +90,14 @@ signals:
      */
     void dataReady();
 
+private slots:
+    void onDataReady();
+
 private:
     RecorderPrivate& mRecorder;
+    Persist& mPersist;
     int mOffset;
+    int mLoadSequence;
 };
 
 class RecorderReader
@@ -140,7 +146,8 @@ public:
      * sequences that can be recorded. It should default to a generous number needed to complete any one of the
      * available levels.
      */
-    Recorder( int capacity = SaneMaxCapacity, QObject* parent = 0 );
+    Recorder( int capacity = SaneMaxCapacity );
+    Recorder( RecorderPrivate* recorder_p );
     ~Recorder();
 
     /**
@@ -187,20 +194,7 @@ public:
      */
     RecorderSource* source();
 
-    /**
-     * @brief Obtain a reader for playback of this recording
-     */
-    RecorderReader* getReader();
-
-    /**
-     * @brief Preloads the recorder with recording data
-     * @param count The size of the data
-     * @param data raw recording data
-     * @return true if sucessful
-     */
-    bool setData( int count, const unsigned char *data );
-
-private:
+protected:
     RecorderPrivate* mPrivate;
     int mStartDirection; // the initial tank direction
 };

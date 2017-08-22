@@ -18,7 +18,8 @@ HEADERS += \
     util/gameutils.h \
     util/imageutils.h \
     view/boardrenderer.h \
-    util/persist.h
+    util/persist.h \
+    util/loadable.h
 
 SOURCES += \
     model/board.cpp \

@@ -214,6 +214,14 @@ bool LevelList::isInitialized() const
     return mInitialized;
 }
 
+bool LevelList::isLevelCompleted( int number ) const
+{
+    if ( const Level* level = find( number ) ) {
+        return level->getCompleted();
+    }
+    return false;
+}
+
 void LevelList::setCompleted( int number )
 {
     int i = indexOf( number );

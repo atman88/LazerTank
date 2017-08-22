@@ -253,15 +253,16 @@ signals:
 public slots:
     /**
      * @brief Enable/disable automatic replay
-     * @param on
+     * @param on Enables replay if true otherwise disables replay
+     * @return previous on/off replay setting
      */
-    void setReplay( bool on ) override;
+    bool setReplay( bool on ) override;
 
 private slots:
     void replayPlayback();
 
 private:
-    RecorderReader* mReplaySource;
+    RecorderReader* mReplayReader;
 };
 
 #endif // MOVECONTROLLER_H
