@@ -51,8 +51,7 @@ public:
     static const int SaneMaxFileSize = 100 *
       (sizeof(PersistedLevelRecord)+Recorder::SaneMaxCapacity + sizeof(PersistedLevelIndex)) + sizeof(PersistedLevelIndexFooter);
 
-    PersistentRunnable( Persist& persist, bool deleteWhenDone = true ) : ErrorableRunnable(deleteWhenDone), mPersist(persist),
-      mFile( persist.mPath )
+    PersistentRunnable( Persist& persist ) : mPersist(persist), mFile( persist.mPath )
     {
     }
     virtual ~PersistentRunnable() {}
@@ -128,7 +127,7 @@ public:
 class PersistentUpdateRunnable : public PersistentRunnable
 {
 public:
-    PersistentUpdateRunnable( Persist& persist ) : PersistentRunnable(persist,false)
+    PersistentUpdateRunnable( Persist& persist ) : PersistentRunnable(persist)
     {
     }
 
@@ -581,6 +580,13 @@ PersistLevelLoader::PersistLevelLoader( Persist& persist, PersistedLevelIndex in
     // background to foreground signal connection:
     QObject::connect( this, &PersistLevelLoader::dataReadyInternal, this, &PersistLevelLoader::onDataReadyInternal,
       Qt::ConnectionType( Qt::QueuedConnection|Qt::UniqueConnection ) /* unique allows for multiple calls within tests*/ );
+}
+
+PersistLevelLoader::~PersistLevelLoader()
+{
+    if ( mRunnable ) {
+        delete mRunnable;
+    }
 }
 
 int PersistLevelLoader::getCount()

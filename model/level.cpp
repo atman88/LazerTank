@@ -84,11 +84,7 @@ private:
 class ListLoadRunnable : public BasicRunnable
 {
 public:
-    ListLoadRunnable( LevelList& levelList ) : BasicRunnable(true), mLevelList(levelList)
-    {
-    }
-
-    ~ListLoadRunnable()
+    ListLoadRunnable( LevelList& levelList ) : mLevelList(levelList)
     {
     }
 
@@ -111,6 +107,11 @@ public:
         mLevelList.mInitialized = true;
 
         emit mLevelList.initialized();
+    }
+
+    bool deleteWhenDone()
+    {
+        return true;
     }
 
 private:

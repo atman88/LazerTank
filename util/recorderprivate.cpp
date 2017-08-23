@@ -9,8 +9,15 @@
 #define ALLOCATION_CHUNK_SIZE 1000
 
 RecorderSource::RecorderSource( RecorderPrivate& recorder, Persist& persist ) : QObject(0), mRecorder(recorder),
-  mPersist(persist), mOffset(0), mLoadSequence(0)
+  mPersist(persist), mLoader(0), mOffset(0), mLoadSequence(0)
 {
+}
+
+RecorderSource::~RecorderSource()
+{
+    if ( mLoader ) {
+        delete mLoader;
+    }
 }
 
 RecorderSource::ReadState RecorderSource::getReadState() const
@@ -50,15 +57,19 @@ unsigned char RecorderSource::get()
         return mRecorder.mRecorded[mOffset++].u.value;
     }
 
-    if ( mLoadSequence == 0 ) {
-        if ( PersistLevelLoader* loader = mPersist.getLevelLoader( mRecorder.getLevel() ) ) {
-            if ( mRecorder.setData( *loader ) ) {
-                QObject::connect( loader, &PersistLevelLoader::dataReady, this, &RecorderSource::onDataReady );
+    if ( mLoadSequence == 0 && mLoader == 0 ) {
+        if ( (mLoader = mPersist.getLevelLoader( mRecorder.getLevel()) ) ) {
+            if ( mRecorder.setData( *mLoader ) ) {
+                QObject::connect( mLoader, &PersistLevelLoader::dataReady, this, &RecorderSource::onDataReady );
                 mLoadSequence = 1;
                 return 0;
             }
         }
         mLoadSequence = 2;
+        if ( mLoader ) {
+            delete mLoader;
+            mLoader = 0;
+        }
     }
 
     return 0;
@@ -86,6 +97,10 @@ void RecorderSource::onDataReady()
 {
     disconnect( 0, 0, this, SIGNAL(onDataReady) );
     mLoadSequence = 2;
+    if ( mLoader ) {
+        delete mLoader;
+        mLoader = 0;
+    }
     emit dataReady();
 }
 

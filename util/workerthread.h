@@ -15,20 +15,32 @@ class Runnable
 public:
     virtual ~Runnable() {}
 
+    /**
+     * @brief User-suppled method performed in the background
+     */
     virtual void run() = 0;
 
+    /**
+     * @brief Hook for wrapping additional run behavior
+     */
     virtual void runInternal() = 0;
 
+    /**
+     * @brief Hook for specifying delete ownership
+     * @return true to force deletion of this runnable after it is run by the WorkerThread
+     */
     virtual bool deleteWhenDone() = 0;
 };
 
+/**
+ * @brief A runnable with default hooks provided. Deletion of this runnable is managed by the caller.
+ */
 class BasicRunnable : public Runnable
 {
 public:
-    BasicRunnable( bool deleteWhenDone = false ) : mDeleteWhenDone(deleteWhenDone)
+    BasicRunnable()
     {
     }
-    virtual ~BasicRunnable() {}
 
 protected:
     virtual void runInternal()
@@ -36,28 +48,33 @@ protected:
         run();
     }
 
-    bool deleteWhenDone() override
+    bool deleteWhenDone()
     {
-        return mDeleteWhenDone;
+        return false;
     }
-
-private:
-    bool mDeleteWhenDone;
 };
 
 /**
- * @brief A task with error handling hooks
+ * @brief A runnable which provides error handling hooks
  */
 class ErrorableRunnable : public BasicRunnable
 {
 public:
-    ErrorableRunnable( bool deleteWhenDone = false ) : BasicRunnable(deleteWhenDone), mLastError(0)
+    ErrorableRunnable() : mLastError(-1)
     {
     }
     virtual ~ErrorableRunnable() {}
 
+    /**
+     * @brief User-supplied hook for error reporting, recovery etc
+     * @param errorCode User-defined error identifier
+     */
     virtual void onError( int errorCode ) = 0;
 
+    /**
+     * @brief Raise an error. This method terminates the running run method (I.e. it does not return)
+     * @param errorCode User-defined error identifier
+     */
     void error( int errorCode )
     {
         onError( errorCode );
@@ -65,9 +82,28 @@ public:
         std::longjmp( mJmpBuf, errorCode );
     }
 
+    /**
+     * @brief Query whether this runnable encountered an error during it's last run
+     * @return true if errored
+     */
+    bool errored() const
+    {
+        return mLastError >= 0;
+    }
+
+    /**
+     * @brief Retrieve the error code for the last error encountered
+     * @return The last raised error code or -1 if an error has not occurred
+     */
+    int getLastError() const
+    {
+        return mLastError;
+    }
+
 protected:
     void runInternal() override
     {
+        mLastError = -1;
         if ( !setjmp( mJmpBuf ) ) {
             run();
         }
@@ -90,13 +126,13 @@ public:
     WorkerThread();
 
     /**
-     * @brief Queue a task for execution
+     * @brief Queue a task for execution. Ownership of the runnable is retained by the caller.
      * @param runnable The task to queue
      */
     void doWork( Runnable* runnable );
 
     /**
-     * @brief Queue a shared task for execution
+     * @brief Queue a shared task for execution. This method is useful for facilitating auto deletion of the runnable.
      * @param sharedRunnable
      */
     void doWork( std::shared_ptr<Runnable> sharedRunnable );

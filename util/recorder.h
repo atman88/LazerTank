@@ -5,6 +5,7 @@
 
 class Recorder;
 class Persist;
+class PersistLevelLoader;
 class RecorderPrivate;
 class Board;
 
@@ -46,6 +47,7 @@ public:
     } ReadState;
 
     RecorderSource( RecorderPrivate& recorder, Persist& persist );
+    ~RecorderSource();
 
     /**
      * @brief Query whether data is ready to read
@@ -96,6 +98,7 @@ private slots:
 private:
     RecorderPrivate& mRecorder;
     Persist& mPersist;
+    PersistLevelLoader* mLoader;
     int mOffset;
     int mLoadSequence;
 };
@@ -191,6 +194,8 @@ public:
 
     /**
      * @brief Obtain a raw data reader for this recording
+     * @return A newly allocated RecorderSource instance if successful or 0 if an failure occured.
+     * Onus is on the caller to delete the returned RecorderSource
      */
     RecorderSource* source();
 

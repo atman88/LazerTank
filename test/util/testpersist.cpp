@@ -107,7 +107,9 @@ void TestMain::testPersistReplace()
         QSignalSpy loaderSpy( loader, SIGNAL(dataReady()) );
         loader->load( *recorder_p );
         QVERIFY( loaderSpy.wait(1000) );
+        delete loader;
         QCOMPARE( source->getCount(), 2 );
+        delete source;
     } else {
         QFAIL( "init failure" );
     }
