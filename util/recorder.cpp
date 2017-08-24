@@ -102,7 +102,6 @@ bool RecorderReader::consumeNext( RecorderPlayer* player )
 
     bool empty = true;
     if ( encoded.u.move.adjacent ) {
-std::cout << "RecorderReader::consumeNext move " << mLastDirection << std::endl;
         player->move( mLastDirection, !encoded.u.move.rotate );
         empty = false;
     }
@@ -120,7 +119,7 @@ std::cout << "RecorderReader::consumeNext move " << mLastDirection << std::endl;
             abort();
             return false;
         }
-std::cout << "RecorderReader::consumeNext move " << mLastDirection << std::endl;
+
         player->move( mLastDirection );
         empty = false;
     }
@@ -151,7 +150,6 @@ std::cout << "RecorderReader::consumeNext move " << mLastDirection << std::endl;
                 }
             }
         }
-std::cout << "RecorderReader::consumeNext fire " << shotCount << std::endl;
         player->fire( shotCount );
     }
     return true;

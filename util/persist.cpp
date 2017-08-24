@@ -149,7 +149,6 @@ public:
 
     void run() override
     {
-        std::cout << "persist: running InitRunnable" << std::endl;
         if ( mFile.exists() ) {
             eOpen( QIODevice::ReadOnly );
 
@@ -198,8 +197,6 @@ public:
 
     void run() override
     {
-        std::cout << "persist: running UpdateRunnable level=" << mLevel << std::endl;
-
         // build a list of retained indexes sorted by offset
         PersistedLevelIndex oldIndex;
         oldIndex.offset = -1; // mark as null
@@ -412,13 +409,11 @@ void Persist::setUnusable()
 void Persist::onPersistentUpdateResult()
 {
     mLastUpdateTime.start();
-std::cout << "Persist: emit indexReadyQueued\n";
     emit indexReadyQueued();
 }
 
 void Persist::onIndexReadyQueued()
 {
-std::cout << "Persist: onIndexReadyQueued runnable=" << (mUpdateRunnable != 0) << std::endl;
     if ( mUpdateRunnable ) {
         // mark existing records as unitialized
         for( auto old = mRecords.begin(); old != mRecords.end(); ++old ) {
@@ -515,8 +510,6 @@ public:
 
     bool doLoad()
     {
-std::cout << "persist: running LoadLevelRunnable\n";
-
         if ( !mPersist.isUnusable() ) {
             if ( GameRegistry* registry = getRegistry(&mLoader.mPersist) ) {
                 mWorking = true;
@@ -568,6 +561,11 @@ std::cout << "persist: running LoadLevelRunnable\n";
         mLoader.onLoaded();
     }
 
+    bool deleteWhenDone()
+    {
+        return true;
+    }
+
 private:
     PersistLevelLoader& mLoader;
     bool mWorking;
@@ -575,18 +573,11 @@ private:
 };
 
 PersistLevelLoader::PersistLevelLoader( Persist& persist, PersistedLevelIndex index, QObject* parent )
-  : QObject(parent), mPersist(persist), mIndex(index), mRunnable(0)
+  : QObject(parent), mPersist(persist), mIndex(index), mStarted(false)
 {
     // background to foreground signal connection:
     QObject::connect( this, &PersistLevelLoader::dataReadyInternal, this, &PersistLevelLoader::onDataReadyInternal,
       Qt::ConnectionType( Qt::QueuedConnection|Qt::UniqueConnection ) /* unique allows for multiple calls within tests*/ );
-}
-
-PersistLevelLoader::~PersistLevelLoader()
-{
-    if ( mRunnable ) {
-        delete mRunnable;
-    }
 }
 
 int PersistLevelLoader::getCount()
@@ -596,12 +587,15 @@ int PersistLevelLoader::getCount()
 
 bool PersistLevelLoader::load( Loadable& loadable )
 {
-    if ( mRunnable ) {
-        return false; // already called
+    if ( !mStarted ) {
+        mStarted = true;
+        LoadLevelRunnable* runnable = new LoadLevelRunnable( *this, loadable );
+        if ( runnable->doLoad() ) {
+            return true;
+        }
+        delete runnable;
     }
-
-    mRunnable = new LoadLevelRunnable( *this, loadable );
-    return mRunnable->doLoad();
+    return false;
 }
 
 void PersistLevelLoader::onDataReadyInternal()

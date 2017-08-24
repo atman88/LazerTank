@@ -48,7 +48,6 @@ class PersistLevelLoader : public QObject
 
 public:
     PersistLevelLoader( Persist& persist, PersistedLevelIndex index, QObject* parent = 0 );
-    ~PersistLevelLoader();
 
     /**
      * @brief Query the size of the persisted recording data for the level associated with this loader
@@ -82,7 +81,7 @@ private:
 
     Persist& mPersist;
     PersistedLevelIndex mIndex;
-    LoadLevelRunnable* mRunnable;
+    bool mStarted;
 
     friend class LoadLevelRunnable;
 };

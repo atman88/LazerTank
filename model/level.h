@@ -6,7 +6,6 @@
 #include <QAbstractListModel>
 
 #include "modelpoint.h"
-#include "util/workerthread.h"
 
 class GameRegistry;
 class Board;

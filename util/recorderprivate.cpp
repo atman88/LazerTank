@@ -95,7 +95,7 @@ int RecorderSource::seekEnd()
 
 void RecorderSource::onDataReady()
 {
-    disconnect( 0, 0, this, SIGNAL(onDataReady) );
+    disconnect( this, SLOT(onDataReady()) );
     mLoadSequence = 2;
     if ( mLoader ) {
         delete mLoader;
