@@ -24,13 +24,13 @@ bool PathSearchAction::setCriteria( PieceType focus, const ModelPoint& target )
                 mFocus = TANK;
             } else {
                 mFocus = MOVE;
-                mStartPoint = *move;
+                mStartVector = *move;
                 mStartDirection = move->getAngle();
             }
         }
 
         if ( mFocus == TANK ) {
-            mStartPoint = registry->getTank().getPoint();
+            mStartVector = registry->getTank().getVector();
             mStartDirection = registry->getTank().getRotation();
         }
 

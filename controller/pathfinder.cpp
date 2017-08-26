@@ -78,34 +78,46 @@ void PathFinder::printSearchMap()
 }
 */
 
-void PathFinder::buildPath( int col, int row )
+#define CANBUILD() mSearchMap[row*BOARD_MAX_WIDTH+col]==mPassValue
+
+bool PathFinder::buildPath()
 {
-    int direction = 0;
+    ModelVector curVector = mRunCriteria.getStartVector();
 
-    while( col != mRunCriteria.getTargetCol() || row != mRunCriteria.getTargetRow() ) {
-        ModelPoint lastPoint( col, row );
+    int angle = curVector.mAngle;
+    int col = curVector.mCol;
+    int row = curVector.mRow;
 
+    while( !mRunCriteria.getTargetPoint().equals( curVector ) ) {
         if ( --mPassValue < 0 ) {
             mPassValue = TRAVERSIBLE-1;
         }
-        if      ( row > 0              && mSearchMap[(row-1) * BOARD_MAX_WIDTH + col  ] == mPassValue ) { --row; direction =   0; }
-        else if ( col > 0              && mSearchMap[row     * BOARD_MAX_WIDTH + col-1] == mPassValue ) { --col; direction = 270; }
-        else if ( row < mMaxPoint.mRow && mSearchMap[(row+1) * BOARD_MAX_WIDTH + col  ] == mPassValue ) { ++row; direction = 180; }
-        else if ( col < mMaxPoint.mCol && mSearchMap[row     * BOARD_MAX_WIDTH + col+1] == mPassValue ) { ++col; direction =  90; }
-        else {
-            break;
-        }
+        for( ;; ) {
+            switch( angle ) {
+            case   0: if ( row > 0              ) { --row; if ( CANBUILD() ) goto found; ++row; } break;
+            case 270: if ( col > 0              ) { --col; if ( CANBUILD() ) goto found; ++col; } break;
+            case 180: if ( row < mMaxPoint.mRow ) { ++row; if ( CANBUILD() ) goto found; --row; } break;
+            case  90: if ( col < mMaxPoint.mCol ) { ++col; if ( CANBUILD() ) goto found; --col; } break;
+            }
 
-        if ( lastPoint.mCol != mRunCriteria.getStartCol()
-          || lastPoint.mRow != mRunCriteria.getStartRow()
-          || direction != mRunCriteria.getStartDirection() ) {
-            mMoves.append( MOVE, lastPoint, direction );
+            angle = (angle + 90) % 360;
+            if ( angle == curVector.mAngle ) {
+                return false;
+            }
         }
+      found:
+        curVector.mAngle = angle;
+        if ( !curVector.equals( mRunCriteria.getStartVector() ) ) {
+            mMoves.append( MOVE, curVector );
+        }
+        curVector.mCol = col;
+        curVector.mRow = row;
     }
-    mMoves.append( MOVE, ModelPoint( col, row ), direction );
+    mMoves.append( MOVE, curVector );
+    return true;
 }
 
-void PathFinder::tryAt( int col, int row )
+bool PathFinder::tryAt( int col, int row )
 {
     if ( col >= 0 && col <= mMaxPoint.mCol
       && row >= 0 && row <= mMaxPoint.mRow ) {
@@ -120,15 +132,13 @@ void PathFinder::tryAt( int col, int row )
             break;
 
         case TARGET:
-            if ( !mTestOnly ) {
-                buildPath( col, row );
-            }
-            std::longjmp( mJmpBuf, 1 );
+            return true;
 
         default:
             ;
         }
     }
+    return false;
 }
 
 int PathFinder::pass1( int nPoints )
@@ -140,10 +150,12 @@ int PathFinder::pass1( int nPoints )
     for( int pullIndex = 0; pullIndex < nPoints && !mStopping; ++pullIndex ) {
         int col = mSearchCol[pullIndex];
         int row = mSearchRow[pullIndex];
-        tryAt( col,   row-1 );
-        tryAt( col-1, row   );
-        tryAt( col,   row+1 );
-        tryAt( col+1, row   );
+        if ( tryAt( col,   row-1 )
+          || tryAt( col-1, row   )
+          || tryAt( col,   row+1 )
+          || tryAt( col+1, row   ) ) {
+            std::longjmp( mJmpBuf, 1 );
+        }
     }
     return (sizeof mSearchCol)/(sizeof *mSearchCol) - mPushIndex;
 }
@@ -158,10 +170,12 @@ int PathFinder::pass2( int nPoints )
     for( int pullIndex = (sizeof mSearchCol)/(sizeof *mSearchCol); --pullIndex > endIndex && !mStopping; ) {
         int col = mSearchCol[pullIndex];
         int row = mSearchRow[pullIndex];
-        tryAt( col,   row-1 );
-        tryAt( col-1, row   );
-        tryAt( col,   row+1 );
-        tryAt( col+1, row   );
+        if ( tryAt( col,   row-1 )
+          || tryAt( col-1, row   )
+          || tryAt( col,   row+1 )
+          || tryAt( col+1, row   ) ) {
+            std::longjmp( mJmpBuf, 1 );
+        }
     }
     return mPushIndex;
 }
@@ -197,7 +211,9 @@ void PathFinder::run()
 
     if ( mTestOnly ) {
         emit testResult( found, mRunCriteria );
-    } else if ( found && mMoves.size() > 0 ) {
-        emit pathFound( mRunCriteria, &mMoves );
+    } else if ( found ) {
+        if ( buildPath() ) {
+            emit pathFound( mRunCriteria, &mMoves );
+        }
     }
 }

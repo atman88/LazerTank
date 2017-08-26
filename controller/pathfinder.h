@@ -53,10 +53,10 @@ signals:
 
 private:
     void addPush( Push& push );
-    void tryAt(int col, int row);
+    bool tryAt( int col, int row );
     int pass1( int nPoints );
     int pass2( int nPoints );
-    void buildPath( int col, int row );
+    bool buildPath();
 
     PathSearchCriteria mCriteria;
     PathSearchCriteria mRunCriteria; // copy used by the background which won't be impacted by a parallel call to findPath

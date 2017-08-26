@@ -5,14 +5,14 @@ PathSearchCriteria::PathSearchCriteria() : mStartDirection(0), mFocus(MOVE)
 {
 }
 
-PathSearchCriteria::PathSearchCriteria( const PathSearchCriteria& source ) : mStartPoint(source.mStartPoint),
+PathSearchCriteria::PathSearchCriteria( const PathSearchCriteria& source ) : mStartVector(source.mStartVector),
   mStartDirection(source.mStartDirection), mTargetPoint(source.mTargetPoint), mFocus(source.mFocus)
 {
 }
 
 PathSearchCriteria& PathSearchCriteria::operator =(const PathSearchCriteria other)
 {
-    mStartPoint     = other.mStartPoint;
+    mStartVector    = other.mStartVector;
     mStartDirection = other.mStartDirection;
     mTargetPoint    = other.mTargetPoint;
     mFocus          = other.mFocus;
@@ -21,7 +21,7 @@ PathSearchCriteria& PathSearchCriteria::operator =(const PathSearchCriteria othe
 
 bool PathSearchCriteria::operator ==(const PathSearchCriteria other)
 {
-    return mStartPoint     == other.mStartPoint
+    return mStartVector    == other.mStartVector
         && mStartDirection == other.mStartDirection
         && mTargetPoint    == other.mTargetPoint
         && mFocus          == other.mFocus;
@@ -41,19 +41,19 @@ int PathSearchCriteria::getTargetRow() const
     return mTargetPoint.mRow;
 }
 
-ModelPoint PathSearchCriteria::getStartPoint() const
+ModelVector PathSearchCriteria::getStartVector() const
 {
-    return mStartPoint;
+    return mStartVector;
 }
 
 int PathSearchCriteria::getStartCol() const
 {
-    return mStartPoint.mCol;
+    return mStartVector.mCol;
 }
 
 int PathSearchCriteria::getStartRow() const
 {
-    return mStartPoint.mRow;
+    return mStartVector.mRow;
 }
 
 int PathSearchCriteria::getStartDirection() const

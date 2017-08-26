@@ -16,7 +16,7 @@ public:
     /**
      * @brief Getter methods
      */
-    ModelPoint getStartPoint() const;
+    ModelVector getStartVector() const;
     int getStartCol() const;
     int getStartRow() const;
     int getStartDirection() const;
@@ -32,7 +32,7 @@ public:
     bool isFuturistic() const;
 
 protected:
-    ModelPoint mStartPoint;
+    ModelVector mStartVector;
     int mStartDirection;
     ModelPoint mTargetPoint;
     PieceType mFocus;

@@ -63,6 +63,11 @@ Piece* PieceListManager::addInternal( Piece* piece , bool pushFront )
     return piece;
 }
 
+Piece* PieceListManager::append( PieceType type, ModelVector vector )
+{
+    return addInternal( new SimplePiece( type, vector ) );
+}
+
 Piece* PieceListManager::append( PieceType type, ModelPoint point, int angle )
 {
     return addInternal( new SimplePiece( type, point, angle ) );
