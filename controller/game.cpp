@@ -309,6 +309,20 @@ bool Game::canPlaceAt(PieceType what, ModelPoint point, int fromAngle, bool futu
     return canPlaceAt( what, point, fromAngle, getBoard(futuristic), pushPiece );
 }
 
+static bool canPushPiece( Piece* piece, int fromAngle )
+{
+    switch( piece->getType() ) {
+    case TILE:
+        return true;
+    case TILE_MIRROR:
+        return piece->getAngle() != fromAngle && (piece->getAngle() + 270) % 360 != fromAngle;
+    case CANNON:
+        return (piece->getAngle() + 180) % 360 != fromAngle;
+    default:
+        return false;
+    }
+}
+
 bool Game::canPlaceAt(PieceType what, ModelPoint point, int fromAngle, Board* board, Piece **pushPiece )
 {
     switch( board->tileAt( point ) ) {
@@ -316,9 +330,11 @@ bool Game::canPlaceAt(PieceType what, ModelPoint point, int fromAngle, Board* bo
     case TILE_SUNK:
     {   Piece* hit = board->getPieceManager().pieceAt( point );
         if ( hit ) {
-            if ( what == TANK && pushPiece ) {
-                *pushPiece = hit;
-                return canMoveFrom( hit->getType(), fromAngle, &point, board );
+            if ( canPushPiece( hit, fromAngle ) ) {
+                if ( what == TANK && pushPiece ) {
+                    *pushPiece = hit;
+                    return canMoveFrom( hit->getType(), fromAngle, &point, board );
+                }
             }
             return false;
         }
