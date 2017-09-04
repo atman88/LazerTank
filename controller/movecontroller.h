@@ -9,6 +9,8 @@ class FutureShotPathManager;
 class Board;
 class PathSearchAction;
 
+#include "pathsearchcriteria.h"
+#include "pathfindercontroller.h"
 #include "model/futureshotpath.h"
 #include "model/piecelistmanager.h"
 #include "util/recorder.h"
@@ -222,6 +224,8 @@ private:
 
     DragState mDragState;
     QPoint mPreviousCoord;
+    PathSearchCriteria mTileDragTestCriteria;
+    TileDragTestResult mTileDragTestResult;
     bool mChanged;
 };
 

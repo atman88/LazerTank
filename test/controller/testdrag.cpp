@@ -5,6 +5,7 @@
 #include "movecontroller.h"
 #include "pathfindercontroller.h"
 #include "model/tank.h"
+#include "../test/util/testasync.h"
 
 using namespace std;
 
@@ -123,4 +124,83 @@ void TestMain::testDragPoint()
     moveController.onDragTo( mRegistry.getTank().getPoint().toViewCenterSquare() );
     QCOMPARE( moveController.getMoves().size(), 0 );
 #endif // NOTDEF
+}
+
+class TestPathFinderController : public PathFinderController, public TestAsync
+{
+public:
+    TestPathFinderController() : PathFinderController(0), mError(0), mReceived(false)
+    {
+    }
+
+    void init()
+    {
+        PathFinderController::init();
+        QObject::connect( this, &PathFinderController::testResult, this, &TestPathFinderController::verifyTestResult );
+    }
+
+    bool condition()
+    {
+        return mReceived;
+    }
+
+    bool testBool( bool expression, const char* error )
+    {
+        if ( !expression && !mError ) {
+            mError = error;
+        }
+        return expression;
+    }
+
+    bool testDrag( ModelPoint point, std::set<ModelPoint> expected )
+    {
+        mReceived = false;
+        mExpected = expected;
+        GameRegistry* registry = getRegistry(this);
+        registry->getMoveController().dragStart( point );
+        return testBool( registry->getMoveController().getDragState() == Searching, "dragState != Searching" )
+            && testBool( test(), "timeout" );
+    }
+
+public slots:
+    void verifyTestResult( bool ok, PathSearchCriteria* criteria )
+    {
+        if ( testBool( ok, "verify: received false" ) ) {
+            testBool( mExpected.size() == criteria->getTileDragTestResult()->mPossibleApproaches.size(), "counts differ" );
+            auto expectedIt = mExpected.cbegin();
+            for( auto actualIt : criteria->getTileDragTestResult()->mPossibleApproaches ) {
+                if ( testBool( actualIt.equals( *expectedIt++ ), "result differs" ) ) {
+                    break;
+                }
+            }
+        }
+        mReceived = true;
+    }
+
+    std::set<ModelPoint> mExpected;
+    const char* mError;
+    bool mReceived;
+};
+
+void TestMain::testDragTile()
+{
+    TestPathFinderController* pathFinderController = new TestPathFinderController();
+    mRegistry.injectPathFinderController( pathFinderController );
+    initGame(
+      "T . ..\n"
+      ".[/M..\n"
+      ". . ..\n"
+      ". M ..\n" );
+    pathFinderController->init();
+    qRegisterMetaType<PathSearchCriteria*>("PathSearchCriteria*");
+
+    pathFinderController->testDrag( ModelPoint(1,1), { ModelPoint(1,2), ModelPoint(2,1) } );
+    if ( pathFinderController->mError ) {
+        QFAIL( pathFinderController->mError );
+    }
+
+    pathFinderController->testDrag( ModelPoint(1,3), { ModelPoint(0,3), ModelPoint(2,3), ModelPoint(2,3) } );
+    if ( pathFinderController->mError ) {
+        QFAIL( pathFinderController->mError );
+    }
 }

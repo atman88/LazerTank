@@ -309,13 +309,17 @@ bool Game::canPlaceAt(PieceType what, ModelPoint point, int fromAngle, bool futu
     return canPlaceAt( what, point, fromAngle, getBoard(futuristic), pushPiece );
 }
 
-static bool canPushPiece( Piece* piece, int fromAngle )
+bool Game::canPushPiece( const Piece* piece, int fromAngle )
 {
     switch( piece->getType() ) {
     case TILE:
         return true;
     case TILE_MIRROR:
-        return piece->getAngle() != fromAngle && (piece->getAngle() + 270) % 360 != fromAngle;
+    {   bool rc = piece->getAngle() != fromAngle && (piece->getAngle() + 270) % 360 != fromAngle;
+        std::cout << "canPushPiece p=" << piece->getAngle() << " f=" << fromAngle << " rc=" << rc << std::endl;
+        return rc;
+    }
+//        return piece->getAngle() != fromAngle && (piece->getAngle() + 270) % 360 != fromAngle;
     case CANNON:
         return (piece->getAngle() + 180) % 360 != fromAngle;
     default:

@@ -68,6 +68,11 @@ public:
     TestRegistry* getRegistry();
 
 private slots:
+    void testDragTile();
+    void testDragTank();
+    void testDragPoint();
+    void testDragWithMove();
+
     void testPersistSizes();
     void testPersistNew();
     void testPersistReplace();
@@ -101,10 +106,6 @@ private slots:
     void testMoveFocus();
 
     void testWorker();
-
-    void testDragTank();
-    void testDragPoint();
-    void testDragWithMove();
 
     void cleanup();
 

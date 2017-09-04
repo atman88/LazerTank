@@ -46,7 +46,6 @@ RESOURCES += qml.qrc
 
 HEADERS += \
     view/shooter.h \
-    controller/pathfinder.h \
     controller/speedcontroller.h \
     model/shotmodel.h \
     view/shotview.h \
@@ -56,9 +55,10 @@ HEADERS += \
     view/boardwindow.h \
     model/tank.h \
     view/tankview.h \
-    controller/pathsearchaction.h \
     controller/pathfindercontroller.h \
     controller/pathsearchcriteria.h \
+    controller/pathsearchaction.h \
+    controller/pathfinder/pathfinder.h \
     model/futureshotpath.h \
     view/pushview.h \
     model/push.h \
@@ -77,7 +77,6 @@ HEADERS += \
 
 SOURCES += \
     view/shooter.cpp \
-    controller/pathfinder.cpp \
     controller/speedcontroller.cpp \
     model/shotmodel.cpp \
     view/shotview.cpp \
@@ -87,9 +86,10 @@ SOURCES += \
     view/boardwindow.cpp \
     model/tank.cpp \
     view/tankview.cpp \
-    controller/pathsearchaction.cpp \
-    controller/pathfindercontroller.cpp \
-    controller/pathsearchcriteria.cpp \
+    controller/pathfinder/pathfindercontroller.cpp \
+    controller/pathfinder/pathsearchcriteria.cpp \
+    controller/pathfinder/pathsearchaction.cpp \
+    controller/pathfinder/pathfinder.cpp \
     model/futureshotpath.cpp \
     view/pushview.cpp \
     model/push.cpp \

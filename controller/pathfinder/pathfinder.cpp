@@ -4,6 +4,7 @@
 #include "util/gameutils.h"
 #include "pathfinder.h"
 #include "controller/game.h"
+#include "controller/pathfindercontroller.h"
 #include "controller/gameregistry.h"
 #include "model/push.h"
 
@@ -12,11 +13,12 @@
 #define BLOCKED     4
 #define TARGET      5
 
-PathFinder::PathFinder(QObject *parent) : QThread(parent), mStopping(false), mPassValue(0), mPushIndex(0), mPushDirection(0), mTestOnly(false)
+PathFinder::PathFinder(QObject *parent) : QThread(parent), mStopping(false), mNPoints(0), mPassValue(0), mPushIndex(0),
+  mPushDirection(0), mTestOnly(false)
 {
 }
 
-bool PathFinder::findPath( PathSearchCriteria* criteria, bool testOnly )
+bool PathFinder::execCriteria( PathSearchCriteria* criteria, bool testOnly )
 {
     mStopping = true;
 
@@ -24,29 +26,27 @@ bool PathFinder::findPath( PathSearchCriteria* criteria, bool testOnly )
     // Note: Done here (in the app thread) to ensure the board doesn't change while reading it.
     if ( GameRegistry* registry = getRegistry(this) ) {
         Game& game = registry->getGame();
-        if ( game.canPlaceAt( TANK, criteria->getTargetPoint(), 0, criteria->isFuturistic() )) {
-            Board* board = game.getBoard( criteria->isFuturistic() );
-            mMaxPoint = board->getLowerRight();
+        Board* board = game.getBoard( criteria->isFuturistic() );
+        mMaxPoint = board->getLowerRight();
 
-            ModelPoint point;
-            for( point.mRow = mMaxPoint.mRow; point.mRow >= 0; --point.mRow ) {
-                for( point.mCol = mMaxPoint.mCol; point.mCol >= 0; --point.mCol ) {
-                    mSearchMap[point.mRow*BOARD_MAX_WIDTH+point.mCol] =
-                      game.canPlaceAt( TANK, point, 0, criteria->getFocus() != TANK ) ? TRAVERSIBLE : BLOCKED;
-                }
+        ModelPoint point;
+        for( point.mRow = mMaxPoint.mRow; point.mRow >= 0; --point.mRow ) {
+            for( point.mCol = mMaxPoint.mCol; point.mCol >= 0; --point.mCol ) {
+                mSearchMap[point.mRow*BOARD_MAX_WIDTH+point.mCol] =
+                  game.canPlaceAt( TANK, point, 0, criteria->getFocus() != TANK ) ? TRAVERSIBLE : BLOCKED;
             }
-
-            // account for any outstanding pushes if this is on the master board
-            if ( game.isMasterBoard(board) ) {
-                addPush( registry->getTankPush() );
-                addPush( registry->getShotPush() );
-            }
-
-            mCriteria = *criteria;
-            mTestOnly = testOnly;
-            start( LowPriority );
-            return true;
         }
+
+        // account for any outstanding pushes if this is on the master board
+        if ( game.isMasterBoard(board) ) {
+            addPush( registry->getTankPush() );
+            addPush( registry->getShotPush() );
+        }
+
+        mCriteria = *criteria;
+        mTestOnly = testOnly;
+        start( LowPriority );
+        return true;
     }
     return false;
 }
@@ -122,6 +122,22 @@ bool PathFinder::tryAt( int col, int row )
     if ( col >= 0 && col <= mMaxPoint.mCol
       && row >= 0 && row <= mMaxPoint.mRow ) {
         switch( mSearchMap[row*BOARD_MAX_WIDTH + col] ) {
+        case TARGET:
+        {   ModelPoint point( col, row );
+            auto it = mTargets.find( point );
+            if ( it != mTargets.end() ) {
+                mTargets.erase( it );
+                if ( TileDragTestResult* result = mRunCriteria.getTileDragTestResult() ) {
+                    result->mPossibleApproaches.insert( point );
+                }
+                if ( mTargets.empty() ) {
+                    return true;
+                }
+            }
+        }
+
+            // fall through
+
         case TRAVERSIBLE:
             mSearchMap[row*BOARD_MAX_WIDTH + col] = mPassValue;
             if ( mPushIndex >= 0 && mPushIndex < (int) ((sizeof mSearchCol)/(sizeof *mSearchCol)) ) {
@@ -131,9 +147,6 @@ bool PathFinder::tryAt( int col, int row )
             }
             break;
 
-        case TARGET:
-            return true;
-
         default:
             ;
         }
@@ -141,13 +154,13 @@ bool PathFinder::tryAt( int col, int row )
     return false;
 }
 
-int PathFinder::pass1( int nPoints )
+void PathFinder::pass1()
 {
     mPassValue = (mPassValue + 1) % TRAVERSIBLE;
     mPushIndex = (sizeof mSearchCol)/(sizeof *mSearchCol)-1;
     mPushDirection = -1;
 
-    for( int pullIndex = 0; pullIndex < nPoints && !mStopping; ++pullIndex ) {
+    for( unsigned pullIndex = 0; pullIndex < mNPoints && !mStopping; ++pullIndex ) {
         int col = mSearchCol[pullIndex];
         int row = mSearchRow[pullIndex];
         if ( tryAt( col,   row-1 )
@@ -157,15 +170,15 @@ int PathFinder::pass1( int nPoints )
             std::longjmp( mJmpBuf, 1 );
         }
     }
-    return (sizeof mSearchCol)/(sizeof *mSearchCol) - mPushIndex;
+    mNPoints = (sizeof mSearchCol)/(sizeof *mSearchCol) - mPushIndex;
 }
 
-int PathFinder::pass2( int nPoints )
+void PathFinder::pass2()
 {
     mPassValue = (mPassValue + 1) % TRAVERSIBLE;
     mPushIndex = 0;
     mPushDirection = 1;
-    int endIndex = (sizeof mSearchCol)/(sizeof *mSearchCol) - nPoints;
+    int endIndex = (sizeof mSearchCol)/(sizeof *mSearchCol) - mNPoints;
 
     for( int pullIndex = (sizeof mSearchCol)/(sizeof *mSearchCol); --pullIndex > endIndex && !mStopping; ) {
         int col = mSearchCol[pullIndex];
@@ -177,7 +190,7 @@ int PathFinder::pass2( int nPoints )
             std::longjmp( mJmpBuf, 1 );
         }
     }
-    return mPushIndex;
+    mNPoints = mPushIndex;
 }
 
 void PathFinder::run()
@@ -189,23 +202,49 @@ void PathFinder::run()
 
     mMoves.reset();
     bool found = false;
-    switch( setjmp( mJmpBuf ) ) {
-    case 0:
-        mSearchMap[mRunCriteria.getStartRow()*BOARD_MAX_WIDTH+mRunCriteria.getStartCol()] = TARGET;
+    if ( !setjmp( mJmpBuf ) ) {
+        mNPoints = 0;
         mPassValue = 0;
-        mSearchMap[mRunCriteria.getTargetRow()*BOARD_MAX_WIDTH+mRunCriteria.getTargetCol()] = mPassValue;
+        switch( mRunCriteria.getCriteriaType() ) {
+        case PathSearchCriteria::PathCriteria:
+            // For path search the starting point is targetted
+            mSearchMap[mRunCriteria.getStartRow() *BOARD_MAX_WIDTH+mRunCriteria.getStartCol() ] = TARGET;
+            mSearchMap[mRunCriteria.getTargetRow()*BOARD_MAX_WIDTH+mRunCriteria.getTargetCol()] = mPassValue;
+            mSearchCol[0] = mRunCriteria.getTargetCol();
+            mSearchRow[0] = mRunCriteria.getTargetRow();
+            mNPoints = 1;
+            break;
 
-        mSearchCol[0] = mRunCriteria.getTargetCol();
-        mSearchRow[0] = mRunCriteria.getTargetRow();
-    {   int nPoints = 1;
-        while( nPoints > 0 && !mStopping ) {
-            nPoints = pass1( nPoints );
-            nPoints = pass2( nPoints );
+        case PathSearchCriteria::TileDragTestCriteria:
+            // for multi target test, the target points are targeted
+            mSearchMap[mRunCriteria.getStartRow()*BOARD_MAX_WIDTH+mRunCriteria.getStartCol()] = mPassValue;
+            mSearchCol[0] = mRunCriteria.getStartCol();
+            mSearchRow[0] = mRunCriteria.getStartRow();
+            mTargets.clear();
+            if ( TileDragTestResult* result = mRunCriteria.getTileDragTestResult() ) {
+                for( auto it : result->mPossibleApproaches ) {
+                    char* p = &mSearchMap[it.mRow*BOARD_MAX_WIDTH+it.mCol];
+                    if ( *p == TRAVERSIBLE ) {
+                        *p = TARGET;
+                        mSearchCol[mNPoints] = it.mCol;
+                        mSearchRow[mNPoints] = it.mRow;
+                        mTargets.insert( it );
+                        ++mNPoints;
+                    }
+                }
+                result->mPossibleApproaches.clear();
+            }
+            break;
+
+        default:
+            ;
         }
-    }
-        break;
 
-    default:
+        while( mNPoints && !mStopping ) {
+            pass1();
+            pass2();
+        }
+    } else {
         found = true;
     }
 

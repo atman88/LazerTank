@@ -29,6 +29,14 @@ bool ModelPoint::operator !=( const ModelPoint& other ) const
     return !equals(other);
 }
 
+bool ModelPoint::operator <(const ModelPoint& other) const
+{
+    if ( mCol == other.mCol ) {
+        return mRow < other.mRow;
+    }
+    return mCol < other.mCol;
+}
+
 void ModelPoint::minMax(ModelPoint &min, ModelPoint &max) const
 {
     if ( mCol < min.mCol ) min.mCol = mCol; else if ( mCol > max.mCol ) max.mCol = mCol;

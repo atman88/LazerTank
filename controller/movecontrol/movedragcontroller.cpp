@@ -14,6 +14,7 @@ void MoveDragController::init( GameRegistry* registry )
 {
     MoveBaseController::init( registry );
     QObject::connect( &registry->getPathFinderController(), &PathFinderController::pathFound, this, &MoveDragController::onPathFound );
+    mTileDragTestResult.setParent(this);
 }
 
 void MoveDragController::onBoardLoaded( Board& board )
@@ -27,22 +28,27 @@ void MoveDragController::dragStart( ModelPoint selectedPoint )
     if ( GameRegistry* registry = getRegistry(this) ) {
         mChanged = false;
         mPreviousCoord = QPoint();
-        ModelPoint startPoint = getFocusVector();
 
-        PathSearchAction& pathToAction = registry->getPathToAction();
-        if ( selectedPoint.equals( startPoint ) ) {
+        if ( selectedPoint.equals( getFocusVector() ) ) {
             setDragState( Selecting );
         } else {
             Board* board = registry->getGame().getBoard(true);
-            if ( /*Piece* piece =*/ board->getPieceManager().pieceAt( selectedPoint ) ) {
-                setDragState( Forbidden );
+            if ( Piece* piece = board->getPieceManager().pieceAt( selectedPoint ) ) {
+                if ( mTileDragTestCriteria.setTileDragCriteria( mFocus, piece, &mTileDragTestResult ) ) {
+                    setDragState( Searching );
+                    registry->getPathFinderController().testCriteria( &mTileDragTestCriteria );
+                } else {
+                    setDragState( Forbidden );
+                }
             } else switch( board->tileAt( selectedPoint ) ) {
             case DIRT:
             case TILE_SUNK:
             case FLAG:
+            {   PathSearchAction& pathToAction = registry->getPathToAction();
                 pathToAction.setCriteria( mFocus, selectedPoint );
                 registry->getPathFinderController().doAction( &pathToAction );
                 setDragState( Searching );
+            }
                 break;
             default:
                 setDragState( Forbidden );
@@ -131,12 +137,10 @@ void MoveDragController::onDragTo( QPoint coord )
     if ( p == focusVector ) {
         setDragState( Selecting );
     } else if ( GameRegistry* registry = getRegistry(this) ) {
-        Game& game = registry->getGame();
-
         for( int angle = 0; angle < 360; angle += 90 ) {
             ModelPoint toPoint( focusVector );
             Piece* pushPiece = 0;
-            if ( game.canMoveFrom( TANK, angle, &toPoint, true, &pushPiece ) ) {
+            if ( registry->getGame().canMoveFrom( TANK, angle, &toPoint, true, &pushPiece ) ) {
                 if ( toPoint == p ) {
                     Piece* lastMove = mMoves.getBack();
                     const ModelPoint* prevMovePoint;

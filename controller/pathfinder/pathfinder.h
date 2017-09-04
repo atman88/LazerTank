@@ -26,13 +26,13 @@ public:
     PathFinder( QObject *parent = 0 );
 
     /**
-     * @brief Initiate a path search. If found, the resulting path is posted via the pathFound signal.
-     * @param action The search criteria
-     * @param testOnly If true, only the pathTestResult signal is raised as a result otherwise a pathFound signal
+     * @brief Initiate a search or test
+     * @param criteria Parameters for the search or test
+     * @param testOnly If true, the pathTestResult signal delivers the test result, otherwise the pathFound signal
      * is raised if (and only if) the path is successful
      * @return true if the search is successfully started
      */
-    bool findPath( PathSearchCriteria* criteria, bool testOnly );
+    bool execCriteria( PathSearchCriteria* criteria, bool testOnly = true );
 
     void run() override;
 
@@ -46,7 +46,7 @@ signals:
 
     /**
      * @brief Notification of a test result
-     * @param reachable true if a path between the two points is possible, otherwise false
+     * @param reachable true if a path between the start and any target points are possible, otherwise false
      * @param criteria The search parameters that were tested
      */
     void testResult( bool reachable, PathSearchCriteria criteria );
@@ -54,8 +54,8 @@ signals:
 private:
     void addPush( Push& push );
     bool tryAt( int col, int row );
-    int pass1( int nPoints );
-    int pass2( int nPoints );
+    void pass1();
+    void pass2();
     bool buildPath();
 
     PathSearchCriteria mCriteria;
@@ -65,10 +65,12 @@ private:
     ModelPoint mMaxPoint;
     int mSearchCol[MAX_POINTS];
     int mSearchRow[MAX_POINTS];
+    unsigned mNPoints;
     int mPassValue;
     int mPushIndex;
     int mPushDirection;
     bool mTestOnly;
+    std::set<ModelPoint> mTargets;
 
     PieceListManager mMoves;
 

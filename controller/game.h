@@ -83,6 +83,14 @@ public:
     void undoFuturePush( MovePiece* pusher );
 
     /**
+     * @brief test whether a piece allows being pushed from the given approach angle
+     * @param piece
+     * @param fromAngle
+     * @return true if the angle is allowed
+     */
+    static bool canPushPiece( const Piece* piece, int fromAngle );
+
+    /**
      * @brief Obtain the set of pieces representing differences between the current board and
      * what the board will be as a result of applying outstanding moves
      * @return set of future pieces or 0 if future tracking is not active

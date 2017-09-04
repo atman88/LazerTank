@@ -218,7 +218,7 @@ PieceListManager& MoveBaseController::getMoves()
 
 void MoveBaseController::onPathFound( PieceListManager* path, PathSearchAction* action )
 {
-    if ( action->getFocus() == TANK ) {
+    if ( action->getCriteria().getFocus() == TANK ) {
         mMoves.reset( path );
     } else {
         mMoves.replaceBack( MOVE );

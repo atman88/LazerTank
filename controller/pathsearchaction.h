@@ -4,12 +4,14 @@
 #include <QAction>
 #include <QObject>
 
+class GameRegistry;
+
 #include "pathsearchcriteria.h"
 
 /**
- * @brief A path search term container object
+ * @brief A QAction which is enabled/disabled by a search term
  */
-class PathSearchAction : public QAction, public PathSearchCriteria
+class PathSearchAction : public QAction
 {
     Q_OBJECT
 public:
@@ -20,14 +22,17 @@ public:
 
     /**
      * @brief Set criteria for this search
-     * The the game's tank position is always used for the search starting coordinate
-     * @param focus The focus of the starting point. Either TANK or MOVE.
+     * The starting point is determined by the focus parameter
+     * @param focus Identifies the starting point. Either TANK or MOVE.
      * @param target The square to find a path to.
-     * @return true if successful
+     * @return true if valid search criteria constructed successfully
      */
     bool setCriteria( PieceType focus, const ModelPoint& target );
 
-    PathSearchCriteria* getCriteria();
+    PathSearchCriteria& getCriteria();
+
+private:
+    PathSearchCriteria mCriteria;
 };
 
 #endif // PATHSEARCHACTION_H

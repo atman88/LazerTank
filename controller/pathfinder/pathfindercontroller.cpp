@@ -5,7 +5,7 @@
 #include "game.h"
 
 
-PathFinderController::PathFinderController(QObject *parent) : QObject(parent), mCurAction(0)
+PathFinderController::PathFinderController(QObject *parent) : QObject(parent), mCurCriteria(0), mCurAction(0)
 {
 }
 
@@ -14,7 +14,7 @@ void PathFinderController::init()
     mPathFinder.setParent(this);
     qRegisterMetaType<PathSearchCriteria>("PathSearchCriteria");
     QObject::connect( &mPathFinder, &PathFinder::testResult, this, &PathFinderController::onResult, Qt::QueuedConnection );
-    if ( !((bool) QObject::connect( &mPathFinder, &PathFinder::pathFound,  this, &PathFinderController::onPath,   Qt::QueuedConnection )) ) {
+    if ( !((bool) QObject::connect( &mPathFinder, &PathFinder::pathFound,  this, &PathFinderController::onPath, Qt::QueuedConnection )) ) {
         std::cout << "*** connection failed" << std::endl;
     }
 }
@@ -22,15 +22,20 @@ void PathFinderController::init()
 bool PathFinderController::doAction( PathSearchAction* action, bool testOnly )
 {
     mCurAction = action;
-    return mPathFinder.findPath( action->getCriteria(), testOnly );
+    mCurCriteria = &action->getCriteria();
+    return mPathFinder.execCriteria( mCurCriteria, testOnly );
 }
 
 void PathFinderController::testNextAction()
 {
     if ( mTestActions.size() > 0 ) {
         mCurAction = mTestActions.front();
+        mCurCriteria = &mCurAction->getCriteria();
         mTestActions.pop_front();
         doAction( mCurAction, true );
+    } else {
+        mCurAction = 0;
+        mCurCriteria = 0;
     }
 }
 
@@ -46,11 +51,20 @@ void PathFinderController::testActions( PathSearchAction* actions[], unsigned co
     testNextAction();
 }
 
+bool PathFinderController::testCriteria( PathSearchCriteria* criteria )
+{
+    mCurCriteria = criteria;
+    return mPathFinder.execCriteria( mCurCriteria );
+}
+
 void PathFinderController::onResult( bool ok, PathSearchCriteria criteria )
 {
     // filter any stale results
-    if ( criteria == *mCurAction->getCriteria() ) {
-        mCurAction->setEnabled( ok );
+    if ( mCurCriteria && criteria == *mCurCriteria ) {
+        if ( mCurAction ) {
+            mCurAction->setEnabled( ok );
+        }
+        emit testResult( ok, &criteria );
 
         // only test next if this result is unchanged given any remaining ones won't be valid if this one isn't
         testNextAction();
@@ -60,7 +74,7 @@ void PathFinderController::onResult( bool ok, PathSearchCriteria criteria )
 void PathFinderController::onPath( PathSearchCriteria criteria, PieceListManager* path )
 {
     // filter any stale results
-    if ( criteria == *mCurAction->getCriteria() ) {
+    if ( criteria == mCurAction->getCriteria() ) {
         emit pathFound( path, &(*mCurAction) );
     }
 }
