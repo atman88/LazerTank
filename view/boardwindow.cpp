@@ -86,6 +86,7 @@ void BoardWindow::init( GameRegistry* registry )
     QObject::connect( &TO_QACTION(mReplayAction),    &QAction::triggered, &game, &Game::replayLevel );
 
     QObject::connect( &moveController, &MoveController::dragStateChanged, this, &BoardWindow::setCursorDragState );
+    QObject::connect( &moveController, &MoveController::tileDragFocusChanged, &mDragMarker, &TileDragMarker::setEntryFocus );
     QObject::connect( &mDragMarker, &TileDragMarker::rectDirty, this, &BoardWindow::renderLater );
 
     QObject::connect( &game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded );

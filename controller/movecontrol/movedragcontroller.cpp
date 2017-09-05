@@ -6,7 +6,8 @@
 #include "model/piecelistmanager.h"
 #include "model/tank.h"
 
-MoveDragController::MoveDragController( QObject *parent ) : MoveBaseController(parent), mDragState(Inactive), mChanged(false)
+MoveDragController::MoveDragController( QObject *parent ) : MoveBaseController(parent), mDragState(Inactive),
+  mTileDragFocusAngle(-1), mChanged(false)
 {
 }
 
@@ -59,7 +60,7 @@ void MoveDragController::dragStart( ModelPoint selectedPoint )
     }
 }
 
-unsigned MoveDragController::getDragTileAngleMask()
+unsigned MoveDragController::getDragTileAngleMask() const
 {
     unsigned angleMask = 0;
     if ( mDragState == DraggingTile ) {
@@ -76,7 +77,7 @@ unsigned MoveDragController::getDragTileAngleMask()
     return angleMask;
 }
 
-ModelPoint MoveDragController::getDragTilePoint()
+ModelPoint MoveDragController::getDragTilePoint() const
 {
     return mTileDragTestCriteria.getTargetPoint();
 }
@@ -107,7 +108,16 @@ void MoveDragController::setDragState( DragState state )
 {
     if ( mDragState != state ) {
         mDragState = state;
+        mTileDragFocusAngle = -1;
         emit dragStateChanged( state );
+    }
+}
+
+void MoveDragController::setTileDragFocusAngle( int angle )
+{
+    if ( angle != mTileDragFocusAngle ) {
+        mTileDragFocusAngle = angle;
+        emit tileDragFocusChanged( angle );
     }
 }
 
@@ -161,61 +171,73 @@ static int coordLeaning( QPoint coord, ModelPoint square )
 
 void MoveDragController::onDragTo( QPoint coord )
 {
-    if ( mDragState == Inactive || mDragState == Searching ) {
-        return;
-    }
-
     ModelPoint p( coord );
     ModelVector focusVector = getFocusVector();
-    if ( focusVector.isNull() ) {
+    if ( focusVector.isNull() ) { // safety
         setDragState( Inactive );
         return;
     }
 
-    if ( p == focusVector ) {
-        setDragState( DraggingTank );
-    } else if ( GameRegistry* registry = getRegistry(this) ) {
-        for( int angle = 0; angle < 360; angle += 90 ) {
-            ModelPoint toPoint( focusVector );
-            Piece* pushPiece = 0;
-            if ( registry->getGame().canMoveFrom( TANK, angle, &toPoint, true, &pushPiece ) ) {
-                if ( toPoint == p ) {
-                    Piece* lastMove = mMoves.getBack();
-                    const ModelPoint* prevMovePoint;
-                    if ( Piece* prevMove = mMoves.getBack(1) ) {
-                        prevMovePoint = prevMove;
-                    } else {
-                        prevMovePoint = &registry->getTank().getPoint();
-                    }
-                    setDragState( DraggingTank );
-                    if ( lastMove && !lastMove->getShotCount()
-                      && focusVector.ModelPoint::equals( *lastMove ) && prevMovePoint->equals( toPoint ) ) {
-                        undoLastMove();
-                        // if only a simple rotation remains then remove it too:
-                        if ( (lastMove = mMoves.getBack()) ) {
-                            if ( !lastMove->getShotCount() && registry->getTank().getPoint().equals( *lastMove ) ) {
-                                undoLastMove();
+    switch( mDragState ) {
+    case Inactive:
+    case Searching:
+        return;
+
+    case Forbidden:
+    case DraggingTank:
+        if ( p == focusVector ) {
+            setDragState( DraggingTank );
+        } else if ( GameRegistry* registry = getRegistry(this) ) {
+            for( int angle = 0; angle < 360; angle += 90 ) {
+                ModelPoint toPoint( focusVector );
+                Piece* pushPiece = 0;
+                if ( registry->getGame().canMoveFrom( TANK, angle, &toPoint, true, &pushPiece ) ) {
+                    if ( toPoint == p ) {
+                        Piece* lastMove = mMoves.getBack();
+                        const ModelPoint* prevMovePoint;
+                        if ( Piece* prevMove = mMoves.getBack(1) ) {
+                            prevMovePoint = prevMove;
+                        } else {
+                            prevMovePoint = &registry->getTank().getPoint();
+                        }
+                        setDragState( DraggingTank );
+                        if ( lastMove && !lastMove->getShotCount()
+                             && focusVector.ModelPoint::equals( *lastMove ) && prevMovePoint->equals( toPoint ) ) {
+                            undoLastMove();
+                            // if only a simple rotation remains then remove it too:
+                            if ( (lastMove = mMoves.getBack()) ) {
+                                if ( !lastMove->getShotCount() && registry->getTank().getPoint().equals( *lastMove ) ) {
+                                    undoLastMove();
+                                }
+                            }
+                        } else {
+                            MoveBaseController::move( angle );
+                            lastMove = mMoves.getBack();
+                            if ( lastMove && !p.equals( *lastMove ) ) {
+                                MoveBaseController::move( angle );
                             }
                         }
-                    } else {
-                        MoveBaseController::move( angle );
-                        lastMove = mMoves.getBack();
-                        if ( lastMove && !p.equals( *lastMove ) ) {
-                            MoveBaseController::move( angle );
-                        }
+                        mChanged = true;
+                        return;
                     }
-                    mChanged = true;
-                    return;
                 }
             }
+            setDragState( Forbidden );
         }
-        setDragState( Forbidden );
-    }
 
-    // check for rotation change:
-    int rotation = coordLeaning( coord, focusVector );
-    if ( rotation >= 0 && rotation != focusVector.mAngle && rotation != coordLeaning( mPreviousCoord, focusVector ) ) {
-        MoveBaseController::move( rotation );
+        // check for rotation change:
+    {   int rotation = coordLeaning( coord, focusVector );
+        if ( rotation >= 0 && rotation != focusVector.mAngle && rotation != coordLeaning( mPreviousCoord, focusVector ) ) {
+            MoveBaseController::move( rotation );
+        }
+    }
+        break;
+
+    case DraggingTile:
+        if ( p.equals( mTileDragTestCriteria.getTargetPoint() ) ) {
+            setTileDragFocusAngle( coordLeaning( coord, p ) );
+        }
+        break;
     }
 
     mPreviousCoord = coord;

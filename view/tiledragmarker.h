@@ -30,12 +30,25 @@ public slots:
      */
     void disable();
 
+    /**
+     * @brief Show which angle is currently selected
+     * @param angle A 90 degree angle of exit. Focus will be applied if the given angle is enabled
+     */
+    void setFocus( int angle );
+
+    /**
+     * @brief set focus with conversion from entry angle to an exit angle
+     * @param entryAngle Angle of entry
+     */
+    void setEntryFocus( int entryAngle );
+
 signals:
     void rectDirty( QRect& rect );
 
 private:
     QPoint mCenter;
     unsigned mAngleMask;
+    int mFocusAngle; // exit perspective value
     int mTileSize;
     QRect mBounds;
 };

@@ -196,13 +196,13 @@ public:
     /**
      * @brief Get the possible approach angles to the tile selected for dragging, as a bit mask
      */
-    unsigned getDragTileAngleMask();
+    unsigned getDragTileAngleMask() const;
 
     /**
      * @brief Get the point for the tile being dragged
      * @return The square which the target tile resides on. Note the value is undetermined if a tile drag is not active
      */
-    ModelPoint getDragTilePoint();
+    ModelPoint getDragTilePoint() const;
 
     /**
      * @brief move the tank one square
@@ -218,6 +218,12 @@ signals:
      * @brief Indicates that a change of state occured
      */
     void dragStateChanged( DragState state );
+
+    /**
+     * @brief Notifies when the angle selection changes
+     * @param focusAngle A 90 degree angle value or -1 if nothing selected
+     */
+    void tileDragFocusChanged( int focusAngle );
 
 public slots:
     /**
@@ -240,11 +246,13 @@ protected slots:
 
 private:
     void setDragState( DragState state );
+    void setTileDragFocusAngle( int angle );
 
     DragState mDragState;
     QPoint mPreviousCoord;
     PathSearchCriteria mTileDragTestCriteria;
     TileDragTestResult mTileDragTestResult;
+    int mTileDragFocusAngle;
     bool mChanged;
 };
 
