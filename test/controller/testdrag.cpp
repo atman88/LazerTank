@@ -21,7 +21,7 @@ void TestMain::testDragTank()
     QCOMPARE( moveController.getDragState(), Inactive );
 
     moveController.dragStart( mRegistry.getTank().getPoint() );
-    QCOMPARE( moveController.getDragState(), Selecting );
+    QCOMPARE( moveController.getDragState(), DraggingTank );
     QCOMPARE( moveController.getFocusVector(), mRegistry.getTank().getVector() );
 
     // test off-board:
@@ -33,7 +33,7 @@ void TestMain::testDragTank()
 
     // test valid drag:
     moveController.onDragTo( ModelPoint(2,1).toViewCenterSquare() );
-    QCOMPARE( moveController.getDragState(), Selecting );
+    QCOMPARE( moveController.getDragState(), DraggingTank );
     if ( ModelVector* vector = moveController.getMoves().getBack() ) {
         QVERIFY( ModelVector(2,1,0).equals( *vector ) );
     } else {
@@ -51,16 +51,16 @@ void TestMain::testDragTank()
 
     // test drag undo:
     moveController.onDragTo( mRegistry.getTank().getPoint().toViewCenterSquare() );
-    QCOMPARE( moveController.getDragState(), Selecting );
+    QCOMPARE( moveController.getDragState(), DraggingTank );
     QVERIFY( moveController.getMoves().size() <= 1 );
 
     // test drag with initial rotate:
     moveController.onDragTo( ModelPoint(2,3).toViewCenterSquare() );
-    QCOMPARE( moveController.getDragState(), Selecting );
+    QCOMPARE( moveController.getDragState(), DraggingTank );
     QCOMPARE( moveController.getMoves().size(), 2 );
     // undo it:
     moveController.onDragTo( mRegistry.getTank().getPoint().toViewCenterSquare() );
-    QCOMPARE( moveController.getDragState(), Selecting );
+    QCOMPARE( moveController.getDragState(), DraggingTank );
     QVERIFY( moveController.getMoves().size() <= 1 );
 
     // test stop:

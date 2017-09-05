@@ -195,7 +195,7 @@ private:
      * @brief Determines whether the given piece can enter the given square.
      * @param what The type of peice.
      * @param point The square to consider
-     * @param fromAngle The entry direction
+     * @param fromAngle The entry direction or -1 to simply test the square's vacancy
      * @param board The board to consider
      * @param pushPiece if non-null, returns a reference to any piece that that this placement would result in pushing
      * @return true if the entry is legal

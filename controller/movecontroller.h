@@ -155,7 +155,8 @@ protected:
 typedef enum {
     Inactive,
     Searching,
-    Selecting,
+    DraggingTank,
+    DraggingTile,
     Forbidden
 } DragState;
 
@@ -193,6 +194,17 @@ public:
     void dragStart( ModelPoint startPoint );
 
     /**
+     * @brief Get the possible approach angles to the tile selected for dragging, as a bit mask
+     */
+    unsigned getDragTileAngleMask();
+
+    /**
+     * @brief Get the point for the tile being dragged
+     * @return The square which the target tile resides on. Note the value is undetermined if a tile drag is not active
+     */
+    ModelPoint getDragTilePoint();
+
+    /**
      * @brief move the tank one square
      * @param direction A rotation angle (one of 0, 90, 180, 270) or -1 to advance in the current direction
      * @param doWakeup Suppresses starting animations when false
@@ -218,6 +230,13 @@ protected slots:
      * @brief Listens to path events for starting drag activities when self-initiated
      */
     void onPathFound( PieceListManager* path, PathSearchAction* action );
+
+    /**
+     * @brief Listens for tile drag test results
+     * @param reachable true if the target tile can be dragged in one or more directions
+     * @param criteria The parameters tested
+     */
+    void onTestResult( bool reachable, PathSearchCriteria* criteria );
 
 private:
     void setDragState( DragState state );

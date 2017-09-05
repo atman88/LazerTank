@@ -86,6 +86,7 @@ void BoardWindow::init( GameRegistry* registry )
     QObject::connect( &TO_QACTION(mReplayAction),    &QAction::triggered, &game, &Game::replayLevel );
 
     QObject::connect( &moveController, &MoveController::dragStateChanged, this, &BoardWindow::setCursorDragState );
+    QObject::connect( &mDragMarker, &TileDragMarker::rectDirty, this, &BoardWindow::renderLater );
 
     QObject::connect( &game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded );
 }
@@ -235,6 +236,8 @@ void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* p
         // render the moves ontop of (i.e. after) the tank:
         renderListIn( moveIterator, moves->end(), rect, painter );
     }
+
+    mDragMarker.render( rect, painter );
     registry->getCannonShot().render( painter );
 
     if ( moveController.replaying() ) {
@@ -613,9 +616,20 @@ static void drawForbidden( QBitmap* b, QPen& pen )
 
 void BoardWindow::setCursorDragState( DragState state )
 {
-    switch( state) {
-    case Selecting:
+    mDragMarker.disable();
+
+    switch( state ) {
+    case DraggingTank:
         setCursor( Qt::CrossCursor );
+        break;
+    case DraggingTile:
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            MoveController& moveController = registry->getMoveController();
+            if ( int mask = moveController.getDragTileAngleMask() ) {
+                setCursor( Qt::CrossCursor );
+                mDragMarker.enable( mask, moveController.getDragTilePoint().toViewCenterSquare(), TILE_SIZE );
+            }
+        }
         break;
     case Forbidden:
         if ( !mForbiddenCursor ) {

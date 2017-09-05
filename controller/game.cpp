@@ -334,10 +334,14 @@ bool Game::canPlaceAt(PieceType what, ModelPoint point, int fromAngle, Board* bo
     case TILE_SUNK:
     {   Piece* hit = board->getPieceManager().pieceAt( point );
         if ( hit ) {
-            if ( canPushPiece( hit, fromAngle ) ) {
-                if ( what == TANK && pushPiece ) {
-                    *pushPiece = hit;
-                    return canMoveFrom( hit->getType(), fromAngle, &point, board );
+            if ( fromAngle >= 0 ) {
+                if ( canPushPiece( hit, fromAngle ) ) {
+                    if ( what == TANK ) {
+                        if ( pushPiece ) {
+                            *pushPiece = hit;
+                        }
+                        return canMoveFrom( hit->getType(), fromAngle, &point, board );
+                    }
                 }
             }
             return false;

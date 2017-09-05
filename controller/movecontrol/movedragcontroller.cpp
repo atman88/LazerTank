@@ -13,7 +13,9 @@ MoveDragController::MoveDragController( QObject *parent ) : MoveBaseController(p
 void MoveDragController::init( GameRegistry* registry )
 {
     MoveBaseController::init( registry );
-    QObject::connect( &registry->getPathFinderController(), &PathFinderController::pathFound, this, &MoveDragController::onPathFound );
+    PathFinderController& controller = registry->getPathFinderController();
+    QObject::connect( &controller, &PathFinderController::pathFound,  this, &MoveDragController::onPathFound  );
+    QObject::connect( &controller, &PathFinderController::testResult, this, &MoveDragController::onTestResult );
     mTileDragTestResult.setParent(this);
 }
 
@@ -30,7 +32,7 @@ void MoveDragController::dragStart( ModelPoint selectedPoint )
         mPreviousCoord = QPoint();
 
         if ( selectedPoint.equals( getFocusVector() ) ) {
-            setDragState( Selecting );
+            setDragState( DraggingTank );
         } else {
             Board* board = registry->getGame().getBoard(true);
             if ( Piece* piece = board->getPieceManager().pieceAt( selectedPoint ) ) {
@@ -55,6 +57,28 @@ void MoveDragController::dragStart( ModelPoint selectedPoint )
             }
         }
     }
+}
+
+unsigned MoveDragController::getDragTileAngleMask()
+{
+    unsigned angleMask = 0;
+    if ( mDragState == DraggingTile ) {
+        for( int angleNo = 4; --angleNo >= 0; ) {
+            ModelPoint point = mTileDragTestCriteria.getTargetPoint();
+            if ( getAdjacentPosition( angleNo * 90, &point ) ) {
+                auto approaches = mTileDragTestResult.mPossibleApproaches;
+                if ( approaches.find( point ) != approaches.end() ) {
+                    angleMask |= 1 << angleNo;
+                }
+            }
+        }
+    }
+    return angleMask;
+}
+
+ModelPoint MoveDragController::getDragTilePoint()
+{
+    return mTileDragTestCriteria.getTargetPoint();
 }
 
 void MoveDragController::move( int direction, bool doWakeup )
@@ -96,7 +120,21 @@ void MoveDragController::onPathFound( PieceListManager* path, PathSearchAction* 
 {
     MoveBaseController::onPathFound( path, action );
     if ( mDragState == Searching ) {
-        setDragState( Selecting );
+        setDragState( DraggingTank );
+    }
+}
+
+void MoveDragController::onTestResult( bool reachable, PathSearchCriteria* criteria )
+{
+    if ( mDragState == Searching ) {
+        if ( reachable ) {
+            // verify this is a tile drag test we initiated
+            if ( criteria->getTileDragTestResult() == &mTileDragTestResult ) {
+                setDragState( DraggingTile );
+                return;
+            }
+        }
+        setDragState( Inactive );
     }
 }
 
@@ -135,7 +173,7 @@ void MoveDragController::onDragTo( QPoint coord )
     }
 
     if ( p == focusVector ) {
-        setDragState( Selecting );
+        setDragState( DraggingTank );
     } else if ( GameRegistry* registry = getRegistry(this) ) {
         for( int angle = 0; angle < 360; angle += 90 ) {
             ModelPoint toPoint( focusVector );
@@ -149,7 +187,7 @@ void MoveDragController::onDragTo( QPoint coord )
                     } else {
                         prevMovePoint = &registry->getTank().getPoint();
                     }
-                    setDragState( Selecting );
+                    setDragState( DraggingTank );
                     if ( lastMove && !lastMove->getShotCount()
                       && focusVector.ModelPoint::equals( *lastMove ) && prevMovePoint->equals( toPoint ) ) {
                         undoLastMove();

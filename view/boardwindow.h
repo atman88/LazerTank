@@ -15,6 +15,7 @@ class Game;
 class ReplayText;
 
 #include "boardrenderer.h"
+#include "tiledragmarker.h"
 #include "controller/movecontroller.h"
 #include "model/piece.h"
 
@@ -98,7 +99,7 @@ public slots:
      * @brief mark a rectangular area as dirty
      * @param rect The rectangular area
      */
-    void renderLater(const QRect &rect);
+    void renderLater( const QRect &rect );
 
     /**
      * @brief mark a given square as dirty
@@ -208,6 +209,8 @@ private:
     ReplayText* mReplayText;
 
     QCursor* mForbiddenCursor;
+
+    TileDragMarker mDragMarker;
 
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
     void requestUpdate();

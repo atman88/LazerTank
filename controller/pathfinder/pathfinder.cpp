@@ -33,7 +33,7 @@ bool PathFinder::execCriteria( PathSearchCriteria* criteria, bool testOnly )
         for( point.mRow = mMaxPoint.mRow; point.mRow >= 0; --point.mRow ) {
             for( point.mCol = mMaxPoint.mCol; point.mCol >= 0; --point.mCol ) {
                 mSearchMap[point.mRow*BOARD_MAX_WIDTH+point.mCol] =
-                  game.canPlaceAt( TANK, point, 0, criteria->getFocus() != TANK ) ? TRAVERSIBLE : BLOCKED;
+                  game.canPlaceAt( TANK, point, -1, criteria->getFocus() != TANK ) ? TRAVERSIBLE : BLOCKED;
             }
         }
 
@@ -200,39 +200,35 @@ void PathFinder::run()
     // copy the action for background thread use:
     mRunCriteria = mCriteria;
 
+    mNPoints = 0;
+    mPushIndex = 0;
+    mPushDirection = 1;
     mMoves.reset();
+    mTargets.clear();
     bool found = false;
     if ( !setjmp( mJmpBuf ) ) {
-        mNPoints = 0;
         mPassValue = 0;
         switch( mRunCriteria.getCriteriaType() ) {
         case PathSearchCriteria::PathCriteria:
             // For path search the starting point is targetted
             mSearchMap[mRunCriteria.getStartRow() *BOARD_MAX_WIDTH+mRunCriteria.getStartCol() ] = TARGET;
-            mSearchMap[mRunCriteria.getTargetRow()*BOARD_MAX_WIDTH+mRunCriteria.getTargetCol()] = mPassValue;
-            mSearchCol[0] = mRunCriteria.getTargetCol();
-            mSearchRow[0] = mRunCriteria.getTargetRow();
-            mNPoints = 1;
+            mTargets.insert( mRunCriteria.getStartVector() );
+            tryAt( mRunCriteria.getTargetCol(), mRunCriteria.getTargetRow() );
+            // Note we are not interested in 0-length paths in this case so we don't set found here
             break;
 
         case PathSearchCriteria::TileDragTestCriteria:
             // for multi target test, the target points are targeted
-            mSearchMap[mRunCriteria.getStartRow()*BOARD_MAX_WIDTH+mRunCriteria.getStartCol()] = mPassValue;
-            mSearchCol[0] = mRunCriteria.getStartCol();
-            mSearchRow[0] = mRunCriteria.getStartRow();
-            mTargets.clear();
             if ( TileDragTestResult* result = mRunCriteria.getTileDragTestResult() ) {
                 for( auto it : result->mPossibleApproaches ) {
                     char* p = &mSearchMap[it.mRow*BOARD_MAX_WIDTH+it.mCol];
                     if ( *p == TRAVERSIBLE ) {
                         *p = TARGET;
-                        mSearchCol[mNPoints] = it.mCol;
-                        mSearchRow[mNPoints] = it.mRow;
                         mTargets.insert( it );
-                        ++mNPoints;
                     }
                 }
                 result->mPossibleApproaches.clear();
+                tryAt( mRunCriteria.getStartCol(), mRunCriteria.getStartRow() );
             }
             break;
 
@@ -240,6 +236,7 @@ void PathFinder::run()
             ;
         }
 
+        mNPoints = mPushIndex;
         while( mNPoints && !mStopping ) {
             pass1();
             pass2();
@@ -249,6 +246,12 @@ void PathFinder::run()
     }
 
     if ( mTestOnly ) {
+        // At this point found is set when ALL are found. For the drag test, set found if ANY are found:
+        if ( !found && mRunCriteria.getCriteriaType() == PathSearchCriteria::TileDragTestCriteria ) {
+            if ( TileDragTestResult* result = mRunCriteria.getTileDragTestResult() ) {
+                found = !result->mPossibleApproaches.empty();
+            }
+        }
         emit testResult( found, mRunCriteria );
     } else if ( found ) {
         if ( buildPath() ) {

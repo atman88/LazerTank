@@ -40,13 +40,10 @@ bool PathSearchCriteria::setTileDragCriteria( PieceType focus, const Piece* targ
         result->mPossibleApproaches.clear();
         for( int angle = 0; angle < 360; angle += 90 ) {
             if ( Game::canPushPiece( target, angle ) ) {
-                ModelPoint point( *target );
-                if ( getAdjacentPosition( angle, &point ) ) {
-                    if ( registry->getGame().canPlaceAt( target->getType(), point, angle ) ) {
-                        point = *target;
-                        if ( getAdjacentPosition( (angle + 180) % 360, &point ) ) {
-                            result->mPossibleApproaches.insert( point );
-                        }
+                if ( registry->getGame().canPlaceAt( TANK, *target, angle ) ) {
+                    ModelPoint point( *target );
+                    if ( getAdjacentPosition( (angle + 180) % 360, &point ) ) {
+                        result->mPossibleApproaches.insert( point );
                     }
                 }
             }
