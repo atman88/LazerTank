@@ -35,7 +35,7 @@ void PathFinderController::testNextAction()
         doAction( mCurAction, true );
     } else {
         mCurAction = 0;
-        mCurCriteria = 0;
+//        mCurCriteria = 0;
     }
 }
 
@@ -57,6 +57,11 @@ bool PathFinderController::testCriteria( PathSearchCriteria* criteria )
     return mPathFinder.execCriteria( mCurCriteria );
 }
 
+bool PathFinderController::buildTilePushPath( ModelVector target )
+{
+    return mPathFinder.buildTilePushPath( target );
+}
+
 void PathFinderController::onResult( bool ok, PathSearchCriteria criteria )
 {
     // filter any stale results
@@ -74,7 +79,7 @@ void PathFinderController::onResult( bool ok, PathSearchCriteria criteria )
 void PathFinderController::onPath( PathSearchCriteria criteria, PieceListManager* path )
 {
     // filter any stale results
-    if ( criteria == mCurAction->getCriteria() ) {
-        emit pathFound( path, &(*mCurAction) );
+    if ( mCurCriteria && criteria == *mCurCriteria ) {
+        emit pathFound( path, &(*mCurCriteria) );
     }
 }

@@ -57,14 +57,21 @@ public:
      */
     bool testCriteria( PathSearchCriteria* criteria );
 
+    /**
+     * @brief Construct a path to the given target using the residue of a previous tile drag test
+     * @param target The final endpoint vector of the resultant path
+     * @return true if successful. To succeed, the preceeding execCriteria call must have been a TileDragTestCriteria
+     * which included the given target.
+     */
+    bool buildTilePushPath( ModelVector target );
+
 signals:
     /**
      * @brief Notification of an action result
      * @param path
-     * @param action The search action that started the search
-     * If false, move animations are intended to resume on a subsequent trigger.
+     * @param criteria The search parameters that started the search
      */
-    void pathFound( PieceListManager* path, PathSearchAction* action );
+    void pathFound( PieceListManager* path, PathSearchCriteria* criteria );
 
     /**
      * @brief Notification of a test result

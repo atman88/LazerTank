@@ -104,6 +104,11 @@ public:
         *dynamic_cast<ModelPoint*>(this) = p;
     }
 
+    ModelPoint& toPoint()
+    {
+        return *dynamic_cast<ModelPoint*>(this);
+    }
+
     /**
      * @brief compare equality
      */

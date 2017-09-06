@@ -13,8 +13,8 @@
 #define BLOCKED     4
 #define TARGET      5
 
-PathFinder::PathFinder(QObject *parent) : QThread(parent), mStopping(false), mNPoints(0), mPassValue(0), mPushIndex(0),
-  mPushDirection(0), mTestOnly(false)
+PathFinder::PathFinder( QObject* parent ) : QObject(parent), mStopping(false), mNPoints(0), mPassValue(0), mPushIndex(0),
+  mPushDirection(0), mTestOnly(false), mPathSearchRunnable(*this), mTileDragBuildRunnable(*this)
 {
 }
 
@@ -45,7 +45,7 @@ bool PathFinder::execCriteria( PathSearchCriteria* criteria, bool testOnly )
 
         mCriteria = *criteria;
         mTestOnly = testOnly;
-        start( LowPriority );
+        registry->getWorker().doWork( &mPathSearchRunnable );
         return true;
     }
     return false;
@@ -58,7 +58,6 @@ void PathFinder::addPush( Push& push )
     }
 }
 
-/*
 void PathFinder::printSearchMap()
 {
     for( int row = 0; row <= mMaxPoint.mRow; ++row ) {
@@ -76,7 +75,6 @@ void PathFinder::printSearchMap()
         std::cout << std::endl;
     }
 }
-*/
 
 #define CANBUILD() mSearchMap[row*BOARD_MAX_WIDTH+col]==mPassValue
 
@@ -117,6 +115,65 @@ bool PathFinder::buildPath()
     return true;
 }
 
+bool PathFinder::buildTilePushPath( ModelVector target )
+{
+    if ( mRunCriteria.getTargetPoint().equals( target ) ) {
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            mTileDragBuildRunnable.mTarget = target;
+            registry->getWorker().doWork( &mTileDragBuildRunnable );
+            return true;
+        }
+    }
+    return false;
+}
+
+void PathFinder::buildTilePushPathInternal( ModelVector target )
+{
+    printSearchMap();
+
+    mMoves.reset();
+    ModelPoint endPoint = mRunCriteria.getStartVector();
+    if ( endPoint.equals( target ) ) {
+        emit pathFound( mRunCriteria, &mMoves );
+        return;
+    }
+
+    ModelVector curVector( target );
+    if ( getAdjacentPosition( (curVector.mAngle + 180) % 360, &curVector ) ) {
+        mMoves.push_front( MOVE, curVector );
+
+        int col = curVector.mCol;
+        int row = curVector.mRow;
+        mPassValue = mSearchMap[curVector.mRow*BOARD_MAX_WIDTH + curVector.mCol];
+
+        while( !endPoint.equals( curVector ) ) {
+            if ( --mPassValue < 0 ) {
+                mPassValue = TRAVERSIBLE-1;
+            }
+
+            int angle = curVector.mAngle;
+            for( ;; ) {
+                switch( curVector.mAngle ) {
+                case 180: if ( row > 0              ) { --row; if ( CANBUILD() ) goto found; ++row; } break;
+                case  90: if ( col > 0              ) { --col; if ( CANBUILD() ) goto found; ++col; } break;
+                case   0: if ( row < mMaxPoint.mRow ) { ++row; if ( CANBUILD() ) goto found; --row; } break;
+                case 270: if ( col < mMaxPoint.mCol ) { ++col; if ( CANBUILD() ) goto found; --col; } break;
+                }
+
+                curVector.mAngle = (curVector.mAngle + 90) % 360;
+                if ( curVector.mAngle == angle ) {
+                    return;
+                }
+            }
+          found:
+            curVector.mCol = col;
+            curVector.mRow = row;
+            mMoves.push_front( MOVE, curVector );
+        }
+        emit pathFound( mRunCriteria, &mMoves );
+    }
+}
+
 bool PathFinder::tryAt( int col, int row )
 {
     if ( col >= 0 && col <= mMaxPoint.mCol
@@ -131,6 +188,7 @@ bool PathFinder::tryAt( int col, int row )
                     result->mPossibleApproaches.insert( point );
                 }
                 if ( mTargets.empty() ) {
+                    mSearchMap[row*BOARD_MAX_WIDTH + col] = mPassValue;
                     return true;
                 }
             }
@@ -193,7 +251,7 @@ void PathFinder::pass2()
     mNPoints = mPushIndex;
 }
 
-void PathFinder::run()
+void PathFinder::doSearchInternal()
 {
     mStopping = false;
 

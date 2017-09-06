@@ -108,7 +108,9 @@ void MoveDragController::setDragState( DragState state )
 {
     if ( mDragState != state ) {
         mDragState = state;
-        mTileDragFocusAngle = -1;
+        if ( state != Searching ) {
+            mTileDragFocusAngle = -1;
+        }
         emit dragStateChanged( state );
     }
 }
@@ -126,11 +128,16 @@ DragState MoveDragController::getDragState() const
     return mDragState;
 }
 
-void MoveDragController::onPathFound( PieceListManager* path, PathSearchAction* action )
+void MoveDragController::onPathFound( PieceListManager* path, PathSearchCriteria* criteria )
 {
-    MoveBaseController::onPathFound( path, action );
+    MoveBaseController::onPathFound( path, criteria );
     if ( mDragState == Searching ) {
-        setDragState( DraggingTank );
+        if ( criteria->getCriteriaType() == PathSearchCriteria::TileDragTestCriteria ) {
+            setDragState( Inactive );
+            MoveBaseController::move( mTileDragFocusAngle );
+        } else {
+            setDragState( DraggingTank );
+        }
     }
 }
 
@@ -245,7 +252,8 @@ void MoveDragController::onDragTo( QPoint coord )
 
 void MoveDragController::dragStop()
 {
-    if ( mDragState != Inactive ) {
+    switch( mDragState ) {
+    case DraggingTank:
         // If we've changed it by dragging and effectively cancelled the moves by erasing up to the tank square, then
         // erase any single move given it is only a left-over rotation:
         if ( mChanged ) {
@@ -261,5 +269,21 @@ void MoveDragController::dragStop()
         }
         setDragState( Inactive );
         wakeup();
+        break;
+
+    case DraggingTile:
+        if ( mTileDragFocusAngle >= 0 ) {
+            if ( GameRegistry* registry = getRegistry(this) ) {
+                if ( registry->getPathFinderController().buildTilePushPath( ModelVector(mTileDragTestCriteria.getTargetPoint(), mTileDragFocusAngle) ) ) {
+                    setDragState( Searching );
+                    break;
+                }
+            }
+        }
+
+        // fall through
+
+    default:
+        setDragState( Inactive );
     }
 }

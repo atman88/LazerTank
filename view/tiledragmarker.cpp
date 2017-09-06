@@ -56,6 +56,7 @@ void TileDragMarker::enable( unsigned angleMask, QPoint center, int tileSize )
     mCenter = center;
     mTileSize = tileSize;
     mAngleMask = angleMask;
+    mFocusAngle = -1;
 
     mBounds = QRect( mCenter.x()-mTileSize/2, mCenter.y()-mTileSize/2, mTileSize, mTileSize );
     if ( mAngleMask & (1<<0) ) mBounds.setTop(    mBounds.top()    - MARKER_HEIGHT );

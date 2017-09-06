@@ -2,7 +2,6 @@
 #define PATHFINDER_H
 
 #include <csetjmp>
-#include <QThread>
 
 class Game;
 class Push;
@@ -11,6 +10,7 @@ class PathFinder;
 #include "model/board.h"
 #include "model/piecelistmanager.h"
 #include "pathsearchcriteria.h"
+#include "util/workerthread.h"
 
 // The maximum number of points to track for a given search pass. (A pass can consider nearly two rows worth)
 #define MAX_POINTS (((BOARD_MAX_HEIGHT>BOARD_MAX_WIDTH) ? BOARD_MAX_HEIGHT : BOARD_MAX_WIDTH) * 2)
@@ -18,12 +18,12 @@ class PathFinder;
 /**
  * @brief Computes a list of moves between two points for the current board.
  */
-class PathFinder : public QThread
+class PathFinder : public QObject
 {
     Q_OBJECT
 
 public:
-    PathFinder( QObject *parent = 0 );
+    PathFinder( QObject* parent = 0 );
 
     /**
      * @brief Initiate a search or test
@@ -34,7 +34,13 @@ public:
      */
     bool execCriteria( PathSearchCriteria* criteria, bool testOnly = true );
 
-    void run() override;
+    /**
+     * @brief Construct a path to the given target using the residue of a previous tile drag test
+     * @param target The final endpoint vector of the resultant path
+     * @return true if successful. To succeed, the preceeding execCriteria call must have been a TileDragTestCriteria
+     * which included the given target.
+     */
+    bool buildTilePushPath( ModelVector target );
 
 signals:
     /**
@@ -52,6 +58,9 @@ signals:
     void testResult( bool reachable, PathSearchCriteria criteria );
 
 private:
+    void doSearchInternal();
+    void buildTilePushPathInternal( ModelVector target );
+    void printSearchMap();
     void addPush( Push& push );
     bool tryAt( int col, int row );
     void pass1();
@@ -75,6 +84,36 @@ private:
     PieceListManager mMoves;
 
     std::jmp_buf mJmpBuf;
+
+    class PathSearchRunnable : public BasicRunnable
+    {
+    public:
+        PathSearchRunnable( PathFinder& pathFinder ) : mPathFinder(pathFinder) {}
+
+        void run() override
+        {
+            mPathFinder.doSearchInternal();
+        }
+
+        PathFinder& mPathFinder;
+    } mPathSearchRunnable;
+
+    class TileDragBuildRunnable : public BasicRunnable
+    {
+    public:
+        TileDragBuildRunnable( PathFinder& pathFinder ) : mPathFinder(pathFinder) {}
+
+        void run() override
+        {
+            mPathFinder.buildTilePushPathInternal( mTarget );
+        }
+
+        PathFinder& mPathFinder;
+        ModelVector mTarget;
+    } mTileDragBuildRunnable;
+
+    friend class PathSearchRunnable;
+    friend class TileDragBuildRunnable;
 };
 
 #endif // PATHFINDER_H

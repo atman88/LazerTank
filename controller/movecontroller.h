@@ -110,9 +110,9 @@ protected slots:
     /**
      * @brief adds the given path to the tank's moves as appropriate
      * @param path The path to add
-     * @param action The action which started the search
+     * @param criteria The parameters which started the search
      */
-    void onPathFound( PieceListManager* path, PathSearchAction* action );
+    void onPathFound( PieceListManager* path, PathSearchCriteria* criteria );
 
 protected:
     /**
@@ -235,7 +235,7 @@ protected slots:
     /**
      * @brief Listens to path events for starting drag activities when self-initiated
      */
-    void onPathFound( PieceListManager* path, PathSearchAction* action );
+    void onPathFound( PieceListManager* path, PathSearchCriteria* criteria );
 
     /**
      * @brief Listens for tile drag test results
