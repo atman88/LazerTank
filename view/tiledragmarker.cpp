@@ -59,9 +59,9 @@ void TileDragMarker::enable( unsigned angleMask, QPoint center, int tileSize )
     mFocusAngle = -1;
 
     mBounds = QRect( mCenter.x()-mTileSize/2, mCenter.y()-mTileSize/2, mTileSize, mTileSize );
-    if ( mAngleMask & (1<<0) ) mBounds.setTop(    mBounds.top()    - MARKER_HEIGHT );
+    if ( mAngleMask & (1<<0) ) mBounds.setBottom( mBounds.bottom() + MARKER_HEIGHT );
     if ( mAngleMask & (1<<1) ) mBounds.setLeft(   mBounds.left()   - MARKER_HEIGHT );
-    if ( mAngleMask & (1<<2) ) mBounds.setBottom( mBounds.bottom() + MARKER_HEIGHT );
+    if ( mAngleMask & (1<<2) ) mBounds.setTop(    mBounds.top()    - MARKER_HEIGHT );
     if ( mAngleMask & (1<<3) ) mBounds.setRight(  mBounds.right()  + MARKER_HEIGHT );
     emit rectDirty( mBounds );
 }
