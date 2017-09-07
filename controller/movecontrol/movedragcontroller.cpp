@@ -166,12 +166,16 @@ static int coordLeaning( QPoint coord, ModelPoint square )
     int rotation = -1;
     QPoint relative( coord );
     relative -= square.toViewCenterSquare();
-    if ( std::abs(relative.x()) < 24/4 ) {
-        if ( std::abs(relative.y()) >= 24/4 ) {
+    int dx = std::abs( relative.x() );
+    int dy = std::abs( relative.y() );
+    if ( dx < dy ) {
+        if ( dy > 2 ) {
             rotation = (relative.y() > 0) ? 180 : 0;
         }
-    } else if ( std::abs(relative.y()) < 24/4 ) {
-        rotation = (relative.x() > 0) ? 90 : 270;
+    } else if ( dy < dx ) {
+        if ( dx > 2 ) {
+            rotation = (relative.x() > 0) ? 90 : 270;
+        }
     }
     return rotation;
 }

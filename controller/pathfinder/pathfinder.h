@@ -60,7 +60,6 @@ signals:
 private:
     void doSearchInternal();
     void buildTilePushPathInternal( ModelVector target );
-    void printSearchMap();
     void addPush( Push& push );
     bool tryAt( int col, int row );
     void pass1();

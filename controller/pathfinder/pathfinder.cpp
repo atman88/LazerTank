@@ -1,4 +1,3 @@
-#include <iostream>
 #include <QVariant>
 
 #include "util/gameutils.h"
@@ -58,6 +57,7 @@ void PathFinder::addPush( Push& push )
     }
 }
 
+/*
 void PathFinder::printSearchMap()
 {
     for( int row = 0; row <= mMaxPoint.mRow; ++row ) {
@@ -75,6 +75,7 @@ void PathFinder::printSearchMap()
         std::cout << std::endl;
     }
 }
+*/
 
 #define CANBUILD() mSearchMap[row*BOARD_MAX_WIDTH+col]==mPassValue
 
@@ -129,8 +130,6 @@ bool PathFinder::buildTilePushPath( ModelVector target )
 
 void PathFinder::buildTilePushPathInternal( ModelVector target )
 {
-    printSearchMap();
-
     mMoves.reset();
     ModelPoint endPoint = mRunCriteria.getStartVector();
     if ( endPoint.equals( target ) ) {
