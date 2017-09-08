@@ -219,6 +219,9 @@ PieceListManager& MoveBaseController::getMoves()
 void MoveBaseController::onPathFound( PieceListManager* path, PathSearchCriteria* criteria )
 {
     if ( criteria->getFocus() == TANK ) {
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            registry->getGame().endMoveDeltaTracking();
+        }
         mMoves.reset( path );
     } else {
         mMoves.replaceBack( MOVE );

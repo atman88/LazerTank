@@ -205,13 +205,18 @@ public:
     ModelPoint getDragTilePoint() const;
 
     /**
+     * @brief Get the currently selected angle
+     * @return An exit angle or -1 if no angle selected
+     */
+    int getTileDragFocusAngle() const;
+
+    /**
      * @brief move the tank one square
      * @param direction A rotation angle (one of 0, 90, 180, 270) or -1 to advance in the current direction
      * @param doWakeup Suppresses starting animations when false
      * Attempts to move beyond the current square are ignored when dragging is active
      */
     virtual void move( int direction, bool doWakeup = true ) override;
-
 
 signals:
     /**
@@ -246,13 +251,14 @@ protected slots:
 
 private:
     void setDragState( DragState state );
-    void setTileDragFocusAngle( int angle );
+    bool setTileDragFocusAngle( int angle );
 
     DragState mDragState;
     QPoint mPreviousCoord;
     PathSearchCriteria mTileDragTestCriteria;
     TileDragTestResult mTileDragTestResult;
     int mTileDragFocusAngle;
+    unsigned mTileDragAngleMask;
     bool mChanged;
 };
 

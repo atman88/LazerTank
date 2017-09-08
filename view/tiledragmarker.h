@@ -22,8 +22,9 @@ public slots:
      * @param angleMask A bit mask of the four possible directional angles
      * @param center The screen coordinate to center the markers
      * @param tileSize The size of a tile (used as a size hint)
+     * @param focusAngle An angle to select as the initial focus. Default is no selection
      */
-    void enable( unsigned angleMask, QPoint center, int tileSize );
+    void enable( unsigned angleMask, QPoint center, int tileSize, int focusAngle = -1 );
 
     /**
      * @brief Clear the markers from display
@@ -35,12 +36,6 @@ public slots:
      * @param angle A 90 degree angle of exit. Focus will be applied if the given angle is enabled
      */
     void setFocus( int angle );
-
-    /**
-     * @brief set focus with conversion from entry angle to an exit angle
-     * @param entryAngle Angle of entry
-     */
-    void setEntryFocus( int entryAngle );
 
 signals:
     void rectDirty( QRect& rect );

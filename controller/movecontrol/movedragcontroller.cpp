@@ -7,7 +7,7 @@
 #include "model/tank.h"
 
 MoveDragController::MoveDragController( QObject *parent ) : MoveBaseController(parent), mDragState(Inactive),
-  mTileDragFocusAngle(-1), mChanged(false)
+  mTileDragFocusAngle(-1), mTileDragAngleMask(0), mChanged(false)
 {
 }
 
@@ -62,19 +62,7 @@ void MoveDragController::dragStart( ModelPoint selectedPoint )
 
 unsigned MoveDragController::getDragTileAngleMask() const
 {
-    unsigned angleMask = 0;
-    if ( mDragState == DraggingTile ) {
-        for( int angleNo = 4; --angleNo >= 0; ) {
-            ModelPoint point = mTileDragTestCriteria.getTargetPoint();
-            if ( getAdjacentPosition( angleNo * 90, &point ) ) {
-                auto approaches = mTileDragTestResult.mPossibleApproaches;
-                if ( approaches.find( point ) != approaches.end() ) {
-                    angleMask |= 1 << angleNo;
-                }
-            }
-        }
-    }
-    return angleMask;
+    return mTileDragAngleMask;
 }
 
 ModelPoint MoveDragController::getDragTilePoint() const
@@ -107,20 +95,26 @@ bool MoveDragController::canWakeup()
 void MoveDragController::setDragState( DragState state )
 {
     if ( mDragState != state ) {
-        mDragState = state;
-        if ( state != Searching ) {
+        if ( state == Inactive ) {
             mTileDragFocusAngle = -1;
+            mTileDragAngleMask = 0;
         }
+        mDragState = state;
         emit dragStateChanged( state );
     }
 }
 
-void MoveDragController::setTileDragFocusAngle( int angle )
+bool MoveDragController::setTileDragFocusAngle( int angle )
 {
+    if ( angle >= 0 && !(mTileDragAngleMask & (1 << (angle / 90)) ) ) {
+        angle = -1;
+    }
     if ( angle != mTileDragFocusAngle ) {
         mTileDragFocusAngle = angle;
         emit tileDragFocusChanged( angle );
+        return true;
     }
+    return false;
 }
 
 DragState MoveDragController::getDragState() const
@@ -133,8 +127,8 @@ void MoveDragController::onPathFound( PieceListManager* path, PathSearchCriteria
     MoveBaseController::onPathFound( path, criteria );
     if ( mDragState == Searching ) {
         if ( criteria->getCriteriaType() == PathSearchCriteria::TileDragTestCriteria ) {
-            setDragState( Inactive );
             MoveBaseController::move( mTileDragFocusAngle );
+            setDragState( DraggingTile );
         } else {
             setDragState( DraggingTank );
         }
@@ -147,6 +141,17 @@ void MoveDragController::onTestResult( bool reachable, PathSearchCriteria* crite
         if ( reachable ) {
             // verify this is a tile drag test we initiated
             if ( criteria->getTileDragTestResult() == &mTileDragTestResult ) {
+                auto approaches = mTileDragTestResult.mPossibleApproaches;
+                mTileDragAngleMask = 0;
+                for( int angleNo = 4; --angleNo >= 0; ) {
+                    ModelPoint point = mTileDragTestCriteria.getTargetPoint();
+                    if ( getAdjacentPosition( (angleNo * 90 + 180) % 360, &point ) ) {
+                        if ( approaches.find( point ) != approaches.end() ) {
+                            mTileDragAngleMask |= 1 << angleNo;
+                        }
+                    }
+                }
+
                 setDragState( DraggingTile );
                 return;
             }
@@ -246,7 +251,14 @@ void MoveDragController::onDragTo( QPoint coord )
 
     case DraggingTile:
         if ( p.equals( mTileDragTestCriteria.getTargetPoint() ) ) {
-            setTileDragFocusAngle( coordLeaning( coord, p ) );
+            if ( setTileDragFocusAngle( coordLeaning( coord, p ) ) && mTileDragFocusAngle >= 0 ) {
+                if ( GameRegistry* registry = getRegistry(this) ) {
+                    if ( registry->getPathFinderController().buildTilePushPath(
+                      ModelVector(mTileDragTestCriteria.getTargetPoint(), mTileDragFocusAngle) ) ) {
+                        setDragState( Searching );
+                    }
+                }
+            }
         }
         break;
     }
@@ -276,16 +288,9 @@ void MoveDragController::dragStop()
         break;
 
     case DraggingTile:
-        if ( mTileDragFocusAngle >= 0 ) {
-            if ( GameRegistry* registry = getRegistry(this) ) {
-                if ( registry->getPathFinderController().buildTilePushPath( ModelVector(mTileDragTestCriteria.getTargetPoint(), mTileDragFocusAngle) ) ) {
-                    setDragState( Searching );
-                    break;
-                }
-            }
-        }
-
-        // fall through
+        setDragState( Inactive );
+        wakeup();
+        break;
 
     default:
         setDragState( Inactive );

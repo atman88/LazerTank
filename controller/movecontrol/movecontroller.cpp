@@ -61,3 +61,8 @@ void MoveController::replayPlayback()
         mReplayReader->consumeNext( this );
     }
 }
+
+int MoveDragController::getTileDragFocusAngle() const
+{
+    return mTileDragFocusAngle;
+}

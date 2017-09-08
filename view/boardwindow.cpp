@@ -86,7 +86,7 @@ void BoardWindow::init( GameRegistry* registry )
     QObject::connect( &TO_QACTION(mReplayAction),    &QAction::triggered, &game, &Game::replayLevel );
 
     QObject::connect( &moveController, &MoveController::dragStateChanged, this, &BoardWindow::setCursorDragState );
-    QObject::connect( &moveController, &MoveController::tileDragFocusChanged, &mDragMarker, &TileDragMarker::setEntryFocus );
+    QObject::connect( &moveController, &MoveController::tileDragFocusChanged, &mDragMarker, &TileDragMarker::setFocus );
     QObject::connect( &mDragMarker, &TileDragMarker::rectDirty, this, &BoardWindow::renderLater );
 
     QObject::connect( &game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded );
@@ -628,7 +628,8 @@ void BoardWindow::setCursorDragState( DragState state )
             MoveController& moveController = registry->getMoveController();
             if ( int mask = moveController.getDragTileAngleMask() ) {
                 setCursor( Qt::CrossCursor );
-                mDragMarker.enable( mask, moveController.getDragTilePoint().toViewCenterSquare(), TILE_SIZE );
+                mDragMarker.enable( mask, moveController.getDragTilePoint().toViewCenterSquare(), TILE_SIZE,
+                  moveController.getTileDragFocusAngle() );
             }
         }
         break;
