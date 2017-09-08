@@ -251,11 +251,19 @@ void MoveDragController::onDragTo( QPoint coord )
 
     case DraggingTile:
         if ( p.equals( mTileDragTestCriteria.getTargetPoint() ) ) {
-            if ( setTileDragFocusAngle( coordLeaning( coord, p ) ) && mTileDragFocusAngle >= 0 ) {
-                if ( GameRegistry* registry = getRegistry(this) ) {
-                    if ( registry->getPathFinderController().buildTilePushPath(
-                      ModelVector(mTileDragTestCriteria.getTargetPoint(), mTileDragFocusAngle) ) ) {
-                        setDragState( Searching );
+            if ( GameRegistry* registry = getRegistry(this) ) {
+                if ( setTileDragFocusAngle( coordLeaning( coord, p ) ) ) {
+                    if ( mTileDragFocusAngle >= 0 ) {
+                        if ( registry->getPathFinderController().buildTilePushPath(
+                                 ModelVector(mTileDragTestCriteria.getTargetPoint(), mTileDragFocusAngle) ) ) {
+                            setDragState( Searching );
+                        }
+                    } else {
+                        bool reachedStart = false;
+                        for( Piece* move; (move = mMoves.getBack()) && !reachedStart; ) {
+                            reachedStart = mTileDragTestCriteria.getStartPoint().equals( *move );
+                            undoLastMove();
+                        }
                     }
                 }
             }

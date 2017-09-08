@@ -99,6 +99,11 @@ int PathSearchCriteria::getTargetRow() const
     return mTargetPoint.mRow;
 }
 
+ModelPoint PathSearchCriteria::getStartPoint() const
+{
+    return mStartVector;
+}
+
 ModelVector PathSearchCriteria::getStartVector() const
 {
     return mStartVector;

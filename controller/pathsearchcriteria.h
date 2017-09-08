@@ -48,6 +48,7 @@ public:
      * @brief Getter methods
      */
     CriteriaType getCriteriaType() const;
+    ModelPoint getStartPoint() const;
     ModelVector getStartVector() const;
     int getStartCol() const;
     int getStartRow() const;
