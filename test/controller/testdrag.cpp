@@ -90,42 +90,6 @@ void TestMain::testDragWithMove()
     QCOMPARE( v, moveController.getFocusVector() );
 }
 
-void TestMain::testDragPoint()
-{
-    initGame(
-      "SSS\n"
-      "S..\n"
-      ".MT\n"
-      "...\n" );
-
-    MoveController& moveController = mRegistry.getMoveController();
-
-    // select forbidden (stone):
-    moveController.dragStart( ModelPoint(0,0) );
-    QCOMPARE( moveController.getDragState(), Forbidden );
-    moveController.dragStop();
-    QCOMPARE( moveController.getDragState(), Inactive );
-
-#ifdef NOTDEF
-  // Want to use google mock for the path finder controller here
-    // select
-    qRegisterMetaType<DragState>("DragState");
-    moveController.start( ModelPoint(2,3) );
-    QSignalSpy dragSpy( &moveController, SIGNAL(stateChanged(DragState)) );
-    cout << "dragSpy valid: " << dragSpy.isValid() << endl;
-    if ( !dragSpy.wait(1000) ) {
-        cout << "wait for Selecting state returned false" << endl;
-    }
-    cout << "stateChange count=" << dragSpy.size() << " state=" << dragActivity.getState() << endl;
-    QCOMPARE( moveController.getState(), Selecting );
-    QCOMPARE( moveController.getMoves().size(), 2 ); // rotation + move
-
-    // undo
-    moveController.onDragTo( mRegistry.getTank().getPoint().toViewCenterSquare() );
-    QCOMPARE( moveController.getMoves().size(), 0 );
-#endif // NOTDEF
-}
-
 class TestPathFinderController : public PathFinderController, public TestAsync
 {
 public:
@@ -181,6 +145,41 @@ public slots:
     const char* mError;
     bool mReceived;
 };
+
+void TestMain::testDragPoint()
+{
+    TestPathFinderController* pathFinderController = new TestPathFinderController();
+    mRegistry.injectPathFinderController( pathFinderController );
+    initGame(
+      "S..\n"
+      ".M.\n"
+      "...\n"
+      ".T.\n" );
+    pathFinderController->init();
+
+    MoveController& moveController = mRegistry.getMoveController();
+
+    // select forbidden (stone):
+    moveController.dragStart( ModelPoint(0,0) );
+    QCOMPARE( moveController.getDragState(), Forbidden );
+    moveController.dragStop();
+    QCOMPARE( moveController.getDragState(), Inactive );
+
+    pathFinderController->testDrag( ModelPoint(1,2), { ModelPoint(1,3) } );
+
+    // push the tile
+    QPoint coord( ModelPoint(1,1).toViewCenterSquare() );
+    moveController.onDragTo( coord );
+    QCOMPARE( moveController.getMoves().size(), 2 );
+
+    // cause the rotation change
+    coord.setY( coord.y()+24/3 );
+    moveController.onDragTo( coord );
+
+    // undo the push
+    moveController.onDragTo( ModelPoint(1,2).toViewCenterSquare() );
+    QCOMPARE( moveController.getMoves().size(), 1 );
+}
 
 void TestMain::testDragTile()
 {

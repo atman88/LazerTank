@@ -210,16 +210,23 @@ void MoveDragController::onDragTo( QPoint coord )
                 if ( registry->getGame().canMoveFrom( TANK, angle, &toPoint, true, &pushPiece ) ) {
                     if ( toPoint == p ) {
                         Piece* lastMove = mMoves.getBack();
+                        int trimCount = 1;
                         const ModelPoint* prevMovePoint;
-                        if ( Piece* prevMove = mMoves.getBack(1) ) {
+                        Piece* prevMove = mMoves.getBack(1);
+                        if ( prevMove && prevMove->ModelPoint::equals( *lastMove ) ) {
+                            prevMove = mMoves.getBack(++trimCount);
+                        }
+                        if ( prevMove ) {
                             prevMovePoint = prevMove;
                         } else {
                             prevMovePoint = &registry->getTank().getPoint();
                         }
                         setDragState( DraggingTank );
                         if ( lastMove && !lastMove->getShotCount()
-                             && focusVector.ModelPoint::equals( *lastMove ) && prevMovePoint->equals( toPoint ) ) {
-                            undoLastMove();
+                          && focusVector.ModelPoint::equals( *lastMove ) && prevMovePoint->equals( toPoint ) ) {
+                            while( --trimCount >= 0 ) {
+                                undoLastMove();
+                            }
                             // if only a simple rotation remains then remove it too:
                             if ( (lastMove = mMoves.getBack()) ) {
                                 if ( !lastMove->getShotCount() && registry->getTank().getPoint().equals( *lastMove ) ) {
@@ -266,6 +273,13 @@ void MoveDragController::onDragTo( QPoint coord )
                         }
                     }
                 }
+            }
+        } else {
+            ModelPoint toPoint = mTileDragTestCriteria.getTargetPoint();
+            if ( getAdjacentPosition( mTileDragFocusAngle, &toPoint ) && p.equals( toPoint ) ) {
+                setDragState( DraggingTank );
+                onDragTo( coord );
+                return;
             }
         }
         break;
