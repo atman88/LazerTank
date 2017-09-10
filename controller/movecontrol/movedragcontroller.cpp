@@ -290,8 +290,7 @@ void MoveDragController::onDragTo( QPoint coord )
 
 void MoveDragController::dragStop()
 {
-    switch( mDragState ) {
-    case DraggingTank:
+    if ( mDragState == DraggingTank ) {
         // If we've changed it by dragging and effectively cancelled the moves by erasing up to the tank square, then
         // erase any single move given it is only a left-over rotation:
         if ( mChanged ) {
@@ -305,16 +304,7 @@ void MoveDragController::dragStop()
                 }
             }
         }
-        setDragState( Inactive );
-        wakeup();
-        break;
-
-    case DraggingTile:
-        setDragState( Inactive );
-        wakeup();
-        break;
-
-    default:
-        setDragState( Inactive );
     }
+    setDragState( Inactive );
+    wakeup();
 }
