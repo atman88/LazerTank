@@ -1,4 +1,3 @@
-#include <iostream>
 #include <QPainter>
 
 #include "tiledragmarker.h"
@@ -81,10 +80,8 @@ void TileDragMarker::setFocus( int angle )
     bool changed = false;
     if ( angle >= 0 && !(mAngleMask & (1 << (angle / 90)) ) ) {
         changed = (mFocusAngle >= 0);
-        if ( changed ) std::cout << "TileDragMarker: focus " << mFocusAngle << " -> " << angle << std::endl;
         mFocusAngle = -1;
     } else if ( angle != mFocusAngle ) {
-        std::cout << "TileDragMarker: focus " << mFocusAngle << " -> " << angle << std::endl;
         mFocusAngle = angle;
         changed = true;
     }
