@@ -315,11 +315,7 @@ bool Game::canPushPiece( const Piece* piece, int fromAngle )
     case TILE:
         return true;
     case TILE_MIRROR:
-    {   bool rc = piece->getAngle() != fromAngle && (piece->getAngle() + 270) % 360 != fromAngle;
-        std::cout << "canPushPiece p=" << piece->getAngle() << " f=" << fromAngle << " rc=" << rc << std::endl;
-        return rc;
-    }
-//        return piece->getAngle() != fromAngle && (piece->getAngle() + 270) % 360 != fromAngle;
+        return piece->getAngle() != fromAngle && (piece->getAngle() + 270) % 360 != fromAngle;
     case CANNON:
         return (piece->getAngle() + 180) % 360 != fromAngle;
     default:

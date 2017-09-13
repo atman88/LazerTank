@@ -9,6 +9,8 @@
 
 using namespace std;
 
+#define TESTBOOL(expr,msg) testBool(expr,msg,__FILE__, __LINE__)
+
 void TestMain::testDragTank()
 {
     initGame(
@@ -93,14 +95,14 @@ void TestMain::testDragWithMove()
 class TestPathFinderController : public PathFinderController, public TestAsync
 {
 public:
-    TestPathFinderController() : PathFinderController(0), mError(0), mReceived(false)
+    TestPathFinderController() : PathFinderController(0), mExpectedPathCount(0), mError(0), mReceived(false)
     {
     }
 
     void init()
     {
-        PathFinderController::init();
-        QObject::connect( this, &PathFinderController::testResult, this, &TestPathFinderController::verifyTestResult );
+        QObject::connect( this, &PathFinderController::testResult, this, &TestPathFinderController::verifyStartResult );
+        QObject::connect( this, &PathFinderController::pathFound, this, &TestPathFinderController::verifyDragToResult );
     }
 
     bool condition()
@@ -108,32 +110,59 @@ public:
         return mReceived;
     }
 
-    bool testBool( bool expression, const char* error )
+    bool testBool( bool expression, const char* error, const char* file, int line )
     {
         if ( !expression && !mError ) {
             mError = error;
+            QTest::qFail( error, file, line );
         }
         return expression;
     }
 
-    bool testDrag( ModelPoint point, std::set<ModelPoint> expected )
+    // test starting a drag of a tile
+    bool testStart( ModelPoint point, std::set<ModelPoint> expected )
     {
+        cout << "dragStart (" << point.mCol << "," << point.mRow << ")" << endl;
         mReceived = false;
         mExpected = expected;
         GameRegistry* registry = getRegistry(this);
         registry->getMoveController().dragStart( point );
-        return testBool( registry->getMoveController().getDragState() == Searching, "dragState != Searching" )
-            && testBool( test(), "timeout" );
+        return TESTBOOL( registry->getMoveController().getDragState() == Searching, "dragState != Searching" )
+            && TESTBOOL( test(), "timeout" );
+    }
+
+    // test start a drag at an empty point
+    bool testStart( ModelPoint point, int expectedCount )
+    {
+        cout << "dragStart " << expectedCount << endl;
+        mExpectedPathCount = expectedCount;
+        mReceived = false;
+        GameRegistry* registry = getRegistry(this);
+        registry->getMoveController().dragStart( point );
+        return TESTBOOL( registry->getMoveController().getDragState() == Searching, "dragState != Searching" )
+            && TESTBOOL( test(), "timeout" );
+    }
+
+    bool testDragTo( QPoint coord, int expectedCount )
+    {
+        cout << "onDragTo (" << coord.x() << "," << coord.y() << ")" << endl;
+        mExpectedPathCount = expectedCount;
+        mReceived = false;
+        GameRegistry* registry = getRegistry(this);
+        registry->getMoveController().onDragTo( coord );
+        return TESTBOOL( registry->getMoveController().getDragState() == Searching, "dragState != Searching" )
+            && TESTBOOL( test(), "timeout" );
     }
 
 public slots:
-    void verifyTestResult( bool ok, PathSearchCriteria* criteria )
+    void verifyStartResult( bool ok, PathSearchCriteria* criteria )
     {
-        if ( testBool( ok, "verify: received false" ) ) {
-            testBool( mExpected.size() == criteria->getTileDragTestResult()->mPossibleApproaches.size(), "counts differ" );
+        cout << "verifyStartResult " << ok << endl;
+        if ( TESTBOOL( ok, "verify: received false" ) ) {
+            TESTBOOL( mExpected.size() == criteria->getTileDragTestResult()->mPossibleApproaches.size(), "counts differ" );
             auto expectedIt = mExpected.cbegin();
             for( auto actualIt : criteria->getTileDragTestResult()->mPossibleApproaches ) {
-                if ( testBool( actualIt.equals( *expectedIt++ ), "result differs" ) ) {
+                if ( TESTBOOL( actualIt.equals( *expectedIt++ ), "result differs" ) ) {
                     break;
                 }
             }
@@ -141,22 +170,35 @@ public slots:
         mReceived = true;
     }
 
+    void verifyDragToResult( PieceListManager* path, PathSearchCriteria* /*criteria*/ )
+    {
+        cout << "verifyDragToResult size=" << path->size() << endl;
+        TESTBOOL( path->size() == mExpectedPathCount, "unexpected path size" );
+        mReceived = true;
+    }
+
     std::set<ModelPoint> mExpected;
+    int mExpectedPathCount;
     const char* mError;
     bool mReceived;
 };
 
-void TestMain::testDragPoint()
+TestPathFinderController* TestMain::setupTestDrag( const char* map )
 {
     TestPathFinderController* pathFinderController = new TestPathFinderController();
     mRegistry.injectPathFinderController( pathFinderController );
-    initGame(
+    initGame( map );
+    pathFinderController->init();
+    return pathFinderController;
+}
+
+void TestMain::testDragPoint()
+{
+    TestPathFinderController* pathFinderController = setupTestDrag(
       "S..\n"
       ".M.\n"
       "...\n"
       ".T.\n" );
-    pathFinderController->init();
-
     MoveController& moveController = mRegistry.getMoveController();
 
     // select forbidden (stone):
@@ -165,7 +207,7 @@ void TestMain::testDragPoint()
     moveController.dragStop();
     QCOMPARE( moveController.getDragState(), Inactive );
 
-    pathFinderController->testDrag( ModelPoint(1,2), { ModelPoint(1,3) } );
+    pathFinderController->testStart( ModelPoint(1,2), 1 );
 
     // push the tile
     QPoint coord( ModelPoint(1,1).toViewCenterSquare() );
@@ -183,23 +225,38 @@ void TestMain::testDragPoint()
 
 void TestMain::testDragTile()
 {
-    TestPathFinderController* pathFinderController = new TestPathFinderController();
-    mRegistry.injectPathFinderController( pathFinderController );
-    initGame(
+    TestPathFinderController* pathFinderController = setupTestDrag(
       "T . ..\n"
       ".[/M..\n"
       ". . ..\n"
       ". M ..\n" );
-    pathFinderController->init();
-    qRegisterMetaType<PathSearchCriteria*>("PathSearchCriteria*");
 
-    pathFinderController->testDrag( ModelPoint(1,1), { ModelPoint(1,2), ModelPoint(2,1) } );
+    pathFinderController->testStart( ModelPoint(1,1), { ModelPoint(1,2), ModelPoint(2,1) } );
     if ( pathFinderController->mError ) {
         QFAIL( pathFinderController->mError );
     }
 
-    pathFinderController->testDrag( ModelPoint(1,3), { ModelPoint(0,3), ModelPoint(2,3), ModelPoint(2,3) } );
+    pathFinderController->testStart( ModelPoint(1,3), { ModelPoint(0,3), ModelPoint(2,3), ModelPoint(2,3) } );
     if ( pathFinderController->mError ) {
         QFAIL( pathFinderController->mError );
     }
+}
+
+void TestMain::testFutureSelect()
+{
+    cout << "start testFutureSelect()" << endl;
+    TestPathFinderController* pathFinderController = setupTestDrag(
+      "..T\n"
+      ".MM\n"
+      "...\n" );
+
+    // push the right-side tile
+    pathFinderController->testStart( ModelPoint(2,1), { ModelPoint(2,0), ModelPoint(2,3) } );
+    QPoint coord( ModelPoint(2,1).toViewCenterSquare() );
+    coord.setY( coord.y()+24/3 );
+    pathFinderController->testDragTo( coord, 1 );
+    mRegistry.getMoveController().dragStop();
+
+    // check the left-side possible angles
+    pathFinderController->testStart( ModelPoint(1,1), { ModelPoint(1,0), ModelPoint(0,1), ModelPoint(2,1), ModelPoint(1,2) } );
 }

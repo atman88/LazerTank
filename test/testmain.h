@@ -5,6 +5,8 @@
 #include <QTest>
 #include <QSignalSpy>
 
+class TestPathFinderController;
+
 #include "controller/gameregistry.h"
 #include "controller/game.h"
 #include "controller/speedcontroller.h"
@@ -63,11 +65,13 @@ public:
     void initGame( const char* map );
     void initGame( QTextStream& map );
 
+    TestPathFinderController* setupTestDrag( const char* map );
     Persist* setupTestPersist();
 
     TestRegistry* getRegistry();
 
 private slots:
+    void testFutureSelect();
     void testDragTile();
     void testDragTank();
     void testDragPoint();

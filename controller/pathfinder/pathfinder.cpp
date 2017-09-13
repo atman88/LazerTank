@@ -25,14 +25,14 @@ bool PathFinder::execCriteria( PathSearchCriteria* criteria, bool testOnly )
     // Note: Done here (in the app thread) to ensure the board doesn't change while reading it.
     if ( GameRegistry* registry = getRegistry(this) ) {
         Game& game = registry->getGame();
-        Board* board = game.getBoard( criteria->isFuturistic() );
+        Board* board = game.getBoard( true );
         mMaxPoint = board->getLowerRight();
 
         ModelPoint point;
         for( point.mRow = mMaxPoint.mRow; point.mRow >= 0; --point.mRow ) {
             for( point.mCol = mMaxPoint.mCol; point.mCol >= 0; --point.mCol ) {
                 mSearchMap[point.mRow*BOARD_MAX_WIDTH+point.mCol] =
-                  game.canPlaceAt( TANK, point, -1, criteria->getFocus() != TANK ) ? TRAVERSIBLE : BLOCKED;
+                  game.canPlaceAt( TANK, point, -1, true ) ? TRAVERSIBLE : BLOCKED;
             }
         }
 
