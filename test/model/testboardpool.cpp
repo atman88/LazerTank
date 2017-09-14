@@ -42,8 +42,7 @@ public:
 
     void verifyContents( std::set<int> levels )
     {
-        int i;
-        int max = (*levels.cend()) + 1;
+        int i, max;
         auto it = levels.cbegin();
         if ( it == levels.cend() ) {
             i = max = 0;
