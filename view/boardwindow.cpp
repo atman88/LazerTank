@@ -604,12 +604,12 @@ void BoardWindow::mouseMoveEvent(QMouseEvent* event)
 }
 
 #ifndef Q_OS_WIN
-static void drawForbidden( QBitmap* b, QPen& pen )
+static void drawForbidden( QPen& pen, int width, int height, QBitmap* b )
 {
     QPainter painter(b);
     painter.setPen( pen );
-    int w = b->width() -2;
-    int h = b->height()-2;
+    int w = width -2;
+    int h = height-2;
     painter.drawArc( 1, 1, w, h, 0, 360*16 );
     painter.drawLine( 1,h, w,1 );
 }
@@ -638,24 +638,26 @@ void BoardWindow::setCursorDragState( DragState state )
 #ifdef Q_OS_WIN
         mForbiddenCursor = new QCursor( Qt::ForbiddenCursor );
 #else
-            QSize cursorSize(TILE_SIZE-4,TILE_SIZE-4);
+            QSize bitmapSize(32,32);
+            const int cursorWidth  = TILE_SIZE-4;
+            const int cursorHeight = TILE_SIZE-4;
             QPen pen;
 
-            QBitmap bitmap(cursorSize);
+            QBitmap bitmap(bitmapSize);
             bitmap.clear();
             pen.setWidth(5);
-            drawForbidden( &bitmap, pen );
+            drawForbidden( pen, cursorWidth, cursorHeight, &bitmap );
             pen.setWidth(2);
             pen.setColor( Qt::color0 );
-            drawForbidden( &bitmap, pen );
+            drawForbidden( pen, cursorWidth, cursorHeight, &bitmap );
 
-            QBitmap mask(cursorSize);
+            QBitmap mask(bitmapSize);
             mask.clear();
             pen.setWidth(5);
             pen.setColor( Qt::color1 );
-            drawForbidden( &mask, pen );
+            drawForbidden( pen, cursorWidth, cursorHeight, &mask );
 
-            mForbiddenCursor = new QCursor( bitmap, mask, cursorSize.width()/2, cursorSize.height()/2 );
+            mForbiddenCursor = new QCursor( bitmap, mask, cursorWidth/2, cursorHeight/2 );
 #endif // Q_OS_WIN
         }
         setCursor( *mForbiddenCursor );
