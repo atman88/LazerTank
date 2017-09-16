@@ -123,6 +123,14 @@ protected:
     void appendMove(ModelVector vector, Piece* pushPiece = 0 );
 
     /**
+     * @brief Extend or replace our path with the given path
+     * @param path The new path segment
+     * @param criteria The criteria used to find the new path
+     * @return true if successful
+     */
+    bool applyPathUsingCriteria( PieceListManager* path, PathSearchCriteria* criteria );
+
+    /**
      * @brief Undoes the last move assuming state checking and highlight awareness is handled by the caller
      */
     void undoLastMoveInternal();

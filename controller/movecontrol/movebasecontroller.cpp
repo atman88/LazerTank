@@ -1,3 +1,4 @@
+#include <iostream>
 #include "../movecontroller.h"
 #include "../gameregistry.h"
 #include "../game.h"
@@ -218,18 +219,38 @@ PieceListManager& MoveBaseController::getMoves()
 
 void MoveBaseController::onPathFound( PieceListManager* path, PathSearchCriteria* criteria )
 {
+    applyPathUsingCriteria( path, criteria );
+    wakeup();
+}
+
+bool MoveBaseController::applyPathUsingCriteria( PieceListManager* path, PathSearchCriteria* criteria )
+{
     if ( criteria->getFocus() == TANK ) {
         if ( GameRegistry* registry = getRegistry(this) ) {
+            if ( Piece* firstMove = path->getFront() ) {
+                if ( !registry->getTank().getPoint().equals( *firstMove ) ) {
+                    std::cout << "* applyPathUsingCriteria: ingoring stale path" << std::endl;
+                    return false;
+                }
+            }
             registry->getGame().endMoveDeltaTracking();
+        } else {
+            std::cout << "*** applyPathUsingCriteria: registry error" << std::endl;
+            return false;
         }
         mMoves.reset( path );
     } else {
+        if ( Piece* firstMove = path->getFront() ) {
+            if ( !firstMove->ModelPoint::equals( getFocusVector() ) ) {
+                std::cout << "* applyPathUsingCriteria: stale start point" << std::endl;
+                return false;
+            }
+        }
         mMoves.replaceBack( MOVE );
         mMoves.append( path->getList() );
     }
     mMoves.replaceBack( MOVE_HIGHLIGHT );
-
-    wakeup();
+    return true;
 }
 
 void MoveBaseController::appendMove( ModelVector vector, Piece* pushPiece )

@@ -124,8 +124,7 @@ DragState MoveDragController::getDragState() const
 
 void MoveDragController::onPathFound( PieceListManager* path, PathSearchCriteria* criteria )
 {
-    MoveBaseController::onPathFound( path, criteria );
-    if ( mDragState == Searching ) {
+    if ( applyPathUsingCriteria( path, criteria ) && mDragState == Searching ) {
         if ( criteria->getCriteriaType() == PathSearchCriteria::TileDragTestCriteria ) {
             MoveBaseController::move( mTileDragFocusAngle );
             setDragState( DraggingTile );
