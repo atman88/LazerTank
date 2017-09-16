@@ -636,7 +636,7 @@ void BoardWindow::setCursorDragState( DragState state )
     case Forbidden:
         if ( !mForbiddenCursor ) {
 #ifdef Q_OS_WIN
-        mForbiddenCursor = new QCursor( Qt::ForbiddenCursor );
+            mForbiddenCursor = new QCursor( Qt::ForbiddenCursor );
 #else
             QSize bitmapSize(32,32);
             const int cursorWidth  = TILE_SIZE-4;
