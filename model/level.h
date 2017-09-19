@@ -34,13 +34,13 @@ public:
      */
     const QSize& getSize() const;
 
-    bool getCompleted() const;
-    void setCompleted( bool completed );
+    int getCompletedCount() const;
+    void setCompletedCount( int completedCount );
 
 private:
     int mNumber;
     QSize mSize;
-    bool mCompleted;
+    int mCompletedCount;
 };
 
 Q_DECLARE_METATYPE(Level)
@@ -126,8 +126,9 @@ public slots:
     /**
      * @brief Mark that the user has completed this level
      * @param number The level to mark
+     * @param moveCount The number of moves taken to complete the level
      */
-    void setCompleted( int number );
+    void setCompleted( int number, int moveCount );
 
 signals:
     void initialized();

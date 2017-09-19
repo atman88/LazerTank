@@ -148,8 +148,10 @@ public slots:
 signals:
     /**
      * @brief Notifies that the level is known to have completed
+     * @param level The level number
+     * @param moveCount The number of moves taken to complete the level
      */
-    void levelSetComplete( int level );
+    void levelSetComplete( int level, int count );
 
     /**
      * @brief Internal signal from background to foreground when the indices have been read or changed

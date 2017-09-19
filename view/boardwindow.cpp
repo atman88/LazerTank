@@ -18,11 +18,13 @@
 #include "model/level.h"
 #include "view/levelchooser.h"
 #include "util/recorder.h"
+#include "util/imageutils.h"
 
 #define TILE_SIZE 24
+#define STATUS_HEIGHT 18
 
 BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mBackingStore(0), mRenderer(TILE_SIZE), mRenderedOnce(false),
-  mGameInitialized(false), mHelpWidget(0), mReplayText(0), mForbiddenCursor(0)
+  mGameInitialized(false), mHelpWidget(0), mReplayText(0), mForbiddenCursor(0), mStatusDirty(false)
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
   , mUpdatePending(false)
 #endif
@@ -49,7 +51,7 @@ BoardWindow::~BoardWindow()
 
 void BoardWindow::setSize( int cols, int rows )
 {
-    QRect size( 0, 0, cols * TILE_SIZE, rows * TILE_SIZE );
+    QRect size( 0, 0, cols * TILE_SIZE, rows * TILE_SIZE + STATUS_HEIGHT );
     QRect myGeometry = geometry();
     myGeometry.setSize( size.size() );
 
@@ -90,6 +92,10 @@ void BoardWindow::init( GameRegistry* registry )
     QObject::connect( &mDragMarker, &TileDragMarker::rectDirty, this, &BoardWindow::renderLater );
 
     QObject::connect( &game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded );
+
+    QObject::connect( &registry->getLevelList(), &LevelList::levelUpdated, this, &BoardWindow::onLevelUpdated );
+
+    QObject::connect( &registry->getRecorder(), &Recorder::recordedCountChanged, this, &BoardWindow::onRecordedCountChanged );
 }
 
 void BoardWindow::onBoardLoaded()
@@ -101,6 +107,18 @@ void BoardWindow::onBoardLoaded()
         if ( level > 0 ) {
             QString title( QString("Level %1").arg(level) );
             setTitle( title );
+        }
+    }
+}
+
+void BoardWindow::onLevelUpdated( const QModelIndex& index )
+{
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        if ( const Level* level = registry->getLevelList().at( index.row() ) ) {
+            Board* board = registry->getGame().getBoard();
+            if ( level->getNumber() == board->getLevel() ) {
+                renderLater( QRect(0,board->getHeight()*TILE_SIZE,geometry().width(),STATUS_HEIGHT) );
+            }
         }
     }
 }
@@ -175,7 +193,7 @@ bool BoardWindow::isPaintable() const
     return mRenderedOnce;
 }
 
-void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* painter )
+void BoardWindow::renderBoard( const QRect* rect, GameRegistry* registry, QPainter* painter )
 {
 //std::cout << "render " << rect->x() << "," << rect->y() << " " << rect->width() << "x" << rect->height() << std::endl;
     Board* board = registry->getGame().getBoard();
@@ -251,6 +269,28 @@ void BoardWindow::render( const QRect* rect, GameRegistry* registry, QPainter* p
     }
 }
 
+void BoardWindow::renderStatus( QRect& statusRect, GameRegistry* registry, QPainter* painter )
+{
+    QFont font = painter->font();
+    font.setPixelSize( STATUS_HEIGHT-4 );
+    painter->setFont(font);
+    painter->setPen( Qt::gray );
+
+    painter->drawText( statusRect, Qt::AlignVCenter|Qt::AlignLeft, QString::number(registry->getRecorder().getRecordedCount()) );
+
+    if ( const Level* level = registry->getLevelList().find( registry->getGame().getBoard()->getLevel() ) ) {
+        if ( int completedCount = level->getCompletedCount() ) {
+            QString s = QString::number(completedCount);
+            QRect textRect = painter->boundingRect( statusRect, Qt::AlignVCenter, s );
+            textRect.moveLeft( statusRect.width()-textRect.width()-2 );
+            painter->drawText( textRect, 0, s );
+            const QPixmap* checkmark = getPixmap(COMPLETE_CHECKMARK);
+            painter->drawPixmap( textRect.left()-checkmark->width()-2, statusRect.bottom()-checkmark->height(), *checkmark );
+        }
+    }
+    mStatusDirty = false;
+}
+
 void BoardWindow::renderNow()
 {
     if ( mDirtyRegion.isNull() && mRenderedOnce ) {
@@ -271,12 +311,31 @@ void BoardWindow::renderNow()
                 mRenderRegion = rect;
             }
 
+            QRect statusRect;
+            bool statusFilled = false;
+            if ( boardLoaded ) {
+                int boardHeight = registry->getGame().getBoard()->getHeight() * TILE_SIZE;
+                statusFilled = rect.bottom() > boardHeight;
+                if ( statusFilled || mStatusDirty ) {
+                    statusRect = QRect( 0, boardHeight, geometry().width(), STATUS_HEIGHT );
+                }
+                if ( !statusFilled && mStatusDirty ) {
+                    mRenderRegion += statusRect;
+                }
+            }
+
             mBackingStore->beginPaint( mRenderRegion );
             QPainter painter( device );
 
             painter.fillRect( rect, Qt::black );
+
             if ( boardLoaded ) {
-                render( &rect, registry, &painter );
+                if ( !statusFilled && mStatusDirty ) {
+                    painter.fillRect( statusRect, Qt::black );
+                }
+                renderStatus( statusRect, registry, &painter );
+
+                renderBoard( &rect, registry, &painter );
             }
 
             mBackingStore->endPaint();
@@ -665,6 +724,11 @@ void BoardWindow::setCursorDragState( DragState state )
     default:
         unsetCursor();
     }
+}
+
+void BoardWindow::onRecordedCountChanged()
+{
+    mStatusDirty = true;
 }
 
 int BoardWindow::checkForReplay()

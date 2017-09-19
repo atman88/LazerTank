@@ -272,7 +272,7 @@ void Game::onMoveAggregatorFinished()
 
                 QMessageBox msgBox;
                 msgBox.setWindowTitle( "Level completed!");
-                msgBox.setText( QString("%1 total moves").arg( registry->getRecorder().getCount() ) );
+                msgBox.setText( QString("%1 total moves").arg( registry->getRecorder().getAvailableCount() ) );
                 QPushButton* replayButton = msgBox.addButton( QString("&Auto Replay" ), QMessageBox::ActionRole );
                 QPushButton* nextButton   = msgBox.addButton( QString("&Next Level"  ), QMessageBox::AcceptRole );
                 QPushButton* exitButton   = msgBox.addButton( QString("E&xit"        ), QMessageBox::DestructiveRole );

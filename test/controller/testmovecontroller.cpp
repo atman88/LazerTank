@@ -118,7 +118,7 @@ void TestMain::testReplay()
     }
     QVERIFY( boardPieces.typeAt(ModelPoint(1,2)) == TILE );
 
-    std::cout << "testmovecontroller: start replay #moves=" << mRegistry.getRecorder().getCount() << std::endl;
+    std::cout << "testmovecontroller: start replay #moves=" << mRegistry.getRecorder().getAvailableCount() << std::endl;
 
     mRegistry.getGame().replayLevel();
     QVERIFY( boardPieces.typeAt(ModelPoint(3,0)) == NONE );

@@ -85,7 +85,7 @@ void TestMain::testRecorderOverflow()
 {
     RecorderPrivate& recorder_p = *new RecorderPrivate( 2 );
     QVERIFY( recorder_p.isEmpty() );
-    QVERIFY( recorder_p.getCount() == 0 );
+    QVERIFY( recorder_p.getAvailableCount() == 0 );
 
     Recorder& recorder = *new Recorder( &recorder_p );
     mRegistry.injectRecorder( &recorder );
@@ -99,10 +99,10 @@ void TestMain::testRecorderOverflow()
         recorder_p.recordShot();
     }
 
-    int count = recorder_p.getCount();
+    int count = recorder_p.getAvailableCount();
     // it should discover the overflow with this:
     recorder_p.recordMove( true, -1 );
-    QVERIFY2( recorder_p.getCount() == count, "count overflowed" );
+    QVERIFY2( recorder_p.getAvailableCount() == count, "count overflowed" );
 
     RecorderReader* reader = new RecorderReader( 0, *recorder.source() );
     TestRecorderPlayer player;

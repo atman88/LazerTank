@@ -77,7 +77,13 @@ public:
     /**
      * @brief Get the number of recorded records for possible statistical purposes
      */
-    int getCount() const;
+    int getAvailableCount() const;
+
+    /**
+     * @brief Get the number of records
+     * @return
+     */
+    int getRecordedCount() const;
 
     /**
      * @brief Flush any outstanding lazy write

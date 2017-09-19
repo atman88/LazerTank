@@ -62,7 +62,7 @@ void TestMain::testPersistNew()
         mRegistry.getGame().getBoard()->load(*mStream,2);
         recorder.onBoardLoaded( 2 );
         recorder.recordMove(true,90);
-        QSignalSpy persistSpy( persist, SIGNAL(levelSetComplete(int)) );
+        QSignalSpy persistSpy( persist, SIGNAL(levelSetComplete(int,int)) );
         persist->onLevelUpdated( 2 );
         QVERIFY(persistSpy.wait(2000));
         TestPersistUpdate testPersistAsync( *persist );
@@ -82,7 +82,7 @@ void persistLevel( Recorder& recorder, int level, int count, Persist& persist )
     for( int i = count; --i >= 0; ) {
         recorder.recordMove(true,90);
     }
-    std::cout << "recorder count=" << recorder.getCount() << std::endl;
+    std::cout << "recorder count=" << recorder.getAvailableCount() << std::endl;
 
     persist.onLevelUpdated( level );
     TestPersistUpdate testUpdate( persist );

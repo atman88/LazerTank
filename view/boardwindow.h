@@ -118,6 +118,12 @@ private slots:
     void onBoardLoaded();
 
     /**
+     * @brief Listens for level changes to update the status bar
+     * @param index The level that was updated
+     */
+    void onLevelUpdated( const QModelIndex& index );
+
+    /**
      * @brief Display the game help
      */
     void showHelp();
@@ -137,6 +143,11 @@ private slots:
      * @brief Update the cursor to depict the given drag state
      */
     void setCursorDragState( DragState state );
+
+    /**
+     * @brief Recieves notification that the recording count changed
+     */
+    void onRecordedCountChanged();
 
 signals:
     /**
@@ -179,7 +190,9 @@ private:
      * @param registry The valid game registry
      * @param painter The painter associated with this render operation
      */
-    void render( const QRect* rect, GameRegistry* registry, QPainter* painter );
+    void renderBoard( const QRect* rect, GameRegistry* registry, QPainter* painter );
+
+    void renderStatus( QRect& statusRect, GameRegistry* registry, QPainter* painter );
 
     /**
      * @brief Helper method to render the given set within the given rectangular area
@@ -211,6 +224,8 @@ private:
     QCursor* mForbiddenCursor;
 
     TileDragMarker mDragMarker;
+
+    bool mStatusDirty;
 
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
     void requestUpdate();

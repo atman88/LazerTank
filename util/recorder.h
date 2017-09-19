@@ -177,9 +177,14 @@ public:
     bool isEmpty() const;
 
     /**
-     * @brief Get the number of recorded records for possible statistical purposes
+     * @brief Get the number of records available to be read
      */
-    int getCount() const;
+    int getAvailableCount() const;
+
+    /**
+     * @brief Get the number of newly written records
+     */
+    int getRecordedCount() const;
 
     /**
      * @brief Query which level is being recorded
@@ -198,6 +203,12 @@ public:
      * Onus is on the caller to delete the returned RecorderSource
      */
     RecorderSource* source();
+
+signals:
+    /**
+     * @brief Notifies the recorded count has changed
+     */
+    void recordedCountChanged();
 
 protected:
     RecorderPrivate* mPrivate;

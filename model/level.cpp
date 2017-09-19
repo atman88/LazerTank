@@ -9,11 +9,11 @@
 #include "util/gameutils.h"
 
 
-Level::Level( int number, int width, int height ) : mNumber(number), mSize(QSize(width,height)), mCompleted(false)
+Level::Level( int number, int width, int height ) : mNumber(number), mSize(QSize(width,height)), mCompletedCount(0)
 {
 }
 
-Level::Level( const Level& other) : mNumber(other.mNumber), mSize(other.mSize), mCompleted(other.mCompleted)
+Level::Level( const Level& other) : mNumber(other.mNumber), mSize(other.mSize), mCompletedCount(other.mCompletedCount)
 {
 }
 
@@ -37,14 +37,14 @@ const QSize& Level::getSize() const
     return mSize;
 }
 
-bool Level::getCompleted() const
+int Level::getCompletedCount() const
 {
-    return mCompleted;
+    return mCompletedCount;
 }
 
-void Level::setCompleted(bool completed)
+void Level::setCompletedCount( int completedCount )
 {
-    mCompleted = completed;
+    mCompletedCount = completedCount;
 }
 
 
@@ -218,16 +218,16 @@ bool LevelList::isInitialized() const
 bool LevelList::isLevelCompleted( int number ) const
 {
     if ( const Level* level = find( number ) ) {
-        return level->getCompleted();
+        return level->getCompletedCount() > 0;
     }
     return false;
 }
 
-void LevelList::setCompleted( int number )
+void LevelList::setCompleted( int number, int moveCount )
 {
     int i = indexOf( number );
     if ( i >= 0 ) {
-        mLevels[i].setCompleted( true );
+        mLevels[i].setCompletedCount( moveCount );
         emit levelUpdated( index(i) );
     }
 }

@@ -49,7 +49,7 @@ public:
         painter->drawText( rect - QMargins( PADDING_WIDTH, PADDING_HEIGHT, PADDING_WIDTH, PADDING_HEIGHT ),
           Qt::AlignBottom|Qt::AlignRight|Qt::TextDontClip|Qt::TextSingleLine, QString::number(level.getNumber()) );
 
-        if ( level.getCompleted() ) {
+        if ( level.getCompletedCount() > 0 ) {
             painter->drawPixmap( PADDING_WIDTH, 0, *getPixmap(COMPLETE_CHECKMARK) );
         }
 

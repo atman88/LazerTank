@@ -19,6 +19,7 @@ Recorder::~Recorder()
 void Recorder::onBoardLoaded( int level )
 {
     mPrivate->onBoardLoaded( level );
+    emit recordedCountChanged();
 }
 
 bool Recorder::isEmpty() const
@@ -26,9 +27,14 @@ bool Recorder::isEmpty() const
     return mPrivate->isEmpty();
 }
 
-int Recorder::getCount() const
+int Recorder::getAvailableCount() const
 {
-    return mPrivate->getCount();
+    return mPrivate->getAvailableCount();
+}
+
+int Recorder::getRecordedCount() const
+{
+    return mPrivate->getRecordedCount();
 }
 
 int Recorder::getLevel() const
@@ -53,6 +59,7 @@ RecorderSource* Recorder::source()
 void Recorder::recordMove( bool adjacent, int rotation )
 {
     mPrivate->recordMove( adjacent, rotation );
+    emit recordedCountChanged();
 }
 
 void Recorder::recordShot()

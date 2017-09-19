@@ -39,9 +39,9 @@ void TestMain::testLevelCompleted()
 {
     LevelList list;
     list.addLevel( 1, 10, 10 );
-    QVERIFY( list.at(0)->getCompleted() == false );
+    QVERIFY( list.at(0)->getCompletedCount() == 0 );
     QSignalSpy levelSpy( &list, SIGNAL(levelUpdated(const QModelIndex&)) );
-    list.setCompleted( 1 );
-    QVERIFY( list.at(0)->getCompleted() );
+    list.setCompleted( 1, 1 );
+    QVERIFY( list.at(0)->getCompletedCount() > 0 );
     QVERIFY( levelSpy.size() == 1 );
 }

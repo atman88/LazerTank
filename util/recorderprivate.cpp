@@ -22,7 +22,7 @@ RecorderSource::~RecorderSource()
 
 RecorderSource::ReadState RecorderSource::getReadState() const
 {
-    if ( mOffset < mRecorder.getCount() ) {
+    if ( mOffset < mRecorder.getAvailableCount() ) {
         return Ready;
     }
 
@@ -43,7 +43,7 @@ RecorderSource::ReadState RecorderSource::getReadState() const
 
 int RecorderSource::getCount()
 {
-    return mRecorder.getCount();
+    return mRecorder.getAvailableCount();
 }
 
 int RecorderSource::pos()
@@ -53,7 +53,7 @@ int RecorderSource::pos()
 
 unsigned char RecorderSource::get()
 {
-    if ( mOffset < mRecorder.getCount() ) {
+    if ( mOffset < mRecorder.getAvailableCount() ) {
         return mRecorder.mRecorded[mOffset++].u.value;
     }
 
@@ -89,7 +89,7 @@ void RecorderSource::rewind()
 
 int RecorderSource::seekEnd()
 {
-    mOffset = mRecorder.getCount();
+    mOffset = mRecorder.getAvailableCount();
     return mOffset;
 }
 
@@ -131,13 +131,14 @@ void RecorderPrivate::onBoardLoaded( int level )
     if ( level == mLevel ) {
         // non-destructive rewind
         mPreRecordedCount = mWritePos;
-        mWritePos = 0;
+        lazyFlush();
     } else {
         // reset
         mLevel = level;
-        mCurMove.u.value = 0;
-        mWritePos = mPreRecordedCount = 0;
+        mPreRecordedCount = 0;
     }
+    mCurMove.u.value = 0;
+    mWritePos = 0;
 }
 
 bool RecorderPrivate::isEmpty() const
@@ -145,12 +146,17 @@ bool RecorderPrivate::isEmpty() const
     return mCurMove.isEmpty() && !mWritePos && !mPreRecordedCount;
 }
 
-int RecorderPrivate::getCount() const
+int RecorderPrivate::getAvailableCount() const
 {
     if ( mPreRecordedCount ) {
         return mPreRecordedCount;
     }
 
+    return getRecordedCount();
+}
+
+int RecorderPrivate::getRecordedCount() const
+{
     int count = mWritePos;
     if ( !mCurMove.isEmpty() ) {
         ++count;
@@ -322,7 +328,7 @@ char* RecorderPrivate::getLoadableDestination( int forLevel, int count )
 
 void RecorderPrivate::releaseLoadableDestination( int forLevel, int actualCount )
 {
-    if ( forLevel == mLevel ) {
-        mWritePos = std::max( actualCount, 0 );
+    if ( forLevel == mLevel && !getRecordedCount() ) {
+        mPreRecordedCount = std::max( actualCount, 0 );
     }
 }

@@ -227,11 +227,9 @@ bool MoveBaseController::applyPathUsingCriteria( PieceListManager* path, PathSea
 {
     if ( criteria->getFocus() == TANK ) {
         if ( GameRegistry* registry = getRegistry(this) ) {
-            if ( Piece* firstMove = path->getFront() ) {
-                if ( !registry->getTank().getPoint().equals( *firstMove ) ) {
-                    std::cout << "* applyPathUsingCriteria: ingoring stale path" << std::endl;
-                    return false;
-                }
+            if ( !criteria->getStartPoint().equals( registry->getTank().getPoint() ) ) {
+                std::cout << "* applyPathUsingCriteria: ingoring stale path" << std::endl;
+                return false;
             }
             registry->getGame().endMoveDeltaTracking();
         } else {
@@ -240,11 +238,9 @@ bool MoveBaseController::applyPathUsingCriteria( PieceListManager* path, PathSea
         }
         mMoves.reset( path );
     } else {
-        if ( Piece* firstMove = path->getFront() ) {
-            if ( !firstMove->ModelPoint::equals( getFocusVector() ) ) {
-                std::cout << "* applyPathUsingCriteria: stale start point" << std::endl;
-                return false;
-            }
+        if ( !criteria->getStartPoint().equals( getFocusVector() ) ) {
+            std::cout << "* applyPathUsingCriteria: stale start point" << std::endl;
+            return false;
         }
         mMoves.replaceBack( MOVE );
         mMoves.append( path->getList() );

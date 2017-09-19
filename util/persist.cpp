@@ -214,7 +214,7 @@ public:
         RunnableIndex newIndex;
         newIndex.rec.level = mLevel;
         newIndex.rec.offset = -1; // mark not set
-        newIndex.rec.size = sizeof(PersistedLevelRecord) + mSourceRecorder.getCount();
+        newIndex.rec.size = sizeof(PersistedLevelRecord) + mSourceRecorder.getAvailableCount();
 
         mSource = mSourceRecorder.source();
         if ( !mSource ) {
@@ -393,7 +393,7 @@ void Persist::onLevelUpdated( int number )
             std::cout << "** Persist: ignoring updated level " << number << "; Level " << recorder.getLevel() << " recorded" << std::endl;
             return;
         }
-        if ( !recorder.getCount() ) {
+        if ( !recorder.getAvailableCount() ) {
             std::cout << "** Persist::onLevelUpdated: recorder is empty" << std::endl;
             return;
         }
@@ -425,10 +425,13 @@ void Persist::onIndexReadyQueued()
             auto old = mRecords.find( it.rec.level );
             if ( old != mRecords.end() ) {
                 old->second.offset = it.rec.offset;
-                old->second.size   = it.rec.size;
+                if ( old->second.size != it.rec.size ) {
+                    old->second.size   = it.rec.size;
+                    emit levelSetComplete( it.rec.level, it.rec.size-sizeof(PersistedLevelRecord) );
+                }
             } else {
                 mRecords.insert( { it.rec.level, it.rec } );
-                emit levelSetComplete( it.rec.level );
+                emit levelSetComplete( it.rec.level, it.rec.size-sizeof(PersistedLevelRecord) );
             }
         }
 
