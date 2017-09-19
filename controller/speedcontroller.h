@@ -43,6 +43,11 @@ public slots:
      */
     void setHighSpeed( bool on );
 
+    /**
+     * @brief toggle high speed on/off
+     */
+    void toggleHighSpeed();
+
 signals:
     void highSpeedChanged( int speed );
 

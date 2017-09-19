@@ -579,7 +579,7 @@ void BoardWindow::keyReleaseEvent( QKeyEvent* ev )
                 break;
 
             case Qt::Key_S:
-                TO_QACTION(mSpeedAction).toggle();
+                registry->getSpeedController().toggleHighSpeed();
                 break;
 
             case Qt::Key_C:

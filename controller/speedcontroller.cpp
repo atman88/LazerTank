@@ -56,6 +56,11 @@ void SpeedController::setHighSpeed( bool on )
     }
 }
 
+void SpeedController::toggleHighSpeed()
+{
+    setHighSpeed( !mHighSpeed );
+}
+
 void SpeedControlledAnimation::setController(SpeedController *controller)
 {
     mController = controller;
