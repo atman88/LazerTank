@@ -1,0 +1,4 @@
+#ifndef PERSISTFILE_H
+#define PERSISTFILE_H
+
+#endif // PERSISTFILE_H

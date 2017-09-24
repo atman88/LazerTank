@@ -276,16 +276,18 @@ void BoardWindow::renderStatus( QRect& statusRect, GameRegistry* registry, QPain
     painter->setFont(font);
     painter->setPen( Qt::gray );
 
-    painter->drawText( statusRect, Qt::AlignVCenter|Qt::AlignLeft, QString::number(registry->getRecorder().getRecordedCount()) );
+    QRect r( statusRect );
+    r.setLeft( r.left()+2 );
+    painter->drawText( r, Qt::AlignVCenter|Qt::AlignLeft, QString::number(registry->getRecorder().getRecordedCount()) );
 
     if ( const Level* level = registry->getLevelList().find( registry->getGame().getBoard()->getLevel() ) ) {
         if ( int completedCount = level->getCompletedCount() ) {
             QString s = QString::number(completedCount);
-            QRect textRect = painter->boundingRect( statusRect, Qt::AlignVCenter, s );
-            textRect.moveLeft( statusRect.width()-textRect.width()-2 );
-            painter->drawText( textRect, 0, s );
+            r = painter->boundingRect( statusRect, Qt::AlignVCenter, s );
+            r.moveLeft( statusRect.width()-r.width()-2 );
+            painter->drawText( r, 0, s );
             const QPixmap* checkmark = getPixmap(COMPLETE_CHECKMARK);
-            painter->drawPixmap( textRect.left()-checkmark->width()-2, statusRect.bottom()-checkmark->height(), *checkmark );
+            painter->drawPixmap( r.left()-checkmark->width()-2, statusRect.bottom()-checkmark->height(), *checkmark );
         }
     }
     mStatusDirty = false;
