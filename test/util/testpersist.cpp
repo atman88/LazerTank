@@ -86,7 +86,7 @@ void persistLevel( Recorder& recorder, int level, int count, Persist& persist )
 
     persist.onLevelUpdated( level );
     TestPersistUpdate testUpdate( persist );
-    QVERIFY2( testUpdate.test(), "file not updated" );
+    QVERIFY2( testUpdate.test(10*60*1000), "file not updated" );
 }
 
 void TestMain::testPersistReplace()
@@ -104,6 +104,7 @@ void TestMain::testPersistReplace()
         RecorderSource* source = recorder.source();
         QCOMPARE( source->getCount(), 0 );
         PersistLevelLoader* loader = persist->getLevelLoader(2);
+        Q_ASSERT(loader);
         QSignalSpy loaderSpy( loader, SIGNAL(dataReady()) );
         loader->load( *recorder_p );
         QVERIFY( loaderSpy.wait(1000) );

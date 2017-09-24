@@ -10,18 +10,29 @@
 #include "controller/gameregistry.h"
 #include "controller/movecontroller.h"
 
-static const char PersistentIndexFooterMagicValue[3] = { 'L', 'T', 'i' };
-static const char PersistentLevelRecordMagicValue[3] = { 'L', 'T', 'r' };
+static const char PersistentIndexFooterMagicValue[] = PERSISTED_INDEX_FOOTER_MAGIC_VALUE;
+static const char PersistentLevelRecordMagicValue[] = PERSISTED_LEVEL_RECORD_MAGIC_VALUE;
 
 // A specialized PersistedLevelIndex that sorts by offset:
 typedef struct RunnableIndex {
-    PersistedLevelIndex rec;
+    RunnableIndex( int level = 0, int size = 0, int offset = 0 )
+    {
+         rec.level = level;
+         rec.size = size;
+         rec.offset = offset;
+    }
+    RunnableIndex( const RunnableIndex& other )
+    {
+        rec = other.rec;
+    }
 
     // offset compare
-    constexpr bool operator<( const struct RunnableIndex& other ) const
+    bool operator<( const struct RunnableIndex& other ) const
     {
         return rec.offset < other.rec.offset;
     }
+
+    PersistedLevelIndex rec;
 } RunnableIndex;
 
 class PersistentRunnable : public ErrorableRunnable
@@ -197,20 +208,6 @@ public:
 
     void run() override
     {
-        // build a list of retained indexes sorted by offset
-        PersistedLevelIndex oldIndex;
-        oldIndex.offset = -1; // mark as null
-        for( auto it : mPersist.mRecords ) {
-            if ( it.first == mLevel ) {
-                oldIndex = it.second;
-            } else {
-                // optimize?
-                RunnableIndex newIndex;
-                newIndex.rec = it.second;
-                mIndexes.insert( newIndex );
-            }
-        }
-
         RunnableIndex newIndex;
         newIndex.rec.level = mLevel;
         newIndex.rec.offset = -1; // mark not set
@@ -221,44 +218,46 @@ public:
             error( NullSourceCode );
         }
 
-        bool simplyOverwrite = false;
         if ( !mFile.exists() ) {
             eOpen( QIODevice::WriteOnly );
             newIndex.rec.offset = 0;
             writeLevel( newIndex );
+            mIndexes.insert( newIndex );
         } else {
-            eOpen( QIODevice::ReadWrite );
-            int writeOffset = oldIndex.offset;
-            if ( writeOffset >= 0 ) {
-                simplyOverwrite = oldIndex.size >= newIndex.rec.size;
-                if ( simplyOverwrite ) {
-                    newIndex.rec.offset = writeOffset;
+            // build a list of retained indexes sorted by offset
+            PersistedLevelIndex oldIndex;
+            oldIndex.offset = -1; // mark as null
+            for( auto it : mPersist.mRecords ) {
+                if ( it.first == mLevel ) {
+                    oldIndex = it.second;
                 } else {
-                    for( auto it : mIndexes ) {
-                        if ( it.rec.offset > oldIndex.offset ) {
-                            moveRecord( it.rec, writeOffset );
-                            it.rec.offset = writeOffset;
-                            writeOffset += it.rec.size;
-                        }
-                    }
+                    RunnableIndex newIndex;
+                    newIndex.rec = it.second;
+                    mIndexes.insert( newIndex );
                 }
             }
-            if ( newIndex.rec.offset < 0 ) {
-                if ( !mIndexes.size() ) {
-                    newIndex.rec.offset = 0;
-                } else {
-                    auto it = mIndexes.end();
-                    --it;
-                    newIndex.rec.offset = it->rec.offset + it->rec.size;
-                }
-            }
-            writeLevel( newIndex );
 
-            if ( !simplyOverwrite ) {
-                writeOffset = mFile.pos();
-            } else {
-                writeOffset = newIndex.rec.offset + newIndex.rec.size;
+            eOpen( QIODevice::ReadWrite );
+            int writeOffset = 0;
+            for( auto it = mIndexes.begin(); it != mIndexes.end(); ) {
+                if ( it->rec.offset > writeOffset ) {
+                    RunnableIndex update( it->rec.level, it->rec.size, writeOffset );
+                    moveRecord( it->rec, writeOffset );
+                    it = mIndexes.erase( it );
+                    it = mIndexes.insert( it, update );
+                } else if ( it->rec.offset < writeOffset ) {
+                    std::cerr << "** removing OVERLAPPING record for level " << it->rec.level << std::endl;
+                    it = mIndexes.erase( it );
+                    continue;
+                }
+                writeOffset += it->rec.size;
+                ++it;
             }
+            newIndex.rec.offset = writeOffset;
+            writeLevel( newIndex );
+            mIndexes.insert( newIndex );
+            writeOffset += newIndex.rec.size;
+
             // ensure the index list lands at the very end of the file
             int listSize = mIndexes.size() * sizeof(PersistedLevelIndex) + (sizeof mPersist.mFooter);
             if ( (mFile.size() - writeOffset) > listSize ) {
@@ -268,7 +267,7 @@ public:
             eSeek( writeOffset, SeekIndexCode );
         }
 
-        // write the index
+        // write the indices
         for( auto it : mIndexes ) {
             mFile.write( (const char*) &it.rec, sizeof it.rec );
         }
@@ -299,7 +298,7 @@ public:
     }
 
 private:
-    void moveRecord( PersistedLevelIndex& index, int newOffset )
+    void moveRecord( const PersistedLevelIndex& index, int newOffset )
     {
         char buf[256];
 
@@ -324,8 +323,6 @@ private:
 
     void writeLevel( RunnableIndex& newIndex )
     {
-        mIndexes.insert( newIndex );
-
         PersistedLevelRecord record;
         std::memcpy( record.magic, PersistentLevelRecordMagicValue, sizeof record.magic );
         record.majorVersion = PersistedLevelRecord::MajorVersionValue;
@@ -439,7 +436,7 @@ void Persist::onIndexReadyQueued()
         for( auto old = mRecords.begin(); old != mRecords.end(); ) {
             if ( old->second.offset < 0 ) {
                 std::cout << "* Persist: removing stale index " << old->first << std::endl;
-                mRecords.erase( old );
+                old = mRecords.erase( old );
             } else {
                 ++old;
             }
