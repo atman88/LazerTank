@@ -19,10 +19,10 @@ int BoardRenderer::tileSize() const
 
 void BoardRenderer::render( const QRect* rect, Board* board, QPainter* painter ) const
 {
-    int minCol = rect->left()/mTileSize;
-    int minRow = rect->top() /mTileSize;
-    int maxCol = (rect->right() +mTileSize-1)/mTileSize;
-    int maxRow = (rect->bottom()+mTileSize-1)/mTileSize;
+    int minCol = rect->left()  / mTileSize;
+    int minRow = rect->top()   / mTileSize;
+    int maxCol = rect->right() / mTileSize;
+    int maxRow = rect->bottom()/ mTileSize;
     QRect square( 0, 0, mTileSize, mTileSize );
 
     for( int row = minRow; row <= maxRow; ++row ) {

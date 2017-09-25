@@ -28,9 +28,9 @@ private:
 void TestMain::testPersistSizes()
 {
     // version 1.0 sizes
-    QCOMPARE( sizeof(PersistedLevelIndexFooter), 6UL );
-    QCOMPARE( sizeof(PersistedLevelIndex      ), 8UL );
-    QCOMPARE( sizeof(PersistedLevelRecord     ), 8UL );
+    QVERIFY( sizeof(PersistedLevelIndexFooter) == 6 );
+    QVERIFY( sizeof(PersistedLevelIndex      ) == 8 );
+    QVERIFY( sizeof(PersistedLevelRecord     ) == 8 );
 }
 
 Persist* TestMain::setupTestPersist()
