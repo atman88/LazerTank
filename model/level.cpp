@@ -223,6 +223,17 @@ bool LevelList::isLevelCompleted( int number ) const
     return false;
 }
 
+int LevelList::getCompletedCount() const
+{
+    int count = 0;
+    for( auto it : mLevels ) {
+        if ( it.getCompletedCount() > 0 ) {
+            ++count;
+        }
+    }
+    return count;
+}
+
 void LevelList::setCompleted( int number, int moveCount )
 {
     int i = indexOf( number );

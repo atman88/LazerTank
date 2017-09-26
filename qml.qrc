@@ -68,5 +68,6 @@
         <file>icons/tank.ico</file>
         <file>images/tank-fast.png</file>
         <file>images/complete-checkmark.png</file>
+        <file>images/flag2.png</file>
     </qresource>
 </RCC>

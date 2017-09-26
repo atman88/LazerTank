@@ -120,6 +120,11 @@ public:
      */
     bool isLevelCompleted( int number ) const;
 
+    /**
+     * @brief Get the total number of levels completed
+     */
+    int getCompletedCount() const;
+
     QSize visualSizeHint() const;
 
 public slots:

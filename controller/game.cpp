@@ -17,6 +17,7 @@
 #include "view/boardwindow.h"
 #include "view/boardrenderer.h"
 #include "util/persist.h"
+#include "util/imageutils.h"
 
 Game::Game() : mDesiredLevel(0)
 {
@@ -272,7 +273,12 @@ void Game::onMoveAggregatorFinished()
 
                 QMessageBox msgBox;
                 msgBox.setWindowTitle( "Level completed!");
-                msgBox.setText( QString("%1 total moves").arg( registry->getRecorder().getAvailableCount() ) );
+                msgBox.setText( QString(
+                  "Completed in %1 moves.\n"
+                  "%2 levels completed." )
+                  .arg( registry->getRecorder().getAvailableCount() )
+                  .arg( registry->getLevelList().getCompletedCount() ) );
+                msgBox.setIconPixmap( QPixmap(":/images/flag2.png") );
                 QPushButton* replayButton = msgBox.addButton( QString("&Auto Replay" ), QMessageBox::ActionRole );
                 QPushButton* nextButton   = msgBox.addButton( QString("&Next Level"  ), QMessageBox::AcceptRole );
                 QPushButton* exitButton   = msgBox.addButton( QString("E&xit"        ), QMessageBox::DestructiveRole );
