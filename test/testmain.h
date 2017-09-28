@@ -71,7 +71,7 @@ public:
     TestRegistry* getRegistry();
 
 private slots:
-    void testPersistReplace();
+    void testMeasureShot();
 
     void testFutureSelect();
     void testDragTile();
@@ -81,6 +81,7 @@ private slots:
 
     void testPersistSizes();
     void testPersistNew();
+    void testPersistReplace();
 
     void testLevelFind();
     void testNextLevel();

@@ -437,7 +437,8 @@ bool canShootThruPush( QPoint& centerOfSquare, int angle, Push& push, QPoint *hi
     return true;
 }
 
-bool Game::canShootThru( ModelPoint point, int *angle, FutureChange *change, Shooter* source, QPoint *hitPoint )
+bool Game::canShootThru( ModelPoint point, int *angle, FutureChange *change, bool apply, Shooter* source,
+                         QPoint *hitPoint )
 {
     bool futuristic = (change != 0);
     Board* board = getBoard(futuristic);
@@ -457,7 +458,7 @@ bool Game::canShootThru( ModelPoint point, int *angle, FutureChange *change, Sho
             case CANNON:
             {   int pieceAngle = hitPiece->getAngle();
                 if ( abs( pieceAngle - *angle ) == 180 ) {
-                    if ( futuristic ) {
+                    if ( futuristic && apply ) {
                         mFutureDelta.enable();
                         board = &mFutureBoard;
                     }
@@ -467,7 +468,9 @@ bool Game::canShootThru( ModelPoint point, int *angle, FutureChange *change, Sho
                         change->u.erase.pieceType = CANNON;
                         change->u.erase.pieceAngle = pieceAngle;
                     }
-                    board->getPieceManager().eraseAt( point );
+                    if ( apply ) {
+                        board->getPieceManager().eraseAt( point );
+                    }
 
                     if ( hitPoint ) {
                         centerToEntryPoint( *angle, hitPoint );
@@ -491,8 +494,10 @@ bool Game::canShootThru( ModelPoint point, int *angle, FutureChange *change, Sho
                     change->u.multiPush.pieceAngle = hitPiece->getAngle();
                     change->u.multiPush.direction = *angle;
                     change->u.multiPush.count = 1;
-                    onFuturePush( hitPiece, *angle );
-                } else {
+                    if ( apply ) {
+                        onFuturePush( hitPiece, *angle );
+                    }
+                } else if ( apply ) {
                     SimplePiece simple( hitPiece );
                     board->getPieceManager().eraseAt( point );
                     if ( GameRegistry* registry = getRegistry(this) ) {
@@ -534,7 +539,9 @@ bool Game::canShootThru( ModelPoint point, int *angle, FutureChange *change, Sho
                             }
                             break;
                         }
-                        source->getShot().setIsKill();
+                        if ( apply ) {
+                            source->getShot().setIsKill();
+                        }
                         return false;
                     }
                 }
@@ -555,11 +562,13 @@ bool Game::canShootThru( ModelPoint point, int *angle, FutureChange *change, Sho
     case STONE_MIRROR_270: if ( getShotReflection( 270, angle ) ) return true; break;
 
     case WOOD:
-        if ( futuristic ) {
-            mFutureDelta.enable();
-            board = &mFutureBoard;
+        if ( apply ) {
+            if ( futuristic ) {
+                mFutureDelta.enable();
+                board = &mFutureBoard;
+            }
+            board->setTileAt( WOOD_DAMAGED, point );
         }
-        board->setTileAt( WOOD_DAMAGED, point );
         if ( change ) {
             change->changeType = TILE_CHANGE;
             change->point = point;
@@ -567,11 +576,13 @@ bool Game::canShootThru( ModelPoint point, int *angle, FutureChange *change, Sho
         }
         break;
     case WOOD_DAMAGED:
-        if ( futuristic ) {
-            mFutureDelta.enable();
-            board = &mFutureBoard;
+        if ( apply ) {
+            if ( futuristic ) {
+                mFutureDelta.enable();
+                board = &mFutureBoard;
+            }
+            board->setTileAt( DIRT, point );
         }
-        board->setTileAt( DIRT, point );
         if ( change ) {
             change->changeType = TILE_CHANGE;
             change->point = point;

@@ -52,11 +52,13 @@ public:
      * @param point The square of the lazer end point
      * @param angle Inputs the laser direction as it enters the square; outputs the direction the laser exits the square
      * @param change Apply to the future board if non-zero, otherwise uses the master board. Returns future hit details if non-zero.
+     * @param apply If false then game state is not affected, otherse then resultant effects are applied to the game.
      * @param source The producer of laser beam or 0
      * @param hitPoint If non-zero, input as the square's center view coordinate, outputs the hit coordinate (if any)
      * @return true if the the shot is continuing to advance past the square or false if the shot hit something
      */
-    bool canShootThru( ModelPoint point, int *angle, FutureChange *change, Shooter* source = 0, QPoint *hitPoint = 0 );
+    bool canShootThru( ModelPoint point, int *angle, FutureChange *change = 0, bool apply = false, Shooter* source = 0,
+                       QPoint *hitPoint = 0 );
 
     /**
      * @brief Determines whether the given piece can move to the given square. Pending moves are not considered.

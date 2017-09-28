@@ -132,7 +132,8 @@ test{
         test/model/testboardpool.cpp \
         test/model/testlevellist.cpp \
         test/controller/testdrag.cpp \
-        test/util/testpersist.cpp
+        test/util/testpersist.cpp \
+        test/model/testshot.cpp
 
 } else {
     TARGET = qlt

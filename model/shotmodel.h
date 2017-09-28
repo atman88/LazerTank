@@ -6,6 +6,7 @@
 class Game;
 class AnimationStateAggregator;
 class Shooter;
+class MeasureRunnable;
 
 #include "model/modelpoint.h"
 #include "view/shotview.h"
@@ -17,6 +18,7 @@ class ShotModel : public ShotView
 
 public:
     explicit ShotModel(QObject *parent = 0);
+    ~ShotModel();
 
     /**
      * @brief Initialization method
@@ -63,16 +65,28 @@ public slots:
      * @brief Instructs that the beam should stop emitting. I.e. the trigger has been released.
      */
     void startShedding();
+
+    /**
+     * @brief Informs this shot that it has caused a kill
+     */
     void setIsKill();
 
 private:
+    int getMeasurement() const;
+
     QVariant mSequence;
     QPropertyAnimation mAnimation;
+    ModelVector mStartVector;
     ModelPoint mLeadingPoint;
     int mLeadingDirection;
     int mDistance;
     bool mShedding;
     int mKillSequence;
+    MeasureRunnable* mRunnable;
+    int mSpeed;
+
+    friend class MeasureRunnable;
+    friend class TestShotModel;
 };
 
 #endif // SHOTMODEL_H
