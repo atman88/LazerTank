@@ -600,6 +600,12 @@ void BoardWindow::keyReleaseEvent( QKeyEvent* ev )
                 }
                 break;
 
+            case Qt::Key_R:
+                if ( ev->modifiers() == Qt::AltModifier ) {
+                    registry->getGame().restartLevel();
+                }
+                break;
+
             case Qt::Key_Backspace:
                 if ( !checkForReplay() )  {
                     if ( ev->modifiers() == Qt::ControlModifier ) {
