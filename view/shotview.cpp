@@ -1,4 +1,3 @@
-#include <iostream>
 #include <QRect>
 #include <QPainter>
 #include <QPainterPath>
@@ -18,7 +17,7 @@ ShotView::ShotView(QObject *parent) : QObject(parent), mShooter(0), mLeadAngle(-
 void ShotView::reset()
 {
     // dirty it if visible to erase
-    QPoint curPoint = getStartPoint();
+    QPoint curPoint = getTailPoint();
     if ( curPoint != BoardRenderer::NullPoint ) {
         if ( mLeadPoint != BoardRenderer::NullPoint ) {
             for( auto it : mBendPoints ) {
@@ -51,7 +50,7 @@ QPoint toStartPoint( int x, int y, int angle )
     return QPoint(x, y);
 }
 
-QPoint ShotView::getStartPoint()
+QPoint ShotView::getTailPoint()
 {
     if ( mShooter && mTailPoint == BoardRenderer::NullPoint ) {
         return toStartPoint( mShooter->getViewX().toInt(), mShooter->getViewY().toInt(), mShooter->getViewRotation().toInt() % 360 );
@@ -71,7 +70,7 @@ QPoint ShotView::getLeadPoint() const
 
 void ShotView::render( QPainter* painter )
 {
-    QPoint startPoint = getStartPoint();
+    QPoint startPoint = getTailPoint();
     if ( !startPoint.isNull() ) {
         painter->setPen( mPen );
 

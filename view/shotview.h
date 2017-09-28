@@ -107,7 +107,7 @@ private:
     /**
      * @brief Get the trailing point (I.e. the tip of the tail)
      */
-    QPoint getStartPoint();
+    QPoint getTailPoint();
 
     /**
      * @brief detach the shooter from this shot
