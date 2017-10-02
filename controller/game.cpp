@@ -16,6 +16,7 @@
 #include "model/boardpool.h"
 #include "view/boardwindow.h"
 #include "view/boardrenderer.h"
+#include "view/levelcompleteddialog.h"
 #include "util/persist.h"
 #include "util/imageutils.h"
 
@@ -271,28 +272,23 @@ void Game::onMoveAggregatorFinished()
                     registry->getPersist().onLevelUpdated( mBoard.getLevel() );
                 }
 
-                QMessageBox msgBox;
-                msgBox.setWindowTitle( "Level completed!");
-                msgBox.setText( QString(
-                  "Completed in %1 moves.\n"
-                  "%2 levels completed." )
-                  .arg( registry->getRecorder().getAvailableCount() )
-                  .arg( registry->getLevelList().getCompletedCount() ) );
-                msgBox.setIconPixmap( QPixmap(":/images/flag2.png") );
-                QPushButton* replayButton = msgBox.addButton( QString("&Auto Replay" ), QMessageBox::ActionRole );
-                QPushButton* nextButton   = msgBox.addButton( QString("&Next Level"  ), QMessageBox::AcceptRole );
-                QPushButton* exitButton   = msgBox.addButton( QString("E&xit"        ), QMessageBox::DestructiveRole );
-                msgBox.setDefaultButton( nextButton );
-                nextButton->setEnabled( registry->getLevelList().nextLevel(mBoard.getLevel()) != 0 );
+                LevelCompletedDialog dialog( registry );
+                dialog.exec();
 
-                msgBox.exec();
-
-                if ( msgBox.clickedButton() == exitButton ) {
+                switch( dialog.getClickedCode() ) {
+                case LevelCompletedDialog::Exit:
                     registry->getWindow()->close();
-                } else if ( msgBox.clickedButton() == replayButton ) {
+                    break;
+                case LevelCompletedDialog::Replay:
                     restartLevel( true );
-                } else if ( int i = registry->getLevelList().nextLevel( mBoard.getLevel() ) ) {
-                    loadMasterBoard( i );
+                    break;
+                case LevelCompletedDialog::Next:
+                    if ( int i = registry->getLevelList().nextLevel( mBoard.getLevel() ) ) {
+                        loadMasterBoard( i );
+                    }
+                    break;
+                default:
+                    break;
                 }
             }
             return;

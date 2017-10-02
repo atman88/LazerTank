@@ -75,7 +75,8 @@ HEADERS += \
     model/level.h \
     view/levelchooser.h \
     model/boardpool.h \
-    view/tiledragmarker.h
+    view/tiledragmarker.h \
+    view/levelcompleteddialog.h
 
 SOURCES += \
     view/shooter.cpp \
@@ -107,7 +108,8 @@ SOURCES += \
     model/level.cpp \
     view/levelchooser.cpp \
     model/boardpool.cpp \
-    view/tiledragmarker.cpp
+    view/tiledragmarker.cpp \
+    view/levelcompleteddialog.cpp
 
 test{
     INCLUDEPATH += test/controller
