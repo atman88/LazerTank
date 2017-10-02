@@ -436,27 +436,21 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
         // create the menu on first use
         //
         if ( mMenu.isEmpty() ) {
-            QKeySequence shootSeq( Qt::Key_Space );
-            QKeySequence undoSeq( Qt::Key_Backspace );
-            QKeySequence clearSeq( Qt::CTRL|Qt::Key_Backspace );
-            QKeySequence speedSeq( Qt::Key_S );
-            QKeySequence captureSeq( Qt::Key_C );
-            QKeySequence replaySeq( Qt::ALT|Qt::Key_A );
-
-            mMenu.addAction( "shoot& ", &registry->getMoveController(), SLOT(fire()), shootSeq );
-            TO_QACTION(mUndoMoveAction).setText("&Undo");
-            TO_QACTION(mClearMovesAction).setText("Clear Moves");
+            mMenu.addAction( "shoot& ", &registry->getMoveController(), SLOT(fire()), Qt::Key_Space );
+            TO_QACTION(mUndoMoveAction).setText( "&Undo" );
+            TO_QACTION(mClearMovesAction).setText( "Clear Moves" );
             TO_QACTION(mSpeedAction).setText( "&Speed Boost" );
             pathToAction.setText( "Move &Here" );
             captureAction.setText( "&Capture Flag" );
             TO_QACTION(mReloadAction).setText( "&Restart Level" );
             TO_QACTION(mReplayAction).setText( "&Auto Replay" );
 
-            TO_QACTION(mSpeedAction).setShortcut( speedSeq );
-            captureAction.setShortcut( captureSeq );
-            TO_QACTION(mUndoMoveAction).setShortcut( undoSeq );
-            TO_QACTION(mClearMovesAction).setShortcut(clearSeq);
-            TO_QACTION(mReplayAction).setShortcut( replaySeq );
+            TO_QACTION(mSpeedAction).setShortcut( Qt::Key_S );
+            captureAction.setShortcut( Qt::Key_C );
+            TO_QACTION(mUndoMoveAction).setShortcut( Qt::Key_Backspace );
+            TO_QACTION(mClearMovesAction).setShortcut( Qt::CTRL|Qt::Key_Backspace );
+            TO_QACTION(mReloadAction).setShortcut( Qt::ALT|Qt::Key_R );
+            TO_QACTION(mReplayAction).setShortcut( Qt::ALT|Qt::Key_A );
 
             mMenu.addAction( &TO_QACTION(mSpeedAction)      );
             mMenu.addAction( &TO_QACTION(mUndoMoveAction)   );
@@ -464,11 +458,11 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             mMenu.addAction( &pathToAction );
             mMenu.addAction( &captureAction );
             mMenu.addAction( &TO_QACTION(mReloadAction)     );
-            mMenu.addAction( QString("Select &Level.."), this, SLOT(chooseLevel()));
+            mMenu.addAction( "Select &Level..", this, SLOT(chooseLevel()), Qt::ALT|Qt::Key_L );
             mMenu.addAction( &TO_QACTION(mReplayAction) );
-            mMenu.addAction( QString("&Help"), this, SLOT(showHelp()) );
-            mMenu.addAction( QString("About Qt"), qApp, &QApplication::aboutQt );
-            mMenu.addAction( QString("E&xit"), this, SLOT(close()) );
+            mMenu.addAction( "&Help", this, SLOT(showHelp()) );
+            mMenu.addAction( "About Qt", qApp, &QApplication::aboutQt );
+            mMenu.addAction( "E&xit", this, SLOT(close()) );
         }
 
         //
