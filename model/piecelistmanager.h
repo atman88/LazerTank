@@ -8,12 +8,12 @@
 /**
  * @brief A manager for piece lists
  */
-class PieceListManager : public QObject
+class PieceListManager : public PieceManager
 {
     Q_OBJECT
 
 public:
-    explicit PieceListManager(QObject *parent = 0);
+    explicit PieceListManager( QObject *parent = 0 );
     ~PieceListManager();
 
     /**
@@ -53,6 +53,8 @@ public:
      * @param source The pieces to append
      */
     void append( const PieceList& source );
+
+    void append( PieceListManager* source, bool copy = true );
 
     /**
      * @brief Adds a new piece to the beginning of this list from the given values
@@ -114,29 +116,13 @@ public:
      */
     int size() const;
 
-signals:
-    /**
-     * @brief Notifies that a new piece was added at the end of the list
-     * @param point The associated square of the new piece
-     */
-    void added( ModelPoint point );
-    /**
-     * @brief Notifies that a piece was deleted from the list
-     * @param point The square of the deleted piece
-     */
-    void erased( ModelPoint point );
-    /**
-     * @brief Notifies that a piece in the list was modified
-     * @param point The square of the modified piece
-     */
-    void changed( ModelPoint point );
-
 public slots:
     /**
      * @brief Re-initialize the list
      * @param source If non-zero, initialize with a copy of the given source, otherwise clear the list
+     * @param copy If true, the source is copied, otherwise contents of source are moved
      */
-    void reset( PieceListManager* source = 0 );
+    void reset(PieceListManager* source = 0 , bool copy = true );
 
 private:
     Piece* addInternal( Piece* piece, bool pushFront = false );

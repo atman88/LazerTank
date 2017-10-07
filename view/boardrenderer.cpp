@@ -113,13 +113,29 @@ void BoardRenderer::renderRotatedPixmap( const QPixmap* pixmap, QRect& square, i
 
 void BoardRenderer::renderPiece( PieceType type, QRect& square, int angle, QPainter* painter )
 {
-    const QPixmap* pixmap = getPixmap( type );
+    const ResourcePixmap* pixmap = getPixmap( type );
     if ( pixmap->isNull() ) {
         std::cout << "no pixmap for " << type << std::endl;
         return;
     }
+    const QPixmap* pm;
+    if ( pixmap->hasColorableTag() ) {
+        pm = pixmap->getForColor( painter->pen().color() );
+    } else {
+        pm = pixmap;
+    }
 
-    renderRotatedPixmap( pixmap, square, angle, painter );
+    renderRotatedPixmap( pm, square, angle, painter );
+}
+
+void BoardRenderer::renderListIn( PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter)
+{
+    while( iterator != end ) {
+        if ( !(*iterator)->render( dirty, *this, painter ) ) {
+            break;
+        }
+        ++iterator;
+    }
 }
 
 void BoardRenderer::renderInitialTank( Board* board, QPainter* painter )

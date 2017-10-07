@@ -11,63 +11,77 @@ using namespace std;
 
 #define TESTBOOL(expr,msg) testBool(expr,msg,__FILE__, __LINE__)
 
+class TestMoveController : public MoveController
+{
+public:
+    TestMoveController() : MoveController(0)
+    {
+    }
+
+    PieceListManager& getDragMoves()
+    {
+        return mDragMoves;
+    }
+};
+
 void TestMain::testDragTank()
 {
+    TestMoveController* moveController = new TestMoveController();
+    mRegistry.injectMoveController( moveController );
     initGame(
       "SSS\n"
       "S..\n"
       ".MT\n"
       "...\n" );
 
-    MoveController& moveController = mRegistry.getMoveController();
-    QCOMPARE( moveController.getDragState(), Inactive );
+    QCOMPARE( moveController->getDragState(), Inactive );
 
-    moveController.dragStart( mRegistry.getTank().getPoint() );
-    QCOMPARE( moveController.getDragState(), DraggingTank );
-    QCOMPARE( moveController.getFocusVector(), mRegistry.getTank().getVector() );
+    moveController->dragStart( mRegistry.getTank().getPoint() );
+    QCOMPARE( moveController->getDragState(), DraggingTank );
+    QCOMPARE( moveController->getFocusVector(), mRegistry.getTank().getVector() );
 
     // test off-board:
-    moveController.onDragTo( ModelPoint(3,2).toViewCenterSquare() );
-    QCOMPARE( moveController.getDragState(), Forbidden );
-    if ( ModelPoint* point = moveController.getMoves().getBack() ) {
+    moveController->onDragTo( ModelPoint(3,2).toViewCenterSquare() );
+    QCOMPARE( moveController->getDragState(), Forbidden );
+    if ( ModelPoint* point = moveController->getDragMoves().getBack() ) {
         QVERIFY( mRegistry.getTank().getPoint().equals(*point) );
     }
 
     // test valid drag:
-    moveController.onDragTo( ModelPoint(2,1).toViewCenterSquare() );
-    QCOMPARE( moveController.getDragState(), DraggingTank );
-    if ( ModelVector* vector = moveController.getMoves().getBack() ) {
+    moveController->onDragTo( ModelPoint(2,1).toViewCenterSquare() );
+    QCOMPARE( moveController->getDragState(), DraggingTank );
+    if ( ModelVector* vector = moveController->getDragMoves().getBack() ) {
         QVERIFY( ModelVector(2,1,0).equals( *vector ) );
     } else {
-        QFAIL( "vaid drag has no moves" );
+        QFAIL( "drag has no moves" );
     }
 
     // test drag over stone:
-    moveController.onDragTo( ModelPoint(2,0).toViewCenterSquare() );
-    QCOMPARE( moveController.getDragState(), Forbidden );
-    if ( ModelVector* vector = moveController.getMoves().getBack() ) {
+    moveController->onDragTo( ModelPoint(2,0).toViewCenterSquare() );
+    QCOMPARE( moveController->getDragState(), Forbidden );
+    if ( ModelVector* vector = moveController->getDragMoves().getBack() ) {
         QVERIFY( ModelVector(2,1,0).equals( *vector ) );
     } else {
         QFAIL( "drag over stone has no moves" );
     }
 
     // test drag undo:
-    moveController.onDragTo( mRegistry.getTank().getPoint().toViewCenterSquare() );
-    QCOMPARE( moveController.getDragState(), DraggingTank );
-    QVERIFY( moveController.getMoves().size() <= 1 );
+    moveController->onDragTo( mRegistry.getTank().getPoint().toViewCenterSquare() );
+    QCOMPARE( moveController->getDragState(), DraggingTank );
+    QVERIFY( moveController->getDragMoves().size() <= 1 );
 
     // test drag with initial rotate:
-    moveController.onDragTo( ModelPoint(2,3).toViewCenterSquare() );
-    QCOMPARE( moveController.getDragState(), DraggingTank );
-    QCOMPARE( moveController.getMoves().size(), 2 );
+    moveController->onDragTo( ModelPoint(2,3).toViewCenterSquare() );
+    QCOMPARE( moveController->getDragState(), DraggingTank );
+    QCOMPARE( moveController->getDragMoves().size(), 2 );
     // undo it:
-    moveController.onDragTo( mRegistry.getTank().getPoint().toViewCenterSquare() );
-    QCOMPARE( moveController.getDragState(), DraggingTank );
-    QVERIFY( moveController.getMoves().size() <= 1 );
+    moveController->onDragTo( mRegistry.getTank().getPoint().toViewCenterSquare() );
+    QCOMPARE( moveController->getDragState(), DraggingTank );
+    QVERIFY( moveController->getDragMoves().size() <= 1 );
 
     // test stop:
-    moveController.dragStop();
-    QCOMPARE( moveController.getDragState(), Inactive );
+    moveController->dragStop();
+    QCOMPARE( moveController->getDragState(), Inactive );
 }
 
 void TestMain::testDragWithMove()
@@ -194,33 +208,34 @@ TestPathFinderController* TestMain::setupTestDrag( const char* map )
 
 void TestMain::testDragPoint()
 {
+    TestMoveController* moveController = new TestMoveController();
+    mRegistry.injectMoveController( moveController );
     TestPathFinderController* pathFinderController = setupTestDrag(
       "S..\n"
       ".M.\n"
       "...\n"
       ".T.\n" );
-    MoveController& moveController = mRegistry.getMoveController();
 
     // select forbidden (stone):
-    moveController.dragStart( ModelPoint(0,0) );
-    QCOMPARE( moveController.getDragState(), Forbidden );
-    moveController.dragStop();
-    QCOMPARE( moveController.getDragState(), Inactive );
+    moveController->dragStart( ModelPoint(0,0) );
+    QCOMPARE( moveController->getDragState(), Forbidden );
+    moveController->dragStop();
+    QCOMPARE( moveController->getDragState(), Inactive );
 
     pathFinderController->testStart( ModelPoint(1,2), 1 );
 
     // push the tile
     QPoint coord( ModelPoint(1,1).toViewCenterSquare() );
-    moveController.onDragTo( coord );
-    QCOMPARE( moveController.getMoves().size(), 2 );
+    moveController->onDragTo( coord );
+    QCOMPARE( moveController->getDragMoves().size(), 2 );
 
     // cause the rotation change
     coord.setY( coord.y()+24/3 );
-    moveController.onDragTo( coord );
+    moveController->onDragTo( coord );
 
     // undo the push
-    moveController.onDragTo( ModelPoint(1,2).toViewCenterSquare() );
-    QCOMPARE( moveController.getMoves().size(), 1 );
+    moveController->onDragTo( ModelPoint(1,2).toViewCenterSquare() );
+    QCOMPARE( moveController->getDragMoves().size(), 1 );
 }
 
 void TestMain::testDragTile()
@@ -240,6 +255,22 @@ void TestMain::testDragTile()
     if ( pathFinderController->mError ) {
         QFAIL( pathFinderController->mError );
     }
+}
+
+void TestMain::testUndoDragTile()
+{
+    TestMoveController* moveController = new TestMoveController();
+    mRegistry.injectMoveController( moveController );
+    TestPathFinderController* pathFinderController = setupTestDrag(
+      "T.M.\n" );
+
+    pathFinderController->testStart( ModelPoint(0,2), { ModelPoint(0,1) } );
+    if ( pathFinderController->mError ) {
+        QFAIL( pathFinderController->mError );
+    }
+
+    moveController->dragTo( ModelPoint(0,3).toViewCenterSquare() );
+    moveController->dragTo( ModelPoint(0,2).toViewCenterSquare() );
 }
 
 void TestMain::testFutureSelect()

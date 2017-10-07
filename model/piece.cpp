@@ -4,7 +4,7 @@
 
 MovePiece::MovePiece( const Piece* source ) : SimplePiece(source)
 {
-    if ( source->hasPush() ) {
+    if ( source->hasPush() || source->getShotCount() ) {
         const MovePiece* pusherSource = dynamic_cast<const MovePiece*>(source);
         mPushPieceType  = pusherSource->mPushPieceType;
         mPushPieceAngle = pusherSource->mPushPieceAngle;

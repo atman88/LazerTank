@@ -35,28 +35,32 @@ void MoveBaseController::onBoardLoaded( Board& board )
     emit idle();
 }
 
+void MoveBaseController::moveInternal( const ModelVector& origin, PieceListManager& moves, int direction, bool lastMoveBusy )
+{
+    Piece* lastMove = moves.getBack();
+    ModelVector vector = (lastMove ? *lastMove : origin);
+
+    if ( direction >= 0 && direction != vector.mAngle ) {
+        if ( lastMoveBusy || !lastMove || lastMove->hasPush() || lastMove->getShotCount() ) {
+            appendMove( moves, ModelVector(vector, direction) );
+        } else {
+            moves.replaceBack( MOVE_HIGHLIGHT, direction );
+        }
+    } else if ( GameRegistry* registry = getRegistry(this) ) {
+        Piece* pushPiece = 0;
+        if ( registry->getGame().canMoveFrom( TANK, vector.mAngle, &vector, true, &pushPiece ) ) {
+            appendMove( moves, vector, pushPiece );
+            if ( pushPiece ) {
+                registry->getGame().onFuturePush( pushPiece, vector.mAngle );
+            }
+        }
+    }
+}
+
 void MoveBaseController::move( int direction, bool doWakeup )
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
-        Piece* lastMove = mMoves.getBack();
-        ModelVector vector = (lastMove ? *lastMove : registry->getTank().getVector());
-
-        if ( direction >= 0 && direction != vector.mAngle ) {
-            if ( !lastMove || lastMove->hasPush() || lastMove->getShotCount()
-               || (mState == FiringStage && mMoves.size() == 1) ) {
-                appendMove( ModelVector(vector, direction) );
-            } else {
-                mMoves.replaceBack( MOVE_HIGHLIGHT, direction );
-            }
-        } else {
-            Piece* pushPiece = 0;
-            if ( registry->getGame().canMoveFrom( TANK, vector.mAngle, &vector, true, &pushPiece ) ) {
-                appendMove( vector, pushPiece );
-                if ( pushPiece ) {
-                    registry->getGame().onFuturePush( pushPiece, vector.mAngle );
-                }
-            }
-        }
+        moveInternal( registry->getTank().getVector(), mMoves, direction, mState == FiringStage && mMoves.size() == 1 );
 
         if ( doWakeup ) {
             wakeup();
@@ -64,46 +68,55 @@ void MoveBaseController::move( int direction, bool doWakeup )
     }
 }
 
-void MoveBaseController::fire( int count )
+bool MoveBaseController::fireInternal( ModelVector initialVector, PieceListManager& moves, int count )
 {
-    if ( int nMoves = mMoves.size() ) {
+    if ( int nMoves = moves.size() ) {
         // -1 signifies an increment
         if ( count < 0 ) {
-            count = mMoves.getBack()->getShotCount() + 1;
+            count = moves.getBack()->getShotCount() + 1;
         }
-        MovePiece* move = mMoves.setShotCountBack( count );
+        MovePiece* move = moves.setShotCountBack( count );
         mFutureShots.updatePath( move );
         if ( nMoves == 1 && mState == FiringStage ) {
-            wakeup();
+            return true;
         }
     } else if ( count ) {
         if ( count < 0 ) {
             count = 1;
         }
 
-        if ( GameRegistry* registry = getRegistry(this) ) {
-            Piece* piece = mMoves.append( MOVE, registry->getTank().getVector(), count );
-            // show it's future if it's got multiple shots
-            if ( count > 1 ) {
-                if ( MovePiece* move = dynamic_cast<MovePiece*>(piece) ) {
-                    mFutureShots.updatePath( move );
-                }
+        Piece* piece = moves.append( MOVE, initialVector, count );
+        // show it's future if it's got multiple shots
+        if ( count > 1 ) {
+            if ( MovePiece* move = dynamic_cast<MovePiece*>(piece) ) {
+                mFutureShots.updatePath( move );
             }
+        }
+        return true;
+    }
+
+    return true;
+}
+
+void MoveBaseController::fire( int count )
+{
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        if ( fireInternal( registry->getTank().getVector(), mMoves, count ) ) {
             wakeup();
         }
     }
 }
 
-void MoveBaseController::undoLastMoveInternal()
+void MoveBaseController::undoLastMoveInternal( PieceListManager& moves )
 {
-    if ( Piece* piece = mMoves.getBack() ) {
+    if ( Piece* piece = moves.getBack() ) {
         if ( piece->hasPush() ) {
             if ( GameRegistry* registry = getRegistry(this) ) {
                 registry->getGame().undoFuturePush( dynamic_cast<MovePiece*>(piece) );
             }
         }
         mFutureShots.removePath( piece, true );
-        mMoves.eraseBack();
+        moves.eraseBack();
     }
 }
 
@@ -122,14 +135,14 @@ void MoveBaseController::undoLastMove()
         }
     }
 
-    undoLastMoveInternal();
+    undoLastMoveInternal( mMoves );
     mMoves.replaceBack( MOVE_HIGHLIGHT );
 }
 
 void MoveBaseController::undoMoves()
 {
     while( mMoves.size() > 1 ) {
-        undoLastMoveInternal();
+        undoLastMoveInternal( mMoves );
     }
     undoLastMove();
 }
@@ -249,10 +262,10 @@ bool MoveBaseController::applyPathUsingCriteria( PieceListManager* path, PathSea
     return true;
 }
 
-void MoveBaseController::appendMove( ModelVector vector, Piece* pushPiece )
+void MoveBaseController::appendMove( PieceListManager& moves, ModelVector vector, Piece* pushPiece )
 {
-    mMoves.replaceBack( MOVE ); // erase highlight
-    mMoves.append( MOVE_HIGHLIGHT, vector, 0, pushPiece );
+    moves.replaceBack( MOVE ); // erase highlight
+    moves.append( MOVE_HIGHLIGHT, vector, 0, pushPiece );
 }
 
 void MoveBaseController::transitionState(MoveState newState)

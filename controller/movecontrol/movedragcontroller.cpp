@@ -72,24 +72,27 @@ ModelPoint MoveDragController::getDragTilePoint() const
 
 void MoveDragController::move( int direction, bool doWakeup )
 {
-    if ( mDragState != Inactive ) {
+    if ( mDragState == Inactive ) {
+        MoveBaseController::move( direction, doWakeup );
+    } else {
         // Prevent moving beyond the current square given the mouse cursor would get out of sync
         // (Need a means of moving the mouse cursor in order to remove this limitation)
         ModelVector focusVector = getFocusVector();
         if ( focusVector.mAngle == direction ) {
             return;
         }
-    }
 
-    MoveBaseController::move( direction, doWakeup );
+        moveInternal( getFocusVector(), mDragMoves, direction, false );
+    }
 }
 
-bool MoveDragController::canWakeup()
+void MoveDragController::fire( int count )
 {
     if ( mDragState != Inactive ) {
-        return false;
+        fireInternal( getFocusVector(), mDragMoves, count );
+    } else {
+        MoveBaseController::fire( count );
     }
-    return MoveBaseController::canWakeup();
 }
 
 void MoveDragController::setDragState( DragState state )
@@ -98,6 +101,30 @@ void MoveDragController::setDragState( DragState state )
         if ( state == Inactive ) {
             mTileDragFocusAngle = -1;
             mTileDragAngleMask = 0;
+
+            if ( mDragMoves.size() ) {
+                if ( mFocus == TANK ) {
+//                if ( GameRegistry* registry = getRegistry(this) ) {
+//                    if ( !criteria->getStartPoint().equals( registry->getTank().getPoint() ) ) {
+//                        std::cout << "* applyPathUsingCriteria: ingoring stale path" << std::endl;
+//                        return false;
+//                    }
+//                    registry->getGame().endMoveDeltaTracking();
+//                } else {
+//                    std::cout << "*** applyPathUsingCriteria: registry error" << std::endl;
+//                    return false;
+//                }
+                    mMoves.reset( &mDragMoves, false );
+                } else {
+//                if ( !criteria->getStartPoint().equals( getFocusVector() ) ) {
+//                    std::cout << "* applyPathUsingCriteria: stale start point" << std::endl;
+//                    return false;
+//                }
+                    mMoves.replaceBack( MOVE );
+                    mMoves.append( &mDragMoves, false );
+                }
+                mMoves.replaceBack( MOVE_HIGHLIGHT );
+            }
         }
         mDragState = state;
         emit dragStateChanged( state );
@@ -122,11 +149,24 @@ DragState MoveDragController::getDragState() const
     return mDragState;
 }
 
+ModelVector MoveDragController::getDragFocusVector() const
+{
+    if ( mFocus == MOVE ) {
+        if ( Piece* move = mDragMoves.getBack() ) {
+            return *move;
+        }
+    }
+    return getFocusVector();
+}
+
 void MoveDragController::onPathFound( PieceListManager* path, PathSearchCriteria* criteria )
 {
-    if ( applyPathUsingCriteria( path, criteria ) && mDragState == Searching ) {
+    if ( mDragState == Inactive ) {
+        applyPathUsingCriteria( path, criteria );
+    } else {
+        mDragMoves.reset( path );
         if ( criteria->getCriteriaType() == PathSearchCriteria::TileDragTestCriteria ) {
-            MoveBaseController::move( mTileDragFocusAngle );
+            moveInternal( getFocusVector(), mDragMoves, mTileDragFocusAngle, false );
             setDragState( DraggingTile );
         } else {
             setDragState( DraggingTank );
@@ -187,7 +227,7 @@ static int coordLeaning( QPoint coord, ModelPoint square )
 void MoveDragController::onDragTo( QPoint coord )
 {
     ModelPoint p( coord );
-    ModelVector focusVector = getFocusVector();
+    ModelVector focusVector = getDragFocusVector();
     if ( focusVector.isNull() ) { // safety
         setDragState( Inactive );
         return;
@@ -208,12 +248,12 @@ void MoveDragController::onDragTo( QPoint coord )
                 Piece* pushPiece = 0;
                 if ( registry->getGame().canMoveFrom( TANK, angle, &toPoint, true, &pushPiece ) ) {
                     if ( toPoint == p ) {
-                        Piece* lastMove = mMoves.getBack();
+                        Piece* lastMove = mDragMoves.getBack();
                         int trimCount = 1;
                         const ModelPoint* prevMovePoint;
-                        Piece* prevMove = mMoves.getBack(1);
+                        Piece* prevMove = mDragMoves.getBack(1);
                         if ( prevMove && prevMove->ModelPoint::equals( *lastMove ) ) {
-                            prevMove = mMoves.getBack(++trimCount);
+                            prevMove = mDragMoves.getBack(++trimCount);
                         }
                         if ( prevMove ) {
                             prevMovePoint = prevMove;
@@ -224,19 +264,23 @@ void MoveDragController::onDragTo( QPoint coord )
                         if ( lastMove && !lastMove->getShotCount()
                           && focusVector.ModelPoint::equals( *lastMove ) && prevMovePoint->equals( toPoint ) ) {
                             while( --trimCount >= 0 ) {
-                                undoLastMove();
+                                undoLastMoveInternal( mDragMoves );
                             }
-                            // if only a simple rotation remains then remove it too:
-                            if ( (lastMove = mMoves.getBack()) ) {
-                                if ( !lastMove->getShotCount() && registry->getTank().getPoint().equals( *lastMove ) ) {
-                                    undoLastMove();
+                            if ( (lastMove = mDragMoves.getBack()) ) {
+                                // if only a simple rotation remains then remove it too:
+                                if ( mDragMoves.size() == 1 ) {
+                                    if ( !lastMove->getShotCount() && focusVector.ModelPoint::equals( *lastMove ) ) {
+                                        undoLastMoveInternal( mDragMoves );
+                                    }
+                                } else {
+                                    mDragMoves.replaceBack( MOVE_HIGHLIGHT );
                                 }
                             }
                         } else {
-                            MoveBaseController::move( angle );
-                            lastMove = mMoves.getBack();
+                            moveInternal( getFocusVector(), mDragMoves, angle, false );
+                            lastMove = mDragMoves.getBack();
                             if ( lastMove && !p.equals( *lastMove ) ) {
-                                MoveBaseController::move( angle );
+                                moveInternal( getFocusVector(), mDragMoves, angle, false );
                             }
                         }
                         mChanged = true;
@@ -250,7 +294,7 @@ void MoveDragController::onDragTo( QPoint coord )
         // check for rotation change:
     {   int rotation = coordLeaning( coord, focusVector );
         if ( rotation >= 0 && rotation != focusVector.mAngle && rotation != coordLeaning( mPreviousCoord, focusVector ) ) {
-            MoveBaseController::move( rotation );
+            moveInternal( getDragFocusVector(), mDragMoves, rotation, false );
         }
     }
         break;
@@ -265,10 +309,8 @@ void MoveDragController::onDragTo( QPoint coord )
                             setDragState( Searching );
                         }
                     } else {
-                        bool reachedStart = false;
-                        for( Piece* move; (move = mMoves.getBack()) && !reachedStart; ) {
-                            reachedStart = mTileDragTestCriteria.getStartPoint().equals( *move );
-                            undoLastMove();
+                        while( mDragMoves.size() ) {
+                            undoLastMoveInternal( mDragMoves );
                         }
                     }
                 }
@@ -293,12 +335,10 @@ void MoveDragController::dragStop()
         // If we've changed it by dragging and effectively cancelled the moves by erasing up to the tank square, then
         // erase any single move given it is only a left-over rotation:
         if ( mChanged ) {
-            if ( Piece* piece = mMoves.getBack() ) {
+            if ( Piece* piece = mDragMoves.getBack() ) {
                 if ( !piece->getShotCount() ) {
-                    if ( GameRegistry* registry = getRegistry(this) ) {
-                        if ( registry->getTank().getPoint().equals( *mMoves.getBack() ) ) {
-                            mMoves.eraseBack();
-                        }
+                    if ( getFocusVector().ModelPoint::equals( *mDragMoves.getBack() ) ) {
+                        mDragMoves.eraseBack();
                     }
                 }
             }

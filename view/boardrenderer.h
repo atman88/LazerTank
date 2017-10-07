@@ -66,6 +66,15 @@ public:
     static void renderPiece( PieceType type, QRect& square, int angle, QPainter* painter );
 
     /**
+     * @brief Helper method to render the given set within the given rectangular area
+     * @param iterator The starting position within the set
+     * @param end The end of set position
+     * @param dirty The rectangular area being rendered
+     * @param painter The painter associated with this render operation
+     */
+    void renderListIn( PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter );
+
+    /**
      * @brief A point value used to denote null. The value is not visible in the game's coordinate space
      */
     static const QPoint NullPoint;

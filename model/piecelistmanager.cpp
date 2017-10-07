@@ -1,6 +1,6 @@
 #include "piecelistmanager.h"
 
-PieceListManager::PieceListManager(QObject *parent) : QObject(parent), mSet(0), mMultiSet(0)
+PieceListManager::PieceListManager( QObject *parent ) : PieceManager(parent), mSet(0), mMultiSet(0)
 {
 }
 
@@ -59,7 +59,7 @@ Piece* PieceListManager::addInternal( Piece* piece , bool pushFront )
     if ( mMultiSet ) {
         mMultiSet->insert( piece );
     }
-    emit added( *piece );
+    emit insertedAt( *piece );
     return piece;
 }
 
@@ -129,7 +129,7 @@ bool PieceListManager::eraseInternal( PieceList::iterator it )
     }
 
     delete piece;
-    emit erased( point );
+    emit erasedAt( point );
     return true;
 }
 
@@ -181,7 +181,7 @@ void PieceListManager::replaceInternal( Piece* piece, PieceType type, int newAng
     if ( newAngle >= 0 ) {
         piece->setAngle( newAngle );
     }
-    emit changed( *piece );
+    emit changedAt( *piece );
 }
 
 bool PieceListManager::replaceFront( PieceType type, int newAngle )
@@ -223,7 +223,7 @@ MovePiece* PieceListManager::setShotCountBack( int count )
                 }
             }
             if ( move->setShotCount( count ) ) {
-                emit changed( *piece );
+                emit changedAt( *piece );
             }
             return move;
         }
@@ -231,7 +231,7 @@ MovePiece* PieceListManager::setShotCountBack( int count )
     return 0;
 }
 
-void PieceListManager::reset( PieceListManager* source )
+void PieceListManager::reset( PieceListManager* source, bool copy )
 {
     while( eraseBack() ) {
         // continue
@@ -245,9 +245,19 @@ void PieceListManager::reset( PieceListManager* source )
     }
 
     if ( source ) {
-        const PieceList& list = source->getList();
-        for( auto it : list ) {
-            append( it );
+        append( source, copy );
+    }
+}
+
+void PieceListManager::append( PieceListManager* source, bool copy )
+{
+    PieceList& list = source->mPieces;
+    for( auto it = list.begin(); it != list.end(); ) {
+        append( *it );
+        if ( !copy ) {
+            it = list.erase( it );
+        } else {
+            ++it;
         }
     }
 }

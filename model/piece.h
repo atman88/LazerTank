@@ -1,6 +1,7 @@
 #ifndef PIECE_H
 #define PIECE_H
 
+#include <QObject>
 #include <qmetatype.h>
 #include <list>
 #include <set>
@@ -191,5 +192,38 @@ struct PieceSetComparator {
 typedef std::list<Piece*> PieceList;
 typedef std::set<Piece*,PieceSetComparator> PieceSet;
 typedef std::multiset<Piece*,PieceSetComparator> PieceMultiSet;
+
+/**
+ * @brief The common interface for piece managers
+ */
+class PieceManager : public QObject
+{
+    Q_OBJECT
+
+public:
+    PieceManager( QObject* parent = 0 ) : QObject(parent)
+    {
+    }
+
+signals:
+    /**
+     * @brief Notifies that a new piece was added to the set
+     * @param point The square of the new piece
+     * @param row The row of the new piece
+     */
+    void insertedAt( ModelPoint point );
+
+    /**
+     * @brief Notifies that a piece was deleted from the set
+     * @param point The square of the deleted piece
+     */
+    void erasedAt( ModelPoint point );
+
+    /**
+     * @brief Notifies that a piece was changed
+     * @param point The square of the changed piece
+     */
+    void changedAt( ModelPoint point );
+};
 
 #endif // PIECE_H

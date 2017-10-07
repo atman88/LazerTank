@@ -6,34 +6,16 @@
 #include "imageutils.h"
 #include "model/board.h"
 
-class NamedPixmap : public QPixmap
+const ResourcePixmap* getPixmap( unsigned type )
 {
-public:
-    NamedPixmap()
-    {
-    }
-
-    NamedPixmap(const char* name) : mName(name)
-    {
-    }
-
-    ~NamedPixmap()
-    {
-    }
-
-    const char* mName;
-};
-
-const QPixmap* getPixmap( unsigned type )
-{
-    static std::map<int,NamedPixmap> nameMap = {
+    static std::map<int,ResourcePixmap> nameMap = {
         { STONE,             { "wall-stone"         } },
         { DIRT,              { "dirt"               } },
         { TILE_SUNK,         { "tile-sunk"          } },
         { FLAG,              { "flag"               } },
         { TILE,              { "tile-metal"         } },
-        { MOVE,              { "move-indicator"     } },
-        { MOVE_HIGHLIGHT,    { "move-highlight"     } },
+        { MOVE,              { "c&move-indicator"   } },
+        { MOVE_HIGHLIGHT,    { "c&move-highlight"   } },
         { STONE_MIRROR,      { "wall-mirror"        } },
         { STONE_SLIT,        { "stone-slit"         } },
         { WOOD,              { "wood"               } },
@@ -46,28 +28,84 @@ const QPixmap* getPixmap( unsigned type )
         { TANK_FAST,         { "tank-fast"          } },
         { COMPLETE_CHECKMARK,{"complete-checkmark"  } }
     };
-    static NamedPixmap* nameArray[PixmapTypeUpperBound] = { 0 };
-    static QString pathFormat( ":/images/%1.png" );
-    static NamedPixmap NullPixmap( "null" );
+    static ResourcePixmap* nameArray[PixmapTypeUpperBound] = { 0 };
+    static ResourcePixmap NullPixmap( "null" );
 
     if ( type >= (sizeof nameArray)/(sizeof *nameArray) ) {
         std::cout << "attempt to get INVALID pixmap " << type << std::endl;
         return &NullPixmap;
     }
 
-    NamedPixmap *p = nameArray[type];
+    ResourcePixmap *p = nameArray[type];
     if ( !p ) {
         auto it = nameMap.find( type );
         if ( it == nameMap.end() ) {
             p = &NullPixmap;
         } else {
             p = &it->second;
-            p->load( pathFormat.arg( p->mName ) );
-            if ( p->isNull() ) {
-                std::cout << "failed to load " << pathFormat.arg( p->mName ).toStdString() << std::endl;
-            }
+
+            p->load();
         }
         nameArray[type] = p;
     }
     return p;
+}
+
+ResourcePixmap::ResourcePixmap( const char* name ) : mName(name), mTagCount(0), mBluePixmap(0)
+{
+    if ( mName[1] == '&' ) {
+        mTagCount = 1;
+        mName += 2;
+    }
+}
+
+ResourcePixmap::~ResourcePixmap()
+{
+    if ( mBluePixmap ) {
+        delete mBluePixmap;
+    }
+}
+
+bool ResourcePixmap::load()
+{
+    QString path = QString( ":/images/%1.png" ).arg( mName );
+    if ( !QPixmap::load( path ) ) {
+        std::cout << "** failed to load " << qPrintable(path) << std::endl;
+        return false;
+    }
+
+    if ( hasColorableTag() ) {
+        QImage image = toImage();
+        int width = image.width();
+        for( int y = image.height(); --y >= 0; ) {
+            for( int x = width; --x >= 0; ) {
+                // green -> blue
+                QRgb p = image.pixel( x, y );
+                image.setPixel( x, y, (p & ~0xffff) | ((p & 0xffff) >> 8) );
+            }
+        }
+        mBluePixmap = new QPixmap( QPixmap::fromImage( image ) );
+    }
+    return true;
+}
+
+bool ResourcePixmap::hasColorableTag() const
+{
+    // just test the count given it's the only tag currently defined
+    return mTagCount > 0;
+}
+
+const char* ResourcePixmap::getName() const
+{
+    return mName;
+}
+
+const QPixmap* ResourcePixmap::getForColor( const QColor& color ) const
+{
+    static const QRgb blueRgb = QColor( Qt::blue ).rgb();
+
+    if ( mBluePixmap && color.rgb() == blueRgb ) {
+        return mBluePixmap;
+    }
+    return this;
 }

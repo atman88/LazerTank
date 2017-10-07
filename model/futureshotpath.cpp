@@ -170,7 +170,7 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
     return 0;
 }
 
-void FutureShotPathManager::removePath(Piece* piece, bool undo )
+void FutureShotPathManager::removePath( Piece* piece, bool undo )
 {
     if ( MovePiece* move = dynamic_cast<MovePiece*>(piece) ) {
         FutureShotPath key( move );

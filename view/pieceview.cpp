@@ -49,10 +49,10 @@ bool PieceView::render( const QRect* dirty, const BoardRenderer& renderer, QPain
         renderer.renderPiece( mType, bounds, mAngle, painter );
         int shotCount = getShotCount();
         if ( shotCount > 1 ) {
-            QPen pen;
-            pen.setColor( QColor(Qt::darkBlue) );
-            painter->setPen( pen );
+            QPen savedPen = painter->pen();
+            painter->setPen( Qt::darkBlue );
             painter->drawText( bounds, Qt::AlignCenter, QString::number(shotCount) );
+            painter->setPen( savedPen );
         }
         return true;
     }

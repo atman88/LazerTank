@@ -8,7 +8,7 @@
 /**
  * @brief Manages a self-contained set of pieces
  */
-class PieceSetManager : public QObject
+class PieceSetManager : public PieceManager
 {
     Q_OBJECT
 
@@ -77,26 +77,6 @@ public:
      * @return the number of pieces
      */
     int size() const;
-
-signals:
-    /**
-     * @brief Notifies that a new piece was added to the set
-     * @param point The square of the new piece
-     * @param row The row of the new piece
-     */
-    void insertedAt( ModelPoint point );
-
-    /**
-     * @brief Notifies that a piece was deleted from the set
-     * @param point The square of the deleted piece
-     */
-    void erasedAt( ModelPoint point );
-
-    /**
-     * @brief Notifies that a piece was changed
-     * @param point The square of the changed piece
-     */
-    void changedAt( ModelPoint point );
 
 private:
     PieceSet mPieces;

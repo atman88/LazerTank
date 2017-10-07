@@ -1,6 +1,6 @@
 #include "piecesetmanager.h"
 
-PieceSetManager::PieceSetManager( QObject* parent ) : QObject(parent)
+PieceSetManager::PieceSetManager( QObject* parent ) : PieceManager(parent)
 {
 }
 

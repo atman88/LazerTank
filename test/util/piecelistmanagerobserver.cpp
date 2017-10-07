@@ -8,11 +8,11 @@ using namespace std;
 PieceListManagerObserver::PieceListManagerObserver( PieceListManager& list, int maxAddCount, int maxEraseCount )
     : QObject(&list), mAddCount(0), mEraseCount(0), mMaxAddCount(maxAddCount), mMaxEraseCount(maxEraseCount)
 {
-    if ( !QObject::connect( &list, &PieceListManager::added, this, &PieceListManagerObserver::added ) ) {
+    if ( !QObject::connect( &list, &PieceListManager::insertedAt, this, &PieceListManagerObserver::added ) ) {
         std::cout << "*** PieceListManagerObserver: connect failed!" << std::endl;
     }
-    QObject::connect( &list, &PieceListManager::erased,   this, &PieceListManagerObserver::erased   );
-    QObject::connect( &list, &PieceListManager::changed,  this, &PieceListManagerObserver::changed  );
+    QObject::connect( &list, &PieceListManager::erasedAt,   this, &PieceListManagerObserver::erased   );
+    QObject::connect( &list, &PieceListManager::changedAt,  this, &PieceListManagerObserver::changed  );
 }
 
 void PieceListManagerObserver::added( ModelPoint point )

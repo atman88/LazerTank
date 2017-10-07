@@ -69,14 +69,8 @@ void Game::init( GameRegistry* registry )
         QObject::connect( &menu, &QMenu::aboutToShow, &registry->getTank(), &Tank::pause  );
         QObject::connect( &menu, &QMenu::aboutToHide, &registry->getTank(), &Tank::resume );
 
-        PieceListManager& moveManager = moveController.getMoves();
-        QObject::connect( &moveManager, &PieceListManager::added,   window, &BoardWindow::renderSquareLater );
-        QObject::connect( &moveManager, &PieceListManager::erased,  window, &BoardWindow::renderSquareLater );
-        QObject::connect( &moveManager, &PieceListManager::changed, window, &BoardWindow::renderSquareLater );
-
-        QObject::connect( &mFutureDelta.getPieceManager(), &PieceSetManager::erasedAt,   window, &BoardWindow::renderSquareLater );
-        QObject::connect( &mFutureDelta.getPieceManager(), &PieceSetManager::insertedAt, window, &BoardWindow::renderSquareLater );
-        QObject::connect( &mFutureDelta.getPieceManager(), &PieceSetManager::changedAt,  window, &BoardWindow::renderSquareLater );
+        moveController.connectWindow( window );
+        window->connectTo( mFutureDelta.getPieceManager() );
     }
 
     mBoard.setParent(this);

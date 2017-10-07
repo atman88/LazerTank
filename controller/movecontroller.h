@@ -8,6 +8,7 @@ class Game;
 class FutureShotPathManager;
 class Board;
 class PathSearchAction;
+class BoardWindow;
 
 #include "pathsearchcriteria.h"
 #include "pathfindercontroller.h"
@@ -117,10 +118,11 @@ protected slots:
 protected:
     /**
      * @brief helper method to add a move to the list of moves that is highlight-aware
+     * @param moves The list to append to
      * @param vector The column, row and direction for the new move
      * @param pushPiece The piece that this move pushes or 0 if it doesn't cause a push
      */
-    void appendMove(ModelVector vector, Piece* pushPiece = 0 );
+    void appendMove( PieceListManager& moves, ModelVector vector, Piece* pushPiece = 0 );
 
     /**
      * @brief Extend or replace our path with the given path
@@ -130,10 +132,14 @@ protected:
      */
     bool applyPathUsingCriteria( PieceListManager* path, PathSearchCriteria* criteria );
 
+    void moveInternal( const ModelVector& origin, PieceListManager& moves, int direction, bool lastMoveBusy );
+
+    bool fireInternal( ModelVector initialVector, PieceListManager& moves, int count );
+
     /**
      * @brief Undoes the last move assuming state checking and highlight awareness is handled by the caller
      */
-    void undoLastMoveInternal();
+    void undoLastMoveInternal( PieceListManager& moves );
 
     /**
      * @brief change the move state
@@ -152,7 +158,7 @@ protected:
     PieceListManager mMoves;
 
     /**
-     * @brief Shots related with the pending moves (mMoves).
+     * @brief Shots related with the pending moves (mMoves)
      */
     FutureShotPathManager mFutureShots;
 
@@ -178,16 +184,15 @@ public:
     void onBoardLoaded( Board& board ) override;
 
     /**
-     * @brief Returns whether movement should occur
-     * @return true if paused otherwise false
-     */
-    virtual bool canWakeup() override;
-
-    /**
      * @brief Retrieve the currsor associated with the current state
      * @return The current cursor or 0 if not started
      */
     DragState getDragState() const;
+
+    /**
+     * @brief Retrieve the current drag focus vector
+     */
+    ModelVector getDragFocusVector() const;
 
     /**
      * @brief Handles a drag to the given point
@@ -226,6 +231,13 @@ public:
      */
     virtual void move( int direction, bool doWakeup = true ) override;
 
+public slots:
+    /**
+     * @brief Fire the tank's laser
+     * @param count The number of times to shoot or -1 to increment the shot count
+     */
+    void fire( int count = -1 ) override;
+
 signals:
     /**
      * @brief Indicates that a change of state occured
@@ -256,6 +268,9 @@ protected slots:
      * @param criteria The parameters tested
      */
     void onTestResult( bool reachable, PathSearchCriteria* criteria );
+
+protected:
+    PieceListManager mDragMoves;
 
 private:
     void setDragState( DragState state );
@@ -288,6 +303,10 @@ public:
      * @return true if enabled otherwise false
      */
     bool replaying() const;
+
+    void render( Piece* pos, const QRect* rect, BoardRenderer& renderer, QPainter* painter );
+
+    void connectWindow( const BoardWindow* window ) const;
 
 signals:
     /**

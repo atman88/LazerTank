@@ -1,7 +1,10 @@
 #include <iostream>
+#include <QPainter>
 #include "movecontroller.h"
 #include "gameregistry.h"
 #include "game.h"
+#include "view/boardrenderer.h"
+#include "view/boardwindow.h"
 #include "util/recorder.h"
 #include "util/gameutils.h"
 
@@ -55,6 +58,24 @@ bool MoveController::replaying() const
     return mReplayReader != 0;
 }
 
+void MoveController::render( Piece* pos, const QRect* rect, BoardRenderer& renderer, QPainter* painter )
+{
+    if ( !replaying() ) {
+        const PieceMultiSet* set = mMoves.toMultiSet();
+        PieceSet::iterator it = set->lower_bound( pos );
+        renderer.renderListIn( it, set->end(), rect, painter );
+
+        if ( getDragState() != Inactive && mDragMoves.size() ) {
+            const PieceMultiSet* set = mDragMoves.toMultiSet();
+            PieceSet::iterator it = set->lower_bound( pos );
+            QPen savePen = painter->pen();
+            painter->setPen( Qt::blue );
+            renderer.renderListIn( it, set->end(), rect, painter );
+            painter->setPen( savePen );
+        }
+    }
+}
+
 void MoveController::replayPlayback()
 {
     if ( mReplayReader && mState == Idle ) {
@@ -65,4 +86,10 @@ void MoveController::replayPlayback()
 int MoveDragController::getTileDragFocusAngle() const
 {
     return mTileDragFocusAngle;
+}
+
+void MoveController::connectWindow( const BoardWindow* window ) const
+{
+    window->connectTo( mMoves );
+    window->connectTo( mDragMoves );
 }

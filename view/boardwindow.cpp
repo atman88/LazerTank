@@ -173,16 +173,6 @@ void BoardWindow::renderSquareLater( ModelPoint point )
     renderLater( dirty );
 }
 
-void BoardWindow::renderListIn(PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter )
-{
-    while( iterator != end ) {
-        if ( !(*iterator)->render( dirty, mRenderer, painter ) ) {
-            break;
-        }
-        ++iterator;
-    }
-}
-
 QMenu& BoardWindow::getMenu()
 {
     return mMenu;
@@ -199,20 +189,13 @@ void BoardWindow::renderBoard( const QRect* rect, GameRegistry* registry, QPaint
     Board* board = registry->getGame().getBoard();
     Tank& tank = registry->getTank();
     MoveController& moveController = registry->getMoveController();
-    const PieceMultiSet* moves = moveController.getMoves().toMultiSet();
-    const PieceSet* deltas = (moveController.replaying() ? 0 : registry->getGame().getDeltaPieces());
 
     SimplePiece pos(MOVE, rect->left()/TILE_SIZE, rect->top()/TILE_SIZE);
-    PieceSet::iterator moveIterator = (moveController.replaying() ? moves->end() : moves->lower_bound( &pos ));
-    PieceSet::iterator deltasIterator;
-    if ( deltas ) {
-        deltasIterator = deltas->lower_bound( &pos );
-    }
 
     mRenderer.render( rect, board, painter );
 
-    if ( deltas ) {
-        renderListIn( deltasIterator, deltas->end(), rect, painter );
+    if ( const PieceSet* deltas = (moveController.replaying() ? 0 : registry->getGame().getDeltaPieces()) ) {
+        mRenderer.renderListIn( deltas->lower_bound( &pos ), deltas->end(), rect, painter );
     }
 
     if ( !moveController.replaying() ) {
@@ -244,16 +227,17 @@ void BoardWindow::renderBoard( const QRect* rect, GameRegistry* registry, QPaint
     }
 
     if ( tankIsProminent ) {
-        // render the moves beneath (i.e. before) the tank :
-        renderListIn( moveIterator, moves->end(), rect, painter );
+        // render the moves beneath (i.e. before) the tank:
+        moveController.render( &pos, rect, mRenderer, painter );
     }
 
     registry->getTankPush().render( rect, mRenderer, painter );
     registry->getShotPush().render( rect, mRenderer, painter );
     tank.render( rect, painter );
+
     if ( !tankIsProminent ) {
-        // render the moves ontop of (i.e. after) the tank:
-        renderListIn( moveIterator, moves->end(), rect, painter );
+        // render the moves on top of (i.e. after) the tank:
+        moveController.render( &pos, rect, mRenderer, painter );
     }
 
     mDragMarker.render( rect, painter );
@@ -754,6 +738,13 @@ int BoardWindow::checkForReplay()
     }
 
     return 0; // indicate replay inactive
+}
+
+void BoardWindow::connectTo( const PieceManager& manager ) const
+{
+    QObject::connect( &manager, &PieceManager::insertedAt, this, &BoardWindow::renderSquareLater );
+    QObject::connect( &manager, &PieceManager::erasedAt,   this, &BoardWindow::renderSquareLater );
+    QObject::connect( &manager, &PieceManager::changedAt,  this, &BoardWindow::renderSquareLater );
 }
 
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))

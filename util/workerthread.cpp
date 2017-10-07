@@ -92,6 +92,10 @@ void WorkerThread::dequeueCurrentRunnable()
     std::lock_guard<std::mutex> guard(mPendingMutex);
 
     mPending.pop_front();
+
+    if ( mPending.size() ) {
+        std::cout << "WorkerThread: " << mPending.size() << " additional runnables pending" << std::endl;
+    }
 }
 
 void WorkerThread::run()
