@@ -103,6 +103,17 @@ void MoveDragController::setDragState( DragState state )
             mTileDragAngleMask = 0;
 
             if ( mDragMoves.size() ) {
+                for( auto it : mDragMoves.getList() ) {
+                    if ( int uid = it->getShotPathUID() ) {
+                        for( auto fsit : mFutureShots.getPaths() ) {
+                            if ( fsit.getUID() >= uid ) {
+                                mFutureShots.invalidate( fsit );
+                            }
+                        }
+                        break;
+                    }
+                }
+
                 if ( mFocus == TANK ) {
 //                if ( GameRegistry* registry = getRegistry(this) ) {
 //                    if ( !criteria->getStartPoint().equals( registry->getTank().getPoint() ) ) {

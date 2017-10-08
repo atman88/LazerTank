@@ -1,8 +1,10 @@
 #include <iostream>
+#include <stdint.h>
 #include <QPainter>
 #include "movecontroller.h"
 #include "gameregistry.h"
 #include "game.h"
+#include "model/tank.h"
 #include "view/boardrenderer.h"
 #include "view/boardwindow.h"
 #include "util/recorder.h"
@@ -58,9 +60,40 @@ bool MoveController::replaying() const
     return mReplayReader != 0;
 }
 
+static QColor getTankShotColor( QObject* context )
+{
+    if ( GameRegistry* registry = getRegistry(context) ) {
+        return registry->getTank().getShot().getPen().color();
+    }
+    return QColor(Qt::white); // should never happen - return something 'attention-getting'
+}
+
 void MoveController::render( Piece* pos, const QRect* rect, BoardRenderer& renderer, QPainter* painter )
 {
     if ( !replaying() ) {
+        // find the minimum shot path uid in the drag list:
+        int minDragUID = 0x7fffffff;
+        if ( getDragState() != Inactive ) {
+            for( auto it : mDragMoves.getList() ) {
+                if ( int uid = it->getShotPathUID() ) {
+                    minDragUID = uid;
+                    break;
+                }
+            }
+        }
+
+        QPen pen( Qt::DashLine );
+        for( auto it : mFutureShots.getPaths() ) {
+            if ( rect->intersects( it.getBounds() ) ) {
+                QColor color = (it.getUID() >= minDragUID) ? QColor(Qt::blue) : getTankShotColor(this);
+                color.setAlpha(127); // dim it's color to contrast future shots from actual shots
+                pen.setColor( color );
+                pen.setWidth(2);
+                painter->setPen( pen );
+                painter->drawPath( *it.toQPath() );
+            }
+        }
+
         const PieceMultiSet* set = mMoves.toMultiSet();
         PieceSet::iterator it = set->lower_bound( pos );
         renderer.renderListIn( it, set->end(), rect, painter );

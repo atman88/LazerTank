@@ -98,6 +98,11 @@ public:
 
     const FutureShotPathSet& getPaths() const;
 
+    /**
+     * @brief Cause a repaint of this path
+     */
+    void invalidate( FutureShotPath path );
+
 signals:
     void dirtyRect( const QRect& rect );
 

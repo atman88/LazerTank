@@ -198,27 +198,6 @@ void BoardWindow::renderBoard( const QRect* rect, GameRegistry* registry, QPaint
         mRenderer.renderListIn( deltas->lower_bound( &pos ), deltas->end(), rect, painter );
     }
 
-    if ( !moveController.replaying() ) {
-        bool usingFutureShotPen = false;
-        for( auto it : moveController.getFutureShots().getPaths() ) {
-            if ( rect->intersects( it.getBounds() ) ) {
-                if ( !usingFutureShotPen ) {
-                    QPen pen( tank.getShot().getPen() );
-
-                    // dim it's color to contrast future shots from actual shots:
-                    QColor color = pen.color();
-                    color.setAlpha(127);
-                    pen.setColor( color );
-
-                    pen.setStyle( Qt::DashLine );
-                    painter->setPen( pen );
-                    usingFutureShotPen = true;
-                }
-                painter->drawPath( *it.toQPath() );
-            }
-        }
-    }
-
     bool tankIsProminent = moveController.getFocus() != TANK;
     if ( tankIsProminent && moveController.getDragState() != Inactive ) {
         if ( Piece* piece = moveController.getMoves().getBack() ) {

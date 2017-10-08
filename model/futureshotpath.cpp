@@ -98,6 +98,11 @@ void FutureShotPathManager::reset()
     mPaths.clear();
 }
 
+void FutureShotPathManager::invalidate( FutureShotPath path )
+{
+    emit dirtyRect( path.getBounds() );
+}
+
 const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
@@ -160,7 +165,8 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
         path.mLeadVector = leadVector;
         path.mShotCount = shotCount;
 
-        emit dirtyRect( path.initBounds() );
+        path.initBounds();
+        invalidate( path );
 
         std::pair<std::set<FutureShotPath>::iterator,bool> ret = mPaths.insert( path );
         if ( ret.second ) {
