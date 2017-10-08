@@ -51,7 +51,7 @@ public:
     /**
      * @brief undoes the last future move if safe to do so
      */
-    void undoLastMove();
+    virtual void undoLastMove();
 
     /**
      * @brief Access the pending tank shots
@@ -230,6 +230,11 @@ public:
      * Attempts to move beyond the current square are ignored when dragging is active
      */
     virtual void move( int direction, bool doWakeup = true ) override;
+
+    /**
+     * @brief undoes the last future move if safe to do so
+     */
+    void undoLastMove() override;
 
 public slots:
     /**

@@ -86,6 +86,16 @@ void MoveDragController::move( int direction, bool doWakeup )
     }
 }
 
+void MoveDragController::undoLastMove()
+{
+    if ( !mDragMoves.size() ) {
+        MoveBaseController::undoLastMove();
+    } else {
+        undoLastMoveInternal( mDragMoves );
+        mDragMoves.replaceBack( MOVE_HIGHLIGHT );
+    }
+}
+
 void MoveDragController::fire( int count )
 {
     if ( mDragState != Inactive ) {

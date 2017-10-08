@@ -14,7 +14,8 @@ void TileDragMarker::render( const QRect* rect, QPainter* painter )
 {
     if ( mAngleMask && rect->intersects( mBounds ) ) {
         const QPen& savedPen = painter->pen();
-        QPen pen( Qt::green );
+        QColor color = QColor(Qt::blue);
+        QPen pen( color );
         pen.setWidth(2);
         painter->setPen(pen);
 
@@ -30,10 +31,9 @@ void TileDragMarker::render( const QRect* rect, QPainter* painter )
                 painter->translate( mCenter );
                 painter->rotate( angle );
                 if ( angle == mFocusAngle ) {
-                    painter->fillPath( path, Qt::green );
-                } else {
-                    painter->drawPath( path );
+                    painter->fillPath( path, color.lighter() );
                 }
+                painter->drawPath( path );
                 painter->setTransform( save );
             }
         }
