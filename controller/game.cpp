@@ -115,7 +115,11 @@ void Game::onBoardLoaded( int level )
 
 void Game::endMoveDeltaTracking()
 {
-    mFutureDelta.enable( false );
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        if ( registry->getMoveController().getDragState() == Inactive ) {
+            mFutureDelta.enable( false );
+        }
+    }
 }
 
 Board* Game::getBoard( bool futuristic )
