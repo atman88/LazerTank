@@ -34,8 +34,6 @@ void Game::init( GameRegistry* registry )
 
     MoveController& moveController = registry->getMoveController();
     moveController.init( registry );
-    QObject::connect( &moveController, &MoveController::pushingInto, this, &Game::onTankPushingInto );
-    QObject::connect( &moveController, &MoveController::idle, this, &Game::endMoveDeltaTracking );
 
     registry->getActiveCannon().init( registry, CANNON, QColor(255,50,83) );
 
@@ -115,11 +113,7 @@ void Game::onBoardLoaded( int level )
 
 void Game::endMoveDeltaTracking()
 {
-    if ( GameRegistry* registry = getRegistry(this) ) {
-        if ( registry->getMoveController().getDragState() == Inactive ) {
-            mFutureDelta.enable( false );
-        }
-    }
+    mFutureDelta.enable( false );
 }
 
 Board* Game::getBoard( bool futuristic )

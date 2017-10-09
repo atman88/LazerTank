@@ -64,19 +64,6 @@ public:
      */
     virtual bool canWakeup();
 
-signals:
-    /**
-     * @brief Notifies the tank is about to push into an occupied square
-     * @param point The new square
-     * @param curRotation The direction of the move
-     */
-    void pushingInto( ModelPoint point, int curRotation );
-
-    /**
-     * @brief Notifies that the tank has completed all it's outstanding moves
-     */
-    void idle();
-
 public slots:
     /**
      * @brief Fire the tank's laser
@@ -146,6 +133,11 @@ protected:
      * @param newState The state to transition to
      */
     void transitionState( MoveState newState );
+
+    /**
+     * @brief Invoked when idled
+     */
+    virtual void onIdle() = 0;
 
     /**
      * @brief The square that the tank is moving toward. Nullified when not moving.
@@ -326,6 +318,11 @@ public:
 
 signals:
     /**
+     * @brief Notifies that the tank has completed all it's outstanding moves
+     */
+    void idle();
+
+    /**
      * @brief Indicates that replay playback has ended
      */
     void replayFinished();
@@ -343,6 +340,9 @@ private slots:
 
 private:
     RecorderReader* mReplayReader;
+
+protected:
+    void onIdle();
 };
 
 #endif // MOVECONTROLLER_H

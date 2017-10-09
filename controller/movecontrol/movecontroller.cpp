@@ -131,3 +131,13 @@ void MoveController::connectWindow( const BoardWindow* window ) const
     window->connectTo( mMoves );
     window->connectTo( mDragMoves );
 }
+
+void MoveController::onIdle()
+{
+    if ( getDragState() == Inactive ) {
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            registry->getGame().endMoveDeltaTracking();
+        }
+        emit idle();
+    }
+}

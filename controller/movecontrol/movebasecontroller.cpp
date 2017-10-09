@@ -30,9 +30,9 @@ void MoveBaseController::onBoardLoaded( Board& board )
     mFutureShots.reset();
     mMoves.reset();
 
-    // emit unconditionally to prime the pump:
+    // transition unconditionally to prime the pump:
     mState = Idle;
-    emit idle();
+    onIdle();
 }
 
 void MoveBaseController::moveInternal( const ModelVector& origin, PieceListManager& moves, int direction, bool lastMoveBusy )
@@ -174,7 +174,7 @@ void MoveBaseController::wakeup()
                     mToVector = *move;
 
                     if ( move->hasPush() ) {
-                        emit pushingInto( *move, move->getAngle() );
+                        registry->getGame().onTankPushingInto( *move, move->getAngle() );
                     }
 
                     if ( tank.doMove( *move ) && (hasRotation || move->hasPush()) ) {
@@ -268,7 +268,7 @@ void MoveBaseController::appendMove( PieceListManager& moves, ModelVector vector
     moves.append( MOVE_HIGHLIGHT, vector, 0, pushPiece );
 }
 
-void MoveBaseController::transitionState(MoveState newState)
+void MoveBaseController::transitionState( MoveState newState )
 {
     if ( newState != mState ) {
 //        std::cout << "moveController ";
@@ -283,7 +283,7 @@ void MoveBaseController::transitionState(MoveState newState)
 
         mState = newState;
         if ( newState == Idle ) {
-            emit idle();
+            onIdle();
         }
     }
 }

@@ -202,6 +202,7 @@ void MoveDragController::onPathFound( PieceListManager* path, PathSearchCriteria
         applyPathUsingCriteria( path, criteria );
     } else {
         mDragMoves.reset( path );
+        mDragMoves.replaceBack( MOVE_HIGHLIGHT );
         if ( criteria->getCriteriaType() == PathSearchCriteria::TileDragTestCriteria ) {
             moveInternal( getFocusVector(), mDragMoves, mTileDragFocusAngle, false );
             setDragState( DraggingTile );
