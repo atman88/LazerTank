@@ -92,7 +92,7 @@ public slots:
     /**
      * @brief Cancel any pending (future) moves
      */
-    void undoMoves();
+    virtual void undoMoves();
 
     /**
      * @brief Retrieve the current focus state
@@ -105,7 +105,7 @@ public slots:
      * @brief move the focus between the moves (future) and the tank (present)
      * @param what Either TANK to set the focus to the tank, otherwise focus is set to the moves
      */
-    void setFocus( PieceType what );
+    virtual void setFocus( PieceType what );
 
 protected slots:
     /**
@@ -229,12 +229,23 @@ public:
      * @param doWakeup Suppresses starting animations when false
      * Attempts to move beyond the current square are ignored when dragging is active
      */
-    virtual void move( int direction, bool doWakeup = true ) override;
+    void move( int direction, bool doWakeup = true ) override;
 
     /**
      * @brief undoes the last future move if safe to do so
      */
     void undoLastMove() override;
+
+    /**
+     * @brief Cancel any pending (future) moves
+     */
+    void undoMoves() override;
+
+    /**
+     * @brief move the focus between the moves (future) and the tank (present)
+     * @param what Either TANK to set the focus to the tank, otherwise focus is set to the moves
+     */
+    void setFocus( PieceType what ) override;
 
 public slots:
     /**

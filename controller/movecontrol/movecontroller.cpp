@@ -82,29 +82,34 @@ void MoveController::render( Piece* pos, const QRect* rect, BoardRenderer& rende
             }
         }
 
-        QPen pen( Qt::DashLine );
-        for( auto it : mFutureShots.getPaths() ) {
-            if ( rect->intersects( it.getBounds() ) ) {
-                QColor color = (it.getUID() >= minDragUID) ? QColor(Qt::blue) : getTankShotColor(this);
-                color.setAlpha(127); // dim it's color to contrast future shots from actual shots
-                pen.setColor( color );
-                pen.setWidth(2);
-                painter->setPen( pen );
-                painter->drawPath( *it.toQPath() );
+        QPen savePen = painter->pen();
+
+        if ( mFutureShots.getPaths().size() ) {
+            QPen pen( Qt::DashLine );
+            for( auto it : mFutureShots.getPaths() ) {
+                if ( rect->intersects( it.getBounds() ) ) {
+                    QColor color = (it.getUID() >= minDragUID) ? getTankShotColor(this) : QColor(Qt::blue);
+                    color.setAlpha(127); // dim it's color to contrast future shots from actual shots
+                    pen.setColor( color );
+                    pen.setWidth(2);
+                    painter->setPen( pen );
+                    painter->drawPath( *it.toQPath() );
+                }
             }
+            painter->setPen( savePen );
         }
 
         const PieceMultiSet* set = mMoves.toMultiSet();
         PieceSet::iterator it = set->lower_bound( pos );
+        painter->setPen( Qt::blue );
         renderer.renderListIn( it, set->end(), rect, painter );
+
+        painter->setPen( savePen );
 
         if ( getDragState() != Inactive && mDragMoves.size() ) {
             const PieceMultiSet* set = mDragMoves.toMultiSet();
             PieceSet::iterator it = set->lower_bound( pos );
-            QPen savePen = painter->pen();
-            painter->setPen( Qt::blue );
             renderer.renderListIn( it, set->end(), rect, painter );
-            painter->setPen( savePen );
         }
     }
 }

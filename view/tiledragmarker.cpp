@@ -14,7 +14,7 @@ void TileDragMarker::render( const QRect* rect, QPainter* painter )
 {
     if ( mAngleMask && rect->intersects( mBounds ) ) {
         const QPen& savedPen = painter->pen();
-        QColor color = QColor(Qt::blue);
+        QColor color = QColor(Qt::green);
         QPen pen( color );
         pen.setWidth(2);
         painter->setPen(pen);

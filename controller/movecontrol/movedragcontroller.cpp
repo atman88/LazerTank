@@ -96,6 +96,22 @@ void MoveDragController::undoLastMove()
     }
 }
 
+void MoveDragController::undoMoves()
+{
+    while( mDragMoves.size() ) {
+        undoLastMoveInternal( mDragMoves );
+    }
+    MoveBaseController::undoMoves();
+}
+
+void MoveDragController::setFocus(PieceType what)
+{
+    if ( mDragMoves.size() > 1 ) {
+        mDragMoves.replaceBack( what == TANK ? MOVE : MOVE_HIGHLIGHT );
+    }
+    MoveBaseController::setFocus( what );
+}
+
 void MoveDragController::fire( int count )
 {
     if ( mDragState != Inactive ) {

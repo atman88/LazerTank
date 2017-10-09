@@ -79,9 +79,9 @@ bool ResourcePixmap::load()
         int width = image.width();
         for( int y = image.height(); --y >= 0; ) {
             for( int x = width; --x >= 0; ) {
-                // green -> blue
+                // swap green <-> blue
                 QRgb p = image.pixel( x, y );
-                image.setPixel( x, y, (p & ~0xffff) | ((p & 0xffff) >> 8) );
+                image.setPixel( x, y, (p & 0xffff0000) | (qBlue(p) << 8) | qGreen(p) );
             }
         }
         mBluePixmap = new QPixmap( QPixmap::fromImage( image ) );
