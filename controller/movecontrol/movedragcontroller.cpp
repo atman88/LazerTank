@@ -77,12 +77,12 @@ void MoveDragController::move( int direction, bool doWakeup )
     } else {
         // Prevent moving beyond the current square given the mouse cursor would get out of sync
         // (Need a means of moving the mouse cursor in order to remove this limitation)
-        ModelVector focusVector = getFocusVector();
+        ModelVector focusVector = getDragFocusVector();
         if ( focusVector.mAngle == direction ) {
             return;
         }
 
-        moveInternal( getFocusVector(), mDragMoves, direction, false );
+        moveInternal( focusVector, mDragMoves, direction, false );
     }
 }
 
@@ -188,9 +188,11 @@ DragState MoveDragController::getDragState() const
 
 ModelVector MoveDragController::getDragFocusVector() const
 {
-    if ( mFocus == MOVE ) {
-        if ( Piece* move = mDragMoves.getBack() ) {
+    if ( Piece* move = mDragMoves.getBack() ) {
+        if ( mFocus == MOVE || move->getType() == MOVE_HIGHLIGHT ) {
             return *move;
+        } else {
+            return *mDragMoves.getFront();
         }
     }
     return getFocusVector();
@@ -204,7 +206,7 @@ void MoveDragController::onPathFound( PieceListManager* path, PathSearchCriteria
         mDragMoves.reset( path );
         mDragMoves.replaceBack( MOVE_HIGHLIGHT );
         if ( criteria->getCriteriaType() == PathSearchCriteria::TileDragTestCriteria ) {
-            moveInternal( getFocusVector(), mDragMoves, mTileDragFocusAngle, false );
+            moveInternal( getDragFocusVector(), mDragMoves, mTileDragFocusAngle, false );
             setDragState( DraggingTile );
         } else {
             setDragState( DraggingTank );
@@ -315,10 +317,10 @@ void MoveDragController::onDragTo( QPoint coord )
                                 }
                             }
                         } else {
-                            moveInternal( getFocusVector(), mDragMoves, angle, false );
+                            moveInternal( getDragFocusVector(), mDragMoves, angle, false );
                             lastMove = mDragMoves.getBack();
                             if ( lastMove && !p.equals( *lastMove ) ) {
-                                moveInternal( getFocusVector(), mDragMoves, angle, false );
+                                moveInternal( getDragFocusVector(), mDragMoves, angle, false );
                             }
                         }
                         mChanged = true;
@@ -372,12 +374,10 @@ void MoveDragController::dragStop()
     if ( mDragState == DraggingTank ) {
         // If we've changed it by dragging and effectively cancelled the moves by erasing up to the tank square, then
         // erase any single move given it is only a left-over rotation:
-        if ( mChanged ) {
+        if ( mChanged && mDragMoves.size() == 1 ) {
             if ( Piece* piece = mDragMoves.getBack() ) {
-                if ( !piece->getShotCount() ) {
-                    if ( getFocusVector().ModelPoint::equals( *mDragMoves.getBack() ) ) {
-                        mDragMoves.eraseBack();
-                    }
+                if ( !piece->getShotCount() && getFocusVector().ModelPoint::equals( *piece ) ) {
+                    mDragMoves.eraseBack();
                 }
             }
         }

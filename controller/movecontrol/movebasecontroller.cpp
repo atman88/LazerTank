@@ -318,13 +318,14 @@ void MoveBaseController::setFocus( PieceType what )
             }
         }
 
+        mFocus = what;
+
         if ( what == TANK ) {
             tank.pause();
         } else {
             tank.resume();
+            wakeup();
         }
-
-        mFocus = what;
     }
 }
 

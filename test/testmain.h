@@ -75,7 +75,6 @@ private slots:
 
     void testFutureSelect();
     void testDragTile();
-    void testUndoDragTile();
     void testDragTank();
     void testDragPoint();
     void testDragWithMove();

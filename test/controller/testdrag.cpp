@@ -257,22 +257,6 @@ void TestMain::testDragTile()
     }
 }
 
-void TestMain::testUndoDragTile()
-{
-    TestMoveController* moveController = new TestMoveController();
-    mRegistry.injectMoveController( moveController );
-    TestPathFinderController* pathFinderController = setupTestDrag(
-      "T.M.\n" );
-
-    pathFinderController->testStart( ModelPoint(0,2), { ModelPoint(0,1) } );
-    if ( pathFinderController->mError ) {
-        QFAIL( pathFinderController->mError );
-    }
-
-    moveController->dragTo( ModelPoint(0,3).toViewCenterSquare() );
-    moveController->dragTo( ModelPoint(0,2).toViewCenterSquare() );
-}
-
 void TestMain::testFutureSelect()
 {
     cout << "start testFutureSelect()" << endl;
