@@ -491,6 +491,7 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
 
             case Qt::Key_Control:
                 registry->getMoveController().setFocus( TANK );
+                registry->getTank().pause();
                 break;
 
             case Qt::Key_Space:
@@ -509,13 +510,11 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
                 break;
 
             default:
-                if ( !ev->modifiers() ) {
-                    int rotation = keyToAngle(ev->key());
-                    if ( rotation >= 0 ) {
-                        registry->getMoveController().move( rotation );
-                    } else if ( ev->key() >= Qt::Key_0 && ev->key() <= Qt::Key_9 && !checkForReplay() ) {
-                        registry->getMoveController().fire( ev->key() - Qt::Key_0 );
-                    }
+                int rotation = keyToAngle(ev->key());
+                if ( rotation >= 0 ) {
+                    registry->getMoveController().move( rotation );
+                } else if ( ev->key() >= Qt::Key_0 && ev->key() <= Qt::Key_9 && !checkForReplay() ) {
+                    registry->getMoveController().fire( ev->key() - Qt::Key_0 );
                 }
             }
         }
@@ -534,7 +533,11 @@ void BoardWindow::keyReleaseEvent( QKeyEvent* ev )
                 break;
 
             case Qt::Key_Control:
-                registry->getMoveController().setFocus( MOVE );
+            {   MoveController& moveController = registry->getMoveController();
+                moveController.setFocus( MOVE );
+                registry->getTank().resume();
+                moveController.wakeup();
+            }
                 break;
 
             case Qt::Key_S:
@@ -570,6 +573,18 @@ void BoardWindow::keyReleaseEvent( QKeyEvent* ev )
                     } else {
                         registry->getMoveController().undoLastMove();
                     }
+                }
+                break;
+
+            case Qt::Key_Home:
+                if ( !checkForReplay() && ev->modifiers() == Qt::ControlModifier ) {
+                    registry->getMoveController().setFocus( TANK );
+                }
+                break;
+
+            case Qt::Key_End:
+                if ( !checkForReplay() && ev->modifiers() == Qt::ControlModifier ) {
+                    registry->getMoveController().setFocus( MOVE );
                 }
                 break;
 

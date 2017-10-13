@@ -75,11 +75,11 @@ void MoveDragController::move( int direction, bool doWakeup )
     if ( mDragState == Inactive ) {
         MoveBaseController::move( direction, doWakeup );
     } else {
-        // Prevent moving beyond the current square given the mouse cursor would get out of sync
-        // (Need a means of moving the mouse cursor in order to remove this limitation)
         ModelVector focusVector = getDragFocusVector();
-        if ( focusVector.mAngle == direction ) {
-            return;
+        if ( Piece* piece = mDragMoves.getBack() ) {
+            if ( !piece->equals(focusVector) ) {
+                undoMoves();
+            }
         }
 
         moveInternal( focusVector, mDragMoves, direction, false );
@@ -104,11 +104,9 @@ void MoveDragController::undoMoves()
     MoveBaseController::undoMoves();
 }
 
-void MoveDragController::setFocus(PieceType what)
+void MoveDragController::setFocus( PieceType what )
 {
-    if ( mDragMoves.size() > 1 ) {
-        mDragMoves.replaceBack( what == TANK ? MOVE : MOVE_HIGHLIGHT );
-    }
+    mDragMoves.replaceBack( what == TANK ? MOVE : MOVE_HIGHLIGHT );
     MoveBaseController::setFocus( what );
 }
 
@@ -191,8 +189,6 @@ ModelVector MoveDragController::getDragFocusVector() const
     if ( Piece* move = mDragMoves.getBack() ) {
         if ( mFocus == MOVE || move->getType() == MOVE_HIGHLIGHT ) {
             return *move;
-        } else {
-            return *mDragMoves.getFront();
         }
     }
     return getFocusVector();

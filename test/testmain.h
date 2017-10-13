@@ -104,6 +104,7 @@ private slots:
     void testRecorderRecordSize();
     void testRecorderOverflow();
 
+    void testFocus();
     void testMultiShotQueued();
     void testMultiShotShotDirty();
     void testMultiShotShooterRelease();

@@ -1,9 +1,12 @@
+#include <iostream>
 #include "../testmain.h"
 #include "model/futureshotpath.h"
 #include "controller/game.h"
 #include "controller/movecontroller.h"
 #include "model/board.h"
 #include "model/tank.h"
+
+using namespace std;
 
 void TestMain::testFutureShotPath()
 {
@@ -70,12 +73,11 @@ void TestMain::testFutureShotThruMasterTank()
 
 void TestMain::testFutureMultiShotThruTank()
 {
-    QTextStream map(
+    initGame(
       ". . .\n"
       ". M .\n"
       ".[T<.\n"
       ". . .\n" );
-    initGame( map );
 
     MoveController& moveController = mRegistry.getMoveController();
     moveController.move(270);
@@ -87,4 +89,9 @@ void TestMain::testFutureMultiShotThruTank()
     moveController.move(180);
     moveController.fire(2);
     QCOMPARE( TILE, mRegistry.getGame().getBoard(true)->getPieceManager().pieceAt(ModelPoint(1,3))->getType() );
+    SimplePiece key(MOVE, 1, 3 );
+    auto it = mRegistry.getGame().getDeltaPieces()->find( &key );
+    QVERIFY( it != mRegistry.getGame().getDeltaPieces()->end() );
+    cout << "type=" << (*it)->getType() << endl;
+    QVERIFY( (*it)->getType() == TILE_FUTURE_INSERT );
 }

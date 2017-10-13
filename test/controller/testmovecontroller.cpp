@@ -13,12 +13,58 @@
 using namespace std;
 
 
+void TestMain::testFocus()
+{
+    initGame(
+      ".. . ..\n"
+      "..[T<..\n" );
+
+    MoveController& moveController = mRegistry.getMoveController();
+    ModelVector expected(2,1,270);
+    QVERIFY( expected.equals( moveController.getFocusVector()     ) );
+    QVERIFY( expected.equals( moveController.getDragFocusVector() ) );
+
+    moveController.move( 270, false );
+    --expected.mCol;
+    QVERIFY( expected.equals( moveController.getFocusVector()     ) );
+    QVERIFY( expected.equals( moveController.getDragFocusVector() ) );
+
+    moveController.setFocus( TANK );
+    ++expected.mCol;
+    QVERIFY( expected.equals( moveController.getFocusVector()     ) );
+    QVERIFY( expected.equals( moveController.getDragFocusVector() ) );
+
+    moveController.setFocus( MOVE );
+    --expected.mCol;
+    QVERIFY( expected.equals( moveController.getFocusVector()     ) );
+    QVERIFY( expected.equals( moveController.getDragFocusVector() ) );
+
+    moveController.dragStart( expected );
+    QVERIFY( expected.equals( moveController.getFocusVector()     ) );
+    QVERIFY( expected.equals( moveController.getDragFocusVector() ) );
+
+    moveController.move( 270, false );
+    QVERIFY( expected.equals( moveController.getFocusVector()     ) );
+    --expected.mCol;
+    QVERIFY( expected.equals( moveController.getDragFocusVector() ) );
+
+    moveController.setFocus( TANK );
+    expected.mCol += 2;
+    QVERIFY( expected.equals( moveController.getFocusVector()     ) );
+    QVERIFY( expected.equals( moveController.getDragFocusVector() ) );
+
+    moveController.setFocus( MOVE );
+    --expected.mCol;
+    QVERIFY( expected.equals( moveController.getFocusVector()     ) );
+    --expected.mCol;
+    QVERIFY( expected.equals( moveController.getDragFocusVector() ) );
+}
+
 void setupTestMultiShot( TestMain* main, PieceListManagerObserver **shotObserver )
 {
-    QTextStream map(
+    main->initGame(
       "TM...\n"
       ".....\n" );
-    main->initGame( map );
 
     MoveController& moveController = main->getRegistry()->getMoveController();
     *shotObserver = new PieceListManagerObserver( moveController.getMoves(), 3, 3 );
@@ -81,11 +127,10 @@ void TestMain::testMultiShotShotFinished()
 
 void TestMain::testReplay()
 {
-    QTextStream map(
+    initGame(
       "T.M.\n"
       ".M..\n"
       "....\n" );
-    initGame( map );
 
     MoveController& moveController = mRegistry.getMoveController();
     Tank& tank = mRegistry.getTank();
@@ -137,10 +182,9 @@ void TestMain::testReplay()
 
 void TestMain::testMoveFocus()
 {
-    QTextStream map(
+    initGame(
       "[T>..\n"
       " . ..\n" );
-    initGame( map );
 
     MoveController& moveController = mRegistry.getMoveController();
     Tank& tank = mRegistry.getTank();
