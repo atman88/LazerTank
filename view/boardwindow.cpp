@@ -74,11 +74,11 @@ void BoardWindow::init( GameRegistry* registry )
     MoveController& moveController = registry->getMoveController();
 
     Board* board = game.getBoard();
-    QObject::connect( board, &Board::tileChangedAt, this, &BoardWindow::renderSquareLater );
+    QObject::connect( board, &Board::tileChangedAt, this, &BoardWindow::renderSquareLater, Qt::DirectConnection );
 
     PieceSetManager& pm = board->getPieceManager();
-    QObject::connect( &pm, &PieceSetManager::erasedAt,   this, &BoardWindow::renderSquareLater );
-    QObject::connect( &pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater );
+    QObject::connect( &pm, &PieceSetManager::erasedAt,   this, &BoardWindow::renderSquareLater, Qt::DirectConnection );
+    QObject::connect( &pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater, Qt::DirectConnection );
 
     TO_QACTION(mSpeedAction).setCheckable(true);
 
@@ -89,9 +89,9 @@ void BoardWindow::init( GameRegistry* registry )
 
     QObject::connect( &moveController, &MoveController::dragStateChanged, this, &BoardWindow::setCursorDragState );
     QObject::connect( &moveController, &MoveController::tileDragFocusChanged, &mDragMarker, &TileDragMarker::setFocus );
-    QObject::connect( &mDragMarker, &TileDragMarker::rectDirty, this, &BoardWindow::renderLater );
+    QObject::connect( &mDragMarker, &TileDragMarker::rectDirty, this, &BoardWindow::renderLater, Qt::DirectConnection );
 
-    QObject::connect( &game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded );
+    QObject::connect( &game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded, Qt::DirectConnection );
 
     QObject::connect( &registry->getLevelList(), &LevelList::levelUpdated, this, &BoardWindow::onLevelUpdated );
 
@@ -225,7 +225,7 @@ void BoardWindow::renderBoard( const QRect* rect, GameRegistry* registry, QPaint
     if ( moveController.replaying() ) {
         if ( !mReplayText ) {
             mReplayText = new ReplayText( this, QString("REPLAY") );
-            QObject::connect( mReplayText, &ReplayText::dirty, this, &BoardWindow::renderLater );
+            QObject::connect( mReplayText, &ReplayText::dirty, this, &BoardWindow::renderLater, Qt::DirectConnection );
         }
 
         mReplayText->render( rect, painter );
@@ -736,9 +736,9 @@ int BoardWindow::checkForReplay()
 
 void BoardWindow::connectTo( const PieceManager& manager ) const
 {
-    QObject::connect( &manager, &PieceManager::insertedAt, this, &BoardWindow::renderSquareLater );
-    QObject::connect( &manager, &PieceManager::erasedAt,   this, &BoardWindow::renderSquareLater );
-    QObject::connect( &manager, &PieceManager::changedAt,  this, &BoardWindow::renderSquareLater );
+    QObject::connect( &manager, &PieceManager::insertedAt, this, &BoardWindow::renderSquareLater, Qt::DirectConnection );
+    QObject::connect( &manager, &PieceManager::erasedAt,   this, &BoardWindow::renderSquareLater, Qt::DirectConnection );
+    QObject::connect( &manager, &PieceManager::changedAt,  this, &BoardWindow::renderSquareLater, Qt::DirectConnection );
 }
 
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))

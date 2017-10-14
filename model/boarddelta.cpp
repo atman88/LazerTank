@@ -42,12 +42,12 @@ void BoardDelta::enable( bool newValue )
             mFutureBoard->load( mMasterBoard );
             const PieceSetManager& masterManager = mMasterBoard->getPieceManager();
             PieceSetManager&       futureManager = mFutureBoard->getPieceManager();
-            QObject::connect( &masterManager, &PieceSetManager::insertedAt, this, &BoardDelta::onChangeAt );
-            QObject::connect( &masterManager, &PieceSetManager::erasedAt,   this, &BoardDelta::onChangeAt );
-            QObject::connect( &futureManager, &PieceSetManager::insertedAt, this, &BoardDelta::onChangeAt );
-            QObject::connect( &futureManager, &PieceSetManager::erasedAt,   this, &BoardDelta::onChangeAt );
-            QObject::connect( mMasterBoard, &Board::tileChangedAt, this, &BoardDelta::onChangeAt );
-            QObject::connect( mFutureBoard, &Board::tileChangedAt, this, &BoardDelta::onChangeAt );
+            QObject::connect( &masterManager, &PieceSetManager::insertedAt, this, &BoardDelta::onChangeAt, Qt::DirectConnection );
+            QObject::connect( &masterManager, &PieceSetManager::erasedAt,   this, &BoardDelta::onChangeAt, Qt::DirectConnection );
+            QObject::connect( &futureManager, &PieceSetManager::insertedAt, this, &BoardDelta::onChangeAt, Qt::DirectConnection );
+            QObject::connect( &futureManager, &PieceSetManager::erasedAt,   this, &BoardDelta::onChangeAt, Qt::DirectConnection );
+            QObject::connect( mMasterBoard, &Board::tileChangedAt, this, &BoardDelta::onChangeAt, Qt::DirectConnection );
+            QObject::connect( mFutureBoard, &Board::tileChangedAt, this, &BoardDelta::onChangeAt, Qt::DirectConnection );
         }
         mEnabled = newValue;
     }

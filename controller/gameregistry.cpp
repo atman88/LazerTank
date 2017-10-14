@@ -39,7 +39,7 @@ GameRegistry::GameRegistry( BoardWindow* window ) : QObject(0), mWindow(window)
     mPathToAction.setParent(this);
 
     if ( window ) {
-        QObject::connect( window, &BoardWindow::destroyed, this, &GameRegistry::onWindowDestroyed );
+        QObject::connect( window, &BoardWindow::destroyed, this, &GameRegistry::onWindowDestroyed, Qt::DirectConnection );
         window->setProperty( GameHandleName, property(GameHandleName) );
         mWindow = window;
     }

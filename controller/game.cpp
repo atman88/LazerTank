@@ -39,29 +39,29 @@ void Game::init( GameRegistry* registry )
 
     registry->getPathFinderController().init();
 
-    registry->getMoveAggregate().setObjectName("MoveAggregate");
-    registry->getShotAggregate().setObjectName("ShotAggregate");
+    AnimationStateAggregator& moveAggregate = registry->getMoveAggregate(); moveAggregate.setObjectName("MoveAggregate");
+    AnimationStateAggregator& shotAggregate = registry->getShotAggregate(); shotAggregate.setObjectName("ShotAggregate");
 
-    registry->getTankPush().init( registry );
-    registry->getShotPush().init( registry );
-    QObject::connect( &registry->getTankPush(), &Push::stateChanged, &registry->getMoveAggregate(), &AnimationStateAggregator::onStateChanged );
-    QObject::connect( &registry->getShotPush(), &Push::stateChanged, &registry->getShotAggregate(), &AnimationStateAggregator::onStateChanged );
-    QObject::connect( &registry->getMoveAggregate(), &AnimationStateAggregator::finished, this, &Game::onMoveAggregatorFinished, Qt::QueuedConnection );
-    QObject::connect( &registry->getShotAggregate(), &AnimationStateAggregator::finished, this, &Game::sightCannons );
+    Push& tankPush = registry->getTankPush(); tankPush.init( registry );
+    Push& shotPush = registry->getShotPush(); shotPush.init( registry );
+    QObject::connect( &tankPush, &Push::stateChanged, &moveAggregate, &AnimationStateAggregator::onStateChanged, Qt::DirectConnection );
+    QObject::connect( &shotPush, &Push::stateChanged, &shotAggregate, &AnimationStateAggregator::onStateChanged, Qt::DirectConnection );
+    QObject::connect( &moveAggregate, &AnimationStateAggregator::finished, this, &Game::onMoveAggregatorFinished, Qt::QueuedConnection );
+    QObject::connect( &shotAggregate, &AnimationStateAggregator::finished, this, &Game::sightCannons, Qt::DirectConnection );
 
     mFutureDelta.init( &mBoard, &mFutureBoard );
 
-    QObject::connect( &mBoard, &Board::tileChangedAt, this, &Game::onBoardTileChanged );
-    QObject::connect( &mBoard, &Board::boardLoading,  this, &Game::onBoardLoading );
-    QObject::connect( &mBoard, &Board::boardLoaded,   this, &Game::onBoardLoaded );
+    QObject::connect( &mBoard, &Board::tileChangedAt, this, &Game::onBoardTileChanged, Qt::DirectConnection );
+    QObject::connect( &mBoard, &Board::boardLoading,  this, &Game::onBoardLoading,     Qt::DirectConnection );
+    QObject::connect( &mBoard, &Board::boardLoaded,   this, &Game::onBoardLoaded,      Qt::DirectConnection );
     QObject::connect( &registry->getBoardPool(), &BoardPool::boardLoaded, this, &Game::onPoolLoaded, Qt::QueuedConnection );
 
     if ( BoardWindow* window = registry->getWindow() ) {
-        QObject::connect( &registry->getTankPush(), &Push::rectDirty, window, &BoardWindow::renderLater );
-        QObject::connect( &registry->getShotPush(), &Push::rectDirty, window, &BoardWindow::renderLater );
+        QObject::connect( &tankPush, &Push::rectDirty, window, &BoardWindow::renderLater, Qt::DirectConnection );
+        QObject::connect( &shotPush, &Push::rectDirty, window, &BoardWindow::renderLater, Qt::DirectConnection );
 
-        QObject::connect( &registry->getTank(), &Tank::changed, window, &BoardWindow::renderLater );
-        QObject::connect( &moveController.getFutureShots(), &FutureShotPathManager::dirtyRect, window, &BoardWindow::renderLater );
+        QObject::connect( &registry->getTank(), &Tank::changed, window, &BoardWindow::renderLater, Qt::DirectConnection );
+        QObject::connect( &moveController.getFutureShots(), &FutureShotPathManager::dirtyRect, window, &BoardWindow::renderLater, Qt::DirectConnection );
 
         QMenu& menu = window->getMenu();
         QObject::connect( &menu, &QMenu::aboutToShow, &registry->getTank(), &Tank::pause  );
