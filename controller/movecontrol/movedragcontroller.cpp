@@ -308,9 +308,8 @@ void MoveDragController::onDragTo( QPoint coord )
                                     if ( !lastMove->getShotCount() && focusVector.ModelPoint::equals( *lastMove ) ) {
                                         undoLastMoveInternal( mDragMoves );
                                     }
-                                } else {
-                                    mDragMoves.replaceBack( MOVE_HIGHLIGHT );
                                 }
+                                mDragMoves.replaceBack( MOVE_HIGHLIGHT );
                             }
                         } else {
                             moveInternal( getDragFocusVector(), mDragMoves, angle, false );
