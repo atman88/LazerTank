@@ -11,10 +11,11 @@ bool AnimationStateAggregator::active()
     return mActiveCount > 0;
 }
 
-void AnimationStateAggregator::onStateChanged( QAbstractAnimation::State newState, QAbstractAnimation::State oldState)
+void AnimationStateAggregator::onStateChanged( QAbstractAnimation::State newState, QAbstractAnimation::State oldState )
 {
     if ( oldState == QAbstractAnimation::Stopped
       && newState == QAbstractAnimation::Running ) {
+//        if ( !mActiveCount ) { std::cout << "AnimationStateAggregator " << qPrintable(objectName()) << ": started" << std::endl; }
         ++mActiveCount;
     } else if ( oldState == QAbstractAnimation::Running
              && newState == QAbstractAnimation::Stopped ) {

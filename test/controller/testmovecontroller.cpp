@@ -137,6 +137,7 @@ void TestMain::testReplay()
     PieceSetManager& boardPieces = mRegistry.getGame().getBoard()->getPieceManager();
 
     QSignalSpy idleSpy( &moveController, &MoveController::idle );
+    QSignalSpy shotSpy( &mRegistry.getShotAggregate(), &AnimationStateAggregator::finished );
     ModelVector pos = tank.getVector();
 
     moveController.move( 90 );
@@ -149,16 +150,17 @@ void TestMain::testReplay()
     QVERIFY( idleSpy.wait( 1000 ) );
     pos.mCol += 1;
     QVERIFY( tank.getVector().equals(pos) );
+    if ( mRegistry.getShotAggregate().active() ) {
+        shotSpy.wait( 1000 );
+    }
     QVERIFY( boardPieces.typeAt(ModelPoint(3,0)) == TILE );
 
     moveController.move( 180 );
     moveController.fire();
-    QVERIFY( idleSpy.wait( 1000 ) );
+    QVERIFY( idleSpy.wait( 2000 ) );
     pos.mAngle = 180;
     QVERIFY( tank.getVector().equals(pos) );\
-
     if ( mRegistry.getShotAggregate().active() ) {
-        QSignalSpy shotSpy( &mRegistry.getShotAggregate(), &AnimationStateAggregator::finished );
         shotSpy.wait( 1000 );
     }
     QVERIFY( boardPieces.typeAt(ModelPoint(1,2)) == TILE );
@@ -172,9 +174,7 @@ void TestMain::testReplay()
     QSignalSpy replaySpy( &moveController, &MoveController::replayFinished );
     QVERIFY( replaySpy.wait() );
     QVERIFY( boardPieces.typeAt(ModelPoint(3,0)) == TILE );
-
     if ( mRegistry.getShotAggregate().active() ) {
-        QSignalSpy shotSpy( &mRegistry.getShotAggregate(), &AnimationStateAggregator::finished );
         shotSpy.wait( 1000 );
     }
     QVERIFY( boardPieces.typeAt(ModelPoint(1,2)) == TILE );

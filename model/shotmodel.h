@@ -1,7 +1,7 @@
 #ifndef SHOTMODEL_H
 #define SHOTMODEL_H
 
-#include <QPropertyAnimation>
+#include <QAbstractAnimation>
 
 class Game;
 class AnimationStateAggregator;
@@ -11,10 +11,32 @@ class MeasureRunnable;
 #include "model/modelpoint.h"
 #include "view/shotview.h"
 
+/**
+ * @brief Animation for sequencing this shot
+ */
+class ShotAnimation : public QAbstractAnimation
+{
+    Q_OBJECT
+
+public:
+    int duration() const
+    {
+        return -1; // run until stopped
+    }
+
+signals:
+    void currentTimeChanged( int currentTime );
+
+protected:
+    void updateCurrentTime( int currentTime )
+    {
+        emit currentTimeChanged( currentTime );
+    }
+};
+
 class ShotModel : public ShotView
 {
     Q_OBJECT
-    Q_PROPERTY(QVariant sequence READ getSequence WRITE setSequence)
 
 public:
     explicit ShotModel(QObject *parent = 0);
@@ -32,11 +54,6 @@ public:
      * @return true if the shot was successfully started
      */
     bool fire( Shooter* shooter );
-
-    /**
-     * @brief Getter method needed for animation sequencing
-     */
-    QVariant getSequence();
 
     /**
      * @brief Return this shot to its inactive state
@@ -57,9 +74,10 @@ signals:
 
 public slots:
     /**
-     * @brief Setter method used by the animation
+     * @brief Advance the animation sequence
+     * @param sequence Animation iteration value
      */
-    void setSequence( const QVariant& shotSequence );
+    void onTimeChanged( int currentTime );
 
     /**
      * @brief Instructs that the beam should stop emitting. I.e. the trigger has been released.
@@ -74,16 +92,16 @@ public slots:
 private:
     int getMeasurement() const;
 
-    QVariant mSequence;
-    QPropertyAnimation mAnimation;
+    ShotAnimation mAnimation;
     ModelVector mStartVector;
     ModelPoint mLeadingPoint;
     int mLeadingDirection;
     int mDistance;
     bool mShedding;
     int mKillSequence;
+    int mLastStepNo;
+    int mDuration;
     MeasureRunnable* mRunnable;
-    int mSpeed;
 
     friend class MeasureRunnable;
     friend class TestShotModel;

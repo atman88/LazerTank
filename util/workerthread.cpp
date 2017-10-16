@@ -93,9 +93,9 @@ void WorkerThread::dequeueCurrentRunnable()
 
     mPending.pop_front();
 
-    if ( mPending.size() ) {
-        std::cout << "WorkerThread: " << mPending.size() << " additional runnables pending" << std::endl;
-    }
+//    if ( mPending.size() ) {
+//        std::cout << "WorkerThread: " << mPending.size() << " additional runnables pending" << std::endl;
+//    }
 }
 
 void WorkerThread::run()

@@ -3,6 +3,7 @@
 #include "shotmodel.h"
 #include "controller/game.h"
 #include "controller/animationstateaggregator.h"
+#include "controller/speedcontroller.h"
 #include "view/shooter.h"
 #include "util/gameutils.h"
 
@@ -65,14 +66,10 @@ private:
     int mResult;
 };
 
-ShotModel::ShotModel(QObject *parent) : ShotView(parent), mLeadingDirection(0), mDistance(0), mShedding(false),
-  mKillSequence(0), mRunnable(new MeasureRunnable(*this))
+ShotModel::ShotModel( QObject* parent ) : ShotView(parent), mLeadingDirection(0), mDistance(0), mShedding(false),
+  mKillSequence(0), mLastStepNo(-1), mDuration(-1), mRunnable(new MeasureRunnable(*this))
 {
-    mAnimation.setTargetObject(this);
-    mAnimation.setPropertyName("sequence");
-    mAnimation.setStartValue(0);
-    mAnimation.setEndValue(BOARD_MAX_WIDTH * BOARD_MAX_HEIGHT); // use a reasonable watermark value
-    mAnimation.setDuration(60/8 * BOARD_MAX_WIDTH * BOARD_MAX_HEIGHT);
+    QObject::connect( &mAnimation, &ShotAnimation::currentTimeChanged, this, &ShotModel::onTimeChanged, Qt::DirectConnection );
 }
 
 ShotModel::~ShotModel()
@@ -85,10 +82,11 @@ void ShotModel::reset()
     mAnimation.stop();
     mStartVector.setNull();
     mLeadingPoint.setNull();
-    mSequence = QVariant(-1);
     mDistance = 0;
     mShedding = false;
     mKillSequence = 0;
+    mLastStepNo = -1;
+    mDuration = -1;
     ShotView::reset();
 }
 
@@ -97,14 +95,9 @@ int ShotModel::getDistance() const
     return mDistance;
 }
 
-void ShotModel::init(AnimationStateAggregator& aggregate )
+void ShotModel::init( AnimationStateAggregator& aggregate )
 {
-    QObject::connect( &mAnimation, &QPropertyAnimation::stateChanged, &aggregate, &AnimationStateAggregator::onStateChanged );
-}
-
-QVariant ShotModel::getSequence()
-{
-    return mSequence;
+    QObject::connect( &mAnimation, &ShotAnimation::stateChanged, &aggregate, &AnimationStateAggregator::onStateChanged );
 }
 
 bool ShotModel::fire( Shooter* shooter )
@@ -115,6 +108,11 @@ bool ShotModel::fire( Shooter* shooter )
         mLeadingDirection = direction;
         mLeadingPoint = ModelPoint( shooter->getViewX().toInt()/24, shooter->getViewY().toInt()/24 );
         mStartVector = ModelVector( mLeadingPoint, direction );
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            mDuration = registry->getSpeedController().getSpeed() - 30;
+        } else {
+            mDuration = SpeedController::NORMAL_SPEED - 30;
+        }
         commenceFire( shooter );
         mAnimation.start();
         mRunnable->startMeasurement( mStartVector );
@@ -123,9 +121,14 @@ bool ShotModel::fire( Shooter* shooter )
     return false;
 }
 
-void ShotModel::setSequence( const QVariant &sequence )
+void ShotModel::onTimeChanged( int currentTime )
 {
-    mSequence = sequence;
+    int anticipatedLength = std::max( getMeasurement(), 5 ); // default to 5 until known
+    int anticipatedSteps = 1 + (anticipatedLength << 2);
+    int targetStepNo = anticipatedSteps * currentTime / mDuration;
+    if ( targetStepNo == mLastStepNo ) {
+        return;
+    }
 
     if ( GameRegistry* registry = getRegistry(this) ) {
         Game& game = registry->getGame();
@@ -145,24 +148,18 @@ void ShotModel::setSequence( const QVariant &sequence )
             return;
         }
 
-        // intializing anticipatedLength here such that:
-        // a) it uses a minimum of 5. This delays tail shedding which in turn slows down short shots so they don't
-        //    flash uncomfortably quickly
-        // b) It uses the measured length of the shot if/when available, otherwise it defaults to the minimum
-        //
-        int anticipatedLength = std::max( getMeasurement(), 5 );
-
-        int iteration = 0;
+        bool hasTermination = hasTerminationPoint();
         do {
-            if ( !hasTerminationPoint() ) {
+            if ( !hasTermination ) {
                 if ( getAdjacentPosition( mLeadingDirection, &mLeadingPoint ) ) {
                     QPoint hitPoint = mLeadingPoint.toViewCenterSquare();
                     int entryDirection = mLeadingDirection;
                     if ( game.canShootThru( mLeadingPoint, &mLeadingDirection, 0, true, getShooter(), &hitPoint ) ) {
                         grow( mLeadingPoint.toViewCenterSquare(), entryDirection );
+                        ++mDistance;
                     } else {
                         addTermination( entryDirection, hitPoint );
-                        mShedding = true;
+                        hasTermination = true;
                     }
                 }
             }
@@ -171,17 +168,19 @@ void ShotModel::setSequence( const QVariant &sequence )
                 break;
             }
 
-            bool isTravelling = true;
-            if ( ++mDistance >= anticipatedLength && mShedding ) {
-                isTravelling = shedTail();
+            if ( !mShedding
+                // check if at max time before shedding (i.e. 3/4 of the anticipated steps)
+              && ((mLastStepNo >= anticipatedSteps - anticipatedLength)
+                // start shedding if terminated and sufficient time has elapsed
+               || (hasTermination && currentTime >= SpeedController::HIGH_SPEED - 30)) ) {
+                mShedding = true;
             }
 
-            if ( !isTravelling ) {
+            if ( mShedding && !shedTail() ) {
                 reset(); // done
                 break;
             }
-            // repeat such that travel should complete after ~four sequence events
-        } while( ++iteration <= anticipatedLength/4 );
+        } while( ++mLastStepNo < targetStepNo );
     }
 }
 

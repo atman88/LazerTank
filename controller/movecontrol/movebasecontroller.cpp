@@ -274,7 +274,7 @@ void MoveBaseController::transitionState( MoveState newState )
 //        std::cout << "moveController ";
 //        switch( newState ) {
 //        case Idle:        std::cout << "Idle";        break;
-//        case RotateStage: std::cout << "RotateStage"; break;
+//        case MovingStage: std::cout << "MovingStage"; break;
 //        case FiringStage: std::cout << "FiringStage"; break;
 //        case IdlingStage: std::cout << "IdlingStage"; break;
 //        default:          std::cout << newState;      break;

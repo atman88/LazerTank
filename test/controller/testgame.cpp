@@ -51,8 +51,8 @@ void testCannon( GameRegistry& registry )
     SignalReceptor killedReceptor;
     ShotModel& shot = registry.getCannonShot();
     QObject::connect( &shot, &ShotModel::tankKilled, &killedReceptor, &SignalReceptor::receive );
-    for( int seq = shot.getSequence().toInt(); seq < 5 && !killedReceptor.mReceived; ++seq ) {
-        shot.setSequence( QVariant(seq) );
+    for( int currentTime = 0; currentTime <= 60*5 && !killedReceptor.mReceived; currentTime += 60 ) {
+        shot.onTimeChanged( currentTime );
     }
     QObject::disconnect( &shot, 0, &killedReceptor, 0 );
 
