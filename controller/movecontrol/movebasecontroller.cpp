@@ -60,9 +60,9 @@ void MoveBaseController::moveInternal( const ModelVector& origin, PieceListManag
 void MoveBaseController::move( int direction, bool doWakeup )
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
-        moveInternal( registry->getTank().getVector(), mMoves, direction, mState == FiringStage && mMoves.size() == 1 );
-
-        if ( doWakeup ) {
+        bool busy = mState == FiringStage && mMoves.size() == 1;
+        moveInternal( registry->getTank().getVector(), mMoves, direction, busy );
+        if ( doWakeup && !busy ) {
             wakeup();
         }
     }
@@ -244,7 +244,6 @@ bool MoveBaseController::applyPathUsingCriteria( PieceListManager* path, PathSea
                 std::cout << "* applyPathUsingCriteria: ingoring stale path" << std::endl;
                 return false;
             }
-            registry->getGame().endMoveDeltaTracking();
         } else {
             std::cout << "*** applyPathUsingCriteria: registry error" << std::endl;
             return false;

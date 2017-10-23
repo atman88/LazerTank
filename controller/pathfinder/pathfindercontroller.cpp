@@ -81,5 +81,7 @@ void PathFinderController::onPath( PathSearchCriteria criteria, PieceListManager
     // filter any stale results
     if ( mCurCriteria && criteria == *mCurCriteria ) {
         emit pathFound( path, &(*mCurCriteria) );
+    } else {
+        std::cout << "PathFinderController::onPath discarding stale path" << std::endl;
     }
 }

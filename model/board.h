@@ -82,7 +82,9 @@ public:
      * @param pieceAngle The piece's current rotation
      * @return true if the push resulted in a change to the board
      */
-    bool applyPushResult(PieceType mType, ModelPoint point, int pieceAngle );
+    bool applyPushResult( PieceType mType, ModelPoint point, int pieceAngle );
+
+    void revertPush( MovePiece* pusher );
 
     /**
      * @brief load a level
@@ -154,6 +156,7 @@ private:
     ModelPoint mLowerRight;
     ModelPoint mFlagPoint;
     ModelVector mTankWayPoint;
+    int mLastPushId;
 
     unsigned char mTiles[BOARD_MAX_WIDTH*BOARD_MAX_HEIGHT];
     PieceSetManager mPieceManager;

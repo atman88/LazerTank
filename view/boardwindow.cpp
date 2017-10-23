@@ -194,10 +194,6 @@ void BoardWindow::renderBoard( const QRect* rect, GameRegistry* registry, QPaint
 
     mRenderer.render( rect, board, painter );
 
-    if ( const PieceSet* deltas = (moveController.replaying() ? 0 : registry->getGame().getDeltaPieces()) ) {
-        mRenderer.renderListIn( deltas->lower_bound( &pos ), deltas->end(), rect, painter );
-    }
-
     bool tankIsProminent = moveController.getFocus() != TANK;
     if ( tankIsProminent && moveController.getDragState() != Inactive ) {
         if ( Piece* piece = moveController.getMoves().getBack() ) {
@@ -208,6 +204,10 @@ void BoardWindow::renderBoard( const QRect* rect, GameRegistry* registry, QPaint
     if ( tankIsProminent ) {
         // render the moves beneath (i.e. before) the tank:
         moveController.render( &pos, rect, mRenderer, painter );
+        if ( const PieceSet* deltas = (moveController.replaying() ? 0 : registry->getGame().getDeltaPieces()) ) {
+            mRenderer.renderListIn( deltas->lower_bound( &pos ), deltas->end(), rect, painter );
+        }
+
     }
 
     registry->getTankPush().render( rect, mRenderer, painter );
@@ -217,6 +217,9 @@ void BoardWindow::renderBoard( const QRect* rect, GameRegistry* registry, QPaint
     if ( !tankIsProminent ) {
         // render the moves on top of (i.e. after) the tank:
         moveController.render( &pos, rect, mRenderer, painter );
+        if ( const PieceSet* deltas = (moveController.replaying() ? 0 : registry->getGame().getDeltaPieces()) ) {
+            mRenderer.renderListIn( deltas->lower_bound( &pos ), deltas->end(), rect, painter );
+        }
     }
 
     mDragMarker.render( rect, painter );

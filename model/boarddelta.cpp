@@ -75,7 +75,10 @@ void BoardDelta::onChangeAt( ModelPoint point )
         // master=yes future=no; indicate an erase:
         mPieceManager.setAt( TILE_FUTURE_ERASE, point );
     } else {
-        if ( mMasterBoard->tileAt(point) == mFutureBoard->tileAt(point) ) {
+        if ( masterPiece->getPushedId() != futurePiece->getPushedId() ) {
+            // tile pushed to this point in the future
+            mPieceManager.setAt( TILE_FUTURE_INSERT, point );
+        } else if ( mMasterBoard->tileAt(point) == mFutureBoard->tileAt(point) ) {
             // No notable differences; Remove any existing delta:
             mPieceManager.eraseAt( point );
         } else {

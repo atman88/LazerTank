@@ -1,3 +1,4 @@
+#include <iostream>
 #include "../movecontroller.h"
 #include "gameregistry.h"
 #include "game.h"
@@ -265,6 +266,7 @@ void MoveDragController::onDragTo( QPoint coord )
     ModelPoint p( coord );
     ModelVector focusVector = getDragFocusVector();
     if ( focusVector.isNull() ) { // safety
+        std::cout << "** MoveDragController::onDragTo null focus" << std::endl;
         setDragState( Inactive );
         return;
     }

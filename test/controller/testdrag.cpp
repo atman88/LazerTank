@@ -5,6 +5,7 @@
 #include "movecontroller.h"
 #include "pathfindercontroller.h"
 #include "model/tank.h"
+#include "util/workerthread.h"
 #include "../test/util/testasync.h"
 
 using namespace std;

@@ -63,6 +63,9 @@ public:
     virtual bool hasPush() const override = 0;
     virtual int getShotCount() const override = 0;
     virtual int getShotPathUID() const override = 0;
+    virtual int getPreviousPushedId() const = 0;
+
+    virtual int getPushedId() const override = 0;
 
     friend bool operator<(const Piece& l, const Piece& r)
     {
@@ -108,6 +111,37 @@ public:
     {
         return 0;
     }
+
+    int getPreviousPushedId() const override
+    {
+        return 0;
+    }
+
+    int getPushedId() const override
+    {
+        return 0;
+    }
+};
+
+class PushedPiece : public SimplePiece
+{
+public:
+    PushedPiece( Piece* piece, int pushedId = 0 ) : SimplePiece(piece), mId(pushedId)
+    {
+    }
+
+    PushedPiece( PieceType type, ModelPoint point, int angle = 0,  int pushedId = 0 )
+      : SimplePiece( type, point, angle ), mId(pushedId)
+    {
+    }
+
+    int getPushedId() const override
+    {
+        return mId;
+    }
+
+private:
+    int mId;
 };
 
 /**
@@ -120,7 +154,8 @@ public:
         : SimplePiece(type,col,row,angle),
           mPushPieceType( pushPiece ? pushPiece->mType  : NONE),
           mPushPieceAngle(pushPiece ? pushPiece->mAngle : 0),
-          mShotCount(shotCount), mShotPathUID(0)
+          mShotCount(shotCount), mShotPathUID(0),
+          mPreviousPushedId(pushPiece ? pushPiece->getPushedId() : 0 )
     {
     }
 
@@ -128,7 +163,8 @@ public:
       : SimplePiece( type, point, angle ),
         mPushPieceType( pushPiece ? pushPiece->mType  : NONE),
         mPushPieceAngle(pushPiece ? pushPiece->mAngle : 0),
-        mShotCount(shotCount), mShotPathUID(0)
+        mShotCount(shotCount), mShotPathUID(0),
+        mPreviousPushedId(pushPiece ? pushPiece->getPushedId() : 0 )
     {
     }
 
@@ -136,7 +172,8 @@ public:
       : SimplePiece( type, vector ),
         mPushPieceType( pushPiece ? pushPiece->mType  : NONE),
         mPushPieceAngle(pushPiece ? pushPiece->mAngle : 0),
-        mShotCount(shotCount), mShotPathUID(0)
+        mShotCount(shotCount), mShotPathUID(0),
+        mPreviousPushedId(pushPiece ? pushPiece->getPushedId() : 0 )
     {
     }
 
@@ -149,6 +186,8 @@ public:
     int getPushPieceAngle() const;
 
     int getShotCount() const override;
+
+    int getPreviousPushedId() const override;
 
     /**
      * @brief Set the count of future shots for this move point
@@ -178,6 +217,7 @@ private:
     int mPushPieceAngle;
     int mShotCount;
     int mShotPathUID;
+    int mPreviousPushedId;
 };
 
 // comparator used by the stl

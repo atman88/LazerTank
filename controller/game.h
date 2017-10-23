@@ -208,6 +208,8 @@ private:
     int mDesiredLevel;
 
     Board mFutureBoard;
+
+protected:
     BoardDelta mFutureDelta;
 };
 

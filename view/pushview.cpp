@@ -28,6 +28,7 @@ void PushView::init( GameRegistry* registry )
 void PushView::start( Piece& what, int fromX, int fromY, int toX, int toY )
 {
     if ( mType != NONE ) {
+        std::cout << "** PushView::start mType=" << mType << std::endl;
         return;
     }
 

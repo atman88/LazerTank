@@ -8,7 +8,7 @@
 #include "controller/gameregistry.h"
 #include "util/workerthread.h"
 
-Board::Board( QObject* parent ) : QObject(parent), mLevel(0), mStream(0)
+Board::Board( QObject* parent ) : QObject(parent), mLevel(0), mLastPushId(0), mStream(0)
 {
     memset( mTiles, EMPTY, sizeof mTiles );
 }
@@ -146,6 +146,7 @@ void Board::load( QTextStream& stream, int level )
 
     mLowerRight.mRow = row-1;
     mLevel = level;
+    mLastPushId = 0;
     mStream = ( level < 0 ) ? &stream : 0;
 
     emit boardLoaded( level );
@@ -153,7 +154,8 @@ void Board::load( QTextStream& stream, int level )
 
 void Board::load( const Board* source )
 {
-    mLevel  = source->mLevel;
+    mLevel        = source->mLevel;
+    mLastPushId   = source->mLastPushId;
     mLowerRight   = source->mLowerRight;
     mFlagPoint    = source->mFlagPoint;
     mTankWayPoint = source->mTankWayPoint;
@@ -200,7 +202,7 @@ void Board::setTileAt( TileType id, ModelPoint point )
 bool Board::applyPushResult( PieceType mType, ModelPoint point, int pieceAngle )
 {
     if ( tileAt( point ) != WATER ) {
-        mPieceManager.insert( mType, point, pieceAngle );
+        mPieceManager.insert( mType, point, pieceAngle, ++mLastPushId );
         return true;
     }
 
@@ -210,6 +212,28 @@ bool Board::applyPushResult( PieceType mType, ModelPoint point, int pieceAngle )
     }
 
     return false;
+}
+
+void Board::revertPush( MovePiece* pusher )
+{
+    ModelPoint point = *pusher;
+    if ( getAdjacentPosition( pusher->getAngle(), &point ) ) {
+        Piece* pushee = mPieceManager.pieceAt( point );
+        int prevId = pusher->getPreviousPushedId();
+        if ( pushee ) {
+            if ( pushee->getPushedId() == mLastPushId ) {
+                --mLastPushId;
+            } else {
+                std::cout << "** revertPush: pushee out of order " << pushee->getPushedId() << " != " << mLastPushId << std::endl;
+            }
+            mPieceManager.erase( pushee );
+        } else if ( pusher->getPushPieceType() == TILE && tileAt( point ) == TILE_SUNK ) {
+            setTileAt( WATER, point );
+        }
+        mPieceManager.insert( pusher->getPushPieceType(), *pusher, pusher->getPushPieceAngle(), prevId );
+    } else {
+        std::cout << "** revertPush: failed to get adjacent pos for " << point.mCol << "," << point.mRow << std::endl;
+    }
 }
 
 bool getAdjacentPosition( int angle, ModelPoint *point )
@@ -241,7 +265,19 @@ void Board::undoChanges( std::vector<FutureChange> changes )
         case PIECE_PUSHED:
         {   int reverseDirection = (it->u.multiPush.direction + 180) % 360;
             ModelPoint p = it->point;
-            if ( !mPieceManager.eraseAt( it->point ) ) {
+            if ( Piece* pushee = mPieceManager.pieceAt( it->point ) ) {
+                if ( pushee->getPushedId() == mLastPushId ) {
+                    mLastPushId -= it->u.multiPush.count;
+                    if ( it->u.multiPush.previousPushedId && it->u.multiPush.previousPushedId != mLastPushId ) {
+                        std::cout << "** undoChanges: change out of order " << it->u.multiPush.previousPushedId << " != " << mLastPushId << std::endl;
+                    } else {
+                        std::cout << "undoChanges: mlastChangeId=" << mLastPushId << std::endl;
+                    }
+                } else {
+                    std::cout << "** undoChanges: pushee out of order " << pushee->getPushedId() << " != " << mLastPushId << std::endl;
+                }
+                mPieceManager.erase( pushee );
+            } else {
                 if ( it->u.multiPush.pieceType != TILE ) {
                     std::cout << "** undo PIECE_PUSHED didn't erase @ (" << p.mCol << "," << p.mRow << ")" << std::endl;
                 } else if ( tileAt( it->point ) == TILE_SUNK ) {
@@ -257,7 +293,7 @@ void Board::undoChanges( std::vector<FutureChange> changes )
                     break;
                 }
             }
-            mPieceManager.insert( it->u.multiPush.pieceType, p, it->u.multiPush.pieceAngle );
+            mPieceManager.insert( it->u.multiPush.pieceType, p, it->u.multiPush.pieceAngle, it->u.multiPush.previousPushedId );
         }
             break;
 

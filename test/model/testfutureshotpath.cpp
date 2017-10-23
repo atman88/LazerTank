@@ -5,6 +5,7 @@
 #include "controller/movecontroller.h"
 #include "model/board.h"
 #include "model/tank.h"
+#include "model/board.h"
 
 using namespace std;
 
@@ -94,4 +95,41 @@ void TestMain::testFutureMultiShotThruTank()
     QVERIFY( it != mRegistry.getGame().getDeltaPieces()->end() );
     cout << "type=" << (*it)->getType() << endl;
     QVERIFY( (*it)->getType() == TILE_FUTURE_INSERT );
+}
+
+void TestMain::testFutureShotPushId()
+{
+    class TestGame : public Game
+    {
+    public:
+        void enableFuture()
+        {
+            mFutureDelta.enable();
+        }
+    };
+
+    TestGame* game = new TestGame();
+    mRegistry.injectGame( game );
+    initGame(
+      "[T>.M....\n" );
+    MoveController& moveController = mRegistry.getMoveController();
+    game->enableFuture();
+
+    const PieceSet& boardPieces = mRegistry.getGame().getBoard(true)->getPieceManager().getPieces();
+
+    QCOMPARE( (*boardPieces.begin())->getPushedId(), 0 );
+
+    moveController.fire(2);
+    QCOMPARE( (*boardPieces.begin())->getPushedId(), 2 );
+
+    moveController.move(90);
+    moveController.fire(2);
+    QCOMPARE( (*boardPieces.begin())->getPushedId(), 4 );
+
+    moveController.undoLastMove();
+    QCOMPARE( (*boardPieces.begin())->getPushedId(), 2 );
+
+    moveController.move(90);
+    moveController.fire(2);
+    QCOMPARE( (*boardPieces.begin())->getPushedId(), 4 );
 }

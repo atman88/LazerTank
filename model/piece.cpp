@@ -37,6 +37,11 @@ int MovePiece::getShotCount() const
     return mShotCount;
 }
 
+int MovePiece::getPreviousPushedId() const
+{
+    return mPreviousPushedId;
+}
+
 bool MovePiece::setShotCount( int count )
 {
     if ( count != mShotCount ) {

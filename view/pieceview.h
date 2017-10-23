@@ -92,6 +92,8 @@ public:
      */
     virtual int getShotPathUID() const = 0;
 
+    virtual int getPushedId() const = 0;
+
 protected:
     PieceType mType;
 };

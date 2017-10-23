@@ -99,6 +99,7 @@ private slots:
     void testFutureShotThruStationaryTank();
     void testFutureShotThruMasterTank();
     void testFutureMultiShotThruTank();
+    void testFutureShotPushId();
 
     void testRecorderBitFields();
     void testRecorderRecordSize();

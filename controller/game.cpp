@@ -482,6 +482,7 @@ bool Game::canShootThru( ModelPoint point, int *angle, FutureChange *change, boo
                     change->u.multiPush.pieceAngle = hitPiece->getAngle();
                     change->u.multiPush.direction = *angle;
                     change->u.multiPush.count = 1;
+                    change->u.multiPush.previousPushedId = hitPiece->getPushedId();
                     if ( apply ) {
                         onFuturePush( hitPiece, *angle );
                     }
@@ -646,17 +647,7 @@ void Game::loadMasterBoard( int level )
 
 void Game::undoFuturePush( MovePiece* pusher )
 {
-    ModelPoint point = *pusher;
-    if ( getAdjacentPosition( pusher->getAngle(), &point ) ) {
-        PieceSetManager& pieceManager = mFutureBoard.getPieceManager();
-        Piece* pushee = pieceManager.pieceAt( point );
-        if ( pushee ) {
-            pieceManager.erase( pushee );
-        } else if ( pusher->getPushPieceType() == TILE && mFutureBoard.tileAt( point ) == TILE_SUNK ) {
-            mFutureBoard.setTileAt( WATER, point );
-        }
-        pieceManager.insert( pusher->getPushPieceType(), *pusher, pusher->getPushPieceAngle() );
-    }
+    mFutureBoard.revertPush( pusher );
 }
 
 void Game::onTankKilled()

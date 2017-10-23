@@ -30,6 +30,7 @@ typedef struct {
     int pieceAngle;
     int direction;
     int count;
+    int previousPushedId;
 } FutureChangeMultiPush;
 
 /**

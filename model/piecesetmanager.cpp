@@ -16,9 +16,9 @@ const PieceSet& PieceSetManager::getPieces() const
     return mPieces;
 }
 
-void PieceSetManager::insert(PieceType type, ModelPoint point, int angle )
+void PieceSetManager::insert( PieceType type, ModelPoint point, int angle, int pushedId )
 {
-    mPieces.insert( new SimplePiece( type, point, angle ) );
+    mPieces.insert( pushedId ? (new PushedPiece( type, point, angle, pushedId)) : (new SimplePiece( type, point, angle )) );
     emit insertedAt( point );
 }
 

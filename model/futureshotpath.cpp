@@ -143,6 +143,7 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
                   && curChange.changeType == PIECE_PUSHED
                   && previousChange->point.equals( leadVector ) ) {
                     curChange.u.multiPush.count += previousChange->u.multiPush.count;
+                    curChange.u.multiPush.previousPushedId = previousChange->u.multiPush.previousPushedId;
                     path.mChanges.erase( previousChange );
                 }
 

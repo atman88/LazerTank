@@ -24,7 +24,7 @@ public:
     /**
      * @brief Creates a new piece from the given values and adds it to this set
      */
-    void insert( PieceType type, ModelPoint point, int angle = 0 );
+    void insert( PieceType type, ModelPoint point, int angle = 0, int pushedId = 0 );
 
     /**
      * @brief Creates a copy of the given piece and adds it to this set
