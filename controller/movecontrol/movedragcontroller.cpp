@@ -16,8 +16,8 @@ void MoveDragController::init( GameRegistry* registry )
 {
     MoveBaseController::init( registry );
     PathFinderController& controller = registry->getPathFinderController();
-    QObject::connect( &controller, &PathFinderController::pathFound,  this, &MoveDragController::onPathFound  );
-    QObject::connect( &controller, &PathFinderController::testResult, this, &MoveDragController::onTestResult );
+    QObject::connect( &controller, &PathFinderController::pathFound,  this, &MoveDragController::onPathFound,  Qt::DirectConnection );
+    QObject::connect( &controller, &PathFinderController::testResult, this, &MoveDragController::onTestResult, Qt::DirectConnection );
     mTileDragTestResult.setParent(this);
 }
 
