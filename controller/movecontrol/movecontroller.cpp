@@ -103,7 +103,6 @@ void MoveController::render( Piece* pos, const QRect* rect, BoardRenderer& rende
         PieceSet::iterator it = set->lower_bound( pos );
         painter->setPen( Qt::blue );
         renderer.renderListIn( it, set->end(), rect, painter );
-
         painter->setPen( savePen );
 
         if ( getDragState() != Inactive && mDragMoves.size() ) {

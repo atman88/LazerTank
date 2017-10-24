@@ -50,6 +50,7 @@ void Game::init( GameRegistry* registry )
     QObject::connect( &shotAggregate, &AnimationStateAggregator::finished, this, &Game::sightCannons, Qt::DirectConnection );
 
     mFutureDelta.init( &mBoard, &mFutureBoard );
+    QObject::connect( &moveController, &MoveController::invalidatePushIdDelineation, &mFutureDelta.getPieceManager(), &PieceSetManager::invalidatePushIdDelineation, Qt::DirectConnection );
 
     QObject::connect( &mBoard, &Board::tileChangedAt, this, &Game::onBoardTileChanged, Qt::DirectConnection );
     QObject::connect( &mBoard, &Board::boardLoading,  this, &Game::onBoardLoading,     Qt::DirectConnection );
@@ -613,18 +614,15 @@ void Game::onFuturePush( Piece* pushPiece, int direction )
 
     // copy values before pushPiece likely deleted:
     ModelPoint point = *pushPiece;
-    PieceType type   = pushPiece->getType();
-    int pieceAngle   = pushPiece->getAngle();
-
-    if ( !mFutureBoard.getPieceManager().erase( pushPiece ) ) {
-        std::cout << "*** failed to erase future pushPiece at " << point.mCol << "," << point.mRow << std::endl;
-    }
 
     if ( !getAdjacentPosition( direction, &point ) ) {
         std::cout << "*** failed to get future pushPiece position for " << direction << "/" << point.mCol << "," << point.mRow << std::endl;
         return;
     }
-    mFutureBoard.applyPushResult( type, point, pieceAngle );
+    mFutureBoard.applyPushResult( pushPiece->getType(), point, pushPiece->getAngle() );
+    if ( !mFutureBoard.getPieceManager().erase( pushPiece ) ) {
+        std::cout << "*** failed to erase future pushPiece at " << point.mCol << "," << point.mRow << std::endl;
+    }
 }
 
 const PieceSet* Game::getDeltaPieces()

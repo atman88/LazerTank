@@ -42,6 +42,11 @@ void Board::initPiece( PieceType type, int col, int row, int angle )
     mTiles[row*BOARD_MAX_HEIGHT + col] = DIRT;
 }
 
+int Board::getLastPushId() const
+{
+    return mLastPushId;
+}
+
 const ModelVector& Board::getTankStartVector() const
 {
     return mTankWayPoint;

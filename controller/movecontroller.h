@@ -239,6 +239,12 @@ public:
      */
     void setFocus( PieceType what ) override;
 
+    /**
+     * @brief Get the push id boundary
+     * @return The push id below the minimum value used for dragging, or -1 if dragging is not active
+     */
+    int getPushIdDelineation() const;
+
 public slots:
     /**
      * @brief Fire the tank's laser
@@ -257,6 +263,12 @@ signals:
      * @param focusAngle A 90 degree angle value or -1 if nothing selected
      */
     void tileDragFocusChanged( int focusAngle );
+
+    /**
+     * @brief Notify that push pieces whose id is greater than delineation have changed
+     * @param delineation pushId watermark value
+     */
+    void invalidatePushIdDelineation( int delineation );
 
 public slots:
     /**
@@ -283,6 +295,7 @@ protected:
 private:
     void setDragState( DragState state );
     bool setTileDragFocusAngle( int angle );
+    int getLastUsedPushId() const;
 
     DragState mDragState;
     QPoint mPreviousCoord;
@@ -290,6 +303,7 @@ private:
     TileDragTestResult mTileDragTestResult;
     int mTileDragFocusAngle;
     unsigned mTileDragAngleMask;
+    int mMinPushedId;
     bool mChanged;
 };
 

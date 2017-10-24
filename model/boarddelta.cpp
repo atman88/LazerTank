@@ -65,25 +65,25 @@ void BoardDelta::onChangeAt( ModelPoint point )
                 mPieceManager.eraseAt( point );
             } else {
                 // No pieces, but tiles differ; indicate an erase:
-                mPieceManager.setAt( TILE_FUTURE_ERASE, point );
+                mPieceManager.setAt( TILE_FUTURE_ERASE, point, 0, mFutureBoard->getLastPushId() );
             }
         } else {
             // master=no future=yes; indicate an insert:
-            mPieceManager.setAt( TILE_FUTURE_INSERT, point );
+            mPieceManager.setAt( TILE_FUTURE_INSERT, point, 0, futurePiece->getPushedId() );
         }
     } else if ( !futurePiece ) {
         // master=yes future=no; indicate an erase:
-        mPieceManager.setAt( TILE_FUTURE_ERASE, point );
+        mPieceManager.setAt( TILE_FUTURE_ERASE, point, 0, mFutureBoard->getLastPushId() );
     } else {
         if ( masterPiece->getPushedId() != futurePiece->getPushedId() ) {
             // tile pushed to this point in the future
-            mPieceManager.setAt( TILE_FUTURE_INSERT, point );
+            mPieceManager.setAt( TILE_FUTURE_INSERT, point, 0, futurePiece->getPushedId() );
         } else if ( mMasterBoard->tileAt(point) == mFutureBoard->tileAt(point) ) {
             // No notable differences; Remove any existing delta:
             mPieceManager.eraseAt( point );
         } else {
             // tiles differ; indicate an erase:
-            mPieceManager.setAt( TILE_FUTURE_ERASE, point );
+            mPieceManager.setAt( TILE_FUTURE_ERASE, point, 0, futurePiece->getPushedId() );
         }
     }
 }

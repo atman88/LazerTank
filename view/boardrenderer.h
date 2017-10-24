@@ -9,9 +9,10 @@ QT_FORWARD_DECLARE_CLASS(QRect)
 QT_FORWARD_DECLARE_CLASS(QPainter)
 
 class Board;
+class GameRegistry;
 
 /**
- * @brief A light-weight class for rendering boards for a specific tile size
+ * @brief A light-weight helper class for rendering boards for a specific tile size
  */
 class BoardRenderer
 {
@@ -74,13 +75,24 @@ public:
      */
     void renderListIn( PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter );
 
+    void renderMoves( const QRect* rect, GameRegistry* registry , QPainter *painter );
+
     /**
      * @brief A point value used to denote null. The value is not visible in the game's coordinate space
      */
     static const QPoint NullPoint;
 
+    /**
+     * @brief Sets a watermark whereby pieces whose pushedId is greater than the given value are painted using an
+     * alternate color
+     * @param pushIdDelineation If positive, push pieces whose pushedId is at or below this value are rendered in the
+     * alternate color. A negative value disables color selection.
+     */
+    void setPushIdDelineation( int pushIdDelineation );
+
 private:
     int mTileSize;
+    int mPushIdDelineation;
 };
 
 #endif // BOARDRENDERER_H

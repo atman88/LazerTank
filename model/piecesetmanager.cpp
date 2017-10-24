@@ -69,11 +69,11 @@ bool PieceSetManager::eraseAt( ModelPoint point )
     return erase( &pos );
 }
 
-void PieceSetManager::setAt(PieceType type, ModelPoint point, int angle )
+void PieceSetManager::setAt( PieceType type, ModelPoint point, int angle, int pushedId )
 {
-    bool changed = false;
-
     if ( Piece* piece = pieceAt( point ) ) {
+        bool changed = false;
+
         if ( piece->getType() != type ) {
             piece->setType( type );
             changed = true;
@@ -82,17 +82,16 @@ void PieceSetManager::setAt(PieceType type, ModelPoint point, int angle )
             piece->setAngle( angle );
             changed = true;
         }
-    } else {
-        insert( type, point, angle );
-        changed = true;
-    }
 
-    if ( changed ) {
-        emit changedAt( point );
+        if ( changed ) {
+            emit changedAt( point );
+        }
+    } else {
+        insert( type, point, angle, pushedId );
     }
 }
 
-void PieceSetManager::reset(const PieceSetManager* source)
+void PieceSetManager::reset( const PieceSetManager* source )
 {
     while( !mPieces.empty() ) {
         PieceSet::iterator it = mPieces.end();
@@ -115,3 +114,13 @@ int PieceSetManager::size() const
 {
     return mPieces.size();
 }
+
+void PieceSetManager::invalidatePushIdDelineation( int delineation )
+{
+    for( auto it : mPieces ) {
+        if ( it->getPushedId() > delineation ) {
+            emit changedAt( *it );
+        }
+    }
+}
+

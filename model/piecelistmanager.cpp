@@ -88,7 +88,7 @@ Piece* PieceListManager::append( const Piece* source )
     if ( const MovePiece* move = dynamic_cast<const MovePiece*>(source) ) {
         return addInternal( new MovePiece(move) );
     }
-    return addInternal( new SimplePiece(source) );
+    return addInternal( source->getPushedId() > 0 ? (new PushedPiece(source)) : (new SimplePiece(source)) );
 }
 
 void PieceListManager::append( const PieceList& source )
