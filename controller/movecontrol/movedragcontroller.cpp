@@ -141,11 +141,13 @@ void MoveDragController::setDragState( DragState state )
         } else if ( state == Inactive ) {
             mTileDragFocusAngle = -1;
             mTileDragAngleMask = 0;
-            if ( mMinPushedId >= 0 && getLastUsedPushId() > mMinPushedId ) {
-                // invalidate deltas:
-                emit invalidatePushIdDelineation( mMinPushedId );
-            }
+
+            int lastMinPushedId = mMinPushedId;
             mMinPushedId = -1;
+            if ( lastMinPushedId >= 0 && getLastUsedPushId() > mMinPushedId ) {
+                // invalidate deltas:
+                emit invalidatePushIdDelineation( lastMinPushedId );
+            }
 
             if ( mDragMoves.size() ) {
                 for( auto it : mDragMoves.getList() ) {

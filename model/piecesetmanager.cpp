@@ -24,7 +24,7 @@ void PieceSetManager::insert( PieceType type, ModelPoint point, int angle, int p
 
 void PieceSetManager::insert( Piece* piece )
 {
-    insert( piece->getType(), *piece, piece->getAngle() );
+    insert( piece->getType(), *piece, piece->getAngle(), piece->getPushedId() );
 }
 
 PieceType PieceSetManager::typeAt( ModelPoint point )

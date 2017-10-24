@@ -97,26 +97,24 @@ void TestMain::testFutureMultiShotThruTank()
     QVERIFY( (*it)->getType() == TILE_FUTURE_INSERT );
 }
 
+class MyTestGame : public Game
+{
+public:
+    void enableFuture()
+    {
+        mFutureDelta.enable();
+    }
+};
+
 void TestMain::testFutureShotPushId()
 {
-    class TestGame : public Game
-    {
-    public:
-        void enableFuture()
-        {
-            mFutureDelta.enable();
-        }
-    };
-
-    TestGame* game = new TestGame();
+    MyTestGame* game = new MyTestGame();
     mRegistry.injectGame( game );
     initGame(
       "[T>.M....\n" );
     MoveController& moveController = mRegistry.getMoveController();
     game->enableFuture();
-
     const PieceSet& boardPieces = mRegistry.getGame().getBoard(true)->getPieceManager().getPieces();
-
     QCOMPARE( (*boardPieces.begin())->getPushedId(), 0 );
 
     moveController.fire(2);
@@ -132,4 +130,21 @@ void TestMain::testFutureShotPushId()
     moveController.move(90);
     moveController.fire(2);
     QCOMPARE( (*boardPieces.begin())->getPushedId(), 4 );
+}
+
+void TestMain::testFutureShotPushIdWater()
+{
+    MyTestGame* game = new MyTestGame();
+    mRegistry.injectGame( game );
+    initGame(
+      "[T>.M..w\n" );
+    MoveController& moveController = mRegistry.getMoveController();
+    game->enableFuture();
+    const PieceSet& boardPieces = mRegistry.getGame().getBoard(true)->getPieceManager().getPieces();
+    QCOMPARE( (*boardPieces.begin())->getPushedId(), 0 );
+
+    moveController.move(90);
+    moveController.fire(3);
+    moveController.fire(2);
+    QCOMPARE( (*boardPieces.begin())->getPushedId(), 2 );
 }

@@ -110,12 +110,12 @@ void MoveBaseController::fire( int count )
 void MoveBaseController::undoLastMoveInternal( PieceListManager& moves )
 {
     if ( Piece* piece = moves.getBack() ) {
+        mFutureShots.removePath( piece, true );
         if ( piece->hasPush() ) {
             if ( GameRegistry* registry = getRegistry(this) ) {
                 registry->getGame().undoFuturePush( dynamic_cast<MovePiece*>(piece) );
             }
         }
-        mFutureShots.removePath( piece, true );
         moves.eraseBack();
     }
 }

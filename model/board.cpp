@@ -204,19 +204,14 @@ void Board::setTileAt( TileType id, ModelPoint point )
     }
 }
 
-bool Board::applyPushResult( PieceType mType, ModelPoint point, int pieceAngle )
+void Board::applyPushResult( PieceType mType, ModelPoint point, int pieceAngle )
 {
+    ++mLastPushId;
     if ( tileAt( point ) != WATER ) {
-        mPieceManager.insert( mType, point, pieceAngle, ++mLastPushId );
-        return true;
-    }
-
-    if ( mType == TILE ) {
+        mPieceManager.insert( mType, point, pieceAngle, mLastPushId );
+    } else if ( mType == TILE ) {
         setTileAt( TILE_SUNK, point );
-        return true;
     }
-
-    return false;
 }
 
 void Board::revertPush( MovePiece* pusher )
@@ -226,15 +221,14 @@ void Board::revertPush( MovePiece* pusher )
         Piece* pushee = mPieceManager.pieceAt( point );
         int prevId = pusher->getPreviousPushedId();
         if ( pushee ) {
-            if ( pushee->getPushedId() == mLastPushId ) {
-                --mLastPushId;
-            } else {
+            if ( pushee->getPushedId() != mLastPushId ) {
                 std::cout << "** revertPush: pushee out of order " << pushee->getPushedId() << " != " << mLastPushId << std::endl;
             }
             mPieceManager.erase( pushee );
         } else if ( pusher->getPushPieceType() == TILE && tileAt( point ) == TILE_SUNK ) {
             setTileAt( WATER, point );
         }
+        --mLastPushId;
         mPieceManager.insert( pusher->getPushPieceType(), *pusher, pusher->getPushPieceAngle(), prevId );
     } else {
         std::cout << "** revertPush: failed to get adjacent pos for " << point.mCol << "," << point.mRow << std::endl;
@@ -272,11 +266,8 @@ void Board::undoChanges( std::vector<FutureChange> changes )
             ModelPoint p = it->point;
             if ( Piece* pushee = mPieceManager.pieceAt( it->point ) ) {
                 if ( pushee->getPushedId() == mLastPushId ) {
-                    mLastPushId -= it->u.multiPush.count;
                     if ( it->u.multiPush.previousPushedId && it->u.multiPush.previousPushedId != mLastPushId ) {
                         std::cout << "** undoChanges: change out of order " << it->u.multiPush.previousPushedId << " != " << mLastPushId << std::endl;
-                    } else {
-                        std::cout << "undoChanges: mlastChangeId=" << mLastPushId << std::endl;
                     }
                 } else {
                     std::cout << "** undoChanges: pushee out of order " << pushee->getPushedId() << " != " << mLastPushId << std::endl;
@@ -291,6 +282,7 @@ void Board::undoChanges( std::vector<FutureChange> changes )
                     std::cout << "** undo PIECE_PUSHED didn't erase @ non-sunk (" << p.mCol << "," << p.mRow << ")" << std::endl;
                 }
             }
+            mLastPushId -= it->u.multiPush.count;
 
             for( int i = it->u.multiPush.count; --i >= 0; ) {
                 if ( !getAdjacentPosition( reverseDirection, &p ) ) {
