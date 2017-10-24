@@ -3,12 +3,15 @@
 #include <QPainter>
 
 #include "boardrenderer.h"
+#include "controller/gameregistry.h"
+#include "controller/game.h"
+#include "controller/movecontroller.h"
 #include "model/board.h"
 #include "util/imageutils.h"
 
 const QPoint BoardRenderer::NullPoint = QPoint(-1,-1);
 
-BoardRenderer::BoardRenderer( int tileSize ) : mTileSize(tileSize)
+BoardRenderer::BoardRenderer( int tileSize ) : mTileSize(tileSize), mPushIdDelineation(-1)
 {
 }
 
@@ -128,14 +131,44 @@ void BoardRenderer::renderPiece( PieceType type, QRect& square, int angle, QPain
     renderRotatedPixmap( pm, square, angle, painter );
 }
 
-void BoardRenderer::renderListIn( PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter)
+void BoardRenderer::renderListIn( PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter )
 {
-    while( iterator != end ) {
-        if ( !(*iterator)->render( dirty, *this, painter ) ) {
-            break;
+    if ( mPushIdDelineation < 0 ) {
+        while( iterator != end ) {
+            if ( !(*iterator)->render( dirty, *this, painter ) ) {
+                break;
+            }
+            ++iterator;
         }
-        ++iterator;
+    } else {
+        bool usingAlternateColor = false;
+        QPen savePen = painter->pen();
+
+        while( iterator != end ) {
+            if ( (*iterator)->getPushedId() <= mPushIdDelineation ) {
+                if ( !usingAlternateColor ) {
+                    painter->setPen( Qt::blue );
+                    usingAlternateColor = true;
+                }
+            } else if ( usingAlternateColor ) {
+                painter->setPen( savePen );
+                usingAlternateColor = false;
+            }
+            if ( !(*iterator)->render( dirty, *this, painter ) ) {
+                break;
+            }
+            ++iterator;
+        }
+
+        if ( usingAlternateColor ) {
+            painter->setPen( savePen );
+        }
     }
+}
+
+void BoardRenderer::setPushIdDelineation( int pushIdDelineation )
+{
+    mPushIdDelineation = pushIdDelineation;
 }
 
 void BoardRenderer::renderInitialTank( Board* board, QPainter* painter )
@@ -149,4 +182,24 @@ QRect* BoardRenderer::getBounds( const ModelPoint& forPoint, QRect* rect ) const
 {
     rect->setRect( forPoint.mCol*mTileSize, forPoint.mRow*mTileSize, mTileSize, mTileSize );
     return rect;
+}
+
+void BoardRenderer::renderMoves( const QRect *rect, GameRegistry* registry, QPainter* painter )
+{
+    MoveController& moveController = registry->getMoveController();
+    SimplePiece pos(MOVE, rect->left()/mTileSize, rect->top()/mTileSize);
+    moveController.render( &pos, rect, *this, painter );
+    if ( const PieceSet* deltas = (moveController.replaying() ? 0 : registry->getGame().getDeltaPieces()) ) {
+        int pushIdDelineation = moveController.getPushIdDelineation();
+        if ( pushIdDelineation < 0 ) {
+            QPen savePen( painter->pen() );
+            painter->setPen( Qt::blue );
+            renderListIn( deltas->lower_bound( &pos ), deltas->end(), rect, painter );
+            painter->setPen( savePen );
+        } else {
+            setPushIdDelineation( pushIdDelineation );
+            renderListIn( deltas->lower_bound( &pos ), deltas->end(), rect, painter );
+            setPushIdDelineation( -1 );
+        }
+    }
 }

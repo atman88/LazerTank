@@ -63,8 +63,9 @@ public:
      * @param point The target square
      * @param type The type to set or add
      * @param angle The piece rotation to set or add
+     * @param pushedId If non-zero, associate the given pushedId
      */
-    void setAt( PieceType type, ModelPoint point, int angle = 0 );
+    void setAt( PieceType type, ModelPoint point, int angle = 0, int pushedId = 0 );
 
     /**
      * @brief Re-initialize the set
@@ -77,6 +78,9 @@ public:
      * @return the number of pieces
      */
     int size() const;
+
+public slots:
+    void invalidatePushIdDelineation( int delineation );
 
 private:
     PieceSet mPieces;

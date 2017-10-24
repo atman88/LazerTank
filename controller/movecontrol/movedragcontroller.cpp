@@ -8,7 +8,7 @@
 #include "model/tank.h"
 
 MoveDragController::MoveDragController( QObject *parent ) : MoveBaseController(parent), mDragState(Inactive),
-  mTileDragFocusAngle(-1), mTileDragAngleMask(0), mChanged(false)
+  mTileDragFocusAngle(-1), mTileDragAngleMask(0), mMinPushedId(-1), mChanged(false)
 {
 }
 
@@ -111,6 +111,11 @@ void MoveDragController::setFocus( PieceType what )
     MoveBaseController::setFocus( what );
 }
 
+int MoveDragController::getPushIdDelineation() const
+{
+    return mMinPushedId;
+}
+
 void MoveDragController::fire( int count )
 {
     if ( mDragState != Inactive ) {
@@ -120,12 +125,27 @@ void MoveDragController::fire( int count )
     }
 }
 
+int MoveDragController::getLastUsedPushId() const
+{
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        return registry->getGame().getBoard(true)->getLastPushId();
+    }
+    return 0;
+}
+
 void MoveDragController::setDragState( DragState state )
 {
     if ( mDragState != state ) {
-        if ( state == Inactive ) {
+        if ( mDragState == Inactive ) {
+            mMinPushedId = getLastUsedPushId();
+        } else if ( state == Inactive ) {
             mTileDragFocusAngle = -1;
             mTileDragAngleMask = 0;
+            if ( mMinPushedId >= 0 && getLastUsedPushId() > mMinPushedId ) {
+                // invalidate deltas:
+                emit invalidatePushIdDelineation( mMinPushedId );
+            }
+            mMinPushedId = -1;
 
             if ( mDragMoves.size() ) {
                 for( auto it : mDragMoves.getList() ) {
@@ -140,22 +160,8 @@ void MoveDragController::setDragState( DragState state )
                 }
 
                 if ( mFocus == TANK ) {
-//                if ( GameRegistry* registry = getRegistry(this) ) {
-//                    if ( !criteria->getStartPoint().equals( registry->getTank().getPoint() ) ) {
-//                        std::cout << "* applyPathUsingCriteria: ingoring stale path" << std::endl;
-//                        return false;
-//                    }
-//                    registry->getGame().endMoveDeltaTracking();
-//                } else {
-//                    std::cout << "*** applyPathUsingCriteria: registry error" << std::endl;
-//                    return false;
-//                }
                     mMoves.reset( &mDragMoves, false );
                 } else {
-//                if ( !criteria->getStartPoint().equals( getFocusVector() ) ) {
-//                    std::cout << "* applyPathUsingCriteria: stale start point" << std::endl;
-//                    return false;
-//                }
                     mMoves.replaceBack( MOVE );
                     mMoves.append( &mDragMoves, false );
                 }

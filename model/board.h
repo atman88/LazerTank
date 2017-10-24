@@ -133,6 +133,8 @@ public:
      */
     void undoChanges( std::vector<FutureChange> changes );
 
+    int getLastPushId() const;
+
 signals:
     /**
      * @brief Notifies that the board is being loaded in the background

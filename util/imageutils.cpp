@@ -9,24 +9,24 @@
 const ResourcePixmap* getPixmap( unsigned type )
 {
     static std::map<int,ResourcePixmap> nameMap = {
-        { STONE,             { "wall-stone"         } },
-        { DIRT,              { "dirt"               } },
-        { TILE_SUNK,         { "tile-sunk"          } },
-        { FLAG,              { "flag"               } },
-        { TILE,              { "tile-metal"         } },
-        { MOVE,              { "c&move-indicator"   } },
-        { MOVE_HIGHLIGHT,    { "c&move-highlight"   } },
-        { STONE_MIRROR,      { "wall-mirror"        } },
-        { STONE_SLIT,        { "stone-slit"         } },
-        { WOOD,              { "wood"               } },
-        { DAMAGE,            { "damage"             } },
-        { TILE_MIRROR,       { "tile-mirror"        } },
-        { CANNON,            { "cannon"             } },
-        { TANK,              { "tank"               } },
-        { TILE_FUTURE_ERASE, { "tile-future-erase"  } },
-        { TILE_FUTURE_INSERT,{ "tile-future-insert" } },
-        { TANK_FAST,         { "tank-fast"          } },
-        { COMPLETE_CHECKMARK,{"complete-checkmark"  } }
+        { STONE,             { "wall-stone"          } },
+        { DIRT,              { "dirt"                } },
+        { TILE_SUNK,         { "tile-sunk"           } },
+        { FLAG,              { "flag"                } },
+        { TILE,              { "tile-metal"          } },
+        { MOVE,              { "c&move-indicator"    } },
+        { MOVE_HIGHLIGHT,    { "c&move-highlight"    } },
+        { STONE_MIRROR,      { "wall-mirror"         } },
+        { STONE_SLIT,        { "stone-slit"          } },
+        { WOOD,              { "wood"                } },
+        { DAMAGE,            { "damage"              } },
+        { TILE_MIRROR,       { "tile-mirror"         } },
+        { CANNON,            { "cannon"              } },
+        { TANK,              { "tank"                } },
+        { TILE_FUTURE_ERASE, { "c&tile-future-erase" } },
+        { TILE_FUTURE_INSERT,{ "c&tile-future-insert"} },
+        { TANK_FAST,         { "tank-fast"           } },
+        { COMPLETE_CHECKMARK,{"complete-checkmark"   } }
     };
     static ResourcePixmap* nameArray[PixmapTypeUpperBound] = { 0 };
     static ResourcePixmap NullPixmap( "null" );

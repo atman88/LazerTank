@@ -126,7 +126,7 @@ public:
 class PushedPiece : public SimplePiece
 {
 public:
-    PushedPiece( Piece* piece, int pushedId = 0 ) : SimplePiece(piece), mId(pushedId)
+    PushedPiece( const Piece* piece, int pushedId = 0 ) : SimplePiece(piece), mId(pushedId ? pushedId : piece->getPushedId())
     {
     }
 
@@ -187,6 +187,10 @@ public:
 
     int getShotCount() const override;
 
+    /**
+     * @brief Get the pushId that the pushed piece had before this push was applied
+     * @return
+     */
     int getPreviousPushedId() const override;
 
     /**
