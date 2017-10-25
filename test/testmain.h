@@ -71,6 +71,8 @@ public:
     TestRegistry* getRegistry();
 
 private slots:
+    void testFutureShotPushIdWater();
+
     void testMeasureShot();
 
     void testFutureSelect();

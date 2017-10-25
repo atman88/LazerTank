@@ -126,22 +126,22 @@ public:
 class PushedPiece : public SimplePiece
 {
 public:
-    PushedPiece( const Piece* piece, int pushedId = 0 ) : SimplePiece(piece), mId(pushedId ? pushedId : piece->getPushedId())
+    PushedPiece( const Piece* piece, int pushedId = 0 ) : SimplePiece(piece), mPushedId(pushedId ? pushedId : piece->getPushedId())
     {
     }
 
     PushedPiece( PieceType type, ModelPoint point, int angle = 0,  int pushedId = 0 )
-      : SimplePiece( type, point, angle ), mId(pushedId)
+      : SimplePiece( type, point, angle ), mPushedId(pushedId)
     {
     }
 
     int getPushedId() const override
     {
-        return mId;
+        return mPushedId;
     }
 
 private:
-    int mId;
+    int mPushedId;
 };
 
 /**

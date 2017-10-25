@@ -16,8 +16,8 @@ void MoveDragController::init( GameRegistry* registry )
 {
     MoveBaseController::init( registry );
     PathFinderController& controller = registry->getPathFinderController();
-    QObject::connect( &controller, &PathFinderController::pathFound,  this, &MoveDragController::onPathFound  );
-    QObject::connect( &controller, &PathFinderController::testResult, this, &MoveDragController::onTestResult );
+    QObject::connect( &controller, &PathFinderController::pathFound,  this, &MoveDragController::onPathFound,  Qt::DirectConnection );
+    QObject::connect( &controller, &PathFinderController::testResult, this, &MoveDragController::onTestResult, Qt::DirectConnection );
     mTileDragTestResult.setParent(this);
 }
 
@@ -141,11 +141,13 @@ void MoveDragController::setDragState( DragState state )
         } else if ( state == Inactive ) {
             mTileDragFocusAngle = -1;
             mTileDragAngleMask = 0;
-            if ( mMinPushedId >= 0 && getLastUsedPushId() > mMinPushedId ) {
-                // invalidate deltas:
-                emit invalidatePushIdDelineation( mMinPushedId );
-            }
+
+            int lastMinPushedId = mMinPushedId;
             mMinPushedId = -1;
+            if ( lastMinPushedId >= 0 && getLastUsedPushId() > mMinPushedId ) {
+                // invalidate deltas:
+                emit invalidatePushIdDelineation( lastMinPushedId );
+            }
 
             if ( mDragMoves.size() ) {
                 for( auto it : mDragMoves.getList() ) {

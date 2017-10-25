@@ -80,9 +80,8 @@ public:
      * @param mType The type of piece being pushed
      * @param point The square that the piece is being pushed to
      * @param pieceAngle The piece's current rotation
-     * @return true if the push resulted in a change to the board
      */
-    bool applyPushResult( PieceType mType, ModelPoint point, int pieceAngle );
+    void applyPushResult( PieceType mType, ModelPoint point, int pieceAngle );
 
     void revertPush( MovePiece* pusher );
 

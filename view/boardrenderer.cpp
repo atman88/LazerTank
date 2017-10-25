@@ -189,17 +189,19 @@ void BoardRenderer::renderMoves( const QRect *rect, GameRegistry* registry, QPai
     MoveController& moveController = registry->getMoveController();
     SimplePiece pos(MOVE, rect->left()/mTileSize, rect->top()/mTileSize);
     moveController.render( &pos, rect, *this, painter );
-    if ( const PieceSet* deltas = (moveController.replaying() ? 0 : registry->getGame().getDeltaPieces()) ) {
-        int pushIdDelineation = moveController.getPushIdDelineation();
-        if ( pushIdDelineation < 0 ) {
-            QPen savePen( painter->pen() );
-            painter->setPen( Qt::blue );
-            renderListIn( deltas->lower_bound( &pos ), deltas->end(), rect, painter );
-            painter->setPen( savePen );
-        } else {
-            setPushIdDelineation( pushIdDelineation );
-            renderListIn( deltas->lower_bound( &pos ), deltas->end(), rect, painter );
-            setPushIdDelineation( -1 );
+    if ( !moveController.replaying() ) {
+        if ( const PieceSet* deltas = registry->getGame().getDeltaPieces() ) {
+            int pushIdDelineation = moveController.getPushIdDelineation();
+            if ( pushIdDelineation < 0 ) {
+                QPen savePen( painter->pen() );
+                painter->setPen( Qt::blue );
+                renderListIn( deltas->lower_bound( &pos ), deltas->end(), rect, painter );
+                painter->setPen( savePen );
+            } else {
+                setPushIdDelineation( pushIdDelineation );
+                renderListIn( deltas->lower_bound( &pos ), deltas->end(), rect, painter );
+                setPushIdDelineation( -1 );
+            }
         }
     }
 }
