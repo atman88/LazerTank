@@ -148,3 +148,43 @@ void TestMain::testFutureShotPushIdWater()
     moveController.fire(2);
     QCOMPARE( (*boardPieces.begin())->getPushedId(), 2 );
 }
+
+void TestMain::testFutureShot2PushIdWater()
+{
+    MyTestGame* game = new MyTestGame();
+    mRegistry.injectGame( game );
+    initGame(
+      "[T>.M..wM.\n" );
+    MoveController& moveController = mRegistry.getMoveController();
+    game->enableFuture();
+    PieceSetManager& pieceManager = mRegistry.getGame().getBoard(true)->getPieceManager();
+
+    moveController.move(90);
+    moveController.fire(4);
+    QCOMPARE( pieceManager.pieceAt( ModelPoint(7,0) )->getPushedId(), 4 );
+    moveController.fire(3);
+    QCOMPARE( pieceManager.pieceAt( ModelPoint(6,0) )->getPushedId(), 0 );
+    moveController.fire(0);
+    QCOMPARE( mRegistry.getGame().getDeltaPieces()->size(), 0U );
+}
+
+void TestMain::testFutureShotTankKill()
+{
+    MyTestGame* game = new MyTestGame();
+    mRegistry.injectGame( game );
+    initGame(
+      "[S/ .  [\\S\n"
+      " .  <    .\n"
+      " . [S\\[/S\n"
+      "[T^ .   .\n" );
+    MoveController& moveController = mRegistry.getMoveController();
+    game->enableFuture();
+    const PieceSet& boardPieces = mRegistry.getGame().getBoard(true)->getPieceManager().getPieces();
+
+    moveController.move(0);
+    moveController.fire(2);
+    QCOMPARE( boardPieces.size(), 0U );
+
+    moveController.fire(1);
+    QCOMPARE( (*boardPieces.begin())->getPushedId(), 1 );
+}

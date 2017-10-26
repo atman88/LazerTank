@@ -20,6 +20,7 @@ typedef enum {
 typedef struct {
     PieceType pieceType;
     int pieceAngle;
+    int previousPushedId;
 } FutureChangePieceErase;
 
 /**

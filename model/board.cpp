@@ -258,18 +258,14 @@ void Board::undoChanges( std::vector<FutureChange> changes )
             break;
 
         case PIECE_ERASED:
-            mPieceManager.insert( it->u.erase.pieceType, it->point, it->u.erase.pieceAngle );
+            mPieceManager.insert( it->u.erase.pieceType, it->point, it->u.erase.pieceAngle, it->u.erase.previousPushedId );
             break;
 
         case PIECE_PUSHED:
         {   int reverseDirection = (it->u.multiPush.direction + 180) % 360;
             ModelPoint p = it->point;
             if ( Piece* pushee = mPieceManager.pieceAt( it->point ) ) {
-                if ( pushee->getPushedId() == mLastPushId ) {
-                    if ( it->u.multiPush.previousPushedId && it->u.multiPush.previousPushedId != mLastPushId ) {
-                        std::cout << "** undoChanges: change out of order " << it->u.multiPush.previousPushedId << " != " << mLastPushId << std::endl;
-                    }
-                } else {
+                if ( pushee->getPushedId() != mLastPushId ) {
                     std::cout << "** undoChanges: pushee out of order " << pushee->getPushedId() << " != " << mLastPushId << std::endl;
                 }
                 mPieceManager.erase( pushee );

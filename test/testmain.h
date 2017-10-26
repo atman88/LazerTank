@@ -71,8 +71,6 @@ public:
     TestRegistry* getRegistry();
 
 private slots:
-    void testFutureShotPushIdWater();
-
     void testMeasureShot();
 
     void testFutureSelect();
@@ -102,6 +100,9 @@ private slots:
     void testFutureShotThruMasterTank();
     void testFutureMultiShotThruTank();
     void testFutureShotPushId();
+    void testFutureShotPushIdWater();
+    void testFutureShot2PushIdWater();
+    void testFutureShotTankKill();
 
     void testRecorderBitFields();
     void testRecorderRecordSize();

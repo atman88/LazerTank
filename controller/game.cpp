@@ -456,6 +456,7 @@ bool Game::canShootThru( ModelPoint point, int *angle, FutureChange *change, boo
                         change->point = point;
                         change->u.erase.pieceType = CANNON;
                         change->u.erase.pieceAngle = pieceAngle;
+                        change->u.erase.previousPushedId = hitPiece->getPreviousPushedId();
                     }
                     if ( apply ) {
                         board->getPieceManager().eraseAt( point );
@@ -612,9 +613,7 @@ void Game::onFuturePush( Piece* pushPiece, int direction )
 {
     mFutureDelta.enable();
 
-    // copy values before pushPiece likely deleted:
     ModelPoint point = *pushPiece;
-
     if ( !getAdjacentPosition( direction, &point ) ) {
         std::cout << "*** failed to get future pushPiece position for " << direction << "/" << point.mCol << "," << point.mRow << std::endl;
         return;
