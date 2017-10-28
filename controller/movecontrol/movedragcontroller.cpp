@@ -39,6 +39,11 @@ void MoveDragController::dragStart( ModelPoint selectedPoint )
             Board* board = registry->getGame().getBoard(true);
             if ( Piece* piece = board->getPieceManager().pieceAt( selectedPoint ) ) {
                 if ( mTileDragTestCriteria.setTileDragCriteria( mFocus, piece, &mTileDragTestResult ) ) {
+#ifndef QT_NO_DEBUG
+                    if ( mDragState == Searching ) {
+                        std::cout << "dragStart: already searching" << std::endl;
+                    }
+#endif // QT_NO_DEBUG
                     setDragState( Searching );
                     registry->getPathFinderController().testCriteria( &mTileDragTestCriteria );
                 } else {
@@ -208,6 +213,14 @@ void MoveDragController::onPathFound( PieceListManager* path, PathSearchCriteria
     if ( mDragState == Inactive ) {
         applyPathUsingCriteria( path, criteria );
     } else {
+#ifndef QT_NO_DEBUG
+        if ( mDragState != Searching ) {
+            std::cout << "onPathFound: dragState=" << mDragState << std::endl;
+        }
+        if ( !criteria->getStartPoint().equals(getFocusVector()) ) {
+            std::cout << "onPathFound: start " << criteria->getStartCol() << "," << criteria->getStartRow() << " != focus" << std::endl;
+        }
+#endif // QT_NO_DEBUG
         mDragMoves.reset( path );
         mDragMoves.replaceBack( MOVE_HIGHLIGHT );
         if ( criteria->getCriteriaType() == PathSearchCriteria::TileDragTestCriteria ) {
@@ -285,6 +298,7 @@ void MoveDragController::onDragTo( QPoint coord )
         return;
 
     case Forbidden:
+    case ForbiddenTank:
     case DraggingTank:
         if ( p == focusVector ) {
             setDragState( DraggingTank );
@@ -333,7 +347,9 @@ void MoveDragController::onDragTo( QPoint coord )
                     }
                 }
             }
-            setDragState( Forbidden );
+            if ( mDragState == DraggingTank ) {
+                setDragState( ForbiddenTank );
+            }
         }
 
         // check for rotation change:
@@ -344,6 +360,7 @@ void MoveDragController::onDragTo( QPoint coord )
     }
         break;
 
+    case ForbiddenTile:
     case DraggingTile:
         if ( p.equals( mTileDragTestCriteria.getTargetPoint() ) ) {
             if ( GameRegistry* registry = getRegistry(this) ) {

@@ -606,6 +606,8 @@ void Game::onTankPushingInto( ModelPoint point, int fromAngle )
         } else {
             std::cout << "*** no adjacent for angle " << fromAngle << std::endl;
         }
+    } else {
+        std::cout << "*** onTankPushingInto: piece not found" << std::endl;
     }
 }
 

@@ -110,3 +110,34 @@ void TestMain::testGamePush()
     testFuturePushToward( 270, mRegistry );
     testFuturePushToward(   0, mRegistry );
 }
+
+void TestMain::testIsMasterBoard()
+{
+    class MyTestGame : public Game
+    {
+    public:
+        Board* getDeltaFutureBoard()
+        {
+            return mFutureDelta.getFutureBoard();
+        }
+
+        void enableFutureDelta()
+        {
+            mFutureDelta.enable();
+        }
+    };
+
+    MyTestGame* game = new MyTestGame();
+    mRegistry.injectGame( game );
+    initGame( "T\n" );
+    QVERIFY( game->isMasterBoard( game->getBoard()) );
+    QVERIFY( game->isMasterBoard(game->getBoard(false)) );
+    QVERIFY( game->isMasterBoard(game->getBoard(true )) );
+    QVERIFY( game->isMasterBoard(game->getDeltaFutureBoard()) == false );
+
+    game->enableFutureDelta();
+
+    QVERIFY( game->isMasterBoard(game->getBoard(false)) == true  );
+    QVERIFY( game->isMasterBoard(game->getBoard(true )) == false );
+    QVERIFY( game->isMasterBoard(game->getDeltaFutureBoard()) == false );
+}

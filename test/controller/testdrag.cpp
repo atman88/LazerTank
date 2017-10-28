@@ -43,7 +43,7 @@ void TestMain::testDragTank()
 
     // test off-board:
     moveController->onDragTo( ModelPoint(3,2).toViewCenterSquare() );
-    QCOMPARE( moveController->getDragState(), Forbidden );
+    QCOMPARE( moveController->getDragState(), ForbiddenTank );
     if ( ModelPoint* point = moveController->getDragMoves().getBack() ) {
         QVERIFY( mRegistry.getTank().getPoint().equals(*point) );
     }
@@ -59,7 +59,7 @@ void TestMain::testDragTank()
 
     // test drag over stone:
     moveController->onDragTo( ModelPoint(2,0).toViewCenterSquare() );
-    QCOMPARE( moveController->getDragState(), Forbidden );
+    QCOMPARE( moveController->getDragState(), ForbiddenTank );
     if ( ModelVector* vector = moveController->getDragMoves().getBack() ) {
         QVERIFY( ModelVector(2,1,0).equals( *vector ) );
     } else {

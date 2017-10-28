@@ -71,6 +71,8 @@ public:
     TestRegistry* getRegistry();
 
 private slots:
+    void testIsMasterBoard();
+
     void testMeasureShot();
 
     void testFutureSelect();

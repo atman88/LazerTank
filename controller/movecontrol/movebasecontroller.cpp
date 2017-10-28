@@ -175,6 +175,14 @@ void MoveBaseController::wakeup()
 
                     if ( move->hasPush() ) {
                         registry->getGame().onTankPushingInto( *move, move->getAngle() );
+#ifndef QT_NO_DEBUG
+                    } else {
+                        if ( GameRegistry* registry = getRegistry(this) ) {
+                            if ( registry->getGame().getBoard()->getPieceManager().pieceAt(*move) ) {
+                                std::cout << "doMove: moving over piece" << std::endl;
+                            }
+                        }
+#endif // QT_NO_DEBUG
                     }
 
                     if ( tank.doMove( *move ) && (hasRotation || move->hasPush()) ) {

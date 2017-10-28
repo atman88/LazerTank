@@ -163,7 +163,9 @@ typedef enum {
     Searching,
     DraggingTank,
     DraggingTile,
-    Forbidden
+    Forbidden,     // attempting to start dragging to an unreachable location
+    ForbiddenTank, // attempting to drag the tank to an illegal location
+    ForbiddenTile, // attempting to drag a tile to an illegal location
 } DragState;
 
 class MoveDragController : public MoveBaseController

@@ -667,6 +667,8 @@ void BoardWindow::setCursorDragState( DragState state )
         }
         break;
     case Forbidden:
+    case ForbiddenTank:
+    case ForbiddenTile:
         if ( !mForbiddenCursor ) {
 #ifdef Q_OS_WIN
             mForbiddenCursor = new QCursor( Qt::ForbiddenCursor );
