@@ -5,49 +5,68 @@
 </head>
 <H1>LazerTank</H1>
 <p>
-A brain-teaser capture the flag puzzle game
+<H3>A capture the flag puzzle game</H3>
 </p>
 <H2>Available Commands:</H2>
-<p>
-<H3>arrow keys - move</H3>
-move in the direction of the arrow key
 </p>
 <p>
-<H3>space bar - shoot</H3>
-shoot the tank's laser once
+<H3>Shoot - space bar</H3>
+Fire the tank's laser once, cummulatively
 </p>
 <p>
-<H3>numeric keys - shoot multiple times</H3>
-shoot the tank's laser the specified number of times
+<H3>Shoot multiple times - numeric keys</H3>
+Fire the tank's laser the specific number of times
 </p>
 <p>
-<H3>mouse left click - move to</H3>
-Moves the tank to the selected square if possible
+<H3>Move - arrow keys</H3>
+Drive the tank in the direction of the arrow key
+<p>
+<H3>Move to a specific square - mouse left click</H3>
+Move the tank to the mouse position. To succeed it must be possible for the tank to move
+to the square that the mouse is pointing to. The tank will find the shortest path to the
+given square
 </p>
 <p>
-<H3>mouse drag - move</H3>
-Define a path for the tank by moving the mouse while holding down the left mouse button
+<H3>Move along a specific path - mouse drag</H3>
+Dictate a path for the tank by moving the mouse while holding down the left mouse button
 </p>
 <p>
-<H3>c - Capture the flag</H3>
-Type a c to move the tank to the flag if a possible path exists
+<H3>Capture the flag - c</H3>
+Press c to move the tank to the flag. Works if the tank can find a possible path to it
 </p>
 <p>
-<H3>Ctrl - focus</H3>
-Switch focus from the last pending move to the tank.
-Entering commands while focused on the tank replaces any pending moves
+<H3>Pause - Ctrl</H3>
+Hold down the Ctrl key to pause. Focus switches from the last pending move to
+the tank so that by default, entering moves while paused replaces any outstanding moves.
+While paused, focus can be changed using the Home and End keys
 </p>
 <p>
-<H3>backspace - Erase</H3>
-Erase the last pending move. Ctrl-backspace erases all pending moves
+<H3>Undo - backspace</H3>
+Erase the last pending move. Ctrl-backspace erases all pending moves. This undoes pending
+tank movement - it does not undo completed tank moves. To undo completed moves, use
+<A href=#autoreplay>Auto Replay</A>
 </p>
 <p>
-<H3>Esc - Menu</H3>
-Open the menu
+<H3>Speed control - s</H3>
+Typing the s key toggles the tank's speed between high and low. The default is low.
+High speed is useful if/when you find yourself waiting for the tank to catch up. In low
+speed, the tank will make adjustments to it speed as the number of outstanding moves
+increases
+<p>
+<H3>Menu - Esc or right mouse click</H3>
+Open the menu. Using the right mouse click to open adds some additional context for the
+square under the mouse cursor
 </p>
 <p>
-<H3>mouse right click - Menu with context</H3>
-Open the menu with additional context for the selected square
+<H3>Select Level - Alt L</H3>
+Choose a level to open
+</p>
+<p>
+<H3 id="autoreplay">Auto Replay - Alt r</H3>
+Watch a replay of completed moves. Entering commands during replay (such as Esc) allows
+game play to resume from the current point in time. This is useful for undoing the
+remaining committed moves. Selecting replay before any moves have been entered replays
+the last time the level was succesfully completed
 </p>
 <!--<p>
 A piece can be pushed to an adjacent square by moving into it or by shooting it.
