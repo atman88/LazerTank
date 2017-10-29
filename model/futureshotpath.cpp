@@ -126,7 +126,6 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
 
         ModelVector leadVector( path.mLeadVector );
 
-        bool bent = false;
         while( path.mShotCount < shotCount ) {
             path.mLeadVector = leadVector;
             if ( !getAdjacentPosition( leadVector.mAngle, &leadVector ) ) {
@@ -152,17 +151,16 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
                 havePreviousChange = true;
                 previousChange = ret;
 
-                if ( bent ) {
-                    // resume from beginning to handle case where the previous change affected our path (cannot optimize)
-                    leadVector = *move;
-                    bent = false;
-                } else if ( curChange.changeType == TILE_CHANGE && (curChange.u.tileType == WOOD || curChange.u.tileType == WOOD_DAMAGED) ) {
+                ++path.mShotCount;
+                if ( curChange.changeType == TILE_CHANGE && (curChange.u.tileType == WOOD || curChange.u.tileType == WOOD_DAMAGED) ) {
                     // resume without advancing the lead point given the current point is still obstructed:
                     leadVector = path.mLeadVector;
+                } else if ( path.mBendPoints.size() && path.mShotCount < shotCount ) {
+                    // resume from beginning to handle case where the previous change affected our path (cannot optimize)
+                    leadVector = *move;
+                    path.mBendPoints.clear();
                 }
-                ++path.mShotCount;
             } else if ( leadVector.mAngle != path.mLeadVector.mAngle ) {
-                bent = true;
                 path.mLeadVector.mAngle = leadVector.mAngle;
                 path.mBendPoints.push_back( leadVector );
             }
