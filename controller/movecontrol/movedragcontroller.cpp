@@ -81,14 +81,12 @@ void MoveDragController::move( int direction, bool doWakeup )
     if ( mDragState == Inactive ) {
         MoveBaseController::move( direction, doWakeup );
     } else {
-        ModelVector focusVector = getDragFocusVector();
-        if ( Piece* piece = mDragMoves.getBack() ) {
-            if ( !piece->equals(focusVector) ) {
-                undoMoves();
-            }
+        if ( mFocus == TANK ) {
+            undoMoves();
+            setFocus( MOVE );
         }
 
-        moveInternal( focusVector, mDragMoves, direction, false );
+        moveInternal( getDragFocusVector(), mDragMoves, direction, false );
     }
 }
 
@@ -108,6 +106,18 @@ void MoveDragController::undoMoves()
         undoLastMoveInternal( mDragMoves );
     }
     MoveBaseController::undoMoves();
+}
+
+void MoveDragController::undo()
+{
+    if ( mDragState == Inactive ) {
+        MoveBaseController::undo();
+    } else if ( mFocus == MOVE ) {
+        undoLastMove();
+    } else {
+        undoMoves();
+        setFocus( MOVE );
+    }
 }
 
 void MoveDragController::setFocus( PieceType what )
@@ -168,11 +178,12 @@ void MoveDragController::setDragState( DragState state )
 
                 if ( mFocus == TANK ) {
                     mMoves.reset( &mDragMoves, false );
+                    setFocus( MOVE );
                 } else {
                     mMoves.replaceBack( MOVE );
                     mMoves.append( &mDragMoves, false );
+                    mMoves.replaceBack( MOVE_HIGHLIGHT );
                 }
-                mMoves.replaceBack( MOVE_HIGHLIGHT );
             }
         }
         mDragState = state;

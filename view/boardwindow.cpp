@@ -561,12 +561,8 @@ void BoardWindow::keyReleaseEvent( QKeyEvent* ev )
                 break;
 
             case Qt::Key_Backspace:
-                if ( !checkForReplay() )  {
-                    if ( ev->modifiers() == Qt::ControlModifier ) {
-                        registry->getMoveController().undoMoves();
-                    } else {
-                        registry->getMoveController().undoLastMove();
-                    }
+                if ( !checkForReplay() ) {
+                    registry->getMoveController().undo();
                 }
                 break;
 

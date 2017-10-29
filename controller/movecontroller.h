@@ -82,6 +82,11 @@ public slots:
     virtual void undoMoves();
 
     /**
+     * @brief focus-aware undo
+     */
+    virtual void undo();
+
+    /**
      * @brief Retrieve the current focus state
      * @return MOVE if focus on the last move (future perspective) or TANK to focus on the first move
      * (present perspective)
@@ -234,6 +239,11 @@ public:
      * @brief Cancel any pending (future) moves
      */
     void undoMoves() override;
+
+    /**
+     * @brief focus-aware undo
+     */
+    void undo() override;
 
     /**
      * @brief move the focus between the moves (future) and the tank (present)

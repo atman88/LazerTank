@@ -60,6 +60,10 @@ void MoveBaseController::moveInternal( const ModelVector& origin, PieceListManag
 void MoveBaseController::move( int direction, bool doWakeup )
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
+        if ( mFocus == TANK ) {
+            undoMoves();
+            setFocus( MOVE );
+        }
         bool busy = mState == FiringStage && mMoves.size() == 1;
         moveInternal( registry->getTank().getVector(), mMoves, direction, busy );
         if ( doWakeup && !busy ) {
@@ -145,6 +149,16 @@ void MoveBaseController::undoMoves()
         undoLastMoveInternal( mMoves );
     }
     undoLastMove();
+}
+
+void MoveBaseController::undo()
+{
+    if ( mFocus != TANK ) {
+        undoLastMove();
+    } else {
+        undoMoves();
+        setFocus( MOVE );
+    }
 }
 
 void MoveBaseController::wakeup()
