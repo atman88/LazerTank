@@ -10,9 +10,9 @@ comfortable without compromising entertainment value.
 
 To run on linux, click on releases amd select LazerTank-x86_64.AppImage. Once downloaded,
 make it executable:
-  # chmod u+x LazerTank-x86_64.AppImage
+  ## chmod u+x LazerTank-x86_64.AppImage
 To run, simply execute the file:
-  # ./LazerTank-x86_64.AppImage
+  ## ./LazerTank-x86_64.AppImage
 
 For Windows, click on releases click and then on LazerTank-window-b3.zip. Unzip the downloaded
 and then open the qlt.exe application.
