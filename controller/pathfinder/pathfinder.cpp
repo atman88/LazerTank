@@ -278,10 +278,12 @@ void PathFinder::doSearchInternal()
             // for multi target test, the target points are targeted
             if ( TileDragTestResult* result = mRunCriteria.getTileDragTestResult() ) {
                 for( auto it : result->mPossibleApproaches ) {
-                    char* p = &mSearchMap[it.mRow*BOARD_MAX_WIDTH+it.mCol];
-                    if ( *p == TRAVERSIBLE ) {
-                        *p = TARGET;
-                        mTargets.insert( it );
+                    if ( it.mCol <= mMaxPoint.mCol && it.mRow <= mMaxPoint.mRow ) {
+                        char* p = &mSearchMap[it.mRow*BOARD_MAX_WIDTH+it.mCol];
+                        if ( *p == TRAVERSIBLE ) {
+                            *p = TARGET;
+                            mTargets.insert( it );
+                        }
                     }
                 }
                 result->mPossibleApproaches.clear();

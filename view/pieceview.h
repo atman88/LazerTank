@@ -43,10 +43,6 @@ public:
      */
     PieceView( const PieceView* source );
 
-    virtual ~PieceView()
-    {
-    }
-
     /**
      * @brief Paint the piece
      * @param dirty The area that requires painting

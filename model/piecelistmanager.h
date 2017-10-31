@@ -54,6 +54,11 @@ public:
      */
     void append( const PieceList& source );
 
+    /**
+     * @brief Copy or move pieces from source to the end of this list
+     * @param source The manager containing the source pieces
+     * @param copy If true, allocates and appends new copies from source. If false, instances are transferred
+     */
     void append( PieceListManager* source, bool copy = true );
 
     /**

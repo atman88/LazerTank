@@ -158,7 +158,7 @@ Piece* PieceListManager::getBack( int index ) const
     return 0;
 }
 
-Piece *PieceListManager::getFront() const
+Piece* PieceListManager::getFront() const
 {
     if ( mPieces.empty() ) {
         return 0;
@@ -205,28 +205,29 @@ bool PieceListManager::replaceBack( PieceType type, int newAngle )
 MovePiece* PieceListManager::setShotCountBack( int count )
 {
     if ( !mPieces.empty() ) {
-        if ( Piece* piece = mPieces.back() ) {
-            MovePiece* move = dynamic_cast<MovePiece*>(piece);
-            if ( !move ) {
-                move = new MovePiece( piece );
-                mPieces.remove( piece );
-                mPieces.push_back( move );
+        PieceList::iterator it = mPieces.end();
+        Piece* piece = *--it;
+        MovePiece* move = dynamic_cast<MovePiece*>(piece);
+        if ( !move ) {
+            move = new MovePiece( piece );
+            mPieces.erase( it );
+            delete piece;
+            mPieces.push_back( move );
 
-                // purge any cached sets given they are now stale:
-                if ( mSet ) {
-                    delete mSet;
-                    mSet = 0;
-                }
-                if ( mMultiSet ) {
-                    delete mMultiSet;
-                    mMultiSet = 0;
-                }
+            // purge any cached sets given they are now stale:
+            if ( mSet ) {
+                delete mSet;
+                mSet = 0;
             }
-            if ( move->setShotCount( count ) ) {
-                emit changedAt( *piece );
+            if ( mMultiSet ) {
+                delete mMultiSet;
+                mMultiSet = 0;
             }
-            return move;
         }
+        if ( move->setShotCount( count ) ) {
+            emit changedAt( *move );
+        }
+        return move;
     }
     return 0;
 }
@@ -253,10 +254,11 @@ void PieceListManager::append( PieceListManager* source, bool copy )
 {
     PieceList& list = source->mPieces;
     for( auto it = list.begin(); it != list.end(); ) {
-        append( *it );
         if ( !copy ) {
+            addInternal( *it );
             it = list.erase( it );
         } else {
+            append( *it );
             ++it;
         }
     }
