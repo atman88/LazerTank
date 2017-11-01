@@ -39,8 +39,8 @@ public:
      */
     Piece* append( PieceType type, ModelVector vector );
     Piece* append( PieceType type, ModelPoint point, int angle = 0 );
-    Piece* append( PieceType type, ModelPoint point, int angle, int shotCount, const Piece* pushPiece = 0 );
-    Piece* append( PieceType type, ModelVector vector, int shotCount, const Piece* pushPiece = 0 );
+    MovePiece* append( PieceType type, ModelPoint point, int angle, int shotCount, const Piece* pushPiece = 0 );
+    MovePiece* append( PieceType type, ModelVector vector, int shotCount, const Piece* pushPiece = 0 );
 
     /**
      * @brief Adds a copy of the given piece to the end of this list

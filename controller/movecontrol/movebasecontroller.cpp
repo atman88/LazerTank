@@ -35,13 +35,13 @@ void MoveBaseController::onBoardLoaded( Board& board )
     onIdle();
 }
 
-void MoveBaseController::moveInternal( const ModelVector& origin, PieceListManager& moves, int direction, bool lastMoveBusy )
+bool MoveBaseController::moveInternal( const ModelVector& origin, PieceListManager& moves, int direction )
 {
     Piece* lastMove = moves.getBack();
     ModelVector vector = (lastMove ? *lastMove : origin);
 
     if ( direction >= 0 && direction != vector.mAngle ) {
-        if ( lastMoveBusy || !lastMove || lastMove->hasPush() || lastMove->getShotCount() ) {
+        if ( !lastMove || lastMove->hasPush() || lastMove->getShotCount() || (&moves == &mMoves && moves.size()==1 && mState >= FiringStage) ) {
             appendMove( moves, ModelVector(vector, direction) );
         } else {
             moves.replaceBack( MOVE_HIGHLIGHT, direction );
@@ -55,6 +55,7 @@ void MoveBaseController::moveInternal( const ModelVector& origin, PieceListManag
             }
         }
     }
+    return &moves == &mMoves && moves.size()==1;
 }
 
 void MoveBaseController::move( int direction, bool doWakeup )
@@ -64,9 +65,7 @@ void MoveBaseController::move( int direction, bool doWakeup )
             undoMoves();
             setFocus( MOVE );
         }
-        bool busy = mState == FiringStage && mMoves.size() == 1;
-        moveInternal( registry->getTank().getVector(), mMoves, direction, busy );
-        if ( doWakeup && !busy ) {
+        if ( moveInternal( registry->getTank().getVector(), mMoves, direction ) && doWakeup ) {
             wakeup();
         }
     }
@@ -75,31 +74,31 @@ void MoveBaseController::move( int direction, bool doWakeup )
 bool MoveBaseController::fireInternal( ModelVector initialVector, PieceListManager& moves, int count )
 {
     if ( int nMoves = moves.size() ) {
-        // -1 signifies an increment
-        if ( count < 0 ) {
-            count = moves.getBack()->getShotCount() + 1;
+        bool moveInPlay = (&moves == &mMoves && nMoves == 1);
+        if ( !moveInPlay || mState <= FiringStage ) {
+            Piece* piece = moves.getBack();
+            int previousCount = piece->getShotCount();
+            // -1 signifies an increment
+            if ( count < 0 ) {
+                count = previousCount + 1;
+            }
+            MovePiece* move = moves.setShotCountBack( count );
+            mFutureShots.updateShots( previousCount, move );
+            return moveInPlay;
         }
-        MovePiece* move = moves.setShotCountBack( count );
-        mFutureShots.updatePath( move );
-        if ( nMoves == 1 && mState == FiringStage ) {
-            return true;
-        }
-    } else if ( count ) {
+    }
+
+    if ( count ) {
         if ( count < 0 ) {
             count = 1;
         }
 
-        Piece* piece = moves.append( MOVE, initialVector, count );
-        // show it's future if it's got multiple shots
-        if ( count > 1 ) {
-            if ( MovePiece* move = dynamic_cast<MovePiece*>(piece) ) {
-                mFutureShots.updatePath( move );
-            }
-        }
-        return true;
+        MovePiece* move = moves.append( MOVE, initialVector, count );
+        mFutureShots.updateShots( 0, move );
+        return &moves == &mMoves;
     }
 
-    return true;
+    return false;
 }
 
 void MoveBaseController::fire( int count )

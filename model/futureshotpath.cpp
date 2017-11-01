@@ -103,20 +103,20 @@ void FutureShotPathManager::invalidate( FutureShotPath path )
     emit dirtyRect( path.getBounds() );
 }
 
-const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
+const FutureShotPath* FutureShotPathManager::updateShots( int previousCount, MovePiece* move )
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
-        int shotCount = move->getShotCount();
-
         FutureShotPath path(move);
         FutureShotPathSet::iterator it = mPaths.find( path );
         if ( it != mPaths.end() ) {
-            registry->getGame().getBoard(true)->undoChanges( it->mChanges );
+            registry->getGame().getBoard(true)->undoChanges( previousCount, it->mChanges );
             emit dirtyRect( it->getBounds() );
             mPaths.erase( it );
         }
 
-        if ( !shotCount ) {
+
+        int newCount = move->getShotCount();
+        if ( !newCount ) {
             move->setShotPathUID(0);
             return 0;
         }
@@ -126,7 +126,7 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
 
         ModelVector leadVector( path.mLeadVector );
 
-        while( path.mShotCount < shotCount ) {
+        while( path.mShotCount < newCount ) {
             path.mLeadVector = leadVector;
             if ( !getAdjacentPosition( leadVector.mAngle, &leadVector ) ) {
                 break;
@@ -155,7 +155,7 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
                 if ( curChange.changeType == TILE_CHANGE && (curChange.u.tileType == WOOD || curChange.u.tileType == WOOD_DAMAGED) ) {
                     // resume without advancing the lead point given the current point is still obstructed:
                     leadVector = path.mLeadVector;
-                } else if ( path.mBendPoints.size() && path.mShotCount < shotCount ) {
+                } else if ( path.mBendPoints.size() && path.mShotCount < newCount ) {
                     // resume from beginning to handle case where the previous change affected our path (cannot optimize)
                     leadVector = *move;
                     path.mBendPoints.clear();
@@ -166,7 +166,7 @@ const FutureShotPath* FutureShotPathManager::updatePath( MovePiece* move )
             }
         }
         path.mLeadVector = leadVector;
-        path.mShotCount = shotCount;
+        path.mShotCount = newCount;
 
         path.initBounds();
         invalidate( path );
@@ -188,7 +188,7 @@ void FutureShotPathManager::removePath( Piece* piece, bool undo )
             QRect bounds( it->mBounds );
             if ( undo ) {
                 if ( GameRegistry* registry = getRegistry(this) ) {
-                    registry->getGame().getBoard(true)->undoChanges( it->mChanges );
+                    registry->getGame().getBoard(true)->undoChanges( move->getShotCount(), it->mChanges );
                 }
             }
             mPaths.erase( it );

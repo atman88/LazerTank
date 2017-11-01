@@ -248,17 +248,19 @@ bool getAdjacentPosition( int angle, ModelPoint *point )
     return false;
 }
 
-void Board::undoChanges( std::vector<FutureChange> changes )
+void Board::undoChanges( int undoShotCount, std::vector<FutureChange> changes )
 {
-    for( auto it = changes.end(); it != changes.begin(); ) {
+    for( auto it = changes.end(); undoShotCount > 0 && it != changes.begin(); ) {
         --it;
         switch( it->changeType ) {
         case TILE_CHANGE:
             setTileAt( it->u.tileType, it->point );
+            --undoShotCount;
             break;
 
         case PIECE_ERASED:
             mPieceManager.insert( it->u.erase.pieceType, it->point, it->u.erase.pieceAngle, it->u.erase.previousPushedId );
+            --undoShotCount;
             break;
 
         case PIECE_PUSHED:
@@ -278,15 +280,18 @@ void Board::undoChanges( std::vector<FutureChange> changes )
                     std::cout << "** undo PIECE_PUSHED didn't erase @ non-sunk (" << p.mCol << "," << p.mRow << ")" << std::endl;
                 }
             }
-            mLastPushId -= it->u.multiPush.count;
+            int count = std::min( it->u.multiPush.count, undoShotCount );
+            undoShotCount -= it->u.multiPush.count;
+            mLastPushId -= count;
+            int previousPushedId = (undoShotCount >= 0 ? it->u.multiPush.previousPushedId : mLastPushId);
 
-            for( int i = it->u.multiPush.count; --i >= 0; ) {
+            while( --count >= 0 ) {
                 if ( !getAdjacentPosition( reverseDirection, &p ) ) {
                     std::cout << "** undo PIECE_PUSHED no adjacent at (" << p.mCol << "," << p.mRow << ")" << std::endl;
                     break;
                 }
             }
-            mPieceManager.insert( it->u.multiPush.pieceType, p, it->u.multiPush.pieceAngle, it->u.multiPush.previousPushedId );
+            mPieceManager.insert( it->u.multiPush.pieceType, p, it->u.multiPush.pieceAngle, previousPushedId );
         }
             break;
 

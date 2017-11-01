@@ -73,14 +73,18 @@ Piece* PieceListManager::append( PieceType type, ModelPoint point, int angle )
     return addInternal( new SimplePiece( type, point, angle ) );
 }
 
-Piece* PieceListManager::append( PieceType type, ModelPoint point, int angle, int shotCount, const Piece* pushPiece )
+MovePiece* PieceListManager::append( PieceType type, ModelPoint point, int angle, int shotCount, const Piece* pushPiece )
 {
-    return addInternal( new MovePiece( type, point, angle, shotCount, pushPiece ) );
+    MovePiece* move = new MovePiece( type, point, angle, shotCount, pushPiece );
+    addInternal( move );
+    return move;
 }
 
-Piece* PieceListManager::append( PieceType type, ModelVector vector, int shotCount, const Piece* pushPiece )
+MovePiece* PieceListManager::append( PieceType type, ModelVector vector, int shotCount, const Piece* pushPiece )
 {
-    return addInternal( new MovePiece( type, vector, shotCount, pushPiece ) );
+    MovePiece* move = new MovePiece( type, vector, shotCount, pushPiece );
+    addInternal( move );
+    return move;
 }
 
 Piece* PieceListManager::append( const Piece* source )

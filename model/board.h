@@ -129,8 +129,10 @@ public:
 
     /**
      * @brief roll back future board changes for this shot path
+     * @param undoShotCount The number of shots to roll back
+     * @param changes The changes to roll back
      */
-    void undoChanges( std::vector<FutureChange> changes );
+    void undoChanges( int undoShotCount, std::vector<FutureChange> changes );
 
     int getLastPushId() const;
 

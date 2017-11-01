@@ -21,7 +21,7 @@ void TestMain::testFutureShotPath()
     manager.setParent( &mRegistry );
 
     MovePiece move( MOVE, mRegistry.getTank().getCol(), mRegistry.getTank().getRow(), 0, 6 );
-    const FutureShotPath* path = manager.updatePath(&move);
+    const FutureShotPath* path = manager.updateShots(&move);
     QCOMPARE( path->getUID(), move.getShotPathUID() );
 
     Game& game = mRegistry.getGame();
@@ -33,15 +33,15 @@ void TestMain::testFutureShotPath()
     QCOMPARE( futureBoard->getPieceManager().typeAt( ModelPoint(2,3) ), CANNON );
 
     move.setShotCount( 5 );
-    manager.updatePath(&move);
+    manager.updateShots(&move);
     QCOMPARE( futureBoard->getPieceManager().typeAt( ModelPoint(2,3) ), CANNON );
 
     move.setShotCount( 4 );
-    manager.updatePath(&move);
+    manager.updateShots(&move);
     QCOMPARE( futureBoard->getPieceManager().typeAt( ModelPoint(2,3) ), NONE );
 
     move.setShotCount( 0 );
-    manager.updatePath(&move);
+    manager.updateShots(&move);
     QCOMPARE( (int) game.getDeltaPieces()->size(), 0 );
 }
 

@@ -124,8 +124,23 @@ protected:
      */
     bool applyPathUsingCriteria( PieceListManager* path, PathSearchCriteria* criteria );
 
-    void moveInternal( const ModelVector& origin, PieceListManager& moves, int direction, bool lastMoveBusy );
+    /**
+     * @brief Add/modify move
+     * @param origin Vector to use in the case where the list is empty a new move is appended
+     * @param moves The managed list of moves to update
+     * @param direction The direction to move
+     * @return Hints as to whether a wakeup may be appropriate as a result of any changes applied
+     */
+    bool moveInternal( const ModelVector& origin, PieceListManager& moves, int direction );
 
+    /**
+     * @brief Add/modify shots
+     * Note that changes are applied to the end focus point (I.e. MOVE focus) of the given moves
+     * @param initialVector The vector to use in cases where a new move is appended to satisfy this update
+     * @param moves The managed list of moves to update
+     * @param count The shot count to set (or replace as appropriate). Passing -1 increments the shot count
+     * @return Hints as to whether a wakeup may be appropriate as a result of any changes applied
+     */
     bool fireInternal( ModelVector initialVector, PieceListManager& moves, int count );
 
     /**

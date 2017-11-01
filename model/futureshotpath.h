@@ -93,7 +93,7 @@ public:
 
     void reset();
 
-    const FutureShotPath* updatePath( MovePiece* move );
+    const FutureShotPath* updateShots( int previousCount, MovePiece* move );
     void removePath( Piece* piece, bool undo );
 
     const FutureShotPathSet& getPaths() const;

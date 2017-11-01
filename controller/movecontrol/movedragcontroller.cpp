@@ -86,7 +86,7 @@ void MoveDragController::move( int direction, bool doWakeup )
             setFocus( MOVE );
         }
 
-        moveInternal( getDragFocusVector(), mDragMoves, direction, false );
+        moveInternal( getDragFocusVector(), mDragMoves, direction );
     }
 }
 
@@ -235,7 +235,7 @@ void MoveDragController::onPathFound( PieceListManager* path, PathSearchCriteria
         mDragMoves.reset( path );
         mDragMoves.replaceBack( MOVE_HIGHLIGHT );
         if ( criteria->getCriteriaType() == PathSearchCriteria::TileDragTestCriteria ) {
-            moveInternal( getDragFocusVector(), mDragMoves, mTileDragFocusAngle, false );
+            moveInternal( getDragFocusVector(), mDragMoves, mTileDragFocusAngle );
             setDragState( DraggingTile );
         } else {
             setDragState( DraggingTank );
@@ -347,10 +347,10 @@ void MoveDragController::onDragTo( QPoint coord )
                                 mDragMoves.replaceBack( MOVE_HIGHLIGHT );
                             }
                         } else {
-                            moveInternal( getDragFocusVector(), mDragMoves, angle, false );
+                            moveInternal( getDragFocusVector(), mDragMoves, angle );
                             lastMove = mDragMoves.getBack();
                             if ( lastMove && !p.equals( *lastMove ) ) {
-                                moveInternal( getDragFocusVector(), mDragMoves, angle, false );
+                                moveInternal( getDragFocusVector(), mDragMoves, angle );
                             }
                         }
                         mChanged = true;
@@ -366,7 +366,7 @@ void MoveDragController::onDragTo( QPoint coord )
         // check for rotation change:
     {   int rotation = coordLeaning( coord, focusVector );
         if ( rotation >= 0 && rotation != focusVector.mAngle && rotation != coordLeaning( mPreviousCoord, focusVector ) ) {
-            moveInternal( getDragFocusVector(), mDragMoves, rotation, false );
+            moveInternal( getDragFocusVector(), mDragMoves, rotation );
         }
     }
         break;
