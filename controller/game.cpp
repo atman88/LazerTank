@@ -138,17 +138,9 @@ bool Game::canMoveFrom( PieceType what, int angle, ModelPoint *point, bool futur
 {
     if ( getAdjacentPosition( angle, point ) ) {
         if ( what != TANK ) {
+            // prevent pushing it onto the tank:
             if ( GameRegistry* registry = getRegistry(this) ) {
-                bool futureTank = false;
-                if ( futuristic ) {
-                    if ( Piece* piece = registry->getMoveController().getMoves().getBack() ) {
-                        if ( point->equals( *piece ) ) {
-                            return false;
-                        }
-                        futureTank = true;
-                    }
-                }
-                if ( !futureTank && point->equals( registry->getTank().getPoint() ) ) {
+                if ( point->equals( registry->getMoveController().getDragFocusVector( futuristic ? MOVE : TANK ) ) ) {
                     return false;
                 }
             }
