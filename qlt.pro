@@ -20,7 +20,8 @@ HEADERS += \
     view/boardrenderer.h \
     util/persist.h \
     util/loadable.h \
-    util/persistfile.h
+    util/persistfile.h \
+    model/movelistmanager.h
 
 SOURCES += \
     model/board.cpp \
@@ -32,7 +33,8 @@ SOURCES += \
     util/gameutils.cpp \
     util/imageutils.cpp \
     view/boardrenderer.cpp \
-    util/persist.cpp
+    util/persist.cpp \
+    model/movelistmanager.cpp
 
 index {
     TARGET = qltindexer

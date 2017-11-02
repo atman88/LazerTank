@@ -102,6 +102,7 @@ private slots:
     void testFutureShotThruMasterTank();
     void testFutureMultiShotThruTank();
     void testFutureShotPushId();
+    void testFutureShotPartialUndo();
     void testFutureShotPushIdWater();
     void testFutureShot2PushIdWater();
     void testFutureShotTankKill();

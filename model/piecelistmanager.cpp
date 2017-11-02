@@ -73,20 +73,6 @@ Piece* PieceListManager::append( PieceType type, ModelPoint point, int angle )
     return addInternal( new SimplePiece( type, point, angle ) );
 }
 
-MovePiece* PieceListManager::append( PieceType type, ModelPoint point, int angle, int shotCount, const Piece* pushPiece )
-{
-    MovePiece* move = new MovePiece( type, point, angle, shotCount, pushPiece );
-    addInternal( move );
-    return move;
-}
-
-MovePiece* PieceListManager::append( PieceType type, ModelVector vector, int shotCount, const Piece* pushPiece )
-{
-    MovePiece* move = new MovePiece( type, vector, shotCount, pushPiece );
-    addInternal( move );
-    return move;
-}
-
 Piece* PieceListManager::append( const Piece* source )
 {
     if ( const MovePiece* move = dynamic_cast<const MovePiece*>(source) ) {
@@ -95,7 +81,7 @@ Piece* PieceListManager::append( const Piece* source )
     return addInternal( source->getPushedId() > 0 ? (new PushedPiece(source)) : (new SimplePiece(source)) );
 }
 
-void PieceListManager::append( const PieceList& source )
+void PieceListManager::appendList( const PieceList& source )
 {
     for( auto it : source ) {
         append( it );
@@ -206,36 +192,6 @@ bool PieceListManager::replaceBack( PieceType type, int newAngle )
     return false;
 }
 
-MovePiece* PieceListManager::setShotCountBack( int count )
-{
-    if ( !mPieces.empty() ) {
-        PieceList::iterator it = mPieces.end();
-        Piece* piece = *--it;
-        MovePiece* move = dynamic_cast<MovePiece*>(piece);
-        if ( !move ) {
-            move = new MovePiece( piece );
-            mPieces.erase( it );
-            delete piece;
-            mPieces.push_back( move );
-
-            // purge any cached sets given they are now stale:
-            if ( mSet ) {
-                delete mSet;
-                mSet = 0;
-            }
-            if ( mMultiSet ) {
-                delete mMultiSet;
-                mMultiSet = 0;
-            }
-        }
-        if ( move->setShotCount( count ) ) {
-            emit changedAt( *move );
-        }
-        return move;
-    }
-    return 0;
-}
-
 void PieceListManager::reset( PieceListManager* source, bool copy )
 {
     while( eraseBack() ) {
@@ -250,11 +206,11 @@ void PieceListManager::reset( PieceListManager* source, bool copy )
     }
 
     if ( source ) {
-        append( source, copy );
+        appendList( source, copy );
     }
 }
 
-void PieceListManager::append( PieceListManager* source, bool copy )
+void PieceListManager::appendList( PieceListManager* source, bool copy )
 {
     PieceList& list = source->mPieces;
     for( auto it = list.begin(); it != list.end(); ) {

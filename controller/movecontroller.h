@@ -13,7 +13,7 @@ class BoardWindow;
 #include "pathsearchcriteria.h"
 #include "pathfindercontroller.h"
 #include "model/futureshotpath.h"
-#include "model/piecelistmanager.h"
+#include "model/movelistmanager.h"
 #include "util/recorder.h"
 
 typedef enum {
@@ -114,7 +114,7 @@ protected:
      * @param vector The column, row and direction for the new move
      * @param pushPiece The piece that this move pushes or 0 if it doesn't cause a push
      */
-    void appendMove( PieceListManager& moves, ModelVector vector, Piece* pushPiece = 0 );
+    void appendMove( MoveListManager& moves, ModelVector vector, Piece* pushPiece = 0 );
 
     /**
      * @brief Extend or replace our path with the given path
@@ -131,7 +131,7 @@ protected:
      * @param direction The direction to move
      * @return Hints as to whether a wakeup may be appropriate as a result of any changes applied
      */
-    bool moveInternal( const ModelVector& origin, PieceListManager& moves, int direction );
+    bool moveInternal( const ModelVector& origin, MoveListManager& moves, int direction );
 
     /**
      * @brief Add/modify shots
@@ -141,7 +141,7 @@ protected:
      * @param count The shot count to set (or replace as appropriate). Passing -1 increments the shot count
      * @return Hints as to whether a wakeup may be appropriate as a result of any changes applied
      */
-    bool fireInternal( ModelVector initialVector, PieceListManager& moves, int count );
+    bool fireInternal( ModelVector initialVector, MoveListManager& moves, int count );
 
     /**
      * @brief Undoes the last move assuming state checking and highlight awareness is handled by the caller
@@ -167,7 +167,7 @@ protected:
     /**
      * @brief Pending moves where the first element may be in progress; all subsequent elements are future moves.
      */
-    PieceListManager mMoves;
+    MoveListManager mMoves;
 
     /**
      * @brief Shots related with the pending moves (mMoves)
@@ -317,7 +317,7 @@ protected slots:
     void onTestResult( bool reachable, PathSearchCriteria* criteria );
 
 protected:
-    PieceListManager mDragMoves;
+    MoveListManager mDragMoves;
 
 private:
     void setDragState( DragState state );

@@ -35,7 +35,7 @@ void MoveBaseController::onBoardLoaded( Board& board )
     onIdle();
 }
 
-bool MoveBaseController::moveInternal( const ModelVector& origin, PieceListManager& moves, int direction )
+bool MoveBaseController::moveInternal( const ModelVector& origin, MoveListManager& moves, int direction )
 {
     Piece* lastMove = moves.getBack();
     ModelVector vector = (lastMove ? *lastMove : origin);
@@ -71,7 +71,7 @@ void MoveBaseController::move( int direction, bool doWakeup )
     }
 }
 
-bool MoveBaseController::fireInternal( ModelVector initialVector, PieceListManager& moves, int count )
+bool MoveBaseController::fireInternal( ModelVector initialVector, MoveListManager& moves, int count )
 {
     if ( int nMoves = moves.size() ) {
         bool moveInPlay = (&moves == &mMoves && nMoves == 1);
@@ -276,13 +276,13 @@ bool MoveBaseController::applyPathUsingCriteria( PieceListManager* path, PathSea
             return false;
         }
         mMoves.replaceBack( MOVE );
-        mMoves.append( path->getList() );
+        mMoves.appendList( path->getList() );
     }
     mMoves.replaceBack( MOVE_HIGHLIGHT );
     return true;
 }
 
-void MoveBaseController::appendMove( PieceListManager& moves, ModelVector vector, Piece* pushPiece )
+void MoveBaseController::appendMove( MoveListManager& moves, ModelVector vector, Piece* pushPiece )
 {
     moves.replaceBack( MOVE ); // erase highlight
     moves.append( MOVE_HIGHLIGHT, vector, 0, pushPiece );

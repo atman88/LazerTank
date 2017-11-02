@@ -13,7 +13,7 @@ class PieceListManager : public PieceManager
     Q_OBJECT
 
 public:
-    explicit PieceListManager( QObject *parent = 0 );
+    PieceListManager( QObject *parent = 0 );
     ~PieceListManager();
 
     /**
@@ -39,8 +39,6 @@ public:
      */
     Piece* append( PieceType type, ModelVector vector );
     Piece* append( PieceType type, ModelPoint point, int angle = 0 );
-    MovePiece* append( PieceType type, ModelPoint point, int angle, int shotCount, const Piece* pushPiece = 0 );
-    MovePiece* append( PieceType type, ModelVector vector, int shotCount, const Piece* pushPiece = 0 );
 
     /**
      * @brief Adds a copy of the given piece to the end of this list
@@ -52,14 +50,14 @@ public:
      * @brief Copy elements from source into the end of this list
      * @param source The pieces to append
      */
-    void append( const PieceList& source );
+    void appendList( const PieceList& source );
 
     /**
      * @brief Copy or move pieces from source to the end of this list
      * @param source The manager containing the source pieces
      * @param copy If true, allocates and appends new copies from source. If false, instances are transferred
      */
-    void append( PieceListManager* source, bool copy = true );
+    void appendList( PieceListManager* source, bool copy = true );
 
     /**
      * @brief Adds a new piece to the beginning of this list from the given values
@@ -110,12 +108,6 @@ public:
     bool replaceBack( PieceType type, int newAngle = -1 );
 
     /**
-     * @brief Set the number of future shots on the last element
-     * @return the updated element or 0 if not updated
-     */
-    MovePiece* setShotCountBack( int count );
-
-    /**
      * @brief Query the number of pieces in the list
      * @return the number of pieces
      */
@@ -129,9 +121,9 @@ public slots:
      */
     void reset(PieceListManager* source = 0 , bool copy = true );
 
-private:
+protected:
     Piece* addInternal( Piece* piece, bool pushFront = false );
-    bool eraseInternal(PieceList::iterator it );
+    bool eraseInternal( PieceList::iterator it );
     void replaceInternal( Piece* piece, PieceType type, int newAngle );
 
     PieceList mPieces;

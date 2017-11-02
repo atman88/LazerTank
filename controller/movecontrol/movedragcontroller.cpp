@@ -181,7 +181,7 @@ void MoveDragController::setDragState( DragState state )
                     setFocus( MOVE );
                 } else {
                     mMoves.replaceBack( MOVE );
-                    mMoves.append( &mDragMoves, false );
+                    mMoves.appendList( &mDragMoves, false );
                     mMoves.replaceBack( MOVE_HIGHLIGHT );
                 }
             }

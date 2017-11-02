@@ -21,7 +21,7 @@ void TestMain::testFutureShotPath()
     manager.setParent( &mRegistry );
 
     MovePiece move( MOVE, mRegistry.getTank().getCol(), mRegistry.getTank().getRow(), 0, 6 );
-    const FutureShotPath* path = manager.updateShots(&move);
+    const FutureShotPath* path = manager.updateShots( 0, &move);
     QCOMPARE( path->getUID(), move.getShotPathUID() );
 
     Game& game = mRegistry.getGame();
@@ -32,16 +32,18 @@ void TestMain::testFutureShotPath()
 
     QCOMPARE( futureBoard->getPieceManager().typeAt( ModelPoint(2,3) ), CANNON );
 
+    int previousShotCount = move.getShotCount();
     move.setShotCount( 5 );
-    manager.updateShots(&move);
+    manager.updateShots( previousShotCount, &move);
     QCOMPARE( futureBoard->getPieceManager().typeAt( ModelPoint(2,3) ), CANNON );
 
+    previousShotCount = move.getShotCount();
     move.setShotCount( 4 );
-    manager.updateShots(&move);
+    manager.updateShots( previousShotCount, &move );
     QCOMPARE( futureBoard->getPieceManager().typeAt( ModelPoint(2,3) ), NONE );
 
     move.setShotCount( 0 );
-    manager.updateShots(&move);
+    manager.updateShots( previousShotCount, &move );
     QCOMPARE( (int) game.getDeltaPieces()->size(), 0 );
 }
 
@@ -132,20 +134,45 @@ void TestMain::testFutureShotPushId()
     QCOMPARE( (*boardPieces.begin())->getPushedId(), 4 );
 }
 
+class SleepingMoveController : public MoveController
+{
+public:
+    bool canWakeup() override {
+        return false;
+    }
+};
+
+void TestMain::testFutureShotPartialUndo()
+{
+    MyTestGame* game = new MyTestGame();
+    mRegistry.injectGame( game );
+    SleepingMoveController* moveController = new SleepingMoveController();
+    mRegistry.injectMoveController( moveController );
+    initGame(
+      "..M.[T<\n" );
+    game->enableFuture();
+
+    moveController->fire(2);
+    moveController->fire(1);
+
+    const PieceSet& boardPieces = game->getBoard(true)->getPieceManager().getPieces();
+    QVERIFY( ModelPoint(1,0).equals( *(*boardPieces.begin()) ) );
+}
+
 void TestMain::testFutureShotPushIdWater()
 {
     MyTestGame* game = new MyTestGame();
     mRegistry.injectGame( game );
+    SleepingMoveController* moveController = new SleepingMoveController();
+    mRegistry.injectMoveController( moveController );
     initGame(
-      "[T>.M..w\n" );
-    MoveController& moveController = mRegistry.getMoveController();
+      "[T>M..w\n" );
     game->enableFuture();
-    const PieceSet& boardPieces = mRegistry.getGame().getBoard(true)->getPieceManager().getPieces();
+    const PieceSet& boardPieces = game->getBoard(true)->getPieceManager().getPieces();
     QCOMPARE( (*boardPieces.begin())->getPushedId(), 0 );
 
-    moveController.move(90);
-    moveController.fire(3);
-    moveController.fire(2);
+    moveController->fire(3);
+    moveController->fire(2);
     QCOMPARE( (*boardPieces.begin())->getPushedId(), 2 );
 }
 
@@ -153,18 +180,19 @@ void TestMain::testFutureShot2PushIdWater()
 {
     MyTestGame* game = new MyTestGame();
     mRegistry.injectGame( game );
+    SleepingMoveController* moveController = new SleepingMoveController();
+    mRegistry.injectMoveController( moveController );
     initGame(
       "[T>.M..wM.\n" );
-    MoveController& moveController = mRegistry.getMoveController();
     game->enableFuture();
-    PieceSetManager& pieceManager = mRegistry.getGame().getBoard(true)->getPieceManager();
+    PieceSetManager& pieceManager = game->getBoard(true)->getPieceManager();
 
-    moveController.move(90);
-    moveController.fire(4);
+    moveController->move(90);
+    moveController->fire(4);
     QCOMPARE( pieceManager.pieceAt( ModelPoint(7,0) )->getPushedId(), 4 );
-    moveController.fire(3);
+    moveController->fire(3);
     QCOMPARE( pieceManager.pieceAt( ModelPoint(6,0) )->getPushedId(), 0 );
-    moveController.fire(0);
+    moveController->fire(0);
     QCOMPARE( mRegistry.getGame().getDeltaPieces()->size(), 0UL );
 }
 
@@ -172,19 +200,18 @@ void TestMain::testFutureShotTankKill()
 {
     MyTestGame* game = new MyTestGame();
     mRegistry.injectGame( game );
+    SleepingMoveController* moveController = new SleepingMoveController();
+    mRegistry.injectMoveController( moveController );
     initGame(
       "[S/ .  [\\S\n"
       " .  <    .\n"
-      " . [S\\[/S\n"
-      "[T^ .   .\n" );
-    MoveController& moveController = mRegistry.getMoveController();
+      "[T^[S\\[/S\n" );
     game->enableFuture();
-    const PieceSet& boardPieces = mRegistry.getGame().getBoard(true)->getPieceManager().getPieces();
+    const PieceSet& boardPieces = game->getBoard(true)->getPieceManager().getPieces();
 
-    moveController.move(0);
-    moveController.fire(2);
+    moveController->fire(2);
     QCOMPARE( boardPieces.size(), 0UL );
 
-    moveController.fire(1);
+    moveController->fire(1);
     QCOMPARE( (*boardPieces.begin())->getPushedId(), 1 );
 }
