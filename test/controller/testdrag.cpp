@@ -39,7 +39,7 @@ void TestMain::testDragTank()
 
     moveController->dragStart( mRegistry.getTank().getPoint() );
     QCOMPARE( moveController->getDragState(), DraggingTank );
-    QCOMPARE( moveController->getFocusVector(), mRegistry.getTank().getVector() );
+    QCOMPARE( moveController->getBaseFocusVector(), mRegistry.getTank().getVector() );
 
     // test off-board:
     moveController->onDragTo( ModelPoint(3,2).toViewCenterSquare() );
@@ -100,11 +100,11 @@ void TestMain::testDragWithMove()
     // test direction change:
     v.mAngle = (v.mAngle + 90) % 360;
     moveController.move( v.mAngle );
-    QCOMPARE( v, moveController.getFocusVector() );
+    QCOMPARE( v, moveController.getBaseFocusVector() );
 
     // attempt column change:
     moveController.move( v.mAngle );
-    QCOMPARE( v, moveController.getFocusVector() );
+    QCOMPARE( v, moveController.getBaseFocusVector() );
 }
 
 class TestPathFinderController : public PathFinderController, public TestAsync

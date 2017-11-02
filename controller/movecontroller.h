@@ -39,9 +39,10 @@ public:
     virtual void move( int direction, bool doWakeup = true );
 
     /**
-     * @brief Retrieve the current focus vector coordinate
+     * @brief Query a focus vector
+     * @param focus Either MOVE, TANK, or NONE, where NONE indicates the current focus should be used
      */
-    ModelVector getFocusVector() const;
+    ModelVector getBaseFocusVector( PieceType focus = NONE ) const;
 
      /**
      * @brief Access the pending tank moves
@@ -126,22 +127,20 @@ protected:
 
     /**
      * @brief Add/modify move
-     * @param origin Vector to use in the case where the list is empty a new move is appended
      * @param moves The managed list of moves to update
      * @param direction The direction to move
-     * @return Hints as to whether a wakeup may be appropriate as a result of any changes applied
+     * @return true if a wakeup is appropriate as a result of any changes applied, otherwise false
      */
-    bool moveInternal( const ModelVector& origin, MoveListManager& moves, int direction );
+    bool moveInternal( MoveListManager& moves, int direction );
 
     /**
      * @brief Add/modify shots
      * Note that changes are applied to the end focus point (I.e. MOVE focus) of the given moves
-     * @param initialVector The vector to use in cases where a new move is appended to satisfy this update
      * @param moves The managed list of moves to update
      * @param count The shot count to set (or replace as appropriate). Passing -1 increments the shot count
-     * @return Hints as to whether a wakeup may be appropriate as a result of any changes applied
+     * @return true if a wakeup is appropriate as a result of any changes applied, otherwise false
      */
-    bool fireInternal( ModelVector initialVector, MoveListManager& moves, int count );
+    bool fireInternal( MoveListManager& moves, int count );
 
     /**
      * @brief Undoes the last move assuming state checking and highlight awareness is handled by the caller
@@ -204,9 +203,10 @@ public:
     DragState getDragState() const;
 
     /**
-     * @brief Retrieve the current drag focus vector
+     * @brief Query a drag focus vector
+     * @param focus Either MOVE, TANK, or NONE, where NONE indicates the current focus should be used
      */
-    ModelVector getDragFocusVector() const;
+    ModelVector getDragFocusVector( PieceType focus = NONE ) const;
 
     /**
      * @brief Handles a drag to the given point

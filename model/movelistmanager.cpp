@@ -1,7 +1,20 @@
+#include <iostream>
 #include "movelistmanager.h"
+#include "controller/gameregistry.h"
+#include "controller/movecontroller.h"
 
-MoveListManager::MoveListManager( QObject* parent ) : PieceListManager(parent)
+MoveListManager::MoveListManager( PieceType initialFocus, QObject* parent ) : PieceListManager(parent), mInitialFocus(initialFocus)
 {
+}
+
+void MoveListManager::setInitialFocus( PieceType initialFocus )
+{
+    mInitialFocus = initialFocus;
+#ifndef QT_NO_DEBUG
+    if ( mPieces.size() ) {
+        std::cout << "** setInitialFocus called on non-empty list" << std::endl;
+    }
+#endif // QT_NO_DEBUG
 }
 
 MovePiece* MoveListManager::append( PieceType type, ModelPoint point, int angle, int shotCount, const Piece* pushPiece )
@@ -46,4 +59,13 @@ MovePiece* MoveListManager::setShotCountBack( int count )
         return move;
     }
     return 0;
+}
+
+ModelVector MoveListManager::getInitialVector()
+{
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        return registry->getMoveController().getBaseFocusVector( mInitialFocus );
+    }
+    std::cout << "*** getInitialVector: registry unreachable" << std::endl;
+    return ModelVector();
 }

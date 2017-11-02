@@ -15,6 +15,8 @@ MoveDragController::MoveDragController( QObject *parent ) : MoveBaseController(p
 void MoveDragController::init( GameRegistry* registry )
 {
     MoveBaseController::init( registry );
+    mDragMoves.setParent( registry );
+    mDragMoves.setInitialFocus( MOVE );
     PathFinderController& controller = registry->getPathFinderController();
     QObject::connect( &controller, &PathFinderController::pathFound,  this, &MoveDragController::onPathFound,  Qt::DirectConnection );
     QObject::connect( &controller, &PathFinderController::testResult, this, &MoveDragController::onTestResult, Qt::DirectConnection );
@@ -33,7 +35,7 @@ void MoveDragController::dragStart( ModelPoint selectedPoint )
         mChanged = false;
         mPreviousCoord = QPoint();
 
-        if ( selectedPoint.equals( getFocusVector() ) ) {
+        if ( selectedPoint.equals( getBaseFocusVector() ) ) {
             setDragState( DraggingTank );
         } else {
             Board* board = registry->getGame().getBoard(true);
@@ -86,7 +88,7 @@ void MoveDragController::move( int direction, bool doWakeup )
             setFocus( MOVE );
         }
 
-        moveInternal( getDragFocusVector(), mDragMoves, direction );
+        moveInternal( mDragMoves, direction );
     }
 }
 
@@ -134,7 +136,7 @@ int MoveDragController::getPushIdDelineation() const
 void MoveDragController::fire( int count )
 {
     if ( mDragState != Inactive ) {
-        fireInternal( getFocusVector(), mDragMoves, count );
+        fireInternal( mDragMoves, count );
     } else {
         MoveBaseController::fire( count );
     }
@@ -209,14 +211,16 @@ DragState MoveDragController::getDragState() const
     return mDragState;
 }
 
-ModelVector MoveDragController::getDragFocusVector() const
+ModelVector MoveDragController::getDragFocusVector( PieceType focus ) const
 {
-    if ( Piece* move = mDragMoves.getBack() ) {
-        if ( mFocus == MOVE || move->getType() == MOVE_HIGHLIGHT ) {
-            return *move;
+    if ( focus == NONE || focus == MOVE ) {
+        if ( Piece* move = mDragMoves.getBack() ) {
+            if ( mFocus == MOVE || move->getType() == MOVE_HIGHLIGHT ) {
+                return *move;
+            }
         }
     }
-    return getFocusVector();
+    return getBaseFocusVector( focus );
 }
 
 void MoveDragController::onPathFound( PieceListManager* path, PathSearchCriteria* criteria )
@@ -228,14 +232,14 @@ void MoveDragController::onPathFound( PieceListManager* path, PathSearchCriteria
         if ( mDragState != Searching ) {
             std::cout << "onPathFound: dragState=" << mDragState << std::endl;
         }
-        if ( !criteria->getStartPoint().equals(getFocusVector()) ) {
+        if ( !criteria->getStartPoint().equals(getBaseFocusVector()) ) {
             std::cout << "onPathFound: start " << criteria->getStartCol() << "," << criteria->getStartRow() << " != focus" << std::endl;
         }
 #endif // QT_NO_DEBUG
         mDragMoves.reset( path );
         mDragMoves.replaceBack( MOVE_HIGHLIGHT );
         if ( criteria->getCriteriaType() == PathSearchCriteria::TileDragTestCriteria ) {
-            moveInternal( getDragFocusVector(), mDragMoves, mTileDragFocusAngle );
+            moveInternal( mDragMoves, mTileDragFocusAngle );
             setDragState( DraggingTile );
         } else {
             setDragState( DraggingTank );
@@ -347,10 +351,10 @@ void MoveDragController::onDragTo( QPoint coord )
                                 mDragMoves.replaceBack( MOVE_HIGHLIGHT );
                             }
                         } else {
-                            moveInternal( getDragFocusVector(), mDragMoves, angle );
+                            moveInternal( mDragMoves, angle );
                             lastMove = mDragMoves.getBack();
                             if ( lastMove && !p.equals( *lastMove ) ) {
-                                moveInternal( getDragFocusVector(), mDragMoves, angle );
+                                moveInternal( mDragMoves, angle );
                             }
                         }
                         mChanged = true;
@@ -366,7 +370,7 @@ void MoveDragController::onDragTo( QPoint coord )
         // check for rotation change:
     {   int rotation = coordLeaning( coord, focusVector );
         if ( rotation >= 0 && rotation != focusVector.mAngle && rotation != coordLeaning( mPreviousCoord, focusVector ) ) {
-            moveInternal( getDragFocusVector(), mDragMoves, rotation );
+            moveInternal( mDragMoves, rotation );
         }
     }
         break;
@@ -409,7 +413,7 @@ void MoveDragController::dragStop()
         // erase any single move given it is only a left-over rotation:
         if ( mChanged && mDragMoves.size() == 1 ) {
             if ( Piece* piece = mDragMoves.getBack() ) {
-                if ( !piece->getShotCount() && getFocusVector().ModelPoint::equals( *piece ) ) {
+                if ( !piece->getShotCount() && getBaseFocusVector().ModelPoint::equals( *piece ) ) {
                     mDragMoves.eraseBack();
                 }
             }

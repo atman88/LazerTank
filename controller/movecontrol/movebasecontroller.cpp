@@ -18,6 +18,7 @@ void MoveBaseController::init( GameRegistry* registry )
 {
     setParent(registry);
     mFutureShots.setParent(registry);
+    mMoves.setParent(registry);
 
     QObject::connect( &registry->getTank().getShot(), &ShotModel::shooterReleased,        this, &MoveController::wakeup, Qt::QueuedConnection );
     QObject::connect( &registry->getShotAggregate(), &AnimationStateAggregator::finished, this, &MoveController::wakeup, Qt::QueuedConnection );
@@ -35,10 +36,10 @@ void MoveBaseController::onBoardLoaded( Board& board )
     onIdle();
 }
 
-bool MoveBaseController::moveInternal( const ModelVector& origin, MoveListManager& moves, int direction )
+bool MoveBaseController::moveInternal( MoveListManager& moves, int direction )
 {
     Piece* lastMove = moves.getBack();
-    ModelVector vector = (lastMove ? *lastMove : origin);
+    ModelVector vector = (lastMove ? *lastMove : moves.getInitialVector());
 
     if ( direction >= 0 && direction != vector.mAngle ) {
         if ( !lastMove || lastMove->hasPush() || lastMove->getShotCount() || (&moves == &mMoves && moves.size()==1 && mState >= FiringStage) ) {
@@ -60,18 +61,16 @@ bool MoveBaseController::moveInternal( const ModelVector& origin, MoveListManage
 
 void MoveBaseController::move( int direction, bool doWakeup )
 {
-    if ( GameRegistry* registry = getRegistry(this) ) {
-        if ( mFocus == TANK ) {
-            undoMoves();
-            setFocus( MOVE );
-        }
-        if ( moveInternal( registry->getTank().getVector(), mMoves, direction ) && doWakeup ) {
-            wakeup();
-        }
+    if ( mFocus == TANK ) {
+        undoMoves();
+        setFocus( MOVE );
+    }
+    if ( moveInternal( mMoves, direction ) && doWakeup ) {
+        wakeup();
     }
 }
 
-bool MoveBaseController::fireInternal( ModelVector initialVector, MoveListManager& moves, int count )
+bool MoveBaseController::fireInternal( MoveListManager& moves, int count )
 {
     if ( int nMoves = moves.size() ) {
         bool moveInPlay = (&moves == &mMoves && nMoves == 1);
@@ -93,7 +92,7 @@ bool MoveBaseController::fireInternal( ModelVector initialVector, MoveListManage
             count = 1;
         }
 
-        MovePiece* move = moves.append( MOVE, initialVector, count );
+        MovePiece* move = moves.append( MOVE, moves.getInitialVector(), count );
         mFutureShots.updateShots( 0, move );
         return &moves == &mMoves;
     }
@@ -103,10 +102,8 @@ bool MoveBaseController::fireInternal( ModelVector initialVector, MoveListManage
 
 void MoveBaseController::fire( int count )
 {
-    if ( GameRegistry* registry = getRegistry(this) ) {
-        if ( fireInternal( registry->getTank().getVector(), mMoves, count ) ) {
-            wakeup();
-        }
+    if ( fireInternal( mMoves, count ) ) {
+        wakeup();
     }
 }
 
@@ -271,7 +268,7 @@ bool MoveBaseController::applyPathUsingCriteria( PieceListManager* path, PathSea
         }
         mMoves.reset( path );
     } else {
-        if ( !criteria->getStartPoint().equals( getFocusVector() ) ) {
+        if ( !criteria->getStartPoint().equals( getBaseFocusVector() ) ) {
             std::cout << "* applyPathUsingCriteria: stale start point" << std::endl;
             return false;
         }
@@ -342,9 +339,13 @@ void MoveBaseController::setFocus( PieceType what )
     }
 }
 
-ModelVector MoveBaseController::getFocusVector() const
+ModelVector MoveBaseController::getBaseFocusVector( PieceType focus ) const
 {
-    if ( mFocus == MOVE ) {
+    if ( focus == NONE ) {
+        focus = mFocus;
+    }
+
+    if ( focus == MOVE ) {
         if ( Piece* move = mMoves.getBack() ) {
             return *move;
         }
@@ -356,5 +357,6 @@ ModelVector MoveBaseController::getFocusVector() const
     if ( GameRegistry* registry = getRegistry(this) ) {
         return registry->getTank().getVector();
     }
+    std::cout << "getBaseFocus tank not registered" << std::endl;
     return ModelVector();
 }
