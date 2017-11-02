@@ -193,7 +193,7 @@ void TestMain::testFutureShot2PushIdWater()
     moveController->fire(3);
     QCOMPARE( pieceManager.pieceAt( ModelPoint(6,0) )->getPushedId(), 0 );
     moveController->fire(0);
-    QCOMPARE( mRegistry.getGame().getDeltaPieces()->size(), 0UL );
+    QVERIFY( mRegistry.getGame().getDeltaPieces()->size()==0 );
 }
 
 void TestMain::testFutureShotTankKill()
@@ -210,7 +210,7 @@ void TestMain::testFutureShotTankKill()
     const PieceSet& boardPieces = game->getBoard(true)->getPieceManager().getPieces();
 
     moveController->fire(2);
-    QCOMPARE( boardPieces.size(), 0UL );
+    QVERIFY( boardPieces.size()==0 );
 
     moveController->fire(1);
     QCOMPARE( (*boardPieces.begin())->getPushedId(), 1 );
