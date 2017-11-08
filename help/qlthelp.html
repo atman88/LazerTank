@@ -62,7 +62,7 @@ square under the mouse cursor
 Choose a level to open
 </p>
 <p>
-<H3 id="autoreplay">Auto Replay - Alt r</H3>
+<H3 id="autoreplay">Auto Replay - Alt R</H3>
 Watch a replay of completed moves. Entering commands during replay (such as Esc) allows
 game play to resume from the current point in time. This is useful for undoing the
 remaining committed moves. Selecting replay before any moves have been entered replays
@@ -71,26 +71,40 @@ the last time the level was succesfully completed
 <!--<p>
 A piece can be pushed to an adjacent square by moving into it or by shooting it.
 </p>
-
-Wood Squares
-Wood squares can be removed by shooting them.
-
-
-<p style="margin-bottom: 0in; line-height: 100%"><br/>
-
-</p>
-<p style="margin-bottom: 0in; line-height: 100%">The Flag</p>
-<p style="margin-bottom: 0in; line-height: 100%">Moving onto the flag
-completes the level.</p>
-<p style="margin-bottom: 0in; line-height: 100%"><br/>
-
-</p>
-<p style="margin-bottom: 0in; line-height: 100%">Cannons</p>
-<p style="margin-bottom: 0in; line-height: 100%">A cannon will shoot
-the tank whenever the tank moves into its direct line of sight.
-Cannon shots do not reflect by mirrors, so the tank can shoot a
-cannon by using a mirror.</p>
-<p style="margin-bottom: 0in; line-height: 100%"><br/>
 -->
+
+<H2>Game Pieces</H2>
+<table id="pieces">
+<style>
+td {background:#f0f0f0;}
+</style>
+
+<tr><td>Tile<td><img src=":/images/tile-metal.png">
+<td>A pushable piece. Pushing these tiles onto water creates a bridge
+
+<tr><td>Bridge<td><img src=":/images/tile-sunk.png">
+<td>A tile submerged in water. Pieces can move over bridge squares
+
+<tr><td>Flag<td><img src=":/images/flag.png"></td>
+<td>Moving the tank onto the flag completes the level.
+
+<tr><td>Stone<td><img src=":/images/wall-stone.png"></td>
+<td>An indestructable, immovable barrier
+
+<tr><td>Wood<td><img src=":/images/wood.png"></td>
+<td>Wood squares cannot be pushed, though they can be destroyed by shooting them.
+Shooting a wood square once damages the wood. Shooting a damanged wood square destroys it
+
+<tr><td>Cannon<td><img src=":/images/cannon.png"></td>
+<td>A cannon will shoot at the tank whenever it moves within its line of sight. Cannons do not shoot through mirrors.
+A cannon is destroyed by shooting into its muzzle. A cannon can be pushed on its left, right and back sides
+
+<tr><td>Mirror<td><img src=":/images/tile-mirror.png"><img src=":/images/wall-mirror.png"></td>
+<td>Mirrors reflect the tank's lazer. Tile mirrors can be pushed on their non-reflective sides
+
+<tr><td>Slit<td><img src=":/images/stone-slit.png"></td>
+<td>A barrier to movement, but allows shots to pass through
+
+</table>
 </body>
 </html>
