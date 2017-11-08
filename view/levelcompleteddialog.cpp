@@ -18,7 +18,7 @@ LevelCompletedDialog::LevelCompletedDialog( GameRegistry* registry ) : mRegistry
     addButton( QString("E&xit" ), DestructiveRole );
     setDefaultButton( nextButton );
     int number = registry->getGame().getBoard()->getLevel();
-    nextButton->setEnabled( registry->getLevelList().nextLevel( number != 0 ) );
+    nextButton->setEnabled( registry->getLevelList().nextLevel( number ) );
 
     setLevelCountInternal();
     QObject::connect( &registry->getLevelList(), &LevelList::levelUpdated, this, &LevelCompletedDialog::onLevelUpdated );
