@@ -109,7 +109,7 @@ bool RecorderReader::consumeNext( RecorderPlayer* player )
 
     bool empty = true;
     if ( encoded.u.move.adjacent ) {
-        player->move( mLastDirection, !encoded.u.move.rotate );
+        player->move( mLastDirection );
         empty = false;
     }
 

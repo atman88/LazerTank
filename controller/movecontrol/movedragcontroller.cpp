@@ -78,10 +78,10 @@ ModelPoint MoveDragController::getDragTilePoint() const
     return mTileDragTestCriteria.getTargetPoint();
 }
 
-void MoveDragController::move( int direction, bool doWakeup )
+void MoveDragController::move( int direction )
 {
     if ( mDragState == Inactive ) {
-        MoveBaseController::move( direction, doWakeup );
+        MoveBaseController::move( direction );
     } else {
         if ( mFocus == TANK ) {
             undoMoves();

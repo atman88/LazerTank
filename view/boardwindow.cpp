@@ -530,16 +530,11 @@ void BoardWindow::keyReleaseEvent( QKeyEvent* ev )
             {   MoveController& moveController = registry->getMoveController();
                 moveController.setFocus( MOVE );
                 registry->getTank().resume();
-                moveController.wakeup();
             }
                 break;
 
             case Qt::Key_S:
                 registry->getSpeedController().toggleHighSpeed();
-                break;
-
-            case Qt::Key_C:
-                registry->getMoveController().wakeup();
                 break;
 
             case Qt::Key_A:

@@ -1,4 +1,6 @@
 #include <iostream>
+#include <QAbstractEventDispatcher>
+
 #include "../movecontroller.h"
 #include "../gameregistry.h"
 #include "../game.h"
@@ -20,6 +22,9 @@ void MoveBaseController::init( GameRegistry* registry )
     mFutureShots.setParent(registry);
     mMoves.setParent(registry);
 
+    QAbstractEventDispatcher *dispatcher = QAbstractEventDispatcher::instance();
+    QObject::connect( dispatcher, &QAbstractEventDispatcher::aboutToBlock, this, &MoveBaseController::wakeup, Qt::DirectConnection );
+
     QObject::connect( &registry->getTank().getShot(), &ShotModel::shooterReleased,        this, &MoveController::wakeup, Qt::QueuedConnection );
     QObject::connect( &registry->getShotAggregate(), &AnimationStateAggregator::finished, this, &MoveController::wakeup, Qt::QueuedConnection );
 }
@@ -36,7 +41,7 @@ void MoveBaseController::onBoardLoaded( Board& board )
     onIdle();
 }
 
-bool MoveBaseController::moveInternal( MoveListManager& moves, int direction )
+void MoveBaseController::moveInternal( MoveListManager& moves, int direction )
 {
     Piece* lastMove = moves.getBack();
     ModelVector vector = (lastMove ? *lastMove : moves.getInitialVector());
@@ -56,21 +61,18 @@ bool MoveBaseController::moveInternal( MoveListManager& moves, int direction )
             }
         }
     }
-    return &moves == &mMoves && moves.size()==1;
 }
 
-void MoveBaseController::move( int direction, bool doWakeup )
+void MoveBaseController::move( int direction )
 {
     if ( mFocus == TANK ) {
         undoMoves();
         setFocus( MOVE );
     }
-    if ( moveInternal( mMoves, direction ) && doWakeup ) {
-        wakeup();
-    }
+    moveInternal( mMoves, direction );
 }
 
-bool MoveBaseController::fireInternal( MoveListManager& moves, int count )
+void MoveBaseController::fireInternal( MoveListManager& moves, int count )
 {
     if ( int nMoves = moves.size() ) {
         bool moveInPlay = (&moves == &mMoves && nMoves == 1);
@@ -83,7 +85,7 @@ bool MoveBaseController::fireInternal( MoveListManager& moves, int count )
             }
             MovePiece* move = moves.setShotCountBack( count );
             mFutureShots.updateShots( previousCount, move );
-            return moveInPlay;
+            return;
         }
     }
 
@@ -94,17 +96,13 @@ bool MoveBaseController::fireInternal( MoveListManager& moves, int count )
 
         MovePiece* move = moves.append( MOVE, moves.getInitialVector(), count );
         mFutureShots.updateShots( 0, move );
-        return &moves == &mMoves;
+        return;
     }
-
-    return false;
 }
 
 void MoveBaseController::fire( int count )
 {
-    if ( fireInternal( mMoves, count ) ) {
-        wakeup();
-    }
+    fireInternal( mMoves, count );
 }
 
 void MoveBaseController::undoLastMoveInternal( PieceListManager& moves )
@@ -251,7 +249,6 @@ PieceListManager& MoveBaseController::getMoves()
 void MoveBaseController::onPathFound( PieceListManager* path, PathSearchCriteria* criteria )
 {
     applyPathUsingCriteria( path, criteria );
-    wakeup();
 }
 
 bool MoveBaseController::applyPathUsingCriteria( PieceListManager* path, PathSearchCriteria* criteria )

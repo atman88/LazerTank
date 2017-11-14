@@ -21,41 +21,41 @@ void TestMain::testFocus()
 
     MoveController& moveController = mRegistry.getMoveController();
     ModelVector expected(2,1,270);
-    QVERIFY( expected.equals( moveController.getBaseFocusVector()     ) );
+    QVERIFY( expected.equals( moveController.getBaseFocusVector() ) );
     QVERIFY( expected.equals( moveController.getDragFocusVector() ) );
 
-    moveController.move( 270, false );
+    moveController.move( 270 );
     --expected.mCol;
-    QVERIFY( expected.equals( moveController.getBaseFocusVector()     ) );
+    QVERIFY( expected.equals( moveController.getBaseFocusVector() ) );
     QVERIFY( expected.equals( moveController.getDragFocusVector() ) );
 
     moveController.setFocus( TANK );
     ++expected.mCol;
-    QVERIFY( expected.equals( moveController.getBaseFocusVector()     ) );
+    QVERIFY( expected.equals( moveController.getBaseFocusVector() ) );
     QVERIFY( expected.equals( moveController.getDragFocusVector() ) );
 
     moveController.setFocus( MOVE );
     --expected.mCol;
-    QVERIFY( expected.equals( moveController.getBaseFocusVector()     ) );
+    QVERIFY( expected.equals( moveController.getBaseFocusVector() ) );
     QVERIFY( expected.equals( moveController.getDragFocusVector() ) );
 
     moveController.dragStart( expected );
-    QVERIFY( expected.equals( moveController.getBaseFocusVector()     ) );
+    QVERIFY( expected.equals( moveController.getBaseFocusVector() ) );
     QVERIFY( expected.equals( moveController.getDragFocusVector() ) );
 
-    moveController.move( 270, false );
-    QVERIFY( expected.equals( moveController.getBaseFocusVector()     ) );
+    moveController.move( 270 );
+    QVERIFY( expected.equals( moveController.getBaseFocusVector() ) );
     --expected.mCol;
     QVERIFY( expected.equals( moveController.getDragFocusVector() ) );
 
     moveController.setFocus( TANK );
     expected.mCol += 2;
-    QVERIFY( expected.equals( moveController.getBaseFocusVector()     ) );
+    QVERIFY( expected.equals( moveController.getBaseFocusVector() ) );
     QVERIFY( expected.equals( moveController.getDragFocusVector() ) );
 
     moveController.setFocus( MOVE );
     --expected.mCol;
-    QVERIFY( expected.equals( moveController.getBaseFocusVector()     ) );
+    QVERIFY( expected.equals( moveController.getBaseFocusVector() ) );
     --expected.mCol;
     QVERIFY( expected.equals( moveController.getDragFocusVector() ) );
 }
@@ -188,7 +188,7 @@ void TestMain::testMoveFocus()
 
     MoveController& moveController = mRegistry.getMoveController();
     Tank& tank = mRegistry.getTank();
-    moveController.move(90, false);
+    moveController.move( 90 );
     QVERIFY( !tank.getVector().equals( moveController.getBaseFocusVector() ) );
     moveController.setFocus( TANK );
     QCOMPARE( moveController.getFocus(), TANK );

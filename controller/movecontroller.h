@@ -36,7 +36,7 @@ public:
      * @brief move the tank one square
      * @param direction A rotation angle (one of 0, 90, 180, 270) or -1 to advance in the current direction
      */
-    virtual void move( int direction, bool doWakeup = true );
+    virtual void move(int direction );
 
     /**
      * @brief Query a focus vector
@@ -129,18 +129,16 @@ protected:
      * @brief Add/modify move
      * @param moves The managed list of moves to update
      * @param direction The direction to move
-     * @return true if a wakeup is appropriate as a result of any changes applied, otherwise false
      */
-    bool moveInternal( MoveListManager& moves, int direction );
+    void moveInternal( MoveListManager& moves, int direction );
 
     /**
      * @brief Add/modify shots
      * Note that changes are applied to the end focus point (I.e. MOVE focus) of the given moves
      * @param moves The managed list of moves to update
      * @param count The shot count to set (or replace as appropriate). Passing -1 increments the shot count
-     * @return true if a wakeup is appropriate as a result of any changes applied, otherwise false
      */
-    bool fireInternal( MoveListManager& moves, int count );
+    void fireInternal( MoveListManager& moves, int count );
 
     /**
      * @brief Undoes the last move assuming state checking and highlight awareness is handled by the caller
@@ -240,10 +238,9 @@ public:
     /**
      * @brief move the tank one square
      * @param direction A rotation angle (one of 0, 90, 180, 270) or -1 to advance in the current direction
-     * @param doWakeup Suppresses starting animations when false
      * Attempts to move beyond the current square are ignored when dragging is active
      */
-    void move( int direction, bool doWakeup = true ) override;
+    void move( int direction ) override;
 
     /**
      * @brief undoes the last future move if safe to do so

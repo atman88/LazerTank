@@ -12,9 +12,9 @@ public:
     {
     }
 
-    void move( int direction, bool doWakeup = true )
+    void move( int direction )
     {
-        cout << "TestRecorderPlayer: move(" << direction << "," << doWakeup << ")" << endl;
+        cout << "TestRecorderPlayer: move(" << direction << ")" << endl;
         ++mMoveCallCount;
         mLastMoveDirection = direction;
     }
