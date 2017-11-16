@@ -61,8 +61,7 @@ void BoardRenderer::render( const QRect* rect, Board* board, QPainter* painter )
                     angle = 90;
                     break;
                 case WOOD_DAMAGED:
-                    BoardRenderer::renderPixmap( square, WOOD,   painter );
-                    BoardRenderer::renderPixmap( square, DAMAGE, painter );
+                    BoardRenderer::renderPixmap( square, WOOD_DAMAGED, painter );
                     break;
                 default: // EMPTY
                     break;

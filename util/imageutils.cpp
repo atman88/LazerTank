@@ -19,7 +19,7 @@ const ResourcePixmap* getPixmap( unsigned type )
         { STONE_MIRROR,      { "wall-mirror"         } },
         { STONE_SLIT,        { "stone-slit"          } },
         { WOOD,              { "wood"                } },
-        { DAMAGE,            { "damage"              } },
+        { WOOD_DAMAGED,      { "wood-damaged"        } },
         { TILE_MIRROR,       { "tile-mirror"         } },
         { CANNON,            { "cannon"              } },
         { TANK,              { "tank"                } },
