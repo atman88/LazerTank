@@ -44,7 +44,7 @@ While paused, focus can be changed using the Home and End keys
 <H3>Undo - backspace</H3>
 Erase the last pending move. Ctrl-backspace erases all pending moves. This undoes pending
 tank movement - it does not undo completed tank moves. To undo completed moves, use
-<A href=#autoreplay>Auto Replay</A>
+<a href=#autoreplay>Auto Replay</a>
 </p>
 <p>
 <H3>Speed control - s</H3>
@@ -76,35 +76,64 @@ A piece can be pushed to an adjacent square by moving into it or by shooting it.
 <H2>Game Pieces</H2>
 <table id="pieces">
 <style>
-td {background:#f0f0f0;}
+tr {background:#f0f0f0;}
 </style>
 
-<tr><td>Tile<td><img src=":/images/tile-metal.png">
-<td>A pushable piece. Pushing these tiles onto water creates a bridge
+<tr valign=middle>
+<td align=center>Tank
+<td align=center><img src=":/images/tank.png">
+<td>Control this vehicle by driving/shooting to complete each level
 
-<tr><td>Bridge<td><img src=":/images/tile-sunk.png">
+<tr valign=middle>
+<td align=center>Tile
+<td align=center><img src=":/images/tile-metal.png">
+<td>A pushable piece. Pushing these tiles onto water creates a bridge.
+A tile is pushed either by driving into it or by shooting it.
+Pieces can not be pushed into a square occupied by another piece
+
+<tr valign=middle>
+<td align=center>Bridge
+<td align=center><img src=":/images/tile-sunk.png">
 <td>A tile submerged in water. Pieces can move over bridge squares
 
-<tr><td>Flag<td><img src=":/images/flag.png"></td>
-<td>Moving the tank onto the flag completes the level.
+<tr valign=middle>
+<td align=center>Flag
+<td align=center><img src=":/images/flag.png">
+<td>Moving the tank onto the flag completes the level
 
-<tr><td>Stone<td><img src=":/images/wall-stone.png"></td>
+<tr valign=middle>
+<td align=center>Stone
+<td align=center><img src=":/images/wall-stone.png"></td>
 <td>An indestructable, immovable barrier
 
-<tr><td>Wood<td><img src=":/images/wood.png"></td>
+<tr valign=middle>
+<td align=center>Wood
+<td align=center><img src=":/images/wood.png"></td>
 <td>Wood squares cannot be pushed, though they can be destroyed by shooting them.
-Shooting a wood square once damages the wood. Shooting a damanged wood square destroys it
+Shooting a wood square once damages it. Shooting damaged wood destroys it
 
-<tr><td>Cannon<td><img src=":/images/cannon.png"></td>
-<td>A cannon will shoot at the tank whenever it moves within its line of sight. Cannons do not shoot through mirrors.
+<tr valign=middle>
+<td align=center>Damaged
+<td align=center><img src=":/images/damage.png"></td>
+<td>Cannot be pushed, though it can be destroyed by shooting it
+
+<tr valign=middle>
+<td align=center>Cannon
+<td align=center><img src=":/images/cannon.png"></td>
+<td>A cannon will shoot at the tank whenever it moves within its line of sight.
+Cannons do not shoot through mirrors.
 A cannon is destroyed by shooting into its muzzle. A cannon can be pushed on its left, right and back sides
 
-<tr><td>Mirror<td><img src=":/images/tile-mirror.png"><img src=":/images/wall-mirror.png"></td>
-<td>Mirrors reflect the tank's lazer. Tile mirrors can be pushed on their non-reflective sides
+<tr valign=middle>
+<td align=center>Mirror
+<td align=center><img src=":/images/tile-mirror.png"><br><img src=":/images/wall-mirror.png"></td>
+<td>Reflects the tank's lazer when shot into its glass.
+Tile mirrors can be pushed on their non-reflective sides
 
-<tr><td>Slit<td><img src=":/images/stone-slit.png"></td>
-<td>A barrier to movement, but allows shots to pass through
+<tr valign=middle>
+<td align=center>Slit
+<td align=center><img src=":/images/stone-slit.png"></td>
+<td>Cannot be moved, but shots pass through its glass core
 
 </table>
-</body>
 </html>
