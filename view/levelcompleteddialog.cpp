@@ -12,7 +12,7 @@ LevelCompletedDialog::LevelCompletedDialog( GameRegistry* registry ) : mRegistry
 {
     setWindowTitle( "Level completed!");
     setText( QString( "Completed in %1 moves" ).arg( registry->getRecorder().getAvailableCount() ) );
-    setIconPixmap( QPixmap(":/images/flag2.png") );
+    setIconPixmap( QPixmap(":/images/flag.png") );
     addButton( QString("&Auto Replay" ), ActionRole  );
     QPushButton* nextButton = addButton( QString("&Next Level" ), AcceptRole );
     addButton( QString("E&xit" ), DestructiveRole );

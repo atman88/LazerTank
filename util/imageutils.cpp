@@ -2,6 +2,7 @@
 #include <map>
 #include <string>
 #include <QPixmap>
+#include <QPainter>
 
 #include "imageutils.h"
 #include "model/board.h"
@@ -12,11 +13,11 @@ const ResourcePixmap* getPixmap( unsigned type )
         { STONE,             { "wall-stone"          } },
         { DIRT,              { "dirt"                } },
         { TILE_SUNK,         { "tile-sunk"           } },
-        { FLAG,              { "flag"                } },
+        { FLAG,              { "dirt+flag"           } },
         { TILE,              { "tile-metal"          } },
         { MOVE,              { "c&move-indicator"    } },
         { MOVE_HIGHLIGHT,    { "c&move-highlight"    } },
-        { STONE_MIRROR,      { "wall-mirror"         } },
+        { STONE_MIRROR,      { "dirt+wall-mirror"    } },
         { STONE_SLIT,        { "stone-slit"          } },
         { WOOD,              { "wood"                } },
         { WOOD_DAMAGED,      { "wood-damaged"        } },
@@ -68,10 +69,31 @@ ResourcePixmap::~ResourcePixmap()
 
 bool ResourcePixmap::load()
 {
-    QString path = QString( ":/images/%1.png" ).arg( mName );
+    const char* name = mName;
+    char* multiNamesBuf = 0;
+    if( const char* additionalName = strchr( name, '+' ) ) {
+        multiNamesBuf = (char*) alloca( strlen(name)+1 );
+        strcpy( multiNamesBuf, name );
+        multiNamesBuf[ (additionalName - name) ] = 0;
+        name = multiNamesBuf;
+    }
+
+    QString path = QString( ":/images/%1.png" ).arg( name );
     if ( !QPixmap::load( path ) ) {
         std::cout << "** failed to load " << qPrintable(path) << std::endl;
         return false;
+    }
+
+    if ( multiNamesBuf ) {
+        name = &multiNamesBuf[ strlen(name)+1 ];
+        QPixmap pixmap2;
+        path = QString( ":/images/%1.png" ).arg( name );
+        if ( !pixmap2.load( path ) ) {
+            std::cout << "** failed to load " << qPrintable(path) << std::endl;
+        } else {
+            QPainter painter( this );
+            painter.drawPixmap( (width()-pixmap2.width())/2, (height()-pixmap2.height())/2, pixmap2 );
+        }
     }
 
     if ( hasColorableTag() ) {
