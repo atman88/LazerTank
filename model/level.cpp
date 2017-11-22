@@ -98,10 +98,10 @@ public:
             QXmlInputSource xmlInputSource( &source );
 
             if ( !xml.parse( xmlInputSource ) ) {
-                std::cout << "** error parsing maps/levels.xml: " << qPrintable(xml.errorHandler()->errorString()) << std::endl;
+                std::cout << "** error parsing " << qPrintable(source.fileName()) << ": " << qPrintable(xml.errorHandler()->errorString()) << std::endl;
             }
         } else {
-            std::cout << "** couldn't' read maps/levels.xml" << std::endl;
+            std::cout << "** couldn't' read " << qPrintable(source.fileName()) << std::endl;
         }
 
         mLevelList.mInitialized = true;

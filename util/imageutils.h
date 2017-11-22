@@ -15,7 +15,7 @@ typedef enum {
 class ResourcePixmap : public QPixmap
 {
 public:
-    ResourcePixmap( const char* getName );
+    ResourcePixmap( const char* name );
     ~ResourcePixmap();
 
     /**
@@ -25,6 +25,10 @@ public:
      */
     static const ResourcePixmap* getPixmap( unsigned type );
 
+    /**
+     * @brief Load this pixmap unconditionally
+     * @return true if successful
+     */
     bool load();
 
     /**
@@ -32,8 +36,16 @@ public:
      */
     bool hasColorableTag() const;
 
+    /**
+     * @brief Get the name of this pixmap
+     */
     const char* getName() const;
 
+    /**
+     * @brief Get the pixmap associated with the given color
+     * @param color Key value
+     * @return The associated pixmap, or the default pixmap if no association for the given color
+     */
     const QPixmap* getForColor( const QColor& color ) const;
 
 private:

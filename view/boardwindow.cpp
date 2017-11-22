@@ -3,6 +3,7 @@
 #include <QAction>
 #include <QMessageBox>
 #include <QTextBrowser>
+#include <QWhatsThis>
 
 #include "boardwindow.h"
 #include "boardrenderer.h"
@@ -368,6 +369,11 @@ bool BoardWindow::event( QEvent* event )
         return true;
     }
 
+    if ( type == QltWhatsThisEvent::getEventType() ) {
+        QltWhatsThisEvent* whatsThisEvent = static_cast<QltWhatsThisEvent*>( event );
+        QWhatsThis::showText( whatsThisEvent->getPos(), whatsThisEvent->getHelpText() );
+    }
+
     return QWindow::event(event);
 }
 
@@ -476,7 +482,7 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
                     what = board->tileAt( p );
                 }
             }
-            whatsthis( globalPos, what );
+            whatsthis( globalPos, what, registry, this );
         } else if ( action == &pathToAction ) {
             registry->getPathFinderController().doAction( &pathToAction );
         } else if ( action == &mReloadAction ) {

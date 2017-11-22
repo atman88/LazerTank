@@ -2,7 +2,6 @@
 #define TESTASYNC_H
 
 #include <QTime>
-#include <QEventLoop>
 
 /**
  * @brief Utility
@@ -28,7 +27,6 @@ public:
     QTime getCreateTime() const;
 
 private:
-//    QEventLoop mLoop;
     QTime mCreateTime;
 };
 

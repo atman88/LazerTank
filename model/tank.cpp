@@ -1,5 +1,4 @@
 #include <iostream>
-#include <QEvent>
 #include <QCoreApplication>
 #include "tank.h"
 #include "controller/gameregistry.h"
