@@ -149,7 +149,11 @@ void whatsthis( QPoint* pos, unsigned what, GameRegistry* registry, QObject* rec
 {
     if ( pos ) {
         const ResourcePixmap* pixmap = ResourcePixmap::getPixmap( what );
-        registry->getWorker().doWork( new HelpLoadRunnable( pixmap->getName(), pos, receiver ) );
+        const char* name = pixmap->getName();
+        if ( const char* multiName = strchr( name, '+' ) ) {
+            name = &multiName[1];
+        }
+        registry->getWorker().doWork( new HelpLoadRunnable( name, pos, receiver ) );
     }
 }
 

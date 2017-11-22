@@ -481,6 +481,15 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
                     what = TANK;
                 } else {
                     what = board->tileAt( p );
+                    switch( what ) {
+                    case STONE_MIRROR__90:
+                    case STONE_MIRROR_180:
+                    case STONE_MIRROR_270:
+                        what = STONE_MIRROR;
+                        break;
+                    default:
+                        ;
+                    }
                 }
             }
             whatsthis( globalPos, what, registry, this );
