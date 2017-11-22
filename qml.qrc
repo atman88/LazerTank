@@ -5,7 +5,6 @@
         <file>images/tank.png</file>
         <file>images/move-indicator.png</file>
         <file>images/tile-metal.png</file>
-        <file>images/flag.png</file>
         <file>maps/level2.txt</file>
         <file>images/tile-sunk.png</file>
         <file>maps/level1.txt</file>
@@ -31,7 +30,6 @@
         <file>images/tile-future-insert.png</file>
         <file>maps/level16.txt</file>
         <file>maps/level17.txt</file>
-        <file>images/damage.png</file>
         <file>maps/level18.txt</file>
         <file>maps/level19.txt</file>
         <file>maps/level20.txt</file>
@@ -68,6 +66,7 @@
         <file>icons/tank.ico</file>
         <file>images/tank-fast.png</file>
         <file>images/complete-checkmark.png</file>
-        <file>images/flag2.png</file>
+        <file>images/flag.png</file>
+        <file>images/wood-damaged.png</file>
     </qresource>
 </RCC>

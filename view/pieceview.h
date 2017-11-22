@@ -18,7 +18,6 @@ typedef enum {
     CANNON,
     TILE_FUTURE_ERASE,
     TILE_FUTURE_INSERT,
-    DAMAGE,
     PieceTypeUpperBound   // must be last
 } PieceType;
 
