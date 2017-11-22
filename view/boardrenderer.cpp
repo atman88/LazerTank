@@ -35,7 +35,7 @@ void BoardRenderer::render( const QRect* rect, Board* board, QPainter* painter )
             square.moveLeft( col * mTileSize );
 
             TileType type = board->tileAt( ModelPoint(col,row) );
-            const QPixmap* pixmap = getPixmap( type );
+            const QPixmap* pixmap = ResourcePixmap::getPixmap( type );
             if ( !pixmap->isNull() ) {
                 painter->drawPixmap( square, *pixmap );
             } else {
@@ -45,19 +45,19 @@ void BoardRenderer::render( const QRect* rect, Board* board, QPainter* painter )
                     painter->fillRect( square, QColor(33,33,255) );
                     break;
                 case STONE_MIRROR__90:
-                    pixmap = getPixmap( STONE_MIRROR );
+                    pixmap = ResourcePixmap::getPixmap( STONE_MIRROR );
                     angle = 90;
                     break;
                 case STONE_MIRROR_180:
-                    pixmap = getPixmap( STONE_MIRROR );
+                    pixmap = ResourcePixmap::getPixmap( STONE_MIRROR );
                     angle = 180;
                     break;
                 case STONE_MIRROR_270:
-                    pixmap = getPixmap( STONE_MIRROR );
+                    pixmap = ResourcePixmap::getPixmap( STONE_MIRROR );
                     angle = 270;
                     break;
                 case STONE_SLIT_90:
-                    pixmap = getPixmap( STONE_SLIT );
+                    pixmap = ResourcePixmap::getPixmap( STONE_SLIT );
                     angle = 90;
                     break;
                 case WOOD_DAMAGED:
@@ -85,7 +85,7 @@ void BoardRenderer::render( const QRect* rect, Board* board, QPainter* painter )
 
 void BoardRenderer::renderPixmap( QRect& square, unsigned type, QPainter* painter )
 {
-    if ( const QPixmap* pixmap = getPixmap(type) ) {
+    if ( const QPixmap* pixmap = ResourcePixmap::getPixmap(type) ) {
         painter->drawPixmap( square, *pixmap );
     } else {
         std::cout << "*** attempt to paint unlisted pixmap " << type << std::endl;
@@ -116,7 +116,7 @@ void BoardRenderer::renderRotatedPixmap( const QPixmap* pixmap, QRect& square, i
 
 void BoardRenderer::renderPiece( PieceType type, QRect& square, int angle, QPainter* painter )
 {
-    const ResourcePixmap* pixmap = getPixmap( type );
+    const ResourcePixmap* pixmap = ResourcePixmap::getPixmap( type );
     if ( pixmap->isNull() ) {
         std::cout << "no pixmap for " << type << std::endl;
         return;

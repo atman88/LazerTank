@@ -1,6 +1,7 @@
 #ifndef IMAGEUTILS_H
 #define IMAGEUTILS_H
 
+#include <map>
 #include <QPixmap>
 
 #include "view/pieceview.h"
@@ -17,6 +18,13 @@ public:
     ResourcePixmap( const char* getName );
     ~ResourcePixmap();
 
+    /**
+     * @brief Retrieve the image for the given piece or tile type
+     * @param type Identifier. Can be a PieceType, TileType or PixmapType value.
+     * @return The associated pixmap. An empty pixmap is returned for unregistered types.
+     */
+    static const ResourcePixmap* getPixmap( unsigned type );
+
     bool load();
 
     /**
@@ -29,16 +37,15 @@ public:
     const QPixmap* getForColor( const QColor& color ) const;
 
 private:
+    static ResourcePixmap* getNullPixmap();
+
     const char* mName;
     int mTagCount;
     QPixmap* mBluePixmap;
-};
 
-/**
- * @brief Retrieve the image for the given piece or tile type
- * @param type Identifier. Can be a PieceType, TileType or PixmapType value.
- * @return The associated pixmap. An empty pixmap is returned for unregistered types.
- */
-extern const ResourcePixmap* getPixmap( unsigned type );
+    static std::map<int,ResourcePixmap> nameMap;
+    static ResourcePixmap* nameArray[PixmapTypeUpperBound];
+    static ResourcePixmap* NullPixmap;
+};
 
 #endif // IMAGEUTILS_H

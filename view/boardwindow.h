@@ -199,6 +199,7 @@ private:
     QBackingStore *mBackingStore;
     BoardRenderer mRenderer;
     QMenu mMenu;
+    ACTION mWhatsThisAction;
     ACTION mSpeedAction;
     ACTION mReloadAction;
     ACTION mUndoMoveAction;

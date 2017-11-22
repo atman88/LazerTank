@@ -3,6 +3,7 @@
 
 #include <QtGlobal>
 QT_FORWARD_DECLARE_CLASS(QPainter)
+QT_FORWARD_DECLARE_CLASS(QRect)
 
 #include "tile.h"
 #include "model/modelpoint.h"

@@ -50,7 +50,7 @@ public:
           Qt::AlignBottom|Qt::AlignRight|Qt::TextDontClip|Qt::TextSingleLine, QString::number(level.getNumber()) );
 
         if ( level.getCompletedCount() > 0 ) {
-            painter->drawPixmap( PADDING_WIDTH, 0, *getPixmap(COMPLETE_CHECKMARK) );
+            painter->drawPixmap( PADDING_WIDTH, 0, *ResourcePixmap::getPixmap(COMPLETE_CHECKMARK) );
         }
 
         painter->restore();

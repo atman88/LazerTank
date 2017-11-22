@@ -19,6 +19,7 @@
 #include "view/levelchooser.h"
 #include "util/recorder.h"
 #include "util/imageutils.h"
+#include "util/helputils.h"
 
 #define TILE_SIZE 24
 #define STATUS_HEIGHT 18
@@ -243,7 +244,7 @@ void BoardWindow::renderStatus( QRect& statusRect, GameRegistry* registry, QPain
             r = painter->boundingRect( statusRect, Qt::AlignVCenter, s );
             r.moveLeft( statusRect.width()-r.width()-2 );
             painter->drawText( r, 0, s );
-            const QPixmap* checkmark = getPixmap(COMPLETE_CHECKMARK);
+            const QPixmap* checkmark = ResourcePixmap::getPixmap(COMPLETE_CHECKMARK);
             painter->drawPixmap( r.left()-checkmark->width()-2, statusRect.bottom()-checkmark->height(), *checkmark );
         }
     }
@@ -394,6 +395,7 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
         //
         if ( mMenu.isEmpty() ) {
             mMenu.addAction( "shoot& ", &registry->getMoveController(), SLOT(fire()), Qt::Key_Space );
+            TO_QACTION(mWhatsThisAction).setText( "What's this?" );
             TO_QACTION(mUndoMoveAction).setText( "&Undo" );
             TO_QACTION(mClearMovesAction).setText( "Clear Moves" );
             TO_QACTION(mSpeedAction).setText( "&Speed Boost" );
@@ -409,6 +411,7 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             TO_QACTION(mReloadAction).setShortcut( Qt::ALT|Qt::Key_R );
             TO_QACTION(mReplayAction).setShortcut( Qt::ALT|Qt::Key_A );
 
+            mMenu.addAction( &TO_QACTION(mWhatsThisAction)  );
             mMenu.addAction( &TO_QACTION(mSpeedAction)      );
             mMenu.addAction( &TO_QACTION(mUndoMoveAction)   );
             mMenu.addAction( &TO_QACTION(mClearMovesAction) );
@@ -426,6 +429,7 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
         // freshen dynamic menu item properties
         //
         Board* board = registry->getGame().getBoard();
+        TO_QACTION(mWhatsThisAction).setVisible( globalPos != 0 );
         TO_QACTION(mSpeedAction).setChecked( registry->getSpeedController().getHighSpeed() );
         TO_QACTION(mReloadAction).setData( QVariant( board->getLevel()) );
 
@@ -463,6 +467,16 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
         QAction* action = mMenu.exec( pos );
         if ( action == &captureAction ) {
             registry->getPathFinderController().doAction( &captureAction );
+        } else if ( action == &mWhatsThisAction ) {
+            unsigned what = board->getPieceManager().typeAt( p );
+            if ( what == NONE ) {
+                if ( registry->getTank().getPoint().equals( p ) ) {
+                    what = TANK;
+                } else {
+                    what = board->tileAt( p );
+                }
+            }
+            whatsthis( globalPos, what );
         } else if ( action == &pathToAction ) {
             registry->getPathFinderController().doAction( &pathToAction );
         } else if ( action == &mReloadAction ) {

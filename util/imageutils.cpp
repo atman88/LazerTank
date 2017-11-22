@@ -1,46 +1,57 @@
 #include <iostream>
-#include <map>
 #include <string>
 #include <QPixmap>
 
 #include "imageutils.h"
 #include "model/board.h"
 
-const ResourcePixmap* getPixmap( unsigned type )
-{
-    static std::map<int,ResourcePixmap> nameMap = {
-        { STONE,             { "wall-stone"          } },
-        { DIRT,              { "dirt"                } },
-        { TILE_SUNK,         { "tile-sunk"           } },
-        { FLAG,              { "flag"                } },
-        { TILE,              { "tile-metal"          } },
-        { MOVE,              { "c&move-indicator"    } },
-        { MOVE_HIGHLIGHT,    { "c&move-highlight"    } },
-        { STONE_MIRROR,      { "wall-mirror"         } },
-        { STONE_SLIT,        { "stone-slit"          } },
-        { WOOD,              { "wood"                } },
-        { DAMAGE,            { "damage"              } },
-        { TILE_MIRROR,       { "tile-mirror"         } },
-        { CANNON,            { "cannon"              } },
-        { TANK,              { "tank"                } },
-        { TILE_FUTURE_ERASE, { "c&tile-future-erase" } },
-        { TILE_FUTURE_INSERT,{ "c&tile-future-insert"} },
-        { TANK_FAST,         { "tank-fast"           } },
-        { COMPLETE_CHECKMARK,{"complete-checkmark"   } }
-    };
-    static ResourcePixmap* nameArray[PixmapTypeUpperBound] = { 0 };
-    static ResourcePixmap NullPixmap( "null" );
+ResourcePixmap* ResourcePixmap::nameArray[PixmapTypeUpperBound] = { 0 };
+ResourcePixmap* ResourcePixmap::NullPixmap = 0;
+std::map<int,ResourcePixmap> ResourcePixmap::nameMap;
 
+ResourcePixmap* ResourcePixmap::getNullPixmap()
+{
+    if ( !NullPixmap ) {
+        NullPixmap = new ResourcePixmap("null");
+    }
+    return NullPixmap;
+}
+
+const ResourcePixmap* ResourcePixmap::getPixmap( unsigned type )
+{
     if ( type >= (sizeof nameArray)/(sizeof *nameArray) ) {
         std::cout << "attempt to get INVALID pixmap " << type << std::endl;
-        return &NullPixmap;
+        return getNullPixmap();
     }
 
     ResourcePixmap *p = nameArray[type];
     if ( !p ) {
+        if ( !nameMap.size() ) {
+            nameMap = {
+                { STONE,             { "wall-stone"          } },
+                { DIRT,              { "dirt"                } },
+                { TILE_SUNK,         { "tile-sunk"           } },
+                { FLAG,              { "flag"                } },
+                { TILE,              { "tile-metal"          } },
+                { MOVE,              { "c&move-indicator"    } },
+                { MOVE_HIGHLIGHT,    { "c&move-highlight"    } },
+                { STONE_MIRROR,      { "wall-mirror"         } },
+                { STONE_SLIT,        { "stone-slit"          } },
+                { WOOD,              { "wood"                } },
+                { DAMAGE,            { "damage"              } },
+                { TILE_MIRROR,       { "tile-mirror"         } },
+                { CANNON,            { "cannon"              } },
+                { TANK,              { "tank"                } },
+                { TILE_FUTURE_ERASE, { "c&tile-future-erase" } },
+                { TILE_FUTURE_INSERT,{ "c&tile-future-insert"} },
+                { TANK_FAST,         { "tank-fast"           } },
+                { COMPLETE_CHECKMARK,{"complete-checkmark"   } }
+            };
+        }
+
         auto it = nameMap.find( type );
         if ( it == nameMap.end() ) {
-            p = &NullPixmap;
+            p = getNullPixmap();
         } else {
             p = &it->second;
 
