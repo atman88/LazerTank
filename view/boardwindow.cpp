@@ -133,6 +133,7 @@ void BoardWindow::showHelp()
             QRect rect = myScreen->availableGeometry();
             rect.setWidth( rect.width()/2 );
             rect.setHeight( (rect.height() * 2) / 3 );
+            rect.moveTo(50,50); // avoid having the frame clipped offscreen on MSWindows
             mHelpWidget->setGeometry( rect );
         }
         mHelpWidget->setSource( QUrl::fromLocalFile(":/help/qlthelp.html") );
