@@ -41,9 +41,6 @@ void BoardRenderer::render( const QRect* rect, Board* board, QPainter* painter )
             } else {
                 int angle = 0;
                 switch( type ) {
-                case WATER:
-                    painter->fillRect( square, QColor(33,33,255) );
-                    break;
                 case STONE_MIRROR__90:
                     pixmap = ResourcePixmap::getPixmap( STONE_MIRROR );
                     angle = 90;

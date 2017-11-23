@@ -68,5 +68,6 @@
         <file>images/complete-checkmark.png</file>
         <file>images/flag.png</file>
         <file>images/wood-damaged.png</file>
+        <file>images/water.png</file>
     </qresource>
 </RCC>

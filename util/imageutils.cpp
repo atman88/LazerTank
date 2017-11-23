@@ -31,6 +31,7 @@ const ResourcePixmap* ResourcePixmap::getPixmap( unsigned type )
             nameMap = {
                 { STONE,             { "wall-stone"          } },
                 { DIRT,              { "dirt"                } },
+                { WATER,             { "water"               } },
                 { TILE_SUNK,         { "tile-sunk"           } },
                 { FLAG,              { "dirt+flag"           } },
                 { TILE,              { "tile-metal"          } },

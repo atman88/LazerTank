@@ -487,6 +487,9 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
                     case STONE_MIRROR_270:
                         what = STONE_MIRROR;
                         break;
+                    case STONE_SLIT_90:
+                        what = STONE_SLIT;
+                        break;
                     default:
                         ;
                     }
