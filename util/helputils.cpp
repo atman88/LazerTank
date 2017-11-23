@@ -20,7 +20,7 @@ class HelpXmlHandler : public QXmlDefaultHandler
     } State;
 
 public:
-    HelpXmlHandler( QString key ) : mKey(key), mCurrentColumn(0), mState(Idle)
+    HelpXmlHandler( QString key ) : mKey(key), mState(Idle), mCurrentColumn(0)
     {
     }
 
@@ -82,7 +82,7 @@ public:
             case 1: mDisplayName += ch; break;
             case 3: mText += ch;
                 mState = Done;
-                break;
+                return false; // terminate
             default:
                 ;
             }
@@ -110,30 +110,25 @@ public:
         return mText;
     }
 
+    bool fatalError(const QXmlParseException &exception) { if ( mState != Done ) printException("*** ", exception); return false; }
+    bool error(     const QXmlParseException &exception) { if ( mState != Done ) printException("** ",  exception); return false; }
+    bool warning(   const QXmlParseException &exception) { if ( mState != Done ) printException("* ",   exception); return false; }
+    QString errorString() const { return mErrorString; }
+
 private:
+    void printException( const char* prefix, const QXmlParseException &exception)
+    {
+        mErrorString = QString( "line %1 column %2: %3" ).arg( exception.lineNumber() ).arg( exception.columnNumber() ).arg( exception.message() );
+        std::cout << prefix << qPrintable(mErrorString) << std::endl;
+    }
+
+    QString mErrorString;
+
     QString mKey;
     State mState;
     int mCurrentColumn;
     QString mDisplayName;
     QString mText;
-};
-
-class MyErrorHandler : public QXmlErrorHandler
-{
-public:
-    bool fatalError(const QXmlParseException &exception) { std::cout << "*** "; printException(exception); return false; }
-    bool error(     const QXmlParseException &exception) { std::cout << "** ";  printException(exception); return false; }
-    bool warning(   const QXmlParseException &exception) { std::cout << "** ";  printException(exception); return false; }
-    QString errorString() const { return mErrorString; }
-
-private:
-    void printException(const QXmlParseException &exception)
-    {
-        mErrorString = QString( "line %1 column %2: %3" ).arg( exception.lineNumber() ).arg( exception.columnNumber() ).arg( exception.message() );
-        std::cout << qPrintable(mErrorString) << std::endl;
-    }
-
-    QString mErrorString;
 };
 
 class HelpLoadRunnable : public BasicRunnable
@@ -151,8 +146,7 @@ public:
             HelpXmlHandler handler( mName );
             xml.setContentHandler( &handler );
             QXmlInputSource xmlInputSource( &source );
-            MyErrorHandler errorHandler;
-            xml.setErrorHandler( &errorHandler );
+            xml.setErrorHandler( &handler );
 
             xml.parse( xmlInputSource );
             if ( handler.found() ) {
