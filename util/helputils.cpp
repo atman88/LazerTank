@@ -16,11 +16,11 @@ class HelpXmlHandler : public QXmlDefaultHandler
         ReadingTable,
         ReadingRow,
         ReadingColumn,
-        Found
+        Done
     } State;
 
 public:
-    HelpXmlHandler( QString key ) : mKey(key), mState(Idle)
+    HelpXmlHandler( QString key ) : mKey(key), mCurrentColumn(0), mState(Idle)
     {
     }
 
@@ -36,17 +36,29 @@ public:
             }
             break;
         case ReadingTable:
-            if ( localName == "img" ) {
-                if ( attributes.value( "src" ) == mKey ) {
-                    mState = ReadingRow;
-                }
+            if ( localName == "tr" && attributes.value( "id" ) == mKey ) {
+                mState = ReadingRow;
+                mCurrentColumn = 0;
             }
             break;
 
         case ReadingRow:
             if ( localName == "td" ) {
-                mState = ReadingColumn;
+                ++mCurrentColumn;
+            } else {
+                QString* p = 0;
+                switch( mCurrentColumn ) {
+                case 1: p = &mDisplayName; break;
+                case 3: p = &mText; break;
+                default:
+                    ;
+                }
+
+                if ( p && localName == "br" ) {
+                    *p += "<br/>";
+                }
             }
+            break;
 
         default:
             ;
@@ -65,28 +77,45 @@ public:
 
     bool characters( const QString &ch )
     {
-        if ( mState == ReadingColumn ) {
-            mResult = ch;
-            std::cout << "found: " << qPrintable(mResult) << std::endl;
-            mState = Found;
+        if ( mState == ReadingRow ) {
+            switch( mCurrentColumn ) {
+            case 1: mDisplayName += ch; break;
+            case 3: mText += ch;
+                mState = Done;
+                break;
+            default:
+                ;
+            }
         }
         return true;
     }
 
     bool found()
     {
-        return mState == Found;
+        return mState == Done;
     }
 
-    QString& getResult()
+    QString& getKey()
     {
-        return mResult;
+        return mKey;
+    }
+
+    QString& getDisplayName()
+    {
+        return mDisplayName;
+    }
+
+    QString& getText()
+    {
+        return mText;
     }
 
 private:
     QString mKey;
     State mState;
-    QString mResult;
+    int mCurrentColumn;
+    QString mDisplayName;
+    QString mText;
 };
 
 class MyErrorHandler : public QXmlErrorHandler
@@ -119,7 +148,7 @@ public:
         QFile source( ":/help/qlthelp.html" );
         if ( source.open( QIODevice::ReadOnly ) ) {
             QXmlSimpleReader xml;
-            HelpXmlHandler handler( QString(":/images/%1.png").arg(mName) );
+            HelpXmlHandler handler( mName );
             xml.setContentHandler( &handler );
             QXmlInputSource xmlInputSource( &source );
             MyErrorHandler errorHandler;
@@ -127,7 +156,18 @@ public:
 
             xml.parse( xmlInputSource );
             if ( handler.found() ) {
-                QCoreApplication::postEvent( mReceiver, new QltWhatsThisEvent( mPos, handler.getResult() ) );
+                QString text = QString(
+                  "<html>"
+                   "<table>"
+                     "<tr valign=middle>"
+                      "<td>%2</td>"
+                      "<td><img src=\":/images/%1.png\"/></td>"
+                      "<td>%3</td>"
+                     "</tr>"
+                    "</table>"
+                   "<html>" ).arg( mName ).arg( handler.getDisplayName() ).arg( handler.getText() );
+
+                QCoreApplication::postEvent( mReceiver, new QltWhatsThisEvent( mPos, text ) );
             }
         } else {
             std::cout << "** couldn't' read " << qPrintable(source.fileName()) << std::endl;

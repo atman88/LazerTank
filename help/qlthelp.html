@@ -79,13 +79,13 @@ the last time the level was succesfully completed
 tr {background:#f0f0f0;}
 </style>
 
-<tr valign="middle">
+<tr id="tank" valign="middle">
 <td align="center">Tank</td>
 <td align="center"><img src=":/images/tank.png"/></td>
-<td>Control this vehicle by driving/shooting to complete each level</td>
+<td>You control this vehicle by driving it and shooting its lazer</td>
 </tr>
 
-<tr valign="middle">
+<tr id="tile-metal" valign="middle">
 <td align="center">Tile</td>
 <td align="center"><img src=":/images/tile-metal.png"/></td>
 <td>A pushable piece. Pushing these tiles onto water creates a bridge.
@@ -93,38 +93,38 @@ A tile is pushed either by driving into it or by shooting it.
 Pieces can not be pushed into a square occupied by another piece</td>
 </tr>
 
-<tr valign="middle">
+<tr id="tile-sunk" valign="middle">
 <td align="center">Bridge</td>
 <td align="center"><img src=":/images/tile-sunk.png"/></td>
 <td>A tile submerged in water. Pieces can move over bridge squares</td>
 </tr>
 
-<tr valign="middle">
+<tr id="flag" valign="middle">
 <td align="center">Flag</td>
 <td align="center"><img src=":/images/flag.png"/></td>
 <td>Moving the tank onto the flag completes the level</td>
 </tr>
 
-<tr valign="middle">
+<tr id="wall-stone" valign="middle">
 <td align="center">Stone</td>
 <td align="center"><img src=":/images/wall-stone.png"/></td>
 <td>An indestructable, immovable barrier</td>
 </tr>
 
-<tr valign="middle">
+<tr id="wood" valign="middle">
 <td align="center">Wood</td>
 <td align="center"><img src=":/images/wood.png"/></td>
 <td>Wood squares cannot be pushed, though they can be destroyed by shooting them.
 Shooting a wood square once damages it. Shooting damaged wood destroys it</td>
 </tr>
 
-<tr valign="middle">
+<tr id="wood-damaged" valign="middle">
 <td align="center">Damaged<br/>Wood</td>
 <td align="center"><img src=":/images/wood-damaged.png"/></td>
 <td>Cannot be pushed, though it can be destroyed by shooting it. Destroying it enables movement within its square</td>
 </tr>
 
-<tr valign="middle">
+<tr id="cannon" valign="middle">
 <td align="center">Cannon</td>
 <td align="center"><img src=":/images/cannon.png"/></td>
 <td>A cannon will shoot at the tank whenever it moves within its line of sight.
@@ -132,32 +132,32 @@ Cannons do not shoot through mirrors.
 A cannon is destroyed by shooting into its muzzle. A cannon can be pushed on its left, right and back sides</td>
 </tr>
 
-<tr valign="middle">
+<tr id="tile-mirror" valign="middle">
 <td align="center">Tile<br/>Mirror</td>
 <td align="center"><img src=":/images/tile-mirror.png"/></td>
 <td>Reflects the tank's lazer when shot into either glass side. Can be pushed on its non-reflective sides</td>
 </tr>
 
-<tr valign="middle">
+<tr id="wall-mirror" valign="middle">
 <td align="center">Stone<br/>Mirror</td>
-<td align="center"><br/><img src=":/images/wall-mirror.png"/></td>
-<td>Immovable barrier that reflects the tank's lazer when shot into either glass side.</td>
+<td align="center"><img src=":/images/wall-mirror.png"/></td>
+<td>An immovable barrier that reflects the tank's lazer when shot into either glass side.</td>
 </tr>
 
-<tr valign="middle">
+<tr id="stone-slit" valign="middle">
 <td align="center">Slit</td>
 <td align="center"><img src=":/images/stone-slit.png"/></td>
 <td>Cannot be moved, but shots pass through its glass core</td>
 </tr>
 
-<tr valign="middle">
+<tr id="water" valign="middle">
 <td align="center">Water</td>
 <td align="center"><img src=":/images/water.png"/></td>
 <td>The tank cannot move on water, though pushing a tile into water creates a bridge.
 Pushing other pushable pieces causes them to sink which destroys them</td>
 </tr>
 
-<tr valign="middle">
+<tr id="dirt" valign="middle">
 <td align="center">Dirt</td>
 <td align="center"><img src=":/images/dirt.png"/></td>
 <td>An unoccuppied square. Has freedom of movement</td>
