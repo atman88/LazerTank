@@ -80,7 +80,8 @@ HEADERS += \
     view/levelchooser.h \
     model/boardpool.h \
     view/tiledragmarker.h \
-    view/levelcompleteddialog.h
+    view/levelcompleteddialog.h \
+    util/qltxmlhandler.h
 
 SOURCES += \
     view/shooter.cpp \
@@ -113,7 +114,8 @@ SOURCES += \
     view/levelchooser.cpp \
     model/boardpool.cpp \
     view/tiledragmarker.cpp \
-    view/levelcompleteddialog.cpp
+    view/levelcompleteddialog.cpp \
+    util/qltxmlhandler.cpp
 
 test{
     INCLUDEPATH += test/controller

@@ -7,6 +7,7 @@
 #include "controller/gameregistry.h"
 #include "model/boardpool.h"
 #include "util/gameutils.h"
+#include "util/qltxmlhandler.h"
 
 
 Level::Level( int number, int width, int height ) : mNumber(number), mSize(QSize(width,height)), mCompletedCount(0)
@@ -48,7 +49,7 @@ void Level::setCompletedCount( int completedCount )
 }
 
 
-class LevelXmlHandler : public QXmlDefaultHandler
+class LevelXmlHandler : public QltXmlHandler
 {
 public:
     LevelXmlHandler( LevelList& levels ) : mLevels(levels)
@@ -76,6 +77,11 @@ public:
         return true;
     }
 
+    bool isDone()
+    {
+        return false;
+    }
+
 private:
     LevelList& mLevels;
 };
@@ -98,7 +104,7 @@ public:
             QXmlInputSource xmlInputSource( &source );
 
             if ( !xml.parse( xmlInputSource ) ) {
-                std::cout << "** error parsing " << qPrintable(source.fileName()) << ": " << qPrintable(xml.errorHandler()->errorString()) << std::endl;
+                std::cout << "** error parsing " << qPrintable(source.fileName()) << ": " << qPrintable(handler.errorString()) << std::endl;
             }
         } else {
             std::cout << "** couldn't' read " << qPrintable(source.fileName()) << std::endl;

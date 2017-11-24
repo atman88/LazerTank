@@ -5,11 +5,12 @@
 #include <QCoreApplication>
 
 #include "helputils.h"
+#include "qltxmlhandler.h"
 #include "imageutils.h"
 #include "workerthread.h"
 #include "controller/gameregistry.h"
 
-class HelpXmlHandler : public QXmlDefaultHandler
+class HelpXmlHandler : public QltXmlHandler
 {
     typedef enum {
         Idle,
@@ -90,7 +91,7 @@ public:
         return true;
     }
 
-    bool found()
+    bool isDone()
     {
         return mState == Done;
     }
@@ -110,20 +111,7 @@ public:
         return mText;
     }
 
-    bool fatalError(const QXmlParseException &exception) { if ( mState != Done ) printException("*** ", exception); return false; }
-    bool error(     const QXmlParseException &exception) { if ( mState != Done ) printException("** ",  exception); return false; }
-    bool warning(   const QXmlParseException &exception) { if ( mState != Done ) printException("* ",   exception); return false; }
-    QString errorString() const { return mErrorString; }
-
 private:
-    void printException( const char* prefix, const QXmlParseException &exception)
-    {
-        mErrorString = QString( "line %1 column %2: %3" ).arg( exception.lineNumber() ).arg( exception.columnNumber() ).arg( exception.message() );
-        std::cout << prefix << qPrintable(mErrorString) << std::endl;
-    }
-
-    QString mErrorString;
-
     QString mKey;
     State mState;
     int mCurrentColumn;
@@ -149,7 +137,7 @@ public:
             xml.setErrorHandler( &handler );
 
             xml.parse( xmlInputSource );
-            if ( handler.found() ) {
+            if ( handler.isDone() ) {
                 QString text = QString(
                   "<html>"
                    "<table>"
