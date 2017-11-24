@@ -401,7 +401,6 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
         // create the menu on first use
         //
         if ( mMenu.isEmpty() ) {
-            mMenu.addAction( "shoot& ", &registry->getMoveController(), SLOT(fire()), Qt::Key_Space );
             TO_QACTION(mWhatsThisAction).setText( "What's this?" );
             TO_QACTION(mUndoMoveAction).setText( "&Undo" );
             TO_QACTION(mClearMovesAction).setText( "Clear Moves" );
@@ -419,10 +418,12 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             TO_QACTION(mReplayAction).setShortcut( Qt::ALT|Qt::Key_A );
 
             mMenu.addAction( &TO_QACTION(mWhatsThisAction)  );
+            mMenu.addAction( &pathToAction );
+            mMenu.addSeparator(); // separate contextual actions (above) and non-contextual (below)
+            mMenu.addAction( "shoot& ", &registry->getMoveController(), SLOT(fire()), Qt::Key_Space );
             mMenu.addAction( &TO_QACTION(mSpeedAction)      );
             mMenu.addAction( &TO_QACTION(mUndoMoveAction)   );
             mMenu.addAction( &TO_QACTION(mClearMovesAction) );
-            mMenu.addAction( &pathToAction );
             mMenu.addAction( &captureAction );
             mMenu.addAction( &TO_QACTION(mReloadAction)     );
             mMenu.addAction( "Select &Level..", this, SLOT(chooseLevel()), Qt::ALT|Qt::Key_L );
@@ -440,19 +441,19 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
         TO_QACTION(mSpeedAction).setChecked( registry->getSpeedController().getHighSpeed() );
         TO_QACTION(mReloadAction).setData( QVariant( board->getLevel()) );
 
-        PathSearchAction* actions[2];
-        int nActions = 0;
+        PathSearchAction* searchActions[2];
+        int nSearchActions = 0;
         PieceType focus = registry->getMoveController().getFocus();
         if ( captureAction.setCriteria( focus, board->getFlagPoint() ) ) {
-            actions[nActions++] = &captureAction;
+            searchActions[nSearchActions++] = &captureAction;
         }
-        if ( p.mCol < 0 ) {
-            pathToAction.setVisible( false );
-        } else if ( pathToAction.setCriteria( focus, p ) ) {
-            actions[nActions++] = &pathToAction;
+        if ( p.mCol >= 0 && pathToAction.setCriteria( focus, p ) ) {
+            searchActions[nSearchActions++] = &pathToAction;
             pathToAction.setVisible( true );
+        } else {
+            pathToAction.setVisible( false );
         }
-        registry->getPathFinderController().testActions( actions, nActions );
+        registry->getPathFinderController().testActions( searchActions, nSearchActions );
 
         bool movesPending = registry->getMoveController().getMoves().size() > 0;
         TO_QACTION(mUndoMoveAction).setEnabled( movesPending );
