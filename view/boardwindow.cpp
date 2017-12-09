@@ -1,4 +1,5 @@
 #include <QMenu>
+#include <QLayout>
 #include <QApplication>
 #include <QAction>
 #include <QMessageBox>
@@ -22,19 +23,129 @@
 #include "util/imageutils.h"
 #include "util/helputils.h"
 
-#define TILE_SIZE 24
 #define STATUS_HEIGHT 18
 
-BoardWindow::BoardWindow(QWindow *parent) : QWindow(parent), mBackingStore(0), mRenderer(TILE_SIZE), mRenderedOnce(false),
-  mGameInitialized(false), mHelpWidget(0), mReplayText(0), mForbiddenCursor(0), mStatusDirty(false)
+BoardWidget::BoardWidget(QWidget* parent) : QWidget(parent), mForbiddenCursor(0)
+{
+    setAttribute( Qt::WA_OpaquePaintEvent );
+    setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
+}
+
+BoardWidget::~BoardWidget()
+{
+    if ( mForbiddenCursor ) {
+        delete mForbiddenCursor;
+    }
+}
+
+void BoardWidget::init( GameRegistry* registry )
+{
+    Game& game = registry->getGame();
+    QObject::connect( &game, &Game::boardLoaded, this, &BoardWidget::onBoardLoaded, Qt::DirectConnection );
+
+    Board* board = game.getBoard();
+    QObject::connect( board, &Board::tileChangedAt, this, &BoardWidget::renderSquareLater, Qt::DirectConnection );
+
+    PieceSetManager& pm = board->getPieceManager();
+    QObject::connect( &pm, &PieceSetManager::erasedAt,   this, &BoardWidget::renderSquareLater, Qt::DirectConnection );
+    QObject::connect( &pm, &PieceSetManager::insertedAt, this, &BoardWidget::renderSquareLater, Qt::DirectConnection );
+
+    MoveController& moveController = registry->getMoveController();
+    QObject::connect( &moveController, &MoveController::dragStateChanged, this, &BoardWidget::setCursorDragState );
+    QObject::connect( &moveController, &MoveController::tileDragFocusChanged, &mDragMarker, &TileDragMarker::setFocus );
+    QObject::connect( &mDragMarker, &TileDragMarker::rectDirty, this, &BoardWidget::renderLater, Qt::DirectConnection );
+
+    Tank& tank = registry->getTank();
+    QObject::connect( &tank,                                  &Tank::changed,       this, &BoardWidget::renderLater, Qt::DirectConnection );
+    QObject::connect( &registry->getTank().getShot(),         &ShotView::rectDirty, this, &BoardWidget::renderLater, Qt::DirectConnection );
+    QObject::connect( &registry->getActiveCannon().getShot(), &ShotView::rectDirty, this, &BoardWidget::renderLater, Qt::DirectConnection );
+    QObject::connect( &registry->getTankPush(),               &Push::rectDirty,     this, &BoardWidget::renderLater, Qt::DirectConnection );
+    QObject::connect( &registry->getShotPush(),               &Push::rectDirty,     this, &BoardWidget::renderLater, Qt::DirectConnection );
+    QObject::connect( &moveController.getFutureShots(), &FutureShotPathManager::dirtyRect, this, &BoardWidget::renderLater, Qt::DirectConnection );
+}
+
+void BoardWidget::paintEvent( QPaintEvent* e )
+{
+    if ( isVisible() ) {
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            QPainter painter(this);
+
+            Board* board = registry->getGame().getBoard();
+            Tank& tank = registry->getTank();
+            MoveController& moveController = registry->getMoveController();
+
+            if ( registry->getGame().isBoardLoaded() ) {
+                BoardRenderer renderer(TILE_SIZE);
+                renderer.render( e->rect(), board, &painter );
+
+                bool tankIsProminent = moveController.getFocus() != TANK && moveController.getDragState() == Inactive;
+                if ( tankIsProminent && moveController.getDragState() != Inactive ) {
+                    if ( Piece* piece = moveController.getMoves().getBack() ) {
+                        tankIsProminent = !tank.getPoint().equals( *piece );
+                    }
+                }
+
+                if ( tankIsProminent ) {
+                    // render the moves beneath (i.e. before) the tank:
+                    renderer.renderMoves( e->rect(), registry, &painter );
+                }
+
+                registry->getTankPush().render( &e->rect(), renderer, &painter );
+                registry->getShotPush().render( &e->rect(), renderer, &painter );
+                tank.render( &e->rect(), &painter );
+
+                if ( !tankIsProminent ) {
+                    // render the moves on top of (i.e. after) the tank:
+                    renderer.renderMoves( e->rect(), registry, &painter );
+                }
+
+                mDragMarker.render( &e->rect(), &painter );
+                registry->getCannonShot().render( &painter );
+            }
+        }
+    }
+}
+
+QSize BoardWidget::sizeHint() const
+{
+    int width = 6, height = 6;
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        Board* board = registry->getGame().getBoard();
+        width  = std::max( width,  board->getWidth()  );
+        height = std::max( height, board->getHeight() );
+    }
+    return QSize( width * TILE_SIZE, height * TILE_SIZE );
+}
+
+void BoardWidget::onBoardLoaded()
+{
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        Board* board = registry->getGame().getBoard();
+        int w = board->getWidth() * TILE_SIZE;
+        int h = board->getHeight()  * TILE_SIZE;
+        setFixedSize( w, h );
+        update( 0, 0, w, h );
+    }
+}
+
+void BoardWidget::renderLater( const QRect& rect )
+{
+    update( rect );
+}
+
+void BoardWidget::renderSquareLater( ModelPoint point )
+{
+    update(point.mCol*TILE_SIZE, point.mRow*TILE_SIZE, TILE_SIZE, TILE_SIZE);
+}
+
+BoardWindow::BoardWindow(QWidget* parent) : QMainWindow(parent),
+  mGameInitialized(false), mHelpWidget(0), mReplayText(0), mStatusDirty(false)
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
   , mUpdatePending(false)
 #endif
 {
-    setFlags( Qt::Dialog );
-    create();
-    // default our size to something reasonable; choosing 6x6 because that is the size of level 1
-    setSize( 6, 6 );
+    setCentralWidget( new BoardWidget(this) );
+    layout()->setSizeConstraint(QLayout::SetFixedSize);
 }
 
 BoardWindow::~BoardWindow()
@@ -45,42 +156,12 @@ BoardWindow::~BoardWindow()
     if ( mReplayText ) {
         delete mReplayText;
     }
-    if ( mForbiddenCursor ) {
-        delete mForbiddenCursor;
-    }
-    delete mBackingStore;
-}
-
-void BoardWindow::setSize( int cols, int rows )
-{
-    QRect size( 0, 0, cols * TILE_SIZE, rows * TILE_SIZE + STATUS_HEIGHT );
-    QRect myGeometry = geometry();
-    myGeometry.setSize( size.size() );
-
-    // center it roughly if it's position isn't initialized
-    if ( !isExposed() && !myGeometry.x() && !myGeometry.y() ) {
-        if ( QScreen* myScreen = screen() ) {
-            QRect available = myScreen->availableGeometry();
-            myGeometry.moveTo( (available.width() -myGeometry.width() )/2,
-                               (available.height()-myGeometry.height())/2  );
-        }
-    }
-    setGeometry(myGeometry);
-    mDirtyRegion = size;
-    renderNow();
 }
 
 void BoardWindow::init( GameRegistry* registry )
 {
     Game& game = registry->getGame();
     MoveController& moveController = registry->getMoveController();
-
-    Board* board = game.getBoard();
-    QObject::connect( board, &Board::tileChangedAt, this, &BoardWindow::renderSquareLater, Qt::DirectConnection );
-
-    PieceSetManager& pm = board->getPieceManager();
-    QObject::connect( &pm, &PieceSetManager::erasedAt,   this, &BoardWindow::renderSquareLater, Qt::DirectConnection );
-    QObject::connect( &pm, &PieceSetManager::insertedAt, this, &BoardWindow::renderSquareLater, Qt::DirectConnection );
 
     TO_QACTION(mSpeedAction).setCheckable(true);
 
@@ -89,38 +170,24 @@ void BoardWindow::init( GameRegistry* registry )
     QObject::connect( &TO_QACTION(mClearMovesAction),&QAction::triggered, &moveController, &MoveController::undoMoves );
     QObject::connect( &TO_QACTION(mReplayAction),    &QAction::triggered, &game, &Game::replayLevel );
 
-    QObject::connect( &moveController, &MoveController::dragStateChanged, this, &BoardWindow::setCursorDragState );
-    QObject::connect( &moveController, &MoveController::tileDragFocusChanged, &mDragMarker, &TileDragMarker::setFocus );
-    QObject::connect( &mDragMarker, &TileDragMarker::rectDirty, this, &BoardWindow::renderLater, Qt::DirectConnection );
-
     QObject::connect( &game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded, Qt::DirectConnection );
 
-    QObject::connect( &registry->getLevelList(), &LevelList::levelUpdated, this, &BoardWindow::onLevelUpdated );
-
     QObject::connect( &registry->getRecorder(), &Recorder::recordedCountChanged, this, &BoardWindow::onRecordedCountChanged );
+
+    Tank& tank = registry->getTank();
+    QObject::connect( &mMenu, &QMenu::aboutToShow, &tank, &Tank::pause  );
+    QObject::connect( &mMenu, &QMenu::aboutToHide, &tank, &Tank::resume );
+
+    static_cast<BoardWidget*>( centralWidget() )->init( registry );
 }
 
 void BoardWindow::onBoardLoaded()
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
-        Board* board = registry->getGame().getBoard();
-        setSize( board->getWidth(), board->getHeight() );
-        int level = board->getLevel();
+        int level = registry->getGame().getBoard()->getLevel();
         if ( level > 0 ) {
             QString title( QString("Level %1").arg(level) );
-            setTitle( title );
-        }
-    }
-}
-
-void BoardWindow::onLevelUpdated( const QModelIndex& index )
-{
-    if ( GameRegistry* registry = getRegistry(this) ) {
-        if ( const Level* level = registry->getLevelList().at( index.row() ) ) {
-            Board* board = registry->getGame().getBoard();
-            if ( level->getNumber() == board->getLevel() ) {
-                renderLater( QRect(0,board->getHeight()*TILE_SIZE,geometry().width(),STATUS_HEIGHT) );
-            }
+            setWindowTitle( title );
         }
     }
 }
@@ -130,14 +197,7 @@ void BoardWindow::showHelp()
     if ( !mHelpWidget ) {
         mHelpWidget = new QTextBrowser();
         mHelpWidget->setWindowTitle( QString("LazerTank Help") );
-
-        if ( QScreen* myScreen = screen() ) {
-            QRect rect = myScreen->availableGeometry();
-            rect.setWidth( rect.width()/2 );
-            rect.setHeight( (rect.height() * 2) / 3 );
-            rect.moveTo(50,50); // avoid having the frame clipped offscreen on MSWindows
-            mHelpWidget->setGeometry( rect );
-        }
+        mHelpWidget->setGeometry( QRect(50,50,myScreenWidth()/2, (myScreenHeight()*2)/3) );
         mHelpWidget->setSource( QUrl::fromLocalFile(":/help/qlthelp.html") );
     }
     mHelpWidget->show();
@@ -150,10 +210,8 @@ void BoardWindow::chooseLevel()
         chooser->setAttribute( Qt::WA_DeleteOnClose );
         QObject::connect( chooser, &LevelChooser::levelChosen, this, &BoardWindow::loadLevel );
 
-        if ( QScreen* myScreen = screen() ) {
-            QSize s = chooser->preferredSize();
-            chooser->setGeometry( 0, 0, s.width(), std::min( myScreen->availableGeometry().height(), s.height() ) );
-        }
+        QSize s = chooser->preferredSize();
+        chooser->setGeometry( 0, 0, s.width(), std::min( myScreenHeight(), s.height() ) );
         chooser->move( frameGeometry().right(), chooser->frameGeometry().top() );
 
         chooser->setVisible(true);
@@ -170,64 +228,22 @@ void BoardWindow::loadLevel( int number )
     }
 }
 
-void BoardWindow::renderSquareLater( ModelPoint point )
-{
-    QRect dirty(point.mCol*TILE_SIZE, point.mRow*TILE_SIZE, TILE_SIZE, TILE_SIZE);
-    renderLater( dirty );
-}
-
 QMenu& BoardWindow::getMenu()
 {
     return mMenu;
 }
 
-bool BoardWindow::isPaintable() const
-{
-    return mRenderedOnce;
-}
+//void BoardWindow::renderBoard( const QRect* rect, GameRegistry* registry, QPainter* painter )
+//{
+//    if ( moveController.replaying() ) {
+//        if ( !mReplayText ) {
+//            mReplayText = new ReplayText( this, QString("REPLAY") );
+//            QObject::connect( mReplayText, &ReplayText::dirty, this, &BoardWindow::renderLater, Qt::DirectConnection );
+//        }
 
-void BoardWindow::renderBoard( const QRect* rect, GameRegistry* registry, QPainter* painter )
-{
-//std::cout << "render " << rect->x() << "," << rect->y() << " " << rect->width() << "x" << rect->height() << std::endl;
-    Board* board = registry->getGame().getBoard();
-    Tank& tank = registry->getTank();
-    MoveController& moveController = registry->getMoveController();
-
-    mRenderer.render( rect, board, painter );
-
-    bool tankIsProminent = moveController.getFocus() != TANK && moveController.getDragState() == Inactive;
-    if ( tankIsProminent && moveController.getDragState() != Inactive ) {
-        if ( Piece* piece = moveController.getMoves().getBack() ) {
-            tankIsProminent = !tank.getPoint().equals( *piece );
-        }
-    }
-
-    if ( tankIsProminent ) {
-        // render the moves beneath (i.e. before) the tank:
-        mRenderer.renderMoves( rect, registry, painter );
-    }
-
-    registry->getTankPush().render( rect, mRenderer, painter );
-    registry->getShotPush().render( rect, mRenderer, painter );
-    tank.render( rect, painter );
-
-    if ( !tankIsProminent ) {
-        // render the moves on top of (i.e. after) the tank:
-        mRenderer.renderMoves( rect, registry, painter );
-    }
-
-    mDragMarker.render( rect, painter );
-    registry->getCannonShot().render( painter );
-
-    if ( moveController.replaying() ) {
-        if ( !mReplayText ) {
-            mReplayText = new ReplayText( this, QString("REPLAY") );
-            QObject::connect( mReplayText, &ReplayText::dirty, this, &BoardWindow::renderLater, Qt::DirectConnection );
-        }
-
-        mReplayText->render( rect, painter );
-    }
-}
+//        mReplayText->render( rect, painter );
+//    }
+//}
 
 void BoardWindow::renderStatus( QRect& statusRect, GameRegistry* registry, QPainter* painter )
 {
@@ -253,129 +269,28 @@ void BoardWindow::renderStatus( QRect& statusRect, GameRegistry* registry, QPain
     mStatusDirty = false;
 }
 
-void BoardWindow::renderNow()
+bool BoardWindow::resizeInternal( const QSize& /*size*/ )
 {
-    if ( mDirtyRegion.isNull() && mRenderedOnce ) {
-        return;
+    if ( mReplayText ) {
+        mReplayText->onResize();
     }
-
-    if ( mBackingStore && isExposed() ) {
-        if ( QPaintDevice *device = mBackingStore->paintDevice() ) {
-            GameRegistry* registry = getRegistry(this);
-            bool boardLoaded = registry ? registry->getGame().isBoardLoaded() : false;
-            QRect rect;
-            if ( boardLoaded ) {
-                mDirtyRegion.swap( mRenderRegion );
-                mDirtyRegion.setRects(0,0);
-                rect = mRenderRegion.boundingRect();
-            } else {
-                rect = QRect( QPoint(0,0), size() );
-                mRenderRegion = rect;
-            }
-
-            QRect statusRect;
-            bool statusFilled = false;
-            if ( boardLoaded ) {
-                int boardHeight = registry->getGame().getBoard()->getHeight() * TILE_SIZE;
-                statusFilled = rect.bottom() > boardHeight;
-                if ( statusFilled || mStatusDirty ) {
-                    statusRect = QRect( 0, boardHeight, geometry().width(), STATUS_HEIGHT );
-                }
-                if ( !statusFilled && mStatusDirty ) {
-                    mRenderRegion += statusRect;
-                }
-            }
-
-            mBackingStore->beginPaint( mRenderRegion );
-            QPainter painter( device );
-
-            painter.fillRect( rect, Qt::black );
-
-            if ( boardLoaded ) {
-                if ( !statusFilled && mStatusDirty ) {
-                    painter.fillRect( statusRect, Qt::black );
-                }
-                renderStatus( statusRect, registry, &painter );
-
-                renderBoard( &rect, registry, &painter );
-            }
-
-            mBackingStore->endPaint();
-            mBackingStore->flush( mRenderRegion );
-
-#if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
-            mUpdatePending = false;
-#endif
-            if ( !mRenderedOnce ) {
-                mRenderedOnce = true;
-                emit paintable();
-            }
-        }
-    }
-}
-
-void BoardWindow::renderLater( const QRect& rect )
-{
-    mDirtyRegion += rect;
-    requestUpdate();
-}
-
-bool BoardWindow::resizeInternal( const QSize& size )
-{
-    mDirtyRegion = QRect( QPoint(0,0), size );
-
-    if ( mBackingStore && mBackingStore->size() != size ) {
-        mBackingStore->resize( size );
-        if ( mReplayText ) {
-            mReplayText->onResize();
-        }
-        return true;
-    }
-    return false;
-}
-
-void BoardWindow::showEvent(QShowEvent*)
-{
-    if ( !mBackingStore ) {
-        mBackingStore = new QBackingStore(this);
-
-        // sizing it on first here because I don't see the backing store constructor initializing it's size
-        resizeInternal( size() );
-    }
-    renderNow();
+    return true;
 }
 
 void BoardWindow::resizeEvent( QResizeEvent* resizeEvent )
 {
-    if ( resizeInternal( resizeEvent->size() ) ) {
-        renderNow();
-    }
-}
-
-void BoardWindow::exposeEvent( QExposeEvent* )
-{
-    if ( mBackingStore ) {
-        mDirtyRegion = QRect( QPoint(0,0), mBackingStore->size() );
-        renderNow();
-    }
+    resizeInternal( resizeEvent->size() );
 }
 
 bool BoardWindow::event( QEvent* event )
 {
     QEvent::Type type = event->type();
-    if ( type == QEvent::UpdateRequest ) {
-        if ( isExposed() ) {
-            renderNow();
-        }
-        return true;
-    }
-
     if ( type == QltWhatsThisEvent::getEventType() ) {
         QltWhatsThisEvent* whatsThisEvent = static_cast<QltWhatsThisEvent*>( event );
         QWhatsThis::showText( whatsThisEvent->getPos(), whatsThisEvent->getHelpText() );
     }
 
-    return QWindow::event(event);
+    return QMainWindow::event(event);
 }
 
 int keyToAngle( int key )
@@ -673,7 +588,7 @@ static void drawForbidden( QPen& pen, int width, int height, QBitmap* b )
 }
 #endif // Q_OS_WIN
 
-void BoardWindow::setCursorDragState( DragState state )
+void BoardWidget::setCursorDragState( DragState state )
 {
     mDragMarker.disable();
 
@@ -757,9 +672,10 @@ int BoardWindow::checkForReplay()
 
 void BoardWindow::connectTo( const PieceManager& manager ) const
 {
-    QObject::connect( &manager, &PieceManager::insertedAt, this, &BoardWindow::renderSquareLater, Qt::DirectConnection );
-    QObject::connect( &manager, &PieceManager::erasedAt,   this, &BoardWindow::renderSquareLater, Qt::DirectConnection );
-    QObject::connect( &manager, &PieceManager::changedAt,  this, &BoardWindow::renderSquareLater, Qt::DirectConnection );
+    BoardWidget* w = static_cast<BoardWidget*>( centralWidget() );
+    QObject::connect( &manager, &PieceManager::insertedAt, w, &BoardWidget::renderSquareLater, Qt::DirectConnection );
+    QObject::connect( &manager, &PieceManager::erasedAt,   w, &BoardWidget::renderSquareLater, Qt::DirectConnection );
+    QObject::connect( &manager, &PieceManager::changedAt,  w, &BoardWidget::renderSquareLater, Qt::DirectConnection );
 }
 
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))

@@ -36,4 +36,8 @@ extern GameRegistry* getRegistry( const QObject* gameObject );
  */
 extern void centerToEntryPoint( int angle, QPoint *point );
 
+// screen geometry helper methods
+extern int myScreenHeight();
+extern int myScreenWidth();
+
 #endif // GAMEUTILS_H

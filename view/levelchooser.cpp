@@ -41,7 +41,7 @@ public:
             QPoint offset( std::max( (rect.width()  - board->getWidth() *TILE_SIZE)/2, PADDING_WIDTH  ),
                            std::max( (rect.height() - board->getHeight()*TILE_SIZE)/2, PADDING_HEIGHT ) );
             painter->translate( offset );
-            renderer.render( &rect, board, painter );
+            renderer.render( rect, board, painter );
             renderer.renderInitialTank( board, painter );
             painter->translate( -offset );
         }

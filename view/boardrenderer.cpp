@@ -20,12 +20,12 @@ int BoardRenderer::tileSize() const
     return mTileSize;
 }
 
-void BoardRenderer::render( const QRect* rect, Board* board, QPainter* painter ) const
+void BoardRenderer::render( const QRect& rect, Board* board, QPainter* painter ) const
 {
-    int minCol = rect->left()  / mTileSize;
-    int minRow = rect->top()   / mTileSize;
-    int maxCol = rect->right() / mTileSize;
-    int maxRow = rect->bottom()/ mTileSize;
+    int minCol = rect.left()  / mTileSize;
+    int minRow = rect.top()   / mTileSize;
+    int maxCol = rect.right() / mTileSize;
+    int maxRow = rect.bottom()/ mTileSize;
     QRect square( 0, 0, mTileSize, mTileSize );
 
     for( int row = minRow; row <= maxRow; ++row ) {
@@ -73,7 +73,7 @@ void BoardRenderer::render( const QRect* rect, Board* board, QPainter* painter )
     const PieceSet& pieces = board->getPieceManager().getPieces();
     SimplePiece pos(MOVE, minCol, minRow);
     for( PieceSet::iterator iterator = pieces.lower_bound( &pos ); iterator != pieces.end(); ++iterator ) {
-        if ( !(*iterator)->render( rect, *this, painter ) ) {
+        if ( !(*iterator)->render( &rect, *this, painter ) ) {
             break;
         }
     }
@@ -180,22 +180,22 @@ QRect* BoardRenderer::getBounds( const ModelPoint& forPoint, QRect* rect ) const
     return rect;
 }
 
-void BoardRenderer::renderMoves( const QRect *rect, GameRegistry* registry, QPainter* painter )
+void BoardRenderer::renderMoves( const QRect& rect, GameRegistry* registry, QPainter* painter )
 {
     MoveController& moveController = registry->getMoveController();
-    SimplePiece pos(MOVE, rect->left()/mTileSize, rect->top()/mTileSize);
-    moveController.render( &pos, rect, *this, painter );
+    SimplePiece pos(MOVE, rect.left()/mTileSize, rect.top()/mTileSize);
+    moveController.render( &pos, &rect, *this, painter );
     if ( !moveController.replaying() ) {
         if ( const PieceSet* deltas = registry->getGame().getDeltaPieces() ) {
             int pushIdDelineation = moveController.getPushIdDelineation();
             if ( pushIdDelineation < 0 ) {
                 QPen savePen( painter->pen() );
                 painter->setPen( Qt::blue );
-                renderListIn( deltas->lower_bound( &pos ), deltas->end(), rect, painter );
+                renderListIn( deltas->lower_bound( &pos ), deltas->end(), &rect, painter );
                 painter->setPen( savePen );
             } else {
                 setPushIdDelineation( pushIdDelineation );
-                renderListIn( deltas->lower_bound( &pos ), deltas->end(), rect, painter );
+                renderListIn( deltas->lower_bound( &pos ), deltas->end(), &rect, painter );
                 setPushIdDelineation( -1 );
             }
         }

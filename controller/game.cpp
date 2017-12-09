@@ -58,16 +58,6 @@ void Game::init( GameRegistry* registry )
     QObject::connect( &registry->getBoardPool(), &BoardPool::boardLoaded, this, &Game::onPoolLoaded, Qt::QueuedConnection );
 
     if ( BoardWindow* window = registry->getWindow() ) {
-        QObject::connect( &tankPush, &Push::rectDirty, window, &BoardWindow::renderLater, Qt::DirectConnection );
-        QObject::connect( &shotPush, &Push::rectDirty, window, &BoardWindow::renderLater, Qt::DirectConnection );
-
-        QObject::connect( &registry->getTank(), &Tank::changed, window, &BoardWindow::renderLater, Qt::DirectConnection );
-        QObject::connect( &moveController.getFutureShots(), &FutureShotPathManager::dirtyRect, window, &BoardWindow::renderLater, Qt::DirectConnection );
-
-        QMenu& menu = window->getMenu();
-        QObject::connect( &menu, &QMenu::aboutToShow, &registry->getTank(), &Tank::pause  );
-        QObject::connect( &menu, &QMenu::aboutToHide, &registry->getTank(), &Tank::resume );
-
         moveController.connectWindow( window );
         window->connectTo( mFutureDelta.getPieceManager() );
     }

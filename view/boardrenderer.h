@@ -21,7 +21,7 @@ public:
 
     int tileSize() const;
 
-    void render( const QRect* rect, Board* board, QPainter* painter ) const;
+    void render( const QRect& rect, Board* board, QPainter* painter ) const;
     void renderInitialTank( Board* board, QPainter* painter );
 
     /**
@@ -75,7 +75,7 @@ public:
      */
     void renderListIn( PieceSet::iterator iterator, PieceSet::iterator end, const QRect* dirty, QPainter* painter );
 
-    void renderMoves( const QRect* rect, GameRegistry* registry , QPainter *painter );
+    void renderMoves( const QRect& rect, GameRegistry* registry , QPainter *painter );
 
     /**
      * @brief A point value used to denote null. The value is not visible in the game's coordinate space

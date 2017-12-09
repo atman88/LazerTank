@@ -17,10 +17,6 @@ void Shooter::init( GameRegistry* registry, PieceType type, QColor color )
 
     QObject::connect( &mShot, &ShotModel::tankKilled, &registry->getGame(), &Game::onTankKilled );
 
-    if ( BoardWindow* window = registry->getWindow() ) {
-        QObject::connect( &mShot, &ShotView::rectDirty,   window, &BoardWindow::renderLater, Qt::DirectConnection  );
-    }
-
     mShot.init( registry->getShotAggregate() );
 }
 

@@ -39,24 +39,22 @@ void GameInitializer::resume()
                 //    2.1) window bringup
                 //    2.2) initialize the board pool
                 if ( BoardWindow* window = registry->getWindow() ) {
-                    QObject::connect( window, &BoardWindow::paintable, this, &GameInitializer::resume, Qt::QueuedConnection );
+//                    QObject::connect( window, &BoardWindow::paintable, this, &GameInitializer::resume, Qt::QueuedConnection );
                     window->setVisible(true);
 
-                    if ( QScreen* screen = window->screen() ) {
-                        registry->getBoardPool().init( registry->getLevelList(), screen->availableSize().height() / 12 ); // chooser's TILE_SIZE
-                    }
+                    registry->getBoardPool().init( registry->getLevelList(), myScreenHeight() / 12 ); // chooser's TILE_SIZE
                 }
 
                 mInitPhase = WindowPhase;
             }
-            return;
+//            return;
         }
 
         Game& game = registry->getGame();
 
         if ( mInitPhase == WindowPhase ) {
             if ( BoardWindow* window = registry->getWindow() ) {
-                if ( window->isPaintable() ) {
+//                if ( window->isPaintable() ) {
                     //
                     // third phase: sequential execution of:
                     //   2.1) initialization of the game & window on the foreground thread
@@ -68,7 +66,7 @@ void GameInitializer::resume()
                     window->init( registry );
                     QObject::connect( &game, &Game::boardLoaded, this, &GameInitializer::resume, Qt::QueuedConnection );
                     game.loadMasterBoard( registry->getLevelList().nextLevel(0) );
-                }
+//                }
             }
             return;
         }

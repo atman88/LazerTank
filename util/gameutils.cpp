@@ -1,5 +1,7 @@
 #include <QVariant>
 #include <QPoint>
+#include <QApplication>
+#include <QDesktopWidget>
 
 #include "gameutils.h"
 #include "controller/gameregistry.h"
@@ -28,4 +30,14 @@ void centerToEntryPoint( int angle, QPoint *point )
     case 180: point->setY( point->y()-24/2 ); break;
     case 270: point->setX( point->x()+24/2 ); break;
     }
+}
+
+int myScreenHeight()
+{
+    return QApplication::desktop()->availableGeometry().height();
+}
+
+int myScreenWidth()
+{
+    return QApplication::desktop()->availableGeometry().width();
 }
