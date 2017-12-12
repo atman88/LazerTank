@@ -67,8 +67,6 @@ public:
     QSize sizeHint() const override;
 
 public slots:
-    void onBoardLoaded();
-
     /**
      * @brief mark a rectangular area as dirty
      * @param rect The rectangular area
@@ -79,6 +77,9 @@ public slots:
      * @brief mark a given square as dirty
      */
     void renderSquareLater( ModelPoint point );
+
+private slots:
+    void onBoardLoaded();
 
 protected:
     void mousePressEvent( QMouseEvent* event ) override;
@@ -139,6 +140,12 @@ private slots:
     void onBoardLoaded();
 
     /**
+     * @brief Listens for level changes to update the status bar
+     * @param index The level that was updated
+     */
+    void onLevelUpdated( const QModelIndex& index );
+
+    /**
      * @brief Display the game help
      */
     void showHelp();
@@ -183,6 +190,8 @@ private:
     ACTION mReplayAction;
 
     QLabel* mMoveCounter;
+    QLabel* mSavedMoveCount;
+    QLabel* mCompletedIndicator;
 
     QRegion mDirtyRegion;
     QRegion mRenderRegion;

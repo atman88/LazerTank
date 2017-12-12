@@ -159,7 +159,8 @@ void BoardWidget::renderSquareLater( ModelPoint point )
     update(point.mCol*TILE_SIZE, point.mRow*TILE_SIZE, TILE_SIZE, TILE_SIZE);
 }
 
-BoardWindow::BoardWindow(QWidget* parent) : QMainWindow(parent), mMoveCounter(0), mGameInitialized(false), mHelpWidget(0), mReplayText(0)
+BoardWindow::BoardWindow(QWidget* parent) : QMainWindow(parent), mMoveCounter(new WhatsThisAwareLabel(this)), mSavedMoveCount(new WhatsThisAwareLabel(this)),
+  mCompletedIndicator(new WhatsThisAwareLabel(this)), mGameInitialized(false), mHelpWidget(0), mReplayText(0)
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
   , mUpdatePending(false)
 #endif
@@ -200,20 +201,57 @@ void BoardWindow::init( GameRegistry* registry )
 
     Recorder& recorder = registry->getRecorder();
     QObject::connect( &recorder, &Recorder::recordedCountChanged, this, &BoardWindow::onRecordedCountChanged );
-    mMoveCounter = new WhatsThisAwareLabel( this );
     mMoveCounter->setAlignment( Qt::AlignLeft );
     mMoveCounter->setNum( recorder.getRecordedCount() );
     mMoveCounter->setWhatsThis( "The number of moves taken" );
     statusBar()->addWidget( mMoveCounter );
+
+    QObject::connect( &registry->getLevelList(), &LevelList::levelUpdated, this, &BoardWindow::onLevelUpdated );
+    if( const QPixmap* pm = ResourcePixmap::getPixmap(COMPLETE_CHECKMARK) ) {
+        mCompletedIndicator->setPixmap( *pm );
+        statusBar()->addPermanentWidget( mCompletedIndicator );
+    }
+    mSavedMoveCount->setAlignment( Qt::AlignRight );
+    mSavedMoveCount->setWhatsThis( "The total moves taken to complete this level" );
+    statusBar()->addPermanentWidget( mSavedMoveCount );
 }
 
 void BoardWindow::onBoardLoaded()
 {
+    bool completedVisible = false;
+
     if ( GameRegistry* registry = getRegistry(this) ) {
-        int level = registry->getGame().getBoard()->getLevel();
-        if ( level > 0 ) {
-            QString title( QString("Level %1").arg(level) );
+        int levelNo = registry->getGame().getBoard()->getLevel();
+        if ( levelNo > 0 ) {
+            QString title( QString("Level %1").arg(levelNo) );
             setWindowTitle( title );
+
+            if ( const Level* level = registry->getLevelList().find( levelNo ) ) {
+                if ( int completedCount = level->getCompletedCount() ) {
+                    mSavedMoveCount->setNum( completedCount );
+                    completedVisible = true;
+                }
+            }
+        }
+    }
+
+    mSavedMoveCount->setVisible(completedVisible);
+    mCompletedIndicator->setVisible(completedVisible);
+}
+
+void BoardWindow::onLevelUpdated( const QModelIndex& index )
+{
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        if ( const Level* level = registry->getLevelList().at( index.row() ) ) {
+            if ( level->getNumber() == registry->getGame().getBoard()->getLevel() ) {
+                bool completedVisible = false;
+                if ( int completedCount = level->getCompletedCount() ) {
+                    mSavedMoveCount->setNum( completedCount );
+                    completedVisible = true;
+                }
+                mSavedMoveCount->setVisible(completedVisible);
+                mCompletedIndicator->setVisible(completedVisible);
+            }
         }
     }
 }
