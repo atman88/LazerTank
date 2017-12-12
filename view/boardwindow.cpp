@@ -2,6 +2,8 @@
 #include <QLayout>
 #include <QApplication>
 #include <QAction>
+#include <QStatusBar>
+#include <QLabel>
 #include <QMessageBox>
 #include <QTextBrowser>
 #include <QWhatsThis>
@@ -23,7 +25,24 @@
 #include "util/imageutils.h"
 #include "util/helputils.h"
 
-#define STATUS_HEIGHT 18
+class WhatsThisAwareLabel : public QLabel
+{
+public:
+    WhatsThisAwareLabel( QWidget* parent = 0 );
+
+protected:
+    void mousePressEvent( QMouseEvent* event );
+
+private:
+    QAction mAction;
+};
+
+
+/**
+ * @brief Confirms whether replay is active
+ * @return 0 if not active, 1 if active or -1 if set inactive as a result of this call
+ */
+int checkForReplay( GameRegistry* registry );
 
 BoardWidget::BoardWidget(QWidget* parent) : QWidget(parent), mForbiddenCursor(0)
 {
@@ -62,6 +81,8 @@ void BoardWidget::init( GameRegistry* registry )
     QObject::connect( &registry->getTankPush(),               &Push::rectDirty,     this, &BoardWidget::renderLater, Qt::DirectConnection );
     QObject::connect( &registry->getShotPush(),               &Push::rectDirty,     this, &BoardWidget::renderLater, Qt::DirectConnection );
     QObject::connect( &moveController.getFutureShots(), &FutureShotPathManager::dirtyRect, this, &BoardWidget::renderLater, Qt::DirectConnection );
+
+    mWhatsThisAction.setText( "What's this?" );
 }
 
 void BoardWidget::paintEvent( QPaintEvent* e )
@@ -138,8 +159,7 @@ void BoardWidget::renderSquareLater( ModelPoint point )
     update(point.mCol*TILE_SIZE, point.mRow*TILE_SIZE, TILE_SIZE, TILE_SIZE);
 }
 
-BoardWindow::BoardWindow(QWidget* parent) : QMainWindow(parent),
-  mGameInitialized(false), mHelpWidget(0), mReplayText(0), mStatusDirty(false)
+BoardWindow::BoardWindow(QWidget* parent) : QMainWindow(parent), mMoveCounter(0), mGameInitialized(false), mHelpWidget(0), mReplayText(0)
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
   , mUpdatePending(false)
 #endif
@@ -172,13 +192,19 @@ void BoardWindow::init( GameRegistry* registry )
 
     QObject::connect( &game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded, Qt::DirectConnection );
 
-    QObject::connect( &registry->getRecorder(), &Recorder::recordedCountChanged, this, &BoardWindow::onRecordedCountChanged );
-
     Tank& tank = registry->getTank();
     QObject::connect( &mMenu, &QMenu::aboutToShow, &tank, &Tank::pause  );
     QObject::connect( &mMenu, &QMenu::aboutToHide, &tank, &Tank::resume );
 
     static_cast<BoardWidget*>( centralWidget() )->init( registry );
+
+    Recorder& recorder = registry->getRecorder();
+    QObject::connect( &recorder, &Recorder::recordedCountChanged, this, &BoardWindow::onRecordedCountChanged );
+    mMoveCounter = new WhatsThisAwareLabel( this );
+    mMoveCounter->setAlignment( Qt::AlignLeft );
+    mMoveCounter->setNum( recorder.getRecordedCount() );
+    mMoveCounter->setWhatsThis( "The number of moves taken" );
+    statusBar()->addWidget( mMoveCounter );
 }
 
 void BoardWindow::onBoardLoaded()
@@ -245,30 +271,6 @@ QMenu& BoardWindow::getMenu()
 //    }
 //}
 
-void BoardWindow::renderStatus( QRect& statusRect, GameRegistry* registry, QPainter* painter )
-{
-    QFont font = painter->font();
-    font.setPixelSize( STATUS_HEIGHT-4 );
-    painter->setFont(font);
-    painter->setPen( Qt::gray );
-
-    QRect r( statusRect );
-    r.setLeft( r.left()+2 );
-    painter->drawText( r, Qt::AlignVCenter|Qt::AlignLeft, QString::number(registry->getRecorder().getRecordedCount()) );
-
-    if ( const Level* level = registry->getLevelList().find( registry->getGame().getBoard()->getLevel() ) ) {
-        if ( int completedCount = level->getCompletedCount() ) {
-            QString s = QString::number(completedCount);
-            r = painter->boundingRect( statusRect, Qt::AlignVCenter, s );
-            r.moveLeft( statusRect.width()-r.width()-2 );
-            painter->drawText( r, 0, s );
-            const QPixmap* checkmark = ResourcePixmap::getPixmap(COMPLETE_CHECKMARK);
-            painter->drawPixmap( r.left()-checkmark->width()-2, statusRect.bottom()-checkmark->height(), *checkmark );
-        }
-    }
-    mStatusDirty = false;
-}
-
 bool BoardWindow::resizeInternal( const QSize& /*size*/ )
 {
     if ( mReplayText ) {
@@ -282,15 +284,16 @@ void BoardWindow::resizeEvent( QResizeEvent* resizeEvent )
     resizeInternal( resizeEvent->size() );
 }
 
-bool BoardWindow::event( QEvent* event )
+bool BoardWidget::event( QEvent* event )
 {
     QEvent::Type type = event->type();
     if ( type == QltWhatsThisEvent::getEventType() ) {
         QltWhatsThisEvent* whatsThisEvent = static_cast<QltWhatsThisEvent*>( event );
         QWhatsThis::showText( whatsThisEvent->getPos(), whatsThisEvent->getHelpText() );
+        return true;
     }
 
-    return QMainWindow::event(event);
+    return QWidget::event(event);
 }
 
 int keyToAngle( int key )
@@ -304,23 +307,20 @@ int keyToAngle( int key )
     }
 }
 
-void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
+QAction* BoardWindow::showMenu( QPoint* globalPos, const QList<QAction*> widgetActions, const QList<PathSearchAction*> widgetSearchActions )
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
         QPoint pos;
 
         PathSearchAction& captureAction = registry->getCaptureAction();
-        PathSearchAction& pathToAction  = registry->getPathToAction();
 
         //
         // create the menu on first use
         //
         if ( mMenu.isEmpty() ) {
-            TO_QACTION(mWhatsThisAction).setText( "What's this?" );
             TO_QACTION(mUndoMoveAction).setText( "&Undo" );
             TO_QACTION(mClearMovesAction).setText( "Clear Moves" );
             TO_QACTION(mSpeedAction).setText( "&Speed Boost" );
-            pathToAction.setText( "Move &Here" );
             captureAction.setText( "&Capture Flag" );
             TO_QACTION(mReloadAction).setText( "&Restart Level" );
             TO_QACTION(mReplayAction).setText( "&Auto Replay" );
@@ -332,8 +332,6 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             TO_QACTION(mReloadAction).setShortcut( Qt::ALT|Qt::Key_R );
             TO_QACTION(mReplayAction).setShortcut( Qt::ALT|Qt::Key_A );
 
-            mMenu.addAction( &TO_QACTION(mWhatsThisAction)  );
-            mMenu.addAction( &pathToAction );
             mMenu.addSeparator(); // separate contextual actions (above) and non-contextual (below)
             mMenu.addAction( "shoot& ", &registry->getMoveController(), SLOT(fire()), Qt::Key_Space );
             mMenu.addAction( &TO_QACTION(mSpeedAction)      );
@@ -352,23 +350,15 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
         // freshen dynamic menu item properties
         //
         Board* board = registry->getGame().getBoard();
-        TO_QACTION(mWhatsThisAction).setVisible( globalPos != 0 );
         TO_QACTION(mSpeedAction).setChecked( registry->getSpeedController().getHighSpeed() );
         TO_QACTION(mReloadAction).setData( QVariant( board->getLevel()) );
 
-        PathSearchAction* searchActions[2];
-        int nSearchActions = 0;
+        QList<PathSearchAction*> searchActions( widgetSearchActions );
         PieceType focus = registry->getMoveController().getFocus();
         if ( captureAction.setCriteria( focus, board->getFlagPoint() ) ) {
-            searchActions[nSearchActions++] = &captureAction;
+            searchActions.append( &captureAction );
         }
-        if ( p.mCol >= 0 && pathToAction.setCriteria( focus, p ) ) {
-            searchActions[nSearchActions++] = &pathToAction;
-            pathToAction.setVisible( true );
-        } else {
-            pathToAction.setVisible( false );
-        }
-        registry->getPathFinderController().testActions( searchActions, nSearchActions );
+        registry->getPathFinderController().testActions( searchActions );
 
         bool movesPending = registry->getMoveController().getMoves().size() > 0;
         TO_QACTION(mUndoMoveAction).setEnabled( movesPending );
@@ -376,6 +366,8 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
         bool modified = !registry->getRecorder().isEmpty();
         TO_QACTION(mReplayAction).setEnabled( modified || registry->getLevelList().isLevelCompleted( board->getLevel() ) );
         TO_QACTION(mReloadAction).setEnabled( modified );
+
+        mMenu.insertActions( mMenu.actions().at(0), widgetActions );
 
         //
         // launch menu
@@ -388,36 +380,20 @@ void BoardWindow::showMenu( QPoint* globalPos, ModelPoint p )
             pos.setY( geometry().top()   );
         }
         QAction* action = mMenu.exec( pos );
+
         if ( action == &captureAction ) {
             registry->getPathFinderController().doAction( &captureAction );
-        } else if ( action == &mWhatsThisAction ) {
-            unsigned what = board->getPieceManager().typeAt( p );
-            if ( what == NONE ) {
-                if ( registry->getTank().getPoint().equals( p ) ) {
-                    what = TANK;
-                } else {
-                    what = board->tileAt( p );
-                    switch( what ) {
-                    case STONE_MIRROR__90:
-                    case STONE_MIRROR_180:
-                    case STONE_MIRROR_270:
-                        what = STONE_MIRROR;
-                        break;
-                    case STONE_SLIT_90:
-                        what = STONE_SLIT;
-                        break;
-                    default:
-                        ;
-                    }
-                }
-            }
-            whatsthis( globalPos, what, registry, this );
-        } else if ( action == &pathToAction ) {
-            registry->getPathFinderController().doAction( &pathToAction );
         } else if ( action == &mReloadAction ) {
             loadLevel( board->getLevel() );
         }
+
+        for( QAction* a : widgetActions ) {
+            mMenu.removeAction( a );
+        }
+        return action;
     }
+
+    return 0;
 }
 
 void BoardWindow::keyPressEvent(QKeyEvent *ev)
@@ -426,7 +402,7 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
         if ( GameRegistry* registry = getRegistry(this) ) {
             switch( ev->key() ) {
             case Qt::Key_Escape:
-                if ( !ev->modifiers() && !checkForReplay() )  {
+                if ( !ev->modifiers() && !checkForReplay(registry) )  {
                     registry->getMoveController().dragStop();
                     showMenu();
                 }
@@ -438,13 +414,13 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
                 break;
 
             case Qt::Key_Space:
-                if ( !checkForReplay() )  {
+                if ( !checkForReplay(registry) )  {
                     registry->getMoveController().fire();
                 }
                 break;
 
             case Qt::Key_C: // attempt to capture the flag
-                if ( !checkForReplay() && registry->getMoveController().getDragState() == Inactive )  {
+                if ( !checkForReplay(registry) && registry->getMoveController().getDragState() == Inactive )  {
                     PathSearchAction& captureAction = registry->getCaptureAction();
                     Board* board = registry->getGame().getBoard();
                     captureAction.setCriteria( registry->getMoveController().getFocus(), board->getFlagPoint() );
@@ -456,7 +432,7 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
                 int rotation = keyToAngle(ev->key());
                 if ( rotation >= 0 ) {
                     registry->getMoveController().move( rotation );
-                } else if ( ev->key() >= Qt::Key_0 && ev->key() <= Qt::Key_9 && !checkForReplay() ) {
+                } else if ( ev->key() >= Qt::Key_0 && ev->key() <= Qt::Key_9 && !checkForReplay(registry) ) {
                     registry->getMoveController().fire( ev->key() - Qt::Key_0 );
                 }
             }
@@ -470,7 +446,7 @@ void BoardWindow::keyReleaseEvent( QKeyEvent* ev )
         if ( GameRegistry* registry = getRegistry(this) ) {
             switch( ev->key() ) {
             case Qt::Key_Space:
-                if ( !checkForReplay() )  {
+                if ( !checkForReplay(registry) )  {
                     registry->getTank().ceaseFire();
                 }
                 break;
@@ -505,19 +481,19 @@ void BoardWindow::keyReleaseEvent( QKeyEvent* ev )
                 break;
 
             case Qt::Key_Backspace:
-                if ( !checkForReplay() ) {
+                if ( !checkForReplay(registry) ) {
                     registry->getMoveController().undo();
                 }
                 break;
 
             case Qt::Key_Home:
-                if ( !checkForReplay() && ev->modifiers() == Qt::ControlModifier ) {
+                if ( !checkForReplay(registry) && ev->modifiers() == Qt::ControlModifier ) {
                     registry->getMoveController().setFocus( TANK );
                 }
                 break;
 
             case Qt::Key_End:
-                if ( !checkForReplay() && ev->modifiers() == Qt::ControlModifier ) {
+                if ( !checkForReplay(registry) && ev->modifiers() == Qt::ControlModifier ) {
                     registry->getMoveController().setFocus( MOVE );
                 }
                 break;
@@ -533,19 +509,57 @@ void BoardWindow::keyReleaseEvent( QKeyEvent* ev )
     }
 }
 
-void BoardWindow::mousePressEvent( QMouseEvent* event )
+void BoardWidget::mousePressEvent( QMouseEvent* event )
 {
     switch( event->button() ) {
     case Qt::RightButton:
-        if ( !checkForReplay() )  {
-            QPoint globalPos = event->globalPos();
-            showMenu( &globalPos, ModelPoint( event->pos() ) );
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            if ( !checkForReplay(registry) )  {
+                Board* board = registry->getGame().getBoard();
+                PathSearchAction& pathToAction = registry->getPathToAction();
+
+                QList<QAction*> myActions( { &mWhatsThisAction } );
+
+                QPoint globalPos = event->globalPos();
+                ModelPoint p( event->pos() );
+                if ( p.mCol >= 0 && pathToAction.setCriteria( registry->getMoveController().getFocus(), p ) ) {
+                    myActions.append( &pathToAction );
+                }
+
+                QAction* action = registry->getWindow()->showMenu( &globalPos, myActions, { &pathToAction } );
+
+                if ( action == &pathToAction ) {
+                    registry->getPathFinderController().doAction( &pathToAction );
+                } else if ( action == &mWhatsThisAction ) {
+                    unsigned what = board->getPieceManager().typeAt( p );
+                    if ( what == NONE ) {
+                        if ( registry->getTank().getPoint().equals( p ) ) {
+                            what = TANK;
+                        } else {
+                            what = board->tileAt( p );
+                            switch( what ) {
+                            case STONE_MIRROR__90:
+                            case STONE_MIRROR_180:
+                            case STONE_MIRROR_270:
+                                what = STONE_MIRROR;
+                                break;
+                            case STONE_SLIT_90:
+                                what = STONE_SLIT;
+                                break;
+                            default:
+                                ;
+                            }
+                        }
+                    }
+                    whatsthis( &globalPos, what, registry, this );
+                }
+            }
         }
         break;
 
     case Qt::LeftButton:
-        if ( !checkForReplay() )  {
-            if ( GameRegistry* registry = getRegistry(this) ) {
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            if ( !checkForReplay(registry) )  {
                 registry->getMoveController().dragStart( ModelPoint( event->pos() ) );
             }
         }
@@ -556,7 +570,7 @@ void BoardWindow::mousePressEvent( QMouseEvent* event )
     }
 }
 
-void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
+void BoardWidget::mouseReleaseEvent( QMouseEvent* event )
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
         switch( event->button() ) {
@@ -569,7 +583,7 @@ void BoardWindow::mouseReleaseEvent( QMouseEvent* event )
     }
 }
 
-void BoardWindow::mouseMoveEvent(QMouseEvent* event)
+void BoardWidget::mouseMoveEvent(QMouseEvent* event)
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
         registry->getMoveController().onDragTo( event->pos() );
@@ -644,27 +658,27 @@ void BoardWidget::setCursorDragState( DragState state )
 
 void BoardWindow::onRecordedCountChanged()
 {
-    mStatusDirty = true;
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        mMoveCounter->setNum( registry->getRecorder().getRecordedCount() );
+    }
 }
 
-int BoardWindow::checkForReplay()
+int checkForReplay( GameRegistry* registry )
 {
-    if ( GameRegistry* registry = getRegistry(this) ) {
-        MoveController& moveController = registry->getMoveController();
-        if ( moveController.replaying() ) {
-            registry->getTank().pause();
+    MoveController& moveController = registry->getMoveController();
+    if ( moveController.replaying() ) {
+        registry->getTank().pause();
 
-            QMessageBox::StandardButton button = QMessageBox::question( 0, "Auto Replay", "Play from here?",
-                                                                        QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes );
-            if ( button == QMessageBox::Yes ) {
-                moveController.setReplay( false );
-            }
-            if ( moveController.canWakeup() ) {
-                registry->getTank().resume();
-            }
-
-            return (button == QMessageBox::Yes) ? -1 /* indicate changed to inactive */ : 1 /* indicate replay is active */;
+        QMessageBox::StandardButton button = QMessageBox::question( 0, "Auto Replay", "Play from here?",
+                                                                    QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes );
+        if ( button == QMessageBox::Yes ) {
+            moveController.setReplay( false );
         }
+        if ( moveController.canWakeup() ) {
+            registry->getTank().resume();
+        }
+
+        return (button == QMessageBox::Yes) ? -1 /* indicate changed to inactive */ : 1 /* indicate replay is active */;
     }
 
     return 0; // indicate replay inactive
@@ -687,3 +701,21 @@ void BoardWindow::requestUpdate()
     }
 }
 #endif
+
+WhatsThisAwareLabel::WhatsThisAwareLabel( QWidget* parent ) : QLabel(parent)
+{
+    mAction.setText( "What's this?" );
+}
+
+void WhatsThisAwareLabel::mousePressEvent(QMouseEvent *event)
+{
+    if ( event->button() == Qt::RightButton ) {
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            QPoint globalPos = event->globalPos();
+            QAction* action = registry->getWindow()->showMenu( &globalPos, { &mAction } );
+            if ( action == &mAction ) {
+                QWhatsThis::showText( globalPos, whatsThis() );
+            }
+        }
+    }
+}

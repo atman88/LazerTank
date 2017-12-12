@@ -48,7 +48,7 @@ public:
      * @param actions An array of search term containers
      * @param count The dimension of the array
      */
-    void testActions( PathSearchAction* actions[], unsigned count );
+    void testActions( const QList<PathSearchAction*>& actions );
 
     /**
      * @brief Perform a non-action test

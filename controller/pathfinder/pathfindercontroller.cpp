@@ -39,11 +39,11 @@ void PathFinderController::testNextAction()
     }
 }
 
-void PathFinderController::testActions( PathSearchAction* actions[], unsigned count )
+void PathFinderController::testActions( const QList<PathSearchAction*>& actions )
 {
     mTestActions.clear();
-    while( count > 0 ) {
-        PathSearchAction* action = actions[--count];
+    for( int count = actions.size(); count > 0; ) {
+        PathSearchAction* action = actions.at(--count);
         action->setEnabled( false ); // default to disabled until tested
         mTestActions.push_front( action );
     }

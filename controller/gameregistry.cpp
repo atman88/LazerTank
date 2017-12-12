@@ -37,6 +37,7 @@ GameRegistry::GameRegistry( BoardWindow* window ) : QObject(0), mWindow(window)
 
     mCaptureAction.setParent(this);
     mPathToAction.setParent(this);
+    mPathToAction.setText( "Move &Here" );
 
     if ( window ) {
         QObject::connect( window, &BoardWindow::destroyed, this, &GameRegistry::onWindowDestroyed, Qt::DirectConnection );

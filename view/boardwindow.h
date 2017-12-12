@@ -9,6 +9,7 @@
 
 QT_FORWARD_DECLARE_CLASS(QMouseEvent)
 QT_FORWARD_DECLARE_CLASS(QTextBrowser)
+QT_FORWARD_DECLARE_CLASS(QLabel)
 
 class Board;
 class GameRegistry;
@@ -79,6 +80,12 @@ public slots:
      */
     void renderSquareLater( ModelPoint point );
 
+protected:
+    void mousePressEvent( QMouseEvent* event ) override;
+    void mouseReleaseEvent( QMouseEvent* event ) override;
+    void mouseMoveEvent( QMouseEvent* event ) override;
+    bool event( QEvent* event ) override;
+
 private:
     /**
      * @brief Update the cursor to depict the given drag state
@@ -87,6 +94,7 @@ private:
 
     TileDragMarker mDragMarker;
     QCursor* mForbiddenCursor;
+    QAction mWhatsThisAction;
 };
 
 /**
@@ -102,24 +110,20 @@ public:
     void init( GameRegistry* registry );
 
     /**
+     * @brief pop up the menu
+     * @param globalPos Optional position argument
+     * @param widgetActions Any additional menu items
+     * @param widgetSearchActions Any widgetActions that are search terms
+     * @return The action activated or 0
+     */
+    QAction* showMenu( QPoint* globalPos = 0, const QList<QAction*> widgetActions = QList<QAction*>(), const QList<PathSearchAction*> widgetSearchActions = QList<PathSearchAction*>() );
+
+    /**
      * @brief Access the window's popup menu
      */
     QMenu& getMenu();
 
     void connectTo( const PieceManager& manager ) const;
-
-protected:
-    /**
-     * @brief pop up the menu
-     * @param globalPos - optional position argument intended for mouse-related events
-     */
-    void showMenu( QPoint* globalPos = 0, ModelPoint p = ModelPoint() );
-
-    /**
-     * @brief Confirms whether replay is active
-     * @return 0 if not active, 1 if active or -1 if set inactive as a result of this call
-     */
-    int checkForReplay();
 
 signals:
     /**
@@ -159,12 +163,8 @@ protected:
     /**
      * @brief Window event handlers
      */
-    bool event(QEvent *event) override;
     void keyPressEvent(QKeyEvent *ev) override;
     void keyReleaseEvent(QKeyEvent *ev) override;
-    void mousePressEvent( QMouseEvent* event ) override;
-    void mouseReleaseEvent( QMouseEvent* event ) override;
-    void mouseMoveEvent( QMouseEvent* event ) override;
     void resizeEvent(QResizeEvent *event) override;
 
 private:
@@ -175,15 +175,14 @@ private:
      */
     bool resizeInternal(const QSize&);
 
-    void renderStatus( QRect& statusRect, GameRegistry* registry, QPainter* painter );
-
     QMenu mMenu;
-    ACTION mWhatsThisAction;
     ACTION mSpeedAction;
     ACTION mReloadAction;
     ACTION mUndoMoveAction;
     ACTION mClearMovesAction;
     ACTION mReplayAction;
+
+    QLabel* mMoveCounter;
 
     QRegion mDirtyRegion;
     QRegion mRenderRegion;
@@ -192,8 +191,6 @@ private:
     QTextBrowser* mHelpWidget;
 
     ReplayText* mReplayText;
-
-    bool mStatusDirty;
 
 #if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
     void requestUpdate();
