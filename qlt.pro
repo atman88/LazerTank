@@ -81,7 +81,8 @@ HEADERS += \
     model/boardpool.h \
     view/tiledragmarker.h \
     view/levelcompleteddialog.h \
-    util/qltxmlhandler.h
+    util/qltxmlhandler.h \
+    view/whatsthisaware.h
 
 SOURCES += \
     view/shooter.cpp \
@@ -115,7 +116,8 @@ SOURCES += \
     model/boardpool.cpp \
     view/tiledragmarker.cpp \
     view/levelcompleteddialog.cpp \
-    util/qltxmlhandler.cpp
+    util/qltxmlhandler.cpp \
+    view/whatsthisaware.cpp
 
 test{
     INCLUDEPATH += test/controller

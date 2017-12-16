@@ -17,6 +17,7 @@ class Game;
 class ReplayText;
 
 #include "tiledragmarker.h"
+#include "whatsthisaware.h"
 #include "controller/movecontroller.h"
 #include "model/piece.h"
 
@@ -172,16 +173,8 @@ protected:
      */
     void keyPressEvent(QKeyEvent *ev) override;
     void keyReleaseEvent(QKeyEvent *ev) override;
-    void resizeEvent(QResizeEvent *event) override;
 
 private:
-    /**
-     * @brief Event handler helper to resize the backing store. Rendering is managed by the caller.
-     * @param size the new size
-     * @return true if changed
-     */
-    bool resizeInternal(const QSize&);
-
     QMenu mMenu;
     ACTION mSpeedAction;
     ACTION mReloadAction;

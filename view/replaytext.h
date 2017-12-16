@@ -8,36 +8,27 @@
 #include <QString>
 #include <QPropertyAnimation>
 
-class ReplayText : public QObject
+#include "whatsthisaware.h"
+
+
+class ReplayText : public WhatsThisAwareLabel
 {
     Q_OBJECT
     Q_PROPERTY(QVariant alpha READ getAlpha WRITE setAlpha)
 
 public:
-    ReplayText( QObject* parent, const QString& text, int minAlpha = 24, int maxAlpha = 96 );
-    void render( const QRect* rect, QPainter* painter );
+    ReplayText( QWidget* parent, const QString& text, int minAlpha = 64, int maxAlpha = 255 );
 
     QVariant getAlpha() const;
-
-signals:
-    void dirty( QRect& rect );
-
-public slots:\
-    /**
-     * @brief Notifies that its window size has changed
-     */
-    void onResize();
-
-    /**
-     * @brief Return this object to its dormant state
-     */
-    void disable();
 
     /**
      * @brief Modifies this object's color alpha value
      * @param alpha A value between 0 and 255
      */
     void setAlpha( QVariant& alpha );
+
+protected:
+    void showEvent( QShowEvent* ) override;
 
 private slots:
     /**
@@ -46,15 +37,13 @@ private slots:
     void startCycle();
 
 private:
-    QString mText;
-    QRect mBounds;
-    QPen mPen;
-    QFont mFont;
     QPropertyAnimation mAnimation;
     int mMinAlpha;
     int mMaxAlpha;
-    bool mInitialized;
-    bool mEnabled;
+    QPalette mPalette;
+
+protected:
+    void mousePressEvent(QMouseEvent *event) override;
 };
 
 #endif // REPLAYTEXT_H

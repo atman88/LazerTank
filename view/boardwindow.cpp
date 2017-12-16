@@ -1,9 +1,7 @@
 #include <QMenu>
 #include <QLayout>
 #include <QApplication>
-#include <QAction>
 #include <QStatusBar>
-#include <QLabel>
 #include <QMessageBox>
 #include <QTextBrowser>
 #include <QWhatsThis>
@@ -24,18 +22,6 @@
 #include "util/recorder.h"
 #include "util/imageutils.h"
 #include "util/helputils.h"
-
-class WhatsThisAwareLabel : public QLabel
-{
-public:
-    WhatsThisAwareLabel( QWidget* parent = 0 );
-
-protected:
-    void mousePressEvent( QMouseEvent* event );
-
-private:
-    QAction mAction;
-};
 
 
 /**
@@ -199,21 +185,40 @@ void BoardWindow::init( GameRegistry* registry )
 
     static_cast<BoardWidget*>( centralWidget() )->init( registry );
 
-    Recorder& recorder = registry->getRecorder();
-    QObject::connect( &recorder, &Recorder::recordedCountChanged, this, &BoardWindow::onRecordedCountChanged );
-    mMoveCounter->setAlignment( Qt::AlignLeft );
-    mMoveCounter->setNum( recorder.getRecordedCount() );
-    mMoveCounter->setWhatsThis( "The number of moves taken" );
-    statusBar()->addWidget( mMoveCounter );
+    if ( QStatusBar* status = statusBar() ) {
+        status->setStyleSheet(
+            "* {"
+               "background-color: black;"
+               "font: bold;"
+            "}" );
+        status->setSizeGripEnabled(false);
 
-    QObject::connect( &registry->getLevelList(), &LevelList::levelUpdated, this, &BoardWindow::onLevelUpdated );
-    if( const QPixmap* pm = ResourcePixmap::getPixmap(COMPLETE_CHECKMARK) ) {
-        mCompletedIndicator->setPixmap( *pm );
-        statusBar()->addPermanentWidget( mCompletedIndicator );
+        ReplayText* replayText = new ReplayText( this, "REPLAY" );
+        replayText->setVisible(false);
+        QObject::connect( &moveController, &MoveController::replayChanged, replayText, &QLabel::setVisible, Qt::QueuedConnection );
+        replayText->setWhatsThis( "Auto Replay mode indicator" );
+        status->addWidget( replayText );
+
+        Recorder& recorder = registry->getRecorder();
+        QObject::connect( &recorder, &Recorder::recordedCountChanged, this, &BoardWindow::onRecordedCountChanged );
+        mMoveCounter->setAlignment( Qt::AlignLeft|Qt::AlignHCenter );
+        mMoveCounter->setStyleSheet( "* { color: gray; }" );
+        mMoveCounter->setNum( recorder.getRecordedCount() );
+        mMoveCounter->setWhatsThis( "Current move count. Shows the number of moves taken so far" );
+        status->addWidget( mMoveCounter );
+
+        QObject::connect( &registry->getLevelList(), &LevelList::levelUpdated, this, &BoardWindow::onLevelUpdated );
+        if( const QPixmap* pm = ResourcePixmap::getPixmap(COMPLETE_CHECKMARK) ) {
+            mCompletedIndicator->setPixmap( *pm );
+            mCompletedIndicator->setWhatsThis( "Completed indicator. Shows this level has been successfully completed before" );
+            status->addPermanentWidget( mCompletedIndicator );
+        }
+
+        mSavedMoveCount->setAlignment( Qt::AlignRight|Qt::AlignHCenter );
+        mSavedMoveCount->setStyleSheet( "* { color: gray; }" );
+        mSavedMoveCount->setWhatsThis( "Completed count. The total moves taken when this level was last completed" );
+        status->addPermanentWidget( mSavedMoveCount );
     }
-    mSavedMoveCount->setAlignment( Qt::AlignRight );
-    mSavedMoveCount->setWhatsThis( "The total moves taken to complete this level" );
-    statusBar()->addPermanentWidget( mSavedMoveCount );
 }
 
 void BoardWindow::onBoardLoaded()
@@ -302,25 +307,10 @@ QMenu& BoardWindow::getMenu()
 //    if ( moveController.replaying() ) {
 //        if ( !mReplayText ) {
 //            mReplayText = new ReplayText( this, QString("REPLAY") );
-//            QObject::connect( mReplayText, &ReplayText::dirty, this, &BoardWindow::renderLater, Qt::DirectConnection );
 //        }
 
-//        mReplayText->render( rect, painter );
 //    }
 //}
-
-bool BoardWindow::resizeInternal( const QSize& /*size*/ )
-{
-    if ( mReplayText ) {
-        mReplayText->onResize();
-    }
-    return true;
-}
-
-void BoardWindow::resizeEvent( QResizeEvent* resizeEvent )
-{
-    resizeInternal( resizeEvent->size() );
-}
 
 bool BoardWidget::event( QEvent* event )
 {
@@ -701,27 +691,6 @@ void BoardWindow::onRecordedCountChanged()
     }
 }
 
-int checkForReplay( GameRegistry* registry )
-{
-    MoveController& moveController = registry->getMoveController();
-    if ( moveController.replaying() ) {
-        registry->getTank().pause();
-
-        QMessageBox::StandardButton button = QMessageBox::question( 0, "Auto Replay", "Play from here?",
-                                                                    QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes );
-        if ( button == QMessageBox::Yes ) {
-            moveController.setReplay( false );
-        }
-        if ( moveController.canWakeup() ) {
-            registry->getTank().resume();
-        }
-
-        return (button == QMessageBox::Yes) ? -1 /* indicate changed to inactive */ : 1 /* indicate replay is active */;
-    }
-
-    return 0; // indicate replay inactive
-}
-
 void BoardWindow::connectTo( const PieceManager& manager ) const
 {
     BoardWidget* w = static_cast<BoardWidget*>( centralWidget() );
@@ -739,21 +708,3 @@ void BoardWindow::requestUpdate()
     }
 }
 #endif
-
-WhatsThisAwareLabel::WhatsThisAwareLabel( QWidget* parent ) : QLabel(parent)
-{
-    mAction.setText( "What's this?" );
-}
-
-void WhatsThisAwareLabel::mousePressEvent(QMouseEvent *event)
-{
-    if ( event->button() == Qt::RightButton ) {
-        if ( GameRegistry* registry = getRegistry(this) ) {
-            QPoint globalPos = event->globalPos();
-            QAction* action = registry->getWindow()->showMenu( &globalPos, { &mAction } );
-            if ( action == &mAction ) {
-                QWhatsThis::showText( globalPos, whatsThis() );
-            }
-        }
-    }
-}

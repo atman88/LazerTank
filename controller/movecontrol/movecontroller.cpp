@@ -44,12 +44,13 @@ bool MoveController::setReplay( bool on )
                 }
             }
             QObject::connect( this, &MoveController::idle, this, &MoveController::replayPlayback, Qt::QueuedConnection );
+            emit replayChanged( true );
         }
     } else if ( mReplayReader ) {
         disconnect( this, SLOT(replayPlayback()) );
         delete mReplayReader;
         mReplayReader = 0;
-        emit replayFinished();
+        emit replayChanged( false );
     }
 
     return wasOn;

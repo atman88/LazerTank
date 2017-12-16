@@ -40,4 +40,11 @@ extern void centerToEntryPoint( int angle, QPoint *point );
 extern int myScreenHeight();
 extern int myScreenWidth();
 
+/**
+ * @brief test whether replay is active
+ * @param registry
+ * @return 1 if active, -1 if changed to inactive as a result of this call or 0 if inactive
+ */
+extern int checkForReplay( GameRegistry* registry );
+
 #endif // GAMEUTILS_H

@@ -7,92 +7,66 @@
 #include "controller/movecontroller.h"
 #include "util/gameutils.h"
 
-ReplayText::ReplayText( QObject* parent, const QString& text, int minAlpha, int maxAlpha ) : QObject(parent), mText(text),
-  mMinAlpha(minAlpha), mMaxAlpha(maxAlpha), mInitialized(false), mEnabled(false)
+ReplayText::ReplayText( QWidget* parent, const QString& text, int minAlpha, int maxAlpha ) : WhatsThisAwareLabel(parent),
+  mMinAlpha(minAlpha), mMaxAlpha(maxAlpha)
 {
-}
+    setText( text );
+    setAlignment( Qt::AlignHCenter );
 
-void ReplayText::render( const QRect* rect, QPainter* painter )
-{
-    if ( mBounds.isNull() ) {
-        if ( GameRegistry* registry = getRegistry(this) ) {
-            // lazily initialize on first use:
-            if ( !mInitialized ) {
-                mFont = painter->font();
-                mFont.setBold( true );
-                mFont.setItalic( true );
-                mFont.setPixelSize( 36 );
-                mPen.setColor( QColor(255,255,255,mMaxAlpha) );
+    mPalette = palette();
+    mPalette.setColor( QPalette::WindowText, QColor(255,255,255,mMaxAlpha) );
+    setPalette( mPalette );
 
-                mAnimation.setTargetObject(this);
-                mAnimation.setPropertyName("alpha");
-                mAnimation.setEasingCurve( QEasingCurve::InOutQuad );
-                mAnimation.setDuration( 2000 );
+    QFont myFont( font() );
+    myFont.setBold( true );
+    myFont.setItalic( true );
+    setFont( myFont );
 
-                QObject::connect( &registry->getMoveController(), &MoveController::replayFinished, this, &ReplayText::disable );
-                QObject::connect( &mAnimation, &QPropertyAnimation::finished, this, &ReplayText::startCycle, Qt::QueuedConnection );
-                mInitialized = true;
-            }
+    mAnimation.setTargetObject(this);
+    mAnimation.setPropertyName("alpha");
+    mAnimation.setEasingCurve( QEasingCurve::InOutQuad );
+    mAnimation.setDuration( 2000 );
 
-            if ( BoardWindow* window = registry->getWindow() ) {
-                QSize size = window->size();
-                painter->setFont( mFont );
-                mBounds = painter->boundingRect( QRect(QPoint(0,0),size), Qt::AlignCenter, mText );
-            }
-        }
-    }
-
-    if ( !mEnabled ) {
-        mEnabled = true;
-        startCycle();
-    }
-
-    if ( rect->intersects( mBounds ) ) {
-        painter->setFont( mFont );
-        painter->setPen( mPen );
-        painter->drawText( mBounds, mText );
-    }
+    QObject::connect( &mAnimation, &QPropertyAnimation::finished, this, &ReplayText::startCycle, Qt::QueuedConnection );
 }
 
 void ReplayText::startCycle()
 {
-    if ( mEnabled ) {
-        int alpha = mPen.color().alpha();
+    if ( isVisible() ) {
+        int alpha = mPalette.color(QPalette::WindowText).alpha();
         mAnimation.setStartValue( alpha );
         mAnimation.setEndValue( alpha == mMaxAlpha ? mMinAlpha : mMaxAlpha );
         mAnimation.start();
     }
 }
 
-void ReplayText::disable()
+void ReplayText::mousePressEvent( QMouseEvent* event )
 {
-    mEnabled = false;
-    mAnimation.stop();
-    if ( !mBounds.isNull() ) {
-        emit dirty( mBounds );
+    if ( event->button() == Qt::LeftButton ) {
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            checkForReplay( registry );
+        }
+        return;
     }
+    WhatsThisAwareLabel::mousePressEvent( event );
 }
 
 QVariant ReplayText::getAlpha() const
 {
-    return mPen.color().alpha();
+    return mPalette.color(QPalette::WindowText).alpha();
 }
 
 void ReplayText::setAlpha( QVariant& vAlpha )
 {
     int alpha = vAlpha.toInt();
-    if ( alpha != mPen.color().alpha() ) {
-        QColor color = mPen.color();
-        color.setAlpha( alpha );
-        mPen.setColor( color );
-        if ( !mBounds.isNull() ) {
-            emit dirty( mBounds );
-        }
+    const QColor& color = mPalette.color( QPalette::WindowText );
+    if ( alpha != color.alpha() ) {
+        mPalette.setColor( QPalette::WindowText, QColor(255,255,255,alpha) );
+        setPalette( mPalette );
     }
 }
 
-void ReplayText::onResize()
+void ReplayText::showEvent( QShowEvent* )
 {
-    // nullify the bounds rectangle to recompute on next use
-    mBounds = QRect();
+    startCycle();
 }

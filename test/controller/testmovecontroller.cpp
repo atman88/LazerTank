@@ -171,7 +171,7 @@ void TestMain::testReplay()
     QVERIFY( boardPieces.typeAt(ModelPoint(3,0)) == NONE );
     QVERIFY( boardPieces.typeAt(ModelPoint(1,2)) == NONE );
 
-    QSignalSpy replaySpy( &moveController, &MoveController::replayFinished );
+    QSignalSpy replaySpy( &moveController, &MoveController::replayChanged );
     QVERIFY( replaySpy.wait() );
     QVERIFY( boardPieces.typeAt(ModelPoint(3,0)) == TILE );
     if ( mRegistry.getShotAggregate().active() ) {

@@ -2,9 +2,12 @@
 #include <QPoint>
 #include <QApplication>
 #include <QDesktopWidget>
+#include <QMessageBox>
 
 #include "gameutils.h"
 #include "controller/gameregistry.h"
+#include "controller/movecontroller.h"
+#include "model/tank.h"
 
 const char* GameHandleName = "GameHandle";
 
@@ -40,4 +43,25 @@ int myScreenHeight()
 int myScreenWidth()
 {
     return QApplication::desktop()->availableGeometry().width();
+}
+
+int checkForReplay( GameRegistry* registry )
+{
+    MoveController& moveController = registry->getMoveController();
+    if ( moveController.replaying() ) {
+        registry->getTank().pause();
+
+        QMessageBox::StandardButton button = QMessageBox::question( 0, "Auto Replay", "Play from here?",
+                                                                    QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes );
+        if ( button == QMessageBox::Yes ) {
+            moveController.setReplay( false );
+        }
+        if ( moveController.canWakeup() ) {
+            registry->getTank().resume();
+        }
+
+        return (button == QMessageBox::Yes) ? -1 /* indicate changed to inactive */ : 1 /* indicate replay is active */;
+    }
+
+    return 0; // indicate replay inactive
 }

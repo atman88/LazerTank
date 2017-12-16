@@ -361,9 +361,9 @@ signals:
     void idle();
 
     /**
-     * @brief Indicates that replay playback has ended
+     * @brief Notifies when replay playback starts/stops
      */
-    void replayFinished();
+    void replayChanged( bool on );
 
 public slots:
     /**
