@@ -1,6 +1,9 @@
 #ifndef LOADABLE_H
 #define LOADABLE_H
 
+/**
+ * @brief Interface used for loading recording data
+ */
 class Loadable
 {
 public:

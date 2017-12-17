@@ -147,9 +147,6 @@ void BoardWidget::renderSquareLater( ModelPoint point )
 
 BoardWindow::BoardWindow(QWidget* parent) : QMainWindow(parent), mMoveCounter(new WhatsThisAwareLabel(this)), mSavedMoveCount(new WhatsThisAwareLabel(this)),
   mCompletedIndicator(new WhatsThisAwareLabel(this)), mGameInitialized(false), mHelpWidget(0), mReplayText(0)
-#if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
-  , mUpdatePending(false)
-#endif
 {
     setCentralWidget( new BoardWidget(this) );
     layout()->setSizeConstraint(QLayout::SetFixedSize);
@@ -170,12 +167,12 @@ void BoardWindow::init( GameRegistry* registry )
     Game& game = registry->getGame();
     MoveController& moveController = registry->getMoveController();
 
-    TO_QACTION(mSpeedAction).setCheckable(true);
+    mSpeedAction.setCheckable(true);
 
-    QObject::connect( &TO_QACTION(mSpeedAction), &QAction::toggled, &registry->getSpeedController(), &SpeedController::setHighSpeed );
-    QObject::connect( &TO_QACTION(mUndoMoveAction),  &QAction::triggered, &moveController, &MoveController::undoLastMove );
-    QObject::connect( &TO_QACTION(mClearMovesAction),&QAction::triggered, &moveController, &MoveController::undoMoves );
-    QObject::connect( &TO_QACTION(mReplayAction),    &QAction::triggered, &game, &Game::replayLevel );
+    QObject::connect( &mSpeedAction, &QAction::toggled, &registry->getSpeedController(), &SpeedController::setHighSpeed );
+    QObject::connect( &mUndoMoveAction,  &QAction::triggered, &moveController, &MoveController::undoLastMove );
+    QObject::connect( &mClearMovesAction,&QAction::triggered, &moveController, &MoveController::undoMoves    );
+    QObject::connect( &mReplayAction,    &QAction::triggered, &game, &Game::replayLevel );
 
     QObject::connect( &game, &Game::boardLoaded, this, &BoardWindow::onBoardLoaded, Qt::DirectConnection );
 
@@ -346,29 +343,29 @@ QAction* BoardWindow::showMenu( QPoint* globalPos, const QList<QAction*> widgetA
         // create the menu on first use
         //
         if ( mMenu.isEmpty() ) {
-            TO_QACTION(mUndoMoveAction).setText( "&Undo" );
-            TO_QACTION(mClearMovesAction).setText( "Clear Moves" );
-            TO_QACTION(mSpeedAction).setText( "&Speed Boost" );
+            mUndoMoveAction.setText( "&Undo" );
+            mClearMovesAction.setText( "Clear Moves" );
+            mSpeedAction.setText( "&Speed Boost" );
             captureAction.setText( "&Capture Flag" );
-            TO_QACTION(mReloadAction).setText( "&Restart Level" );
-            TO_QACTION(mReplayAction).setText( "&Auto Replay" );
+            mReloadAction.setText( "&Restart Level" );
+            mReplayAction.setText( "&Auto Replay" );
 
-            TO_QACTION(mSpeedAction).setShortcut( Qt::Key_S );
+            mSpeedAction.setShortcut( Qt::Key_S );
             captureAction.setShortcut( Qt::Key_C );
-            TO_QACTION(mUndoMoveAction).setShortcut( Qt::Key_Backspace );
-            TO_QACTION(mClearMovesAction).setShortcut( Qt::CTRL|Qt::Key_Backspace );
-            TO_QACTION(mReloadAction).setShortcut( Qt::ALT|Qt::Key_R );
-            TO_QACTION(mReplayAction).setShortcut( Qt::ALT|Qt::Key_A );
+            mUndoMoveAction.setShortcut( Qt::Key_Backspace );
+            mClearMovesAction.setShortcut( Qt::CTRL|Qt::Key_Backspace );
+            mReloadAction.setShortcut( Qt::ALT|Qt::Key_R );
+            mReplayAction.setShortcut( Qt::ALT|Qt::Key_A );
 
             mMenu.addSeparator(); // separate contextual actions (above) and non-contextual (below)
             mMenu.addAction( "shoot& ", &registry->getMoveController(), SLOT(fire()), Qt::Key_Space );
-            mMenu.addAction( &TO_QACTION(mSpeedAction)      );
-            mMenu.addAction( &TO_QACTION(mUndoMoveAction)   );
-            mMenu.addAction( &TO_QACTION(mClearMovesAction) );
+            mMenu.addAction( &mSpeedAction      );
+            mMenu.addAction( &mUndoMoveAction   );
+            mMenu.addAction( &mClearMovesAction );
             mMenu.addAction( &captureAction );
-            mMenu.addAction( &TO_QACTION(mReloadAction)     );
+            mMenu.addAction( &mReloadAction     );
             mMenu.addAction( "Select &Level..", this, SLOT(chooseLevel()), Qt::ALT|Qt::Key_L );
-            mMenu.addAction( &TO_QACTION(mReplayAction) );
+            mMenu.addAction( &mReplayAction );
             mMenu.addAction( "&Help", this, SLOT(showHelp()) );
             mMenu.addAction( "About Qt", qApp, &QApplication::aboutQt );
             mMenu.addAction( "E&xit", this, SLOT(close()) );
@@ -378,8 +375,8 @@ QAction* BoardWindow::showMenu( QPoint* globalPos, const QList<QAction*> widgetA
         // freshen dynamic menu item properties
         //
         Board* board = registry->getGame().getBoard();
-        TO_QACTION(mSpeedAction).setChecked( registry->getSpeedController().getHighSpeed() );
-        TO_QACTION(mReloadAction).setData( QVariant( board->getLevel()) );
+        mSpeedAction.setChecked( registry->getSpeedController().getHighSpeed() );
+        mReloadAction.setData( QVariant( board->getLevel()) );
 
         QList<PathSearchAction*> searchActions( widgetSearchActions );
         PieceType focus = registry->getMoveController().getFocus();
@@ -389,11 +386,11 @@ QAction* BoardWindow::showMenu( QPoint* globalPos, const QList<QAction*> widgetA
         registry->getPathFinderController().testActions( searchActions );
 
         bool movesPending = registry->getMoveController().getMoves().size() > 0;
-        TO_QACTION(mUndoMoveAction).setEnabled( movesPending );
-        TO_QACTION(mClearMovesAction).setEnabled( movesPending );
+        mUndoMoveAction.setEnabled( movesPending );
+        mClearMovesAction.setEnabled( movesPending );
         bool modified = !registry->getRecorder().isEmpty();
-        TO_QACTION(mReplayAction).setEnabled( modified || registry->getLevelList().isLevelCompleted( board->getLevel() ) );
-        TO_QACTION(mReloadAction).setEnabled( modified );
+        mReplayAction.setEnabled( modified || registry->getLevelList().isLevelCompleted( board->getLevel() ) );
+        mReloadAction.setEnabled( modified );
 
         mMenu.insertActions( mMenu.actions().at(0), widgetActions );
 
@@ -698,13 +695,3 @@ void BoardWindow::connectTo( const PieceManager& manager ) const
     QObject::connect( &manager, &PieceManager::erasedAt,   w, &BoardWidget::renderSquareLater, Qt::DirectConnection );
     QObject::connect( &manager, &PieceManager::changedAt,  w, &BoardWidget::renderSquareLater, Qt::DirectConnection );
 }
-
-#if (QT_VERSION < QT_VERSION_CHECK(5, 5, 0))
-void BoardWindow::requestUpdate()
-{
-    if ( isExposed() && !mUpdatePending ) {
-        QTimer::singleShot( 17, this, &BoardWindow::renderNow );
-        mUpdatePending = true;
-    }
-}
-#endif

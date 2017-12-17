@@ -12,6 +12,9 @@ typedef enum {
     PixmapTypeUpperBound // must be last
 } PixmapType;
 
+/**
+ * @brief A resource-based pixmap
+ */
 class ResourcePixmap : public QPixmap
 {
 public:

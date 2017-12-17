@@ -21,38 +21,6 @@ class ReplayText;
 #include "controller/movecontroller.h"
 #include "model/piece.h"
 
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 7, 0))
-#define ACTION QAction
-#define TO_QACTION(a) a
-#else
-class ActionProxy
-{
-public:
-    ActionProxy() : mAction(0)
-    {
-    }
-    ~ActionProxy()
-    {
-        if ( mAction ) {
-            delete mAction;
-        }
-    }
-
-    QAction* getAction()
-    {
-        if ( !mAction ) {
-            mAction = new QAction(0);
-        }
-        return mAction;
-    }
-
-private:
-    QAction* mAction;
-};
-
-#define ACTION ActionProxy
-#define TO_QACTION(a) (*(a).getAction())
-#endif
 
 class BoardWidget : public QWidget
 {
@@ -176,11 +144,11 @@ protected:
 
 private:
     QMenu mMenu;
-    ACTION mSpeedAction;
-    ACTION mReloadAction;
-    ACTION mUndoMoveAction;
-    ACTION mClearMovesAction;
-    ACTION mReplayAction;
+    QAction mSpeedAction;
+    QAction mReloadAction;
+    QAction mUndoMoveAction;
+    QAction mClearMovesAction;
+    QAction mReplayAction;
 
     QLabel* mMoveCounter;
     QLabel* mSavedMoveCount;
