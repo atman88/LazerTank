@@ -238,7 +238,7 @@ public:
     /**
      * @brief move the tank one square
      * @param direction A rotation angle (one of 0, 90, 180, 270) or -1 to advance in the current direction
-     * Attempts to move beyond the current square are ignored when dragging is active
+     * Attempts to move beyond an adjacent square are ignored when dragging is active
      */
     void move( int direction ) override;
 

@@ -204,6 +204,14 @@ private:
      */
     bool canPlaceAt( PieceType what, ModelPoint point, int fromAngle, Board* board, Piece **pushPiece = 0 );
 
+    /**
+     * @brief determine whether the given square is suitable for a cannon to "see through"
+     * @param board The board to use for the test
+     * @param point The square of interest
+     * @return true if sight is not obstructed
+     */
+    bool canCannonSightThru( Board* board, ModelPoint point );
+
     Board mBoard;
     int mDesiredLevel;
 

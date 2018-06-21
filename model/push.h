@@ -19,6 +19,13 @@ public:
 
     ModelPoint getTargetPoint() const;
 
+    /**
+     * @brief tests whether the pushed piece covers the centerpoint of the given square
+     * @param square The square to test
+     * @return true if the square's center is covered
+     */
+    bool occupies( ModelPoint& square );
+
 protected:
     void stopping() override;
 

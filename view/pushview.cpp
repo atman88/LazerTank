@@ -66,6 +66,15 @@ QRect* PushView::getBounds()
     return &mBoundingRect;
 }
 
+bool PushView::occupies( QPoint point )
+{
+    if ( mType != NONE ) {
+        return mBoundingRect.left() <= point.x() && point.x() <= mBoundingRect.right()
+            && mBoundingRect.top()  <= point.y() && point.y() <= mBoundingRect.bottom();
+    }
+    return false;
+}
+
 QVariant PushView::getX()
 {
     return QVariant( mBoundingRect.left() );

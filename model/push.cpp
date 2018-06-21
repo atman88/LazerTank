@@ -17,6 +17,11 @@ ModelPoint Push::getTargetPoint() const
     return mTargetPoint;
 }
 
+bool Push::occupies( ModelPoint& square )
+{
+    return PushView::occupies( QPoint(square.mCol*24+24/2, square.mRow*24+24/2) );
+}
+
 void Push::stopping()
 {
     if ( GameRegistry* registry = getRegistry(this) ) {

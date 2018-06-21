@@ -56,6 +56,13 @@ public:
      */
     QRect* getBounds();
 
+    /**
+     * @brief tests whether the pushed piece covers the given point
+     * @param point The point to test
+     * @return true if the center is covered
+     */
+    bool occupies( QPoint point );
+
 protected:
     /**
      * @brief start a push sequence between two squares

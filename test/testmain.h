@@ -74,6 +74,7 @@ private slots:
     void testIsMasterBoard();
 
     void testMeasureShot();
+    void testCannonShot();
 
     void testFutureSelect();
     void testDragTile();

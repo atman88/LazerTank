@@ -141,12 +141,23 @@ bool Game::canMoveFrom( PieceType what, int angle, ModelPoint *point, bool futur
     return false;
 }
 
-bool canSightThru( Board* board, ModelPoint point )
+bool Game::canCannonSightThru( Board* board, ModelPoint point )
 {
     switch( board->tileAt( point ) ) {
     case DIRT:
     case TILE_SUNK:
-        return board->getPieceManager().typeAt( point ) == NONE;
+        if ( board->getPieceManager().typeAt( point ) != NONE ) {
+            return false;
+        }
+
+        if ( GameRegistry* registry = getRegistry(this) ) {
+            if ( registry->getTankPush().occupies( point )
+              || registry->getShotPush().occupies( point ) ) {
+                return false;
+            }
+        }
+        return true;
+
     case WATER:
     case FLAG:
         return true;
@@ -184,7 +195,7 @@ void Game::sightCannons()
                             sighted = true;
                             break;
                         }
-                        if ( !canSightThru( &mBoard, ModelPoint( tankCol, row ) ) ) {
+                        if ( !canCannonSightThru( &mBoard, ModelPoint( tankCol, row ) ) ) {
                             break;
                         }
                     }
@@ -204,7 +215,7 @@ void Game::sightCannons()
                             sighted = true;
                             break;
                         }
-                        if ( !canSightThru( &mBoard, ModelPoint( col, tankRow ) ) ) {
+                        if ( !canCannonSightThru( &mBoard, ModelPoint( col, tankRow ) ) ) {
                             break;
                         }
                     }
