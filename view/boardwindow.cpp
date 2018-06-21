@@ -83,6 +83,7 @@ void BoardWidget::paintEvent( QPaintEvent* e )
 
             if ( registry->getGame().isBoardLoaded() ) {
                 BoardRenderer renderer(TILE_SIZE);
+                painter.fillRect( e->rect(), Qt::black );
                 renderer.render( e->rect(), board, &painter );
 
                 bool tankIsProminent = moveController.getFocus() != TANK && moveController.getDragState() == Inactive;
