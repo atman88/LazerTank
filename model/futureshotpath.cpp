@@ -1,3 +1,4 @@
+#include <iostream>
 #include <QPainterPath>
 
 #include "futureshotpath.h"
@@ -108,8 +109,9 @@ const FutureShotPath* FutureShotPathManager::updateShots( int previousCount, Mov
     if ( GameRegistry* registry = getRegistry(this) ) {
         FutureShotPath path(move);
         FutureShotPathSet::iterator it = mPaths.find( path );
+        Board* board = registry->getGame().getBoard(true);
         if ( it != mPaths.end() ) {
-            registry->getGame().getBoard(true)->undoChanges( previousCount, it->mChanges );
+            board->undoChanges( previousCount, it->mChanges );
             emit dirtyRect( it->getBounds() );
             mPaths.erase( it );
         }
@@ -125,6 +127,7 @@ const FutureShotPath* FutureShotPathManager::updateShots( int previousCount, Mov
         std::vector<FutureChange>::iterator previousChange;
 
         ModelVector leadVector( path.mLeadVector );
+        unsigned maxBends = board->getWidth() + board->getHeight();
 
         while( path.mShotCount < newCount ) {
             path.mLeadVector = leadVector;
@@ -162,6 +165,10 @@ const FutureShotPath* FutureShotPathManager::updateShots( int previousCount, Mov
                 }
             } else if ( leadVector.mAngle != path.mLeadVector.mAngle ) {
                 path.mLeadVector.mAngle = leadVector.mAngle;
+                if ( path.mBendPoints.size() >= maxBends ) { // safety
+                    std::cout << "** max bends " << maxBends << " exceeded" << std::endl;
+                    break;
+                }
                 path.mBendPoints.push_back( leadVector );
             }
         }
