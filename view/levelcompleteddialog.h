@@ -26,6 +26,9 @@ public:
 private slots:
     void onLevelUpdated( const QModelIndex& );
 
+protected:
+    void keyPressEvent( QKeyEvent* e ) override;
+
 private:
     void setLevelCountInternal();
 

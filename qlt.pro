@@ -36,7 +36,8 @@ SOURCES += \
     view/boardrenderer.cpp \
     util/persist.cpp \
     model/movelistmanager.cpp \
-    util/helputils.cpp
+    util/helputils.cpp \
+    util/hexdump.cpp
 
 index {
     TARGET = qltindexer

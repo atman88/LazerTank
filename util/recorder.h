@@ -46,29 +46,28 @@ public:
         Finished
     } ReadState;
 
-    RecorderSource( RecorderPrivate& recorder, Persist& persist );
-    ~RecorderSource();
+    RecorderSource( RecorderPrivate& recorder );
 
     /**
      * @brief Query whether data is ready to read
      */
-    ReadState getReadState() const;
+    virtual ReadState getReadState() const = 0;
 
     /**
      * @brief Query the total count of buffered moves
      */
-    int getCount();
+    virtual int getCount() const = 0;
 
     /**
      * @brief Get the current read position
      */
-    int pos();
+    int pos() const;
 
     /**
      * @brief Read the next available data value
      * @return The next move or an empty move is returned if no more moves ready to read.
      */
-    unsigned char get();
+    virtual unsigned char get() = 0;
 
     /**
      * @brief Undo the last get
@@ -95,12 +94,12 @@ signals:
 private slots:
     void onDataReady();
 
-private:
+protected:
+    void connectDataReady( QObject* sender, const char* signal );
+    virtual void doDataReady() = 0;
+
     RecorderPrivate& mRecorder;
-    Persist& mPersist;
-    PersistLevelLoader* mLoader;
     int mOffset;
-    int mLoadSequence;
 };
 
 class RecorderReader
@@ -204,6 +203,11 @@ public:
      */
     RecorderSource* source();
 
+    /**
+     * @brief dump contents for debug
+     */
+    void dump();
+
 signals:
     /**
      * @brief Notifies the recorded count has changed
@@ -212,7 +216,6 @@ signals:
 
 protected:
     RecorderPrivate* mPrivate;
-    int mStartDirection; // the initial tank direction
 };
 
 #endif // RECORDER_H

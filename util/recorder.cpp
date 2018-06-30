@@ -49,11 +49,25 @@ int Recorder::getCapacity() const
 
 RecorderSource* Recorder::source()
 {
-    if ( GameRegistry* registry = getRegistry(this) ) {
+    if ( !mPrivate->isEmpty() ) {
         mPrivate->lazyFlush();
-        return new RecorderSource( *mPrivate, registry->getPersist() );
+        return new RecorderActiveSource( *mPrivate );
     }
+
+    if ( GameRegistry* registry = getRegistry(this) ) {
+        // confirm current level is persisted
+        Persist& persist = registry->getPersist();
+        if ( persist.isPersisted( mPrivate->getLevel() ) ) {
+            return new RecorderPersistedSource( *mPrivate, persist );
+        }
+    }
+
     return 0;
+}
+
+void Recorder::dump()
+{
+    mPrivate->dump();
 }
 
 void Recorder::recordMove( bool adjacent, int rotation )
@@ -65,6 +79,45 @@ void Recorder::recordMove( bool adjacent, int rotation )
 void Recorder::recordShot()
 {
     mPrivate->recordShot();
+}
+
+RecorderSource::RecorderSource( RecorderPrivate& recorder ) : QObject(0), mRecorder(recorder), mOffset(0)
+{
+}
+
+int RecorderSource::pos() const
+{
+    return mOffset;
+}
+
+void RecorderSource::unget()
+{
+    if ( --mOffset < 0 ) {
+        mOffset = 0;
+    }
+}
+
+void RecorderSource::rewind()
+{
+    mOffset = 0;
+}
+
+int RecorderSource::seekEnd()
+{
+    mOffset = getCount();
+    return mOffset;
+}
+
+void RecorderSource::onDataReady()
+{
+    disconnect( this );
+    doDataReady();
+    emit dataReady();
+}
+
+void RecorderSource::connectDataReady( QObject* sender, const char* signal )
+{
+    QObject::connect( sender, signal, this, SLOT(onDataReady()) );
 }
 
 RecorderReader::RecorderReader( int startDirection, RecorderSource& source ) : mLastDirection(startDirection), mSource(source)
@@ -133,7 +186,7 @@ bool RecorderReader::consumeNext( RecorderPlayer* player )
 
     // let's sanity-check while we're here. Only the first move can fire only:
     if ( empty && mSource.pos() > 1 ) {
-        std::cout << "** consumeNext: Non-move read unexpectedly" << std::endl;
+        std::cout << "**consumeNext: Non-move read unexpectedly" << std::endl;
         abort();
         player->setReplay( false );
         return false;

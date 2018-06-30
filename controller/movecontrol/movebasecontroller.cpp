@@ -181,15 +181,21 @@ void MoveBaseController::wakeup()
                     bool hasRotation = mToVector.mAngle != move->getAngle();
                     mToVector = *move;
 
+#ifndef QT_NO_DEBUG
+                    if ( registry->getTankPush().getType() != NONE ) {
+                        std::cout << "*** doMove: push unexpectedly active!" << std::endl;
+                    }
+                    if ( registry->getShotPush().getType() != NONE && tank.getVector().equals( registry->getShotPush().getTargetPoint() ) ) {
+                        std::cout << "*** doMove: shotPush collision!" << std::endl;
+                    }
+#endif // QT_NO_DEBUG
+
                     if ( move->hasPush() ) {
                         registry->getGame().onTankPushingInto( *move, move->getAngle() );
+
 #ifndef QT_NO_DEBUG
-                    } else {
-                        if ( GameRegistry* registry = getRegistry(this) ) {
-                            if ( registry->getGame().getBoard()->getPieceManager().pieceAt(*move) ) {
-                                std::cout << "doMove: moving over piece" << std::endl;
-                            }
-                        }
+                    } else if ( registry->getGame().getBoard()->getPieceManager().pieceAt(*move) ) {
+                        std::cout << "doMove: moving over piece" << std::endl;
 #endif // QT_NO_DEBUG
                     }
 
@@ -225,6 +231,10 @@ void MoveBaseController::wakeup()
             mMoves.eraseFront();
             transitionState( IdlingStage );
             move = mMoves.getFront();
+        }
+
+        if ( registry->getShotPush().getType() != NONE ) {
+            return;
         }
     }
 

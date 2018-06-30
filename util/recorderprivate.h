@@ -117,9 +117,16 @@ public:
      */
     int getLevel() const;
 
+    /**
+     * @brief dump contents for debug
+     */
+    void dump();
+
     // Loadable interface
     char*getLoadableDestination(int forLevel, int count);
     void releaseLoadableDestination(int forLevel, int actualCount);
+
+    int getPreRecordedCount() const;
 
 private:
     /**
@@ -153,7 +160,38 @@ private:
     int mRecordedAllocationWaterMark; // tracks allocations
 
     friend class Recorder;
-    friend class RecorderSource;
+    friend class RecorderActiveSource;
+    friend class RecorderPersistedSource;
+};
+
+class RecorderActiveSource : public RecorderSource
+{
+public:
+    RecorderActiveSource( RecorderPrivate& recorder );
+    int getCount() const override;
+    unsigned char get() override;
+    ReadState getReadState() const override;
+
+protected:
+    void doDataReady() override;
+};
+
+class RecorderPersistedSource : public RecorderSource
+{
+public:
+    RecorderPersistedSource( RecorderPrivate& recorder, Persist& persist );
+    ~RecorderPersistedSource();
+
+    int getCount() const override;
+    unsigned char get() override;
+    ReadState getReadState() const override;
+
+protected:
+    void doDataReady() override;
+
+    Persist& mPersist;
+    PersistLevelLoader* mLoader;
+    int mLoadSequence;
 };
 
 #endif // RECORDERPRIVATE_H

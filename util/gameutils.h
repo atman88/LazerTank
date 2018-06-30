@@ -47,4 +47,12 @@ extern int myScreenWidth();
  */
 extern int checkForReplay( GameRegistry* registry );
 
+/**
+ * @brief Print a hex dump
+ * @param desc Description heading or NULL to omit
+ * @param addr Address of buffer to dump
+ * @param len Buffer size
+ */
+extern void hexDump( const char* desc, void* addr, int len );
+
 #endif // GAMEUTILS_H

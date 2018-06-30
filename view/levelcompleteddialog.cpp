@@ -1,5 +1,4 @@
 #include <QObject>
-#include <QMessageBox>
 #include <QPushButton>
 #include "levelcompleteddialog.h"
 #include "controller/gameregistry.h"
@@ -10,10 +9,10 @@
 
 LevelCompletedDialog::LevelCompletedDialog( GameRegistry* registry ) : mRegistry(registry)
 {
-    setWindowTitle( "Level completed!");
+    setWindowTitle( "Level completed!" );
     setText( QString( "Completed in %1 moves" ).arg( registry->getRecorder().getAvailableCount() ) );
     setIconPixmap( QPixmap(":/images/flag.png") );
-    addButton( QString("&Auto Replay" ), ActionRole  );
+    addButton( QString("&Auto Replay" ), ActionRole );
     QPushButton* nextButton = addButton( QString("&Next Level" ), AcceptRole );
     addButton( QString("E&xit" ), DestructiveRole );
     setDefaultButton( nextButton );
@@ -41,6 +40,19 @@ LevelCompletedDialog::ButtonCode LevelCompletedDialog::getClickedCode() const
 void LevelCompletedDialog::onLevelUpdated( const QModelIndex& )
 {
     setLevelCountInternal();
+}
+
+void LevelCompletedDialog::keyPressEvent( QKeyEvent* e )
+{
+    if ( !e->isAutoRepeat() ) {
+        switch( e->key() ) {
+        case Qt::Key_D: // dump recording (debug)
+            if ( e->modifiers() == Qt::AltModifier ) {
+                mRegistry->getRecorder().dump();
+            }
+            break;
+        }
+    }
 }
 
 void LevelCompletedDialog::setLevelCountInternal()

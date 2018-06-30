@@ -4,25 +4,38 @@
 
 #include "recorderprivate.h"
 #include "util/persist.h"
+#include "util/gameutils.h"
 
 // In a spirit of friendly memory consumption stewardship, this class grows its recording buffer as needed in chunks of size:
 #define ALLOCATION_CHUNK_SIZE 1000
 
-RecorderSource::RecorderSource( RecorderPrivate& recorder, Persist& persist ) : QObject(0), mRecorder(recorder),
-  mPersist(persist), mLoader(0), mOffset(0), mLoadSequence(0)
+RecorderActiveSource::RecorderActiveSource( RecorderPrivate& recorder ) : RecorderSource(recorder)
 {
 }
 
-RecorderSource::~RecorderSource()
+RecorderPersistedSource::RecorderPersistedSource( RecorderPrivate& recorder, Persist& persist ) : RecorderSource(recorder), mPersist(persist),
+  mLoader(0), mLoadSequence(0)
+{
+}
+
+RecorderPersistedSource::~RecorderPersistedSource()
 {
     if ( mLoader ) {
         delete mLoader;
     }
 }
 
-RecorderSource::ReadState RecorderSource::getReadState() const
+RecorderSource::ReadState RecorderActiveSource::getReadState() const
 {
-    if ( mOffset < mRecorder.getAvailableCount() ) {
+    if ( mOffset < getCount() ) {
+        return Ready;
+    }
+    return Finished;
+}
+
+RecorderSource::ReadState RecorderPersistedSource::getReadState() const
+{
+    if ( mOffset < getCount() ) {
         return Ready;
     }
 
@@ -41,31 +54,40 @@ RecorderSource::ReadState RecorderSource::getReadState() const
     }
 }
 
-int RecorderSource::getCount()
+int RecorderActiveSource::getCount() const
 {
     return mRecorder.getAvailableCount();
 }
 
-int RecorderSource::pos()
+int RecorderPersistedSource::getCount() const
 {
-    return mOffset;
+    return mRecorder.getPreRecordedCount();
 }
 
-unsigned char RecorderSource::get()
+unsigned char RecorderActiveSource::get()
 {
-    if ( mOffset < mRecorder.getAvailableCount() ) {
+    if ( mOffset < getCount() ) {
+        return mRecorder.mRecorded[mOffset++].u.value;
+    }
+
+    return 0;
+}
+
+unsigned char RecorderPersistedSource::get()
+{
+    if ( mOffset < getCount() ) {
         return mRecorder.mRecorded[mOffset++].u.value;
     }
 
     if ( mLoadSequence == 0 && mLoader == 0 ) {
         if ( (mLoader = mPersist.getLevelLoader( mRecorder.getLevel()) ) ) {
             if ( mRecorder.setData( *mLoader ) ) {
-                QObject::connect( mLoader, &PersistLevelLoader::dataReady, this, &RecorderSource::onDataReady );
+                connectDataReady( mLoader, SIGNAL(dataReady()) );
                 mLoadSequence = 1;
                 return 0;
             }
         }
-        mLoadSequence = 2;
+        mLoadSequence = -1;
         if ( mLoader ) {
             delete mLoader;
             mLoader = 0;
@@ -75,33 +97,18 @@ unsigned char RecorderSource::get()
     return 0;
 }
 
-void RecorderSource::unget()
+void RecorderActiveSource::doDataReady()
 {
-    if ( --mOffset < 0 ) {
-        mOffset = 0;
-    }
+    // do nothing
 }
 
-void RecorderSource::rewind()
+void RecorderPersistedSource::doDataReady()
 {
-    mOffset = 0;
-}
-
-int RecorderSource::seekEnd()
-{
-    mOffset = mRecorder.getAvailableCount();
-    return mOffset;
-}
-
-void RecorderSource::onDataReady()
-{
-    disconnect( this, SLOT(onDataReady()) );
     mLoadSequence = 2;
     if ( mLoader ) {
         delete mLoader;
         mLoader = 0;
     }
-    emit dataReady();
 }
 
 RecorderPrivate::RecorderPrivate( int capacity ) : mLevel(0), mWritePos(0), mPreRecordedCount(0),
@@ -130,8 +137,8 @@ void RecorderPrivate::onBoardLoaded( int level )
 {
     if ( level == mLevel ) {
         // non-destructive rewind
-        mPreRecordedCount = mWritePos;
         lazyFlush();
+        mPreRecordedCount = mWritePos;
     } else {
         // reset
         mLevel = level;
@@ -270,6 +277,12 @@ int RecorderPrivate::getLevel() const
     return mLevel;
 }
 
+void RecorderPrivate::dump()
+{
+    lazyFlush();
+    hexDump( "recorder", mRecorded, mWritePos );
+}
+
 int RecorderPrivate::storeCurMove()
 {
     int count = mWritePos;
@@ -316,6 +329,11 @@ bool RecorderPrivate::commitCurMove()
     return true;
 }
 
+int RecorderPrivate::getPreRecordedCount() const
+{
+    return mPreRecordedCount;
+}
+
 char* RecorderPrivate::getLoadableDestination( int forLevel, int count )
 {
     if ( forLevel == mLevel ) {
@@ -330,5 +348,6 @@ void RecorderPrivate::releaseLoadableDestination( int forLevel, int actualCount 
 {
     if ( forLevel == mLevel && !getRecordedCount() ) {
         mPreRecordedCount = std::max( actualCount, 0 );
+        hexDump( "loaded", mRecorded, mPreRecordedCount );
     }
 }

@@ -2,7 +2,6 @@
 #include <QLayout>
 #include <QApplication>
 #include <QStatusBar>
-#include <QMessageBox>
 #include <QTextBrowser>
 #include <QWhatsThis>
 
@@ -526,6 +525,12 @@ void BoardWindow::keyReleaseEvent( QKeyEvent* ev )
 
             case Qt::Key_F1:
                 showHelp();
+                break;
+
+            case Qt::Key_D: // dump recording (debug)
+                if ( ev->modifiers() == Qt::AltModifier ) {
+                    registry->getRecorder().dump();
+                }
                 break;
 
             default:

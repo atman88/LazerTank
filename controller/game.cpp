@@ -645,6 +645,8 @@ void Game::undoFuturePush( MovePiece* pusher )
 void Game::onTankKilled()
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
+        registry->getRecorder().dump();
+
         // if we don't have a window then we're headless (i.e. testing); don't show message boxes for the headless case
         if ( registry->getWindow() ) {
             // ensure this is off now to remove it from the display:
