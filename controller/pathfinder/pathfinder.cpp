@@ -15,6 +15,7 @@
 PathFinder::PathFinder( QObject* parent ) : QObject(parent), mStopping(false), mNPoints(0), mPassValue(0), mPushIndex(0),
   mPushDirection(0), mTestOnly(false), mPathSearchRunnable(*this), mTileDragBuildRunnable(*this)
 {
+    memset( mJmpBuf, 0, sizeof mJmpBuf );
 }
 
 bool PathFinder::execCriteria( PathSearchCriteria* criteria, bool testOnly )
