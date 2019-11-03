@@ -82,12 +82,14 @@ ResourcePixmap::~ResourcePixmap()
 bool ResourcePixmap::load()
 {
     const char* name = mName;
-    char* multiNamesBuf = 0;
-    if( const char* additionalName = strchr( name, '+' ) ) {
-        multiNamesBuf = (char*) alloca( strlen(name)+1 );
-        strcpy( multiNamesBuf, name );
-        multiNamesBuf[ (additionalName - name) ] = 0;
-        name = multiNamesBuf;
+    const char* secondName = strchr( name, '+' );
+    if ( secondName ) {
+        ++secondName;
+        size_t nameSize = static_cast<size_t>( secondName - mName );
+        char* nameBuf = static_cast<char*>( alloca( nameSize ) );
+        strncpy( nameBuf, name, nameSize );
+        nameBuf[nameSize-1] = 0;
+        name = nameBuf;
     }
 
     QString path = QString( ":/images/%1.png" ).arg( name );
@@ -96,10 +98,9 @@ bool ResourcePixmap::load()
         return false;
     }
 
-    if ( multiNamesBuf ) {
-        name = &multiNamesBuf[ strlen(name)+1 ];
+    if ( secondName ) {
         QPixmap pixmap2;
-        path = QString( ":/images/%1.png" ).arg( name );
+        path = QString( ":/images/%1.png" ).arg( secondName );
         if ( !pixmap2.load( path ) ) {
             std::cout << "** failed to load " << qPrintable(path) << std::endl;
         } else {
