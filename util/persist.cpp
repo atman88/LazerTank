@@ -38,7 +38,7 @@ typedef struct RunnableIndex {
 class PersistentRunnable : public ErrorableRunnable
 {
 public:
-    enum {
+    typedef enum {
         OpenCode = 1,
         SeekFooterCode,
         ReadFooterCode,
@@ -359,6 +359,7 @@ private:
 Persist::Persist( const char* path, QObject* parent ) : QObject(parent),
   mPath(path ? path : QDir::home().absoluteFilePath("qlt.sav")), mFileUnusable(false), mUpdateRunnable(0)
 {
+    memset( &mFooter, 0, sizeof mFooter );
 }
 
 Persist::~Persist()
