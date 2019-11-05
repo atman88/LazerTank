@@ -77,7 +77,7 @@ public:
         return true;
     }
 
-    bool isDone()
+    bool isDone() override
     {
         return false;
     }
@@ -115,7 +115,7 @@ public:
         emit mLevelList.initialized();
     }
 
-    bool deleteWhenDone()
+    bool deleteWhenDone() override
     {
         return true;
     }
