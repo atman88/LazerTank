@@ -17,7 +17,7 @@ class Level
 {
 public:
     explicit Level( int number, int width, int height );
-    explicit Level() {}
+    explicit Level() : mNumber(0), mCompletedCount(0) {}
     Level( const Level& other );
     ~Level() {}
 
