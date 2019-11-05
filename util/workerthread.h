@@ -6,6 +6,7 @@
 #include <thread>
 #include <csetjmp>
 #include <memory>
+#include <cstring>
 
 /**
  * @brief Interface for user-defined tasks
@@ -62,6 +63,7 @@ class ErrorableRunnable : public BasicRunnable
 public:
     ErrorableRunnable() : mLastError(-1)
     {
+        std::memset( &mJmpBuf, 0, sizeof mJmpBuf );
     }
     virtual ~ErrorableRunnable() {}
 
@@ -75,7 +77,7 @@ public:
      * @brief Raise an error. This method terminates the running run method (I.e. it does not return)
      * @param errorCode User-defined error identifier
      */
-    void error( int errorCode )
+    void __attribute((noreturn)) error( int errorCode )
     {
         onError( errorCode );
         mLastError = errorCode;
