@@ -6,7 +6,7 @@
 #include "util/gameutils.h"
 
 FutureShotPath::FutureShotPath( MovePiece* move ) : mShotCount(0), mTailPoint(*move), mLeadVector(*move),
-  mUID(move->getShotPathUID()), mPainterPath(0)
+  mUID(move->getShotPathUID()), mPainterPath(nullptr)
 {
     if ( !mUID ) {
         static int lastUID = 0;
@@ -17,15 +17,13 @@ FutureShotPath::FutureShotPath( MovePiece* move ) : mShotCount(0), mTailPoint(*m
 
 FutureShotPath::FutureShotPath( const FutureShotPath& source ) : mShotCount(source.mShotCount),
   mTailPoint(source.mTailPoint), mBendPoints(source.mBendPoints), mLeadVector(source.mLeadVector),
-  mUID(source.mUID), mChanges(source.mChanges), mBounds(source.mBounds), mPainterPath(0)
+  mUID(source.mUID), mChanges(source.mChanges), mBounds(source.mBounds), mPainterPath(nullptr)
 {
 }
 
 FutureShotPath::~FutureShotPath()
 {
-    if ( mPainterPath ) {
-        delete mPainterPath;
-    }
+    delete mPainterPath;
 }
 
 int FutureShotPath::getUID() const
@@ -38,7 +36,7 @@ const QRect& FutureShotPath::initBounds()
     if ( mBounds.isNull() ) {
         ModelPoint min = mTailPoint;
         ModelPoint max = mTailPoint;
-        for( auto it : mBendPoints ) {
+        for( const auto& it : mBendPoints ) {
             it.minMax( min, max );
         }
         mLeadVector.minMax( min, max );
@@ -63,7 +61,7 @@ FutureShotPath &FutureShotPath::operator =( const FutureShotPath &other )
     mUID              = other.mUID;
     mChanges          = other.mChanges;
     mBounds           = other.mBounds;
-    mPainterPath      = 0;
+    mPainterPath      = nullptr;
 
     return *this;
 }
@@ -73,11 +71,11 @@ const QPainterPath* FutureShotPath::toQPath()
     if ( !mPainterPath ) {
         mPainterPath = new QPainterPath();
         mPainterPath->moveTo( mTailPoint.toViewCenterSquare() );
-        for( auto it : mBendPoints ) {
+        for( const auto& it : mBendPoints ) {
             mPainterPath->lineTo( it.toViewCenterSquare() );
         }
         bool lastShotHasPush = false;
-        if ( mChanges.size() ) {
+        if ( !mChanges.empty() ) {
             FutureChange lastChange = mChanges.back();\
             if ( lastChange.changeType == PIECE_PUSHED && lastChange.point.equals( mLeadVector ) ) {
                 int totalPushCount = 0;
@@ -99,7 +97,7 @@ void FutureShotPathManager::reset()
     mPaths.clear();
 }
 
-void FutureShotPathManager::invalidate( FutureShotPath path )
+void FutureShotPathManager::invalidate( const FutureShotPath& path )
 {
     emit dirtyRect( path.getBounds() );
 }
@@ -108,7 +106,7 @@ const FutureShotPath* FutureShotPathManager::updateShots( int previousCount, Mov
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
         FutureShotPath path(move);
-        FutureShotPathSet::iterator it = mPaths.find( path );
+        auto it = mPaths.find( path );
         Board* board = registry->getGame().getBoard(true);
         if ( it != mPaths.end() ) {
             board->undoChanges( previousCount, it->mChanges );
@@ -120,7 +118,7 @@ const FutureShotPath* FutureShotPathManager::updateShots( int previousCount, Mov
         int newCount = move->getShotCount();
         if ( !newCount ) {
             move->setShotPathUID(0);
-            return 0;
+            return nullptr;
         }
 
         bool havePreviousChange = false;
@@ -150,7 +148,7 @@ const FutureShotPath* FutureShotPathManager::updateShots( int previousCount, Mov
                     path.mChanges.erase( previousChange );
                 }
 
-                std::vector<FutureChange>::iterator ret = path.mChanges.insert( path.mChanges.end(), curChange );
+                auto ret = path.mChanges.insert( path.mChanges.end(), curChange );
                 havePreviousChange = true;
                 previousChange = ret;
 
@@ -158,7 +156,7 @@ const FutureShotPath* FutureShotPathManager::updateShots( int previousCount, Mov
                 if ( curChange.changeType == TILE_CHANGE && (curChange.u.tileType == WOOD || curChange.u.tileType == WOOD_DAMAGED) ) {
                     // resume without advancing the lead point given the current point is still obstructed:
                     leadVector = path.mLeadVector;
-                } else if ( path.mBendPoints.size() && path.mShotCount < newCount ) {
+                } else if ( !path.mBendPoints.empty() && path.mShotCount < newCount ) {
                     // resume from beginning to handle case where the previous change affected our path (cannot optimize)
                     leadVector = *move;
                     path.mBendPoints.clear();
@@ -183,12 +181,12 @@ const FutureShotPath* FutureShotPathManager::updateShots( int previousCount, Mov
             return &(*ret.first);
         }
     }
-    return 0;
+    return nullptr;
 }
 
 void FutureShotPathManager::removePath( Piece* piece, bool undo )
 {
-    if ( MovePiece* move = dynamic_cast<MovePiece*>(piece) ) {
+    if ( auto move = dynamic_cast<MovePiece*>(piece) ) {
         FutureShotPath key( move );
         auto it = mPaths.find( key );
         if ( it != mPaths.end() ) {

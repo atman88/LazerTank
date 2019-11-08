@@ -65,7 +65,7 @@ public:
     {
         std::memset( &mJmpBuf, 0, sizeof mJmpBuf );
     }
-    virtual ~ErrorableRunnable() {}
+    virtual ~ErrorableRunnable() override {}
 
     /**
      * @brief User-supplied hook for error reporting, recovery etc
@@ -137,7 +137,7 @@ public:
      * @brief Queue a shared task for execution. This method is useful for facilitating auto deletion of the runnable.
      * @param sharedRunnable
      */
-    void doWork( std::shared_ptr<Runnable> sharedRunnable );
+    void doWork( const std::shared_ptr<Runnable>& sharedRunnable );
 
     /**
      * @brief Inform this class that the app is shutting down

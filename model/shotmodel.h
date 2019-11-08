@@ -39,7 +39,7 @@ class ShotModel : public ShotView
     Q_OBJECT
 
 public:
-    explicit ShotModel(QObject *parent = 0);
+    explicit ShotModel( QObject *parent = nullptr );
     ~ShotModel();
 
     /**

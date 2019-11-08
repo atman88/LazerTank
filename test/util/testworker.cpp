@@ -8,19 +8,17 @@ using namespace std;
 class TestRunnable : public BasicRunnable
 {
 public:
-    TestRunnable() : mStarted(0)
+    TestRunnable() : mStarted(false)
     {
     }
 
-    ~TestRunnable()
-    {
-    }
+    ~TestRunnable() override = default;
 
     void run() override
     {
         cout << "worker starting" << endl;
         mStarted = true;
-        QThread::currentThread()->msleep(10);
+        QThread::msleep(10);
         cout << "worker exiting" << endl;
     }
 
@@ -34,7 +32,7 @@ public:
     {
     }
 
-    bool condition() {
+    bool condition() override {
         return mRunnable.mStarted;
     }
 
@@ -47,7 +45,7 @@ public:
 void TestMain::testWorker()
 {
     std::shared_ptr<Runnable> sharedRunnable;
-    TestRunnable* runnable = new TestRunnable();
+    auto runnable = new TestRunnable();
     sharedRunnable.reset( runnable );
     TestWorker testWorker( *runnable );
     mRegistry.getWorker().doWork( sharedRunnable );

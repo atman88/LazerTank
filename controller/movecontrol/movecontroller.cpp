@@ -1,5 +1,5 @@
 #include <iostream>
-#include <stdint.h>
+#include <cstdint>
 #include <QPainter>
 #include "movecontroller.h"
 #include "gameregistry.h"
@@ -10,15 +10,13 @@
 #include "util/recorder.h"
 #include "util/gameutils.h"
 
-MoveController::MoveController(QObject *parent) : MoveDragController(parent), mReplayReader(0)
+MoveController::MoveController(QObject *parent) : MoveDragController(parent), mReplayReader(nullptr)
 {
 }
 
 MoveController::~MoveController()
 {
-    if ( mReplayReader ) {
-        delete mReplayReader;
-    }
+    delete mReplayReader;
 }
 
 bool MoveController::canWakeup()
@@ -31,7 +29,7 @@ bool MoveController::canWakeup()
 
 bool MoveController::setReplay( bool on )
 {
-    bool wasOn = (mReplayReader != 0);
+    bool wasOn = (mReplayReader != nullptr);
 
     if ( on ) {
         if ( !mReplayReader ) {
@@ -49,7 +47,7 @@ bool MoveController::setReplay( bool on )
     } else if ( mReplayReader ) {
         disconnect( this, SLOT(replayPlayback()) );
         delete mReplayReader;
-        mReplayReader = 0;
+        mReplayReader = nullptr;
         emit replayChanged( false );
     }
 
@@ -58,7 +56,7 @@ bool MoveController::setReplay( bool on )
 
 bool MoveController::replaying() const
 {
-    return mReplayReader != 0;
+    return mReplayReader != nullptr;
 }
 
 static QColor getTankShotColor( QObject* context )
@@ -66,7 +64,7 @@ static QColor getTankShotColor( QObject* context )
     if ( GameRegistry* registry = getRegistry(context) ) {
         return registry->getTank().getShot().getPen().color();
     }
-    return QColor(Qt::white); // should never happen - return something 'attention-getting'
+    return { Qt::white }; // should never happen - return something 'attention-getting'
 }
 
 void MoveController::render( Piece* pos, const QRect* rect, BoardRenderer& renderer, QPainter* painter )
@@ -85,7 +83,7 @@ void MoveController::render( Piece* pos, const QRect* rect, BoardRenderer& rende
 
         QPen savePen = painter->pen();
 
-        if ( mFutureShots.getPaths().size() ) {
+        if ( !mFutureShots.getPaths().empty() ) {
             QPen pen( Qt::DashLine );
             for( auto it : mFutureShots.getPaths() ) {
                 if ( rect->intersects( it.getBounds() ) ) {
@@ -101,14 +99,14 @@ void MoveController::render( Piece* pos, const QRect* rect, BoardRenderer& rende
         }
 
         const PieceMultiSet* set = mMoves.toMultiSet();
-        PieceSet::iterator it = set->lower_bound( pos );
+        auto it = set->lower_bound( pos );
         painter->setPen( Qt::blue );
         renderer.renderListIn( it, set->end(), rect, painter );
         painter->setPen( savePen );
 
         if ( getDragState() != Inactive && mDragMoves.size() ) {
             const PieceMultiSet* set = mDragMoves.toMultiSet();
-            PieceSet::iterator it = set->lower_bound( pos );
+            auto it = set->lower_bound( pos );
             renderer.renderListIn( it, set->end(), rect, painter );
         }
     }

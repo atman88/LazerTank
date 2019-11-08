@@ -8,7 +8,7 @@
 #include "model/board.h"
 #include "model/modelpoint.h"
 
-ShotView::ShotView(QObject *parent) : QObject(parent), mShooter(0), mLeadAngle(-1), mTerminationAngle(-1), mKillTheTank(false)
+ShotView::ShotView(QObject *parent) : QObject(parent), mShooter(nullptr), mLeadAngle(-1), mTerminationAngle(-1), mKillTheTank(false)
 {
     mLeadPoint = mTailPoint = BoardRenderer::NullPoint;
     mPen.setWidth( 2 );
@@ -47,7 +47,7 @@ QPoint toStartPoint( int x, int y, int angle )
     case 180: x += 24/2; y +=   24; break;
     case 270:            y += 24/2; break;
     }
-    return QPoint(x, y);
+    return { x, y };
 }
 
 QPoint ShotView::getTailPoint()
@@ -226,7 +226,7 @@ bool ShotView::shedTail()
 void ShotView::releaseShooter()
 {
     if ( mShooter ) {
-        mShooter = 0;
+        mShooter = nullptr;
         emit shooterReleased();
     }
 }
@@ -240,7 +240,7 @@ void ShotView::killTheTank()
     mKillTheTank = true;
 }
 
-void ShotView::setColor(QColor color)
+void ShotView::setColor( const QColor& color)
 {
     mPen.setColor( color );
 }

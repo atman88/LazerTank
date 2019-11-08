@@ -23,9 +23,9 @@ class Shooter : public QObject
     Q_PROPERTY(QVariant y READ getViewY WRITE setViewY)
 
 public:
-    Shooter(QObject *parent = 0);
+    Shooter( QObject *parent = nullptr );
     virtual ~Shooter() {}
-    void init( GameRegistry* registry, PieceType type, QColor color );
+    void init( GameRegistry* registry, PieceType type, const QColor& color );
 
     void reset( ModelVector v );
 

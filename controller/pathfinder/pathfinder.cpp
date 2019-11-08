@@ -117,7 +117,7 @@ bool PathFinder::buildPath()
     return true;
 }
 
-bool PathFinder::buildTilePushPath( ModelVector target )
+bool PathFinder::buildTilePushPath( const ModelVector& target )
 {
     if ( mRunCriteria.getTargetPoint().equals( target ) ) {
         if ( GameRegistry* registry = getRegistry(this) ) {
@@ -129,7 +129,7 @@ bool PathFinder::buildTilePushPath( ModelVector target )
     return false;
 }
 
-void PathFinder::buildTilePushPathInternal( ModelVector target )
+void PathFinder::buildTilePushPathInternal( const ModelVector& target )
 {
     mMoves.reset();
     ModelPoint endPoint = mRunCriteria.getStartVector();
@@ -318,4 +318,9 @@ void PathFinder::doSearchInternal()
             emit pathFound( mRunCriteria, &mMoves );
         }
     }
+}
+
+void PathFinder::PathSearchRunnable::run()
+{
+    mPathFinder.doSearchInternal();
 }

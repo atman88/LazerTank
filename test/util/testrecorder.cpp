@@ -12,21 +12,21 @@ public:
     {
     }
 
-    void move( int direction )
+    void move( int direction ) override
     {
         cout << "TestRecorderPlayer: move(" << direction << ")" << endl;
         ++mMoveCallCount;
         mLastMoveDirection = direction;
     }
 
-    void fire( int count )
+    void fire( int count ) override
     {
         cout << "TestRecorderPlayer: fire(" << count << ")" << endl;
         ++mFireCallCount;
         mLastFireCount = count;
     }
 
-    bool setReplay( bool on )
+    bool setReplay( bool on ) override
     {
         bool rc = mLastReplayOn;
         cout << "TestRecorderPlayer: setReplay(" << on << ")" << endl;
@@ -104,7 +104,7 @@ void TestMain::testRecorderOverflow()
     recorder_p.recordMove( true, -1 );
     QVERIFY2( recorder_p.getAvailableCount() == count, "count overflowed" );
 
-    RecorderReader* reader = new RecorderReader( 0, *recorder.source() );
+    auto reader = new RecorderReader( 0, *recorder.source() );
     TestRecorderPlayer player;
     QVERIFY( reader->consumeNext( &player ) );
     QVERIFY( player.mLastMoveDirection == 180 );

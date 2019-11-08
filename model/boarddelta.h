@@ -15,7 +15,7 @@ class BoardDelta : public QObject
     Q_OBJECT
 
 public:
-    explicit BoardDelta(QObject *parent = 0);
+    explicit BoardDelta( QObject *parent = nullptr );
 
     /**
      * @brief Initialization method. Specifies two boards to compare.
@@ -51,7 +51,7 @@ public slots:
      * @brief Receives changes from the two boards
      * @param point The square associated with the change
      */
-    void onChangeAt( ModelPoint point );
+    void onChangeAt( const ModelPoint& point );
 
 private:
     PieceSetManager   mPieceManager;

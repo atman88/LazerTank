@@ -18,7 +18,7 @@ public:
     static const int NORMAL_SPEED = 800;
     static const int HIGH_SPEED   = 300;
 
-    explicit SpeedController(QObject *parent = 0);
+    explicit SpeedController(QObject *parent = nullptr);
 
     /**
      * @brief get the current speed value in ms per square
@@ -67,7 +67,7 @@ class SpeedControlledAnimation : public QPropertyAnimation
     Q_OBJECT
 
 public:
-    SpeedControlledAnimation( QObject* parent = 0 ) : QPropertyAnimation(parent), mController(0)
+    SpeedControlledAnimation( QObject* parent = nullptr ) : QPropertyAnimation(parent), mController(nullptr)
     {
     }
 
@@ -105,7 +105,7 @@ class MoveSpeedControlledAnimation : public SpeedControlledAnimation
 {
     Q_OBJECT
 public:
-    MoveSpeedControlledAnimation( QObject* parent = 0 ) : SpeedControlledAnimation(parent)
+    MoveSpeedControlledAnimation( QObject* parent = nullptr ) : SpeedControlledAnimation(parent)
     {
     }
 
@@ -116,7 +116,7 @@ class RotateSpeedControlledAnimation : public SpeedControlledAnimation
 {
     Q_OBJECT
 public:
-    RotateSpeedControlledAnimation( QObject* parent = 0 ) : SpeedControlledAnimation(parent)
+    RotateSpeedControlledAnimation( QObject* parent = nullptr ) : SpeedControlledAnimation(parent)
     {
     }
 

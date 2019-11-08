@@ -21,10 +21,10 @@ class PushView : public QObject
     Q_PROPERTY(QVariant pieceY READ getY WRITE setY)
 
 public:
-    PushView( QObject* parent = 0 );
+    PushView( QObject* parent = nullptr );
 
     void init( GameRegistry* registry );
-    void render( const QRect* rect, BoardRenderer& renderer, QPainter* painter );
+    void render( const QRect* rect, QPainter* painter );
 
     /**
      * @brief Get the type of piece being pushed

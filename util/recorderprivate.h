@@ -180,7 +180,7 @@ class RecorderPersistedSource : public RecorderSource
 {
 public:
     RecorderPersistedSource( RecorderPrivate& recorder, Persist& persist );
-    ~RecorderPersistedSource();
+    ~RecorderPersistedSource() override;
 
     int getCount() const override;
     unsigned char get() override;

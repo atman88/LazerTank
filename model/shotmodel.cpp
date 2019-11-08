@@ -17,7 +17,7 @@ public:
     {
     }
 
-    void startMeasurement( ModelVector startVector )
+    void startMeasurement( const ModelVector& startVector )
     {
         if ( GameRegistry* registry = getRegistry(&mModel) ) {
             {   std::lock_guard<std::mutex> guard(mMutex);
@@ -28,13 +28,13 @@ public:
         }
     }
 
-    int getMeasurementFor( ModelVector startVector )
+    int getMeasurementFor( const ModelVector& startVector )
     {
         std::lock_guard<std::mutex> guard(mMutex);
         return startVector.equals( mStartVector ) ? mResult : 0;
     }
 
-    void run()
+    void run() final
     {
         if ( GameRegistry* registry = getRegistry(&mModel) ) {
             ModelVector curVector;
@@ -154,7 +154,7 @@ void ShotModel::onTimeChanged( int currentTime )
                 if ( getAdjacentPosition( mLeadingDirection, &mLeadingPoint ) ) {
                     QPoint hitPoint = mLeadingPoint.toViewCenterSquare();
                     int entryDirection = mLeadingDirection;
-                    if ( game.canShootThru( mLeadingPoint, &mLeadingDirection, 0, true, getShooter(), &hitPoint ) ) {
+                    if ( game.canShootThru( mLeadingPoint, &mLeadingDirection, nullptr, true, getShooter(), &hitPoint ) ) {
                         grow( mLeadingPoint.toViewCenterSquare(), entryDirection );
                         ++mDistance;
                     } else {

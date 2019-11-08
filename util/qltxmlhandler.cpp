@@ -2,10 +2,6 @@
 
 #include "qltxmlhandler.h"
 
-QltXmlHandler::QltXmlHandler()
-{
-}
-
 bool QltXmlHandler::fatalError( const QXmlParseException &exception ) { if ( !isDone() ) printException("*** ", exception); return false; }
 bool QltXmlHandler::error(      const QXmlParseException &exception ) { if ( !isDone() ) printException("** ",  exception); return false; }
 bool QltXmlHandler::warning(    const QXmlParseException &exception ) { if ( !isDone() ) printException("* ",   exception); return false; }

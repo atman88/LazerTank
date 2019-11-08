@@ -29,7 +29,7 @@
  */
 int checkForReplay( GameRegistry* registry );
 
-BoardWidget::BoardWidget(QWidget* parent) : QWidget(parent), mForbiddenCursor(0)
+BoardWidget::BoardWidget(QWidget* parent) : QWidget(parent), mForbiddenCursor(nullptr)
 {
     setAttribute( Qt::WA_OpaquePaintEvent );
     setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
@@ -37,9 +37,7 @@ BoardWidget::BoardWidget(QWidget* parent) : QWidget(parent), mForbiddenCursor(0)
 
 BoardWidget::~BoardWidget()
 {
-    if ( mForbiddenCursor ) {
-        delete mForbiddenCursor;
-    }
+    delete mForbiddenCursor;
 }
 
 void BoardWidget::init( GameRegistry* registry )
@@ -97,8 +95,8 @@ void BoardWidget::paintEvent( QPaintEvent* e )
                     renderer.renderMoves( e->rect(), registry, &painter );
                 }
 
-                registry->getTankPush().render( &e->rect(), renderer, &painter );
-                registry->getShotPush().render( &e->rect(), renderer, &painter );
+                registry->getTankPush().render( &e->rect(), &painter );
+                registry->getShotPush().render( &e->rect(), &painter );
                 tank.render( &e->rect(), &painter );
 
                 if ( !tankIsProminent ) {
@@ -121,7 +119,7 @@ QSize BoardWidget::sizeHint() const
         width  = std::max( width,  board->getWidth()  );
         height = std::max( height, board->getHeight() );
     }
-    return QSize( width * TILE_SIZE, height * TILE_SIZE );
+    return { width * TILE_SIZE, height * TILE_SIZE };
 }
 
 void BoardWidget::onBoardLoaded()
@@ -145,8 +143,9 @@ void BoardWidget::renderSquareLater( ModelPoint point )
     update(point.mCol*TILE_SIZE, point.mRow*TILE_SIZE, TILE_SIZE, TILE_SIZE);
 }
 
-BoardWindow::BoardWindow(QWidget* parent) : QMainWindow(parent), mMoveCounter(new WhatsThisAwareLabel(this)), mSavedMoveCount(new WhatsThisAwareLabel(this)),
-  mCompletedIndicator(new WhatsThisAwareLabel(this)), mGameInitialized(false), mHelpWidget(0), mReplayText(0)
+BoardWindow::BoardWindow(QWidget* parent) : QMainWindow(parent), mMoveCounter(new WhatsThisAwareLabel(this)),
+  mSavedMoveCount(new WhatsThisAwareLabel(this)), mCompletedIndicator(new WhatsThisAwareLabel(this)),
+  mGameInitialized(false), mHelpWidget(nullptr), mReplayText(nullptr)
 {
     setCentralWidget( new BoardWidget(this) );
     layout()->setSizeConstraint(QLayout::SetFixedSize);
@@ -154,12 +153,8 @@ BoardWindow::BoardWindow(QWidget* parent) : QMainWindow(parent), mMoveCounter(ne
 
 BoardWindow::~BoardWindow()
 {
-    if ( mHelpWidget ) {
-        delete mHelpWidget;
-    }
-    if ( mReplayText ) {
-        delete mReplayText;
-    }
+    delete mHelpWidget;
+    delete mReplayText;
 }
 
 void BoardWindow::init( GameRegistry* registry )
@@ -272,7 +267,7 @@ void BoardWindow::showHelp()
 void BoardWindow::chooseLevel()
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
-        LevelChooser* chooser = new LevelChooser( registry->getLevelList(), registry->getBoardPool() );
+        auto chooser = new LevelChooser( registry->getLevelList(), registry->getBoardPool() );
         chooser->setAttribute( Qt::WA_DeleteOnClose );
         QObject::connect( chooser, &LevelChooser::levelChosen, this, &BoardWindow::loadLevel );
 
@@ -313,7 +308,7 @@ bool BoardWidget::event( QEvent* event )
 {
     QEvent::Type type = event->type();
     if ( type == QltWhatsThisEvent::getEventType() ) {
-        QltWhatsThisEvent* whatsThisEvent = static_cast<QltWhatsThisEvent*>( event );
+        auto whatsThisEvent = static_cast<QltWhatsThisEvent*>( event );
         QWhatsThis::showText( whatsThisEvent->getPos(), whatsThisEvent->getHelpText() );
         return true;
     }
@@ -332,7 +327,7 @@ int keyToAngle( int key )
     }
 }
 
-QAction* BoardWindow::showMenu( QPoint* globalPos, const QList<QAction*> widgetActions, const QList<PathSearchAction*> widgetSearchActions )
+QAction* BoardWindow::showMenu( QPoint* globalPos, const QList<QAction*> widgetActions, const QList<PathSearchAction*>& widgetSearchActions )
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
         QPoint pos;
@@ -418,7 +413,7 @@ QAction* BoardWindow::showMenu( QPoint* globalPos, const QList<QAction*> widgetA
         return action;
     }
 
-    return 0;
+    return nullptr;
 }
 
 void BoardWindow::keyPressEvent(QKeyEvent *ev)
@@ -696,7 +691,7 @@ void BoardWindow::onRecordedCountChanged()
 
 void BoardWindow::connectTo( const PieceManager& manager ) const
 {
-    BoardWidget* w = static_cast<BoardWidget*>( centralWidget() );
+    auto w = static_cast<BoardWidget*>( centralWidget() );
     QObject::connect( &manager, &PieceManager::insertedAt, w, &BoardWidget::renderSquareLater, Qt::DirectConnection );
     QObject::connect( &manager, &PieceManager::erasedAt,   w, &BoardWidget::renderSquareLater, Qt::DirectConnection );
     QObject::connect( &manager, &PieceManager::changedAt,  w, &BoardWidget::renderSquareLater, Qt::DirectConnection );

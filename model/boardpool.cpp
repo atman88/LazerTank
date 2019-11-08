@@ -7,20 +7,11 @@
 class PoolLoadRunnable : BasicRunnable
 {
 public:
-    PoolLoadRunnable() : mBoard(0), mLevel(0)
+    PoolLoadRunnable() : mBoard(nullptr), mLevel(0)
     {
     }
 
-    void load( int level, Board* board )
-    {
-        if ( GameRegistry* registry = getRegistry(board) ) {
-            Q_ASSERT( mBoard == 0 );
-            mBoard = board;
-            mLevel = level;
-            emit board->boardLoading( level );
-            registry->getWorker().doWork( this );
-        }
-    }
+    void load( int level, Board* board );
 
     void run() override
     {
@@ -35,7 +26,7 @@ public:
     Board* reset()
     {
         Board* ret = mBoard;
-        mBoard = 0;
+        mBoard = nullptr;
         mLevel = 0;
         return ret;
     }
@@ -45,16 +36,14 @@ private:
     int mLevel;
 };
 
-BoardPool::BoardPool( int visibleCount, int size ) : QObject(0), mFirstVisible(0), mVisibleCount(visibleCount),
-  mTotalSize(visibleCount + (visibleCount>>1)), mSize(size), mRunnable(0)
+BoardPool::BoardPool( int visibleCount, int size ) : QObject(nullptr), mFirstVisible(0), mVisibleCount(visibleCount),
+  mTotalSize(visibleCount + (visibleCount>>1)), mSize(size), mRunnable(nullptr)
 {
 }
 
 BoardPool::~BoardPool()
 {
-    if ( mRunnable ) {
-        delete mRunnable;
-    }
+    delete mRunnable;
 }
 
 Board* BoardPool::find( int level )
@@ -63,7 +52,7 @@ Board* BoardPool::find( int level )
     if ( it != mPool.end() ) {
         return it->second;
     }
-    return 0;
+    return nullptr;
 }
 
 void BoardPool::onBoardLoaded( int level )
@@ -129,20 +118,20 @@ Board* BoardPool::getBoard( int level )
     if ( mRunnable ) {
         // check if currently loading a level
         if ( mRunnable->getLevel() ) {
-            return 0;
+            return nullptr;
         }
     } else {
         mRunnable = new PoolLoadRunnable();
     }
 
     mRunnable->load( level, getRecyclableBoard() );
-    return 0;
+    return nullptr;
 }
 
 Board* BoardPool::getRecyclableBoard()
 {
     if ( mPool.size() < mTotalSize ) {
-        Board* board = new Board( this );
+        auto board = new Board( this );
         QObject::connect( board, &Board::boardLoaded, this, &BoardPool::onBoardLoaded, Qt::QueuedConnection );
         return board;
     }
@@ -172,6 +161,17 @@ Board* BoardPool::getRecyclableBoard()
             return board;
         }
     }
-    return 0;
+    return nullptr;
 }
 
+
+void PoolLoadRunnable::load(int level, Board *board)
+{
+    if ( GameRegistry* registry = getRegistry(board) ) {
+        Q_ASSERT( mBoard == nullptr );
+        mBoard = board;
+        mLevel = level;
+        emit board->boardLoading( level );
+        registry->getWorker().doWork( this );
+    }
+}

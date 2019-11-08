@@ -9,7 +9,7 @@
 class QltXmlHandler : public QXmlDefaultHandler
 {
 public:
-    QltXmlHandler();
+    QltXmlHandler() = default;
 
     /**
      * @brief Indicates whether this parser is finished. Error reporting is suppressed when this method returns true.

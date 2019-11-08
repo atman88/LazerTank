@@ -13,7 +13,7 @@ class PieceListManager : public PieceManager
     Q_OBJECT
 
 public:
-    PieceListManager( QObject *parent = 0 );
+    PieceListManager( QObject *parent = nullptr );
     ~PieceListManager();
 
     /**
@@ -37,8 +37,8 @@ public:
     /**
      * @brief Adds a new piece to the end of this list from the given values
      */
-    Piece* append( PieceType type, ModelVector vector );
-    Piece* append( PieceType type, ModelPoint point, int angle = 0 );
+    Piece* append( PieceType type, const ModelVector& vector );
+    Piece* append(PieceType type, const ModelPoint& point, int angle = 0 );
 
     /**
      * @brief Adds a copy of the given piece to the end of this list
@@ -62,7 +62,7 @@ public:
     /**
      * @brief Adds a new piece to the beginning of this list from the given values
      */
-    Piece* push_front( PieceType type, ModelVector vector, int shotCount = 0, const Piece* pushPiece = 0 );
+    Piece* push_front(PieceType type, const ModelVector& vector, int shotCount = 0, const Piece* pushPiece = nullptr );
 
     /**
      * @brief get the first element
@@ -119,7 +119,7 @@ public slots:
      * @param source If non-zero, initialize with a copy of the given source, otherwise clear the list
      * @param copy If true, the source is copied, otherwise contents of source are moved
      */
-    void reset(PieceListManager* source = 0 , bool copy = true );
+    void reset( PieceListManager* source = nullptr, bool copy = true );
 
 protected:
     Piece* addInternal( Piece* piece, bool pushFront = false );

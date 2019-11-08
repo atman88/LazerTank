@@ -8,10 +8,6 @@
 #include "controller/game.h"
 #include "util/workerthread.h"
 
-TestRegistry::TestRegistry()
-{
-}
-
 TestRegistry::~TestRegistry()
 {
     cleanup();
@@ -21,7 +17,7 @@ void TestRegistry::cleanup()
 {
     mWorker.purge();
 
-#define DECL_CLEAN(name) { if ( m##name != 0 ) { delete m##name; m##name=0; } }
+#define DECL_CLEAN(name) { if ( m##name != nullptr ) { delete m##name; m##name=nullptr; } }
     DECL_CLEAN(Game)
     DECL_CLEAN(SpeedController)
     DECL_CLEAN(MoveController)

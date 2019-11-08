@@ -19,7 +19,7 @@ void TestMain::testNextLevel()
 void verifyFind( LevelList& list, int number )
 {
     const Level* level = list.find(number);
-    QVERIFY( level != 0 );
+    QVERIFY( level != nullptr );
     QVERIFY( level->getNumber() == number );
 }
 

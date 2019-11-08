@@ -13,7 +13,7 @@ class TileDragMarker : public QObject
     Q_OBJECT
 
 public:
-    TileDragMarker( QObject* parent = 0 );
+    TileDragMarker( QObject* parent = nullptr );
     void render( const QRect* rect, QPainter* painter );
 
 public slots:

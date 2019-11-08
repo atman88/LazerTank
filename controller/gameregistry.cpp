@@ -15,8 +15,8 @@
 #include "util/recorder.h"
 #include "util/persist.h"
 
-GameRegistry::GameRegistry( BoardWindow* window ) : QObject(0), mWindow(window)
-#define DECL_NULL_INIT(o) ,m##o(0)
+GameRegistry::GameRegistry( BoardWindow* window ) : QObject(nullptr), mWindow(window)
+#define DECL_NULL_INIT(o) ,m##o(nullptr)
   DECL_NULL_INIT(Game)
   DECL_NULL_INIT(SpeedController)
   DECL_NULL_INIT(MoveController)
@@ -48,7 +48,7 @@ GameRegistry::GameRegistry( BoardWindow* window ) : QObject(0), mWindow(window)
 
 void GameRegistry::onWindowDestroyed()
 {
-    mWindow = 0;
+    mWindow = nullptr;
 }
 
 BoardWindow*GameRegistry::getWindow()

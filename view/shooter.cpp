@@ -8,7 +8,7 @@ Shooter::Shooter(QObject* parent) : QObject(parent), mViewRotation(0), mBounding
 {
 }
 
-void Shooter::init( GameRegistry* registry, PieceType type, QColor color )
+void Shooter::init( GameRegistry* registry, PieceType type, const QColor& color )
 {
     setParent(registry);
     mType = type;

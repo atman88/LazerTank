@@ -6,8 +6,8 @@
 #include "imageutils.h"
 #include "model/board.h"
 
-ResourcePixmap* ResourcePixmap::nameArray[PixmapTypeUpperBound] = { 0 };
-ResourcePixmap* ResourcePixmap::NullPixmap = 0;
+ResourcePixmap* ResourcePixmap::nameArray[PixmapTypeUpperBound] = { nullptr };
+ResourcePixmap* ResourcePixmap::NullPixmap = nullptr;
 std::map<int,ResourcePixmap> ResourcePixmap::nameMap;
 
 ResourcePixmap* ResourcePixmap::getNullPixmap()
@@ -27,7 +27,7 @@ const ResourcePixmap* ResourcePixmap::getPixmap( unsigned type )
 
     ResourcePixmap *p = nameArray[type];
     if ( !p ) {
-        if ( !nameMap.size() ) {
+        if ( nameMap.empty() ) {
             nameMap = {
                 { STONE,             { "wall-stone"          } },
                 { DIRT,              { "dirt"                } },
@@ -64,7 +64,7 @@ const ResourcePixmap* ResourcePixmap::getPixmap( unsigned type )
     return p;
 }
 
-ResourcePixmap::ResourcePixmap( const char* name ) : mName(name), mTagCount(0), mBluePixmap(0)
+ResourcePixmap::ResourcePixmap( const char* name ) : mName(name), mTagCount(0), mBluePixmap(nullptr)
 {
     if ( mName[1] == '&' ) {
         mTagCount = 1;
@@ -74,9 +74,7 @@ ResourcePixmap::ResourcePixmap( const char* name ) : mName(name), mTagCount(0), 
 
 ResourcePixmap::~ResourcePixmap()
 {
-    if ( mBluePixmap ) {
-        delete mBluePixmap;
-    }
+    delete mBluePixmap;
 }
 
 bool ResourcePixmap::load()
@@ -85,8 +83,8 @@ bool ResourcePixmap::load()
     const char* secondName = strchr( name, '+' );
     if ( secondName ) {
         ++secondName;
-        size_t nameSize = static_cast<size_t>( secondName - mName );
-        char* nameBuf = static_cast<char*>( alloca( nameSize ) );
+        auto nameSize = static_cast<size_t>( secondName - mName );
+        auto nameBuf = static_cast<char*>( alloca( nameSize ) );
         strncpy( nameBuf, name, nameSize );
         nameBuf[nameSize-1] = 0;
         name = nameBuf;

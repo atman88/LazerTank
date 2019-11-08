@@ -46,7 +46,7 @@ bool PieceView::render( const QRect* dirty, const BoardRenderer& renderer, QPain
     QRect bounds;
     renderer.getBounds( *this, &bounds );
     if ( dirty->intersects( bounds ) ) {
-        renderer.renderPiece( mType, bounds, mAngle, painter );
+        BoardRenderer::renderPiece( mType, bounds, mAngle, painter );
         int shotCount = getShotCount();
         if ( shotCount > 1 ) {
             QPen savedPen = painter->pen();

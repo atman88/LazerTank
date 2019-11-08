@@ -45,7 +45,7 @@ void ModelPoint::minMax(ModelPoint &min, ModelPoint &max) const
 
 QPoint ModelPoint::toViewCenterSquare() const
 {
-    return QPoint( mCol*24+24/2, mRow*24+24/2 );
+    return { mCol*24+24/2, mRow*24+24/2 };
 }
 
 QPoint ModelVector::toViewEntryPoint() const
@@ -74,12 +74,12 @@ QPoint ModelVector::toViewExitPoint() const
 
 QPoint ModelPoint::toViewUpperLeft() const
 {
-    return QPoint( mCol*24, mRow* 24 );
+    return { mCol*24, mRow* 24 };
 }
 
 QPoint ModelPoint::toViewLowerRight() const
 {
-    return QPoint( mCol*24+24-1, mRow* 24+24-1 );
+    return { mCol*24+24-1, mRow* 24+24-1 };
 }
 
 bool ModelVector::equals(const ModelVector &other) const

@@ -42,10 +42,10 @@ void PushView::start( Piece& what, int fromX, int fromY, int toX, int toY )
     emit stateChanged(QAbstractAnimation::Running, QAbstractAnimation::Stopped);
 }
 
-void PushView::render( const QRect* rect, BoardRenderer& renderer, QPainter* painter )
+void PushView::render( const QRect* rect, QPainter* painter )
 {
     if ( mType != NONE && mBoundingRect.intersects( *rect ) ) {
-        renderer.renderPiece( mType, mBoundingRect, mPieceAngle, painter );
+        BoardRenderer::renderPiece( mType, mBoundingRect, mPieceAngle, painter );
         mRenderedBoundingRect = mBoundingRect;
     }
 }

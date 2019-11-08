@@ -110,7 +110,7 @@ public:
 
 void TestMain::testFutureShotPushId()
 {
-    MyTestGame* game = new MyTestGame();
+    auto game = new MyTestGame();
     mRegistry.injectGame( game );
     initGame(
       "[T>.M....\n" );
@@ -144,9 +144,9 @@ public:
 
 void TestMain::testFutureShotPartialUndo()
 {
-    MyTestGame* game = new MyTestGame();
+    auto game = new MyTestGame();
     mRegistry.injectGame( game );
-    SleepingMoveController* moveController = new SleepingMoveController();
+    auto moveController = new SleepingMoveController();
     mRegistry.injectMoveController( moveController );
     initGame(
       "..M.[T<\n" );
@@ -161,9 +161,9 @@ void TestMain::testFutureShotPartialUndo()
 
 void TestMain::testFutureShotPushIdWater()
 {
-    MyTestGame* game = new MyTestGame();
+    auto game = new MyTestGame();
     mRegistry.injectGame( game );
-    SleepingMoveController* moveController = new SleepingMoveController();
+    auto moveController = new SleepingMoveController();
     mRegistry.injectMoveController( moveController );
     initGame(
       "[T>M..w\n" );
@@ -178,9 +178,9 @@ void TestMain::testFutureShotPushIdWater()
 
 void TestMain::testFutureShot2PushIdWater()
 {
-    MyTestGame* game = new MyTestGame();
+    auto game = new MyTestGame();
     mRegistry.injectGame( game );
-    SleepingMoveController* moveController = new SleepingMoveController();
+    auto moveController = new SleepingMoveController();
     mRegistry.injectMoveController( moveController );
     initGame(
       "[T>.M..wM.\n" );
@@ -193,14 +193,14 @@ void TestMain::testFutureShot2PushIdWater()
     moveController->fire(3);
     QCOMPARE( pieceManager.pieceAt( ModelPoint(6,0) )->getPushedId(), 0 );
     moveController->fire(0);
-    QVERIFY( mRegistry.getGame().getDeltaPieces()->size()==0 );
+    QVERIFY( mRegistry.getGame().getDeltaPieces()->empty() );
 }
 
 void TestMain::testFutureShotTankKill()
 {
-    MyTestGame* game = new MyTestGame();
+    auto game = new MyTestGame();
     mRegistry.injectGame( game );
-    SleepingMoveController* moveController = new SleepingMoveController();
+    auto moveController = new SleepingMoveController();
     mRegistry.injectMoveController( moveController );
     initGame(
       "[S/ .  [\\S\n"
@@ -210,7 +210,7 @@ void TestMain::testFutureShotTankKill()
     const PieceSet& boardPieces = game->getBoard(true)->getPieceManager().getPieces();
 
     moveController->fire(2);
-    QVERIFY( boardPieces.size()==0 );
+    QVERIFY( boardPieces.empty() );
 
     moveController->fire(1);
     QCOMPARE( (*boardPieces.begin())->getPushedId(), 1 );

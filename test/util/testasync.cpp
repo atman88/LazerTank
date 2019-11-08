@@ -5,10 +5,6 @@
 
 #include "testasync.h"
 
-TestAsync::TestAsync()
-{
-}
-
 bool TestAsync::test( int timeout )
 {
     mCreateTime.start();

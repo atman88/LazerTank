@@ -3,7 +3,7 @@
 #include "boarddelta.h"
 #include "board.h"
 
-BoardDelta::BoardDelta(QObject *parent) : QObject(parent), mMasterBoard(0), mFutureBoard(0), mEnabled(false)
+BoardDelta::BoardDelta(QObject *parent) : QObject(parent), mMasterBoard(nullptr), mFutureBoard(nullptr), mEnabled(false)
 {
 }
 
@@ -32,10 +32,10 @@ void BoardDelta::enable( bool newValue )
 {
     if ( newValue != mEnabled ) {
         if ( !newValue ) {
-            QObject::disconnect( &mMasterBoard->getPieceManager(), 0, this, 0 );
-            QObject::disconnect( &mFutureBoard->getPieceManager(), 0, this, 0 );
-            QObject::disconnect( mMasterBoard, &Board::tileChangedAt, this, 0 );
-            QObject::disconnect( mFutureBoard, &Board::tileChangedAt, this, 0 );
+            QObject::disconnect( &mMasterBoard->getPieceManager(), nullptr, this, nullptr );
+            QObject::disconnect( &mFutureBoard->getPieceManager(), nullptr, this, nullptr );
+            QObject::disconnect( mMasterBoard, &Board::tileChangedAt, this, nullptr );
+            QObject::disconnect( mFutureBoard, &Board::tileChangedAt, this, nullptr );
 
             mPieceManager.reset(); // reset now for rendering
         } else {
@@ -53,7 +53,7 @@ void BoardDelta::enable( bool newValue )
     }
 }
 
-void BoardDelta::onChangeAt( ModelPoint point )
+void BoardDelta::onChangeAt( const ModelPoint& point )
 {
     const Piece* masterPiece = mMasterBoard->getPieceManager().pieceAt( point );
     const Piece* futurePiece = mFutureBoard->getPieceManager().pieceAt( point );

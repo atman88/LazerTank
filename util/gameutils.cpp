@@ -51,7 +51,7 @@ int checkForReplay( GameRegistry* registry )
     if ( moveController.replaying() ) {
         registry->getTank().pause();
 
-        QMessageBox::StandardButton button = QMessageBox::question( 0, "Auto Replay", "Play from here?",
+        QMessageBox::StandardButton button = QMessageBox::question( nullptr, "Auto Replay", "Play from here?",
                                                                     QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes );
         if ( button == QMessageBox::Yes ) {
             moveController.setReplay( false );

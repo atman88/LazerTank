@@ -1,19 +1,13 @@
 #include "piecelistmanager.h"
 
-PieceListManager::PieceListManager( QObject *parent ) : PieceManager(parent), mSet(0), mMultiSet(0)
+PieceListManager::PieceListManager( QObject *parent ) : PieceManager(parent), mSet(nullptr), mMultiSet(nullptr)
 {
 }
 
 PieceListManager::~PieceListManager()
 {
-    if ( mSet ) {
-        delete mSet;
-    }
-
-    if ( mMultiSet ) {
-        delete mMultiSet;
-    }
-
+    delete mSet;
+    delete mMultiSet;
     for( auto it : mPieces ) {
         delete it;
     }
@@ -28,8 +22,8 @@ const PieceSet* PieceListManager::toSet()
 {
     if ( !mSet ) {
         mSet = new PieceSet;
-        for( auto iterator = mPieces.begin(); iterator != mPieces.end(); ++iterator  ) {
-            mSet->insert( *iterator );
+        for( auto iterator : mPieces ) {
+            mSet->insert( iterator );
         }
     }
     return mSet;
@@ -39,8 +33,8 @@ const PieceMultiSet* PieceListManager::toMultiSet()
 {
     if ( !mMultiSet ) {
         mMultiSet = new PieceMultiSet;
-        for( auto iterator = mPieces.begin(); iterator != mPieces.end(); ++iterator  ) {
-            mMultiSet->insert( *iterator );
+        for( auto iterator : mPieces ) {
+            mMultiSet->insert( iterator );
         }
     }
     return mMultiSet;
@@ -63,19 +57,19 @@ Piece* PieceListManager::addInternal( Piece* piece , bool pushFront )
     return piece;
 }
 
-Piece* PieceListManager::append( PieceType type, ModelVector vector )
+Piece* PieceListManager::append( PieceType type, const ModelVector& vector )
 {
     return addInternal( new SimplePiece( type, vector ) );
 }
 
-Piece* PieceListManager::append( PieceType type, ModelPoint point, int angle )
+Piece* PieceListManager::append( PieceType type, const ModelPoint& point, int angle )
 {
     return addInternal( new SimplePiece( type, point, angle ) );
 }
 
 Piece* PieceListManager::append( const Piece* source )
 {
-    if ( const MovePiece* move = dynamic_cast<const MovePiece*>(source) ) {
+    if ( auto move = dynamic_cast<const MovePiece*>(source) ) {
         return addInternal( new MovePiece(move) );
     }
     return addInternal( source->getPushedId() > 0 ? (new PushedPiece(source)) : (new SimplePiece(source)) );
@@ -88,7 +82,7 @@ void PieceListManager::appendList( const PieceList& source )
     }
 }
 
-Piece* PieceListManager::push_front( PieceType type, ModelVector vector, int shotCount, const Piece* pushPiece )
+Piece* PieceListManager::push_front( PieceType type, const ModelVector& vector, int shotCount, const Piece* pushPiece )
 {
     return addInternal( new MovePiece( type, vector, shotCount, pushPiece ), true );
 }
@@ -110,7 +104,7 @@ bool PieceListManager::eraseInternal( PieceList::iterator it )
 
     if ( mMultiSet ) {
         auto pair = mMultiSet->equal_range( piece );
-        for( PieceMultiSet::iterator sit = pair.first; sit != pair.second; ++sit ) {
+        for( auto sit = pair.first; sit != pair.second; ++sit ) {
             if ( *sit == piece ) {
                 mMultiSet->erase(sit);
                 break;
@@ -131,27 +125,27 @@ bool PieceListManager::eraseFront()
 Piece* PieceListManager::getBack() const
 {
     if ( mPieces.empty() ) {
-        return 0;
+        return nullptr;
     }
     return mPieces.back();
 }
 
 Piece* PieceListManager::getBack( int index ) const
 {
-    if ( 0 <= index && ((unsigned) index) < mPieces.size() ) {
+    if ( 0 <= index && static_cast<unsigned>(index) < mPieces.size() ) {
         auto it = mPieces.cend();
         do {
             --it;
         } while( --index >= 0 );
         return *it;
     }
-    return 0;
+    return nullptr;
 }
 
 Piece* PieceListManager::getFront() const
 {
     if ( mPieces.empty() ) {
-        return 0;
+        return nullptr;
     }
     return mPieces.front();
 }
@@ -159,7 +153,7 @@ Piece* PieceListManager::getFront() const
 bool PieceListManager::eraseBack()
 {
     if ( !mPieces.empty() ) {
-        PieceList::iterator it = mPieces.end();
+        auto it = mPieces.end();
         return eraseInternal( --it );
     }
     return false;

@@ -15,7 +15,7 @@ class PathSearchAction : public QAction
 {
     Q_OBJECT
 public:
-    explicit PathSearchAction(QObject *parent = 0);
+    explicit PathSearchAction(QObject *parent = nullptr);
     ~PathSearchAction()
     {
     }

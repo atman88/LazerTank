@@ -15,5 +15,5 @@ int main(int argc, char *argv[])
     GameInitializer initializer;
     initializer.init( registry );
 
-    return app.exec();
+    return QApplication::exec();
 }

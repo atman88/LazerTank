@@ -24,7 +24,7 @@ class TestPathFinderController;
 class TestRegistry : public GameRegistry
 {
 public:
-    TestRegistry();
+    TestRegistry() = default;
     ~TestRegistry();
 
     /**
@@ -34,7 +34,7 @@ public:
 
 #define DECL_INJECT(name,type)\
     void inject##name(type* p##name) {\
-      QVERIFY(m##name == 0);\
+      QVERIFY(m##name == nullptr);\
       m##name=p##name;\
       p##name->setParent(this);\
     }
@@ -155,11 +155,11 @@ class SignalReceptor : public QObject
     Q_OBJECT
 
 public:
-    SignalReceptor() : QObject(0), mReceived(false)
+    SignalReceptor() : QObject(nullptr), mReceived(false)
     {
     }
 
-    SignalReceptor( const QObject* sender, const char* signal ) : QObject(0), mReceived(false)
+    SignalReceptor( const QObject* sender, const char* signal ) : QObject(nullptr), mReceived(false)
     {
         QObject::connect( sender, signal, this, SLOT(receive()) );
     }

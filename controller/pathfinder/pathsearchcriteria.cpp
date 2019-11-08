@@ -6,13 +6,7 @@
 #include "model/tank.h"
 #include "model/piece.h"
 
-PathSearchCriteria::PathSearchCriteria() : mCriteriaType(NullCriteria), mFocus(MOVE), mAction(0), mTileDragTestResult(0)
-{
-}
-
-PathSearchCriteria::PathSearchCriteria( const PathSearchCriteria& source ) : mCriteriaType(source.mCriteriaType),
-  mStartVector(source.mStartVector), mTargetPoint(source.mTargetPoint), mFocus(source.mFocus), mAction(source.mAction),
-  mTileDragTestResult(source.mTileDragTestResult)
+PathSearchCriteria::PathSearchCriteria() : mCriteriaType(NullCriteria), mFocus(MOVE), mAction(nullptr), mTileDragTestResult(nullptr)
 {
 }
 
@@ -23,7 +17,7 @@ bool PathSearchCriteria::setPathCriteria( PieceType focus, const ModelPoint& tar
         mTargetPoint = target;
         setFocusInternal( focus, registry );
         mAction = action;
-        mTileDragTestResult = 0;
+        mTileDragTestResult = nullptr;
         return true;
     }
     return false;
@@ -34,7 +28,7 @@ bool PathSearchCriteria::setTileDragCriteria( PieceType focus, const Piece* targ
     if ( GameRegistry* registry = getRegistry(result) ) {
         mCriteriaType = TileDragTestCriteria;
         mTargetPoint = *target;
-        mAction = 0;
+        mAction = nullptr;
 
         // prime the result here while we have the piece reference & we are running on the app thread
         result->mPossibleApproaches.clear();
@@ -49,7 +43,7 @@ bool PathSearchCriteria::setTileDragCriteria( PieceType focus, const Piece* targ
             }
         }
 
-        if ( result->mPossibleApproaches.size() ) {
+        if ( !result->mPossibleApproaches.empty() ) {
             setFocusInternal( focus, registry );
             mTileDragTestResult = result;
             return true;

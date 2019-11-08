@@ -11,22 +11,22 @@ void MoveListManager::setInitialFocus( PieceType initialFocus )
 {
     mInitialFocus = initialFocus;
 #ifndef QT_NO_DEBUG
-    if ( mPieces.size() ) {
+    if ( !mPieces.empty() ) {
         std::cout << "** setInitialFocus called on non-empty list" << std::endl;
     }
 #endif // QT_NO_DEBUG
 }
 
-MovePiece* MoveListManager::append( PieceType type, ModelPoint point, int angle, int shotCount, const Piece* pushPiece )
+MovePiece* MoveListManager::append( PieceType type, const ModelPoint& point, int angle, int shotCount, const Piece* pushPiece )
 {
-    MovePiece* move = new MovePiece( type, point, angle, shotCount, pushPiece );
+    auto move = new MovePiece( type, point, angle, shotCount, pushPiece );
     addInternal( move );
     return move;
 }
 
-MovePiece* MoveListManager::append( PieceType type, ModelVector vector, int shotCount, const Piece* pushPiece )
+MovePiece* MoveListManager::append( PieceType type, const ModelVector& vector, int shotCount, const Piece* pushPiece )
 {
-    MovePiece* move = new MovePiece( type, vector, shotCount, pushPiece );
+    auto move = new MovePiece( type, vector, shotCount, pushPiece );
     addInternal( move );
     return move;
 }
@@ -34,9 +34,9 @@ MovePiece* MoveListManager::append( PieceType type, ModelVector vector, int shot
 MovePiece* MoveListManager::setShotCountBack( int count )
 {
     if ( !mPieces.empty() ) {
-        PieceList::iterator it = mPieces.end();
+        auto it = mPieces.end();
         Piece* piece = *--it;
-        MovePiece* move = dynamic_cast<MovePiece*>(piece);
+        auto move = dynamic_cast<MovePiece*>(piece);
         if ( !move ) {
             move = new MovePiece( piece );
             mPieces.erase( it );
@@ -46,11 +46,11 @@ MovePiece* MoveListManager::setShotCountBack( int count )
             // purge any cached sets given they are now stale:
             if ( mSet ) {
                 delete mSet;
-                mSet = 0;
+                mSet = nullptr;
             }
             if ( mMultiSet ) {
                 delete mMultiSet;
-                mMultiSet = 0;
+                mMultiSet = nullptr;
             }
         }
         if ( move->setShotCount( count ) ) {
@@ -58,7 +58,7 @@ MovePiece* MoveListManager::setShotCountBack( int count )
         }
         return move;
     }
-    return 0;
+    return nullptr;
 }
 
 ModelVector MoveListManager::getInitialVector()

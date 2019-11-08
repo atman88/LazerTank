@@ -18,7 +18,7 @@ public:
     } CriteriaType;
 
     PathSearchCriteria();
-    PathSearchCriteria( const PathSearchCriteria& source );
+    PathSearchCriteria( const PathSearchCriteria& source ) = default;
     ~PathSearchCriteria() {}
 
     /**

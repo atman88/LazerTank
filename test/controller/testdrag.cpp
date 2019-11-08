@@ -15,7 +15,7 @@ using namespace std;
 class TestMoveController : public MoveController
 {
 public:
-    TestMoveController() : MoveController(0)
+    TestMoveController() : MoveController(nullptr)
     {
     }
 
@@ -27,7 +27,7 @@ public:
 
 void TestMain::testDragTank()
 {
-    TestMoveController* moveController = new TestMoveController();
+    auto moveController = new TestMoveController();
     mRegistry.injectMoveController( moveController );
     initGame(
       "SSS\n"
@@ -110,7 +110,7 @@ void TestMain::testDragWithMove()
 class TestPathFinderController : public PathFinderController, public TestAsync
 {
 public:
-    TestPathFinderController() : PathFinderController(0), mExpectedPathCount(0), mError(0), mReceived(false)
+    TestPathFinderController() : PathFinderController(nullptr), mExpectedPathCount(0), mError(nullptr), mReceived(false)
     {
     }
 
@@ -120,7 +120,7 @@ public:
         QObject::connect( this, &PathFinderController::pathFound, this, &TestPathFinderController::verifyDragToResult );
     }
 
-    bool condition()
+    bool condition() override
     {
         return mReceived;
     }
@@ -135,7 +135,7 @@ public:
     }
 
     // test starting a drag of a tile
-    bool testStart( ModelPoint point, std::set<ModelPoint> expected )
+    bool testStart( const ModelPoint& point, const std::set<ModelPoint>& expected )
     {
         cout << "dragStart (" << point.mCol << "," << point.mRow << ")" << endl;
         mReceived = false;
@@ -147,7 +147,7 @@ public:
     }
 
     // test start a drag at an empty point
-    bool testStart( ModelPoint point, int expectedCount )
+    bool testStart( const ModelPoint& point, int expectedCount )
     {
         cout << "dragStart " << expectedCount << endl;
         mExpectedPathCount = expectedCount;
@@ -176,7 +176,7 @@ public slots:
         if ( TESTBOOL( ok, "verify: received false" ) ) {
             TESTBOOL( mExpected.size() == criteria->getTileDragTestResult()->mPossibleApproaches.size(), "counts differ" );
             auto expectedIt = mExpected.cbegin();
-            for( auto actualIt : criteria->getTileDragTestResult()->mPossibleApproaches ) {
+            for( const auto& actualIt : criteria->getTileDragTestResult()->mPossibleApproaches ) {
                 if ( TESTBOOL( actualIt.equals( *expectedIt++ ), "result differs" ) ) {
                     break;
                 }
@@ -200,7 +200,7 @@ public slots:
 
 TestPathFinderController* TestMain::setupTestDrag( const char* map )
 {
-    TestPathFinderController* pathFinderController = new TestPathFinderController();
+    auto pathFinderController = new TestPathFinderController();
     mRegistry.injectPathFinderController( pathFinderController );
     initGame( map );
     pathFinderController->init();
@@ -209,7 +209,7 @@ TestPathFinderController* TestMain::setupTestDrag( const char* map )
 
 void TestMain::testDragPoint()
 {
-    TestMoveController* moveController = new TestMoveController();
+    auto moveController = new TestMoveController();
     mRegistry.injectMoveController( moveController );
     TestPathFinderController* pathFinderController = setupTestDrag(
       "S..\n"

@@ -6,7 +6,7 @@
 #include "model/boardpool.h"
 #include "util/persist.h"
 
-GameInitializer::GameInitializer() : QObject(0), mInitPhase(PendingPhase)
+GameInitializer::GameInitializer() : QObject(nullptr), mInitPhase(PendingPhase)
 {
 }
 

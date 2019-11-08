@@ -29,7 +29,7 @@ void MoveDragController::onBoardLoaded( Board& board )
     setDragState( Inactive );
 }
 
-void MoveDragController::dragStart( ModelPoint selectedPoint )
+void MoveDragController::dragStart( const ModelPoint& selectedPoint )
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
         mChanged = false;
@@ -169,7 +169,7 @@ void MoveDragController::setDragState( DragState state )
             if ( mDragMoves.size() ) {
                 for( auto it : mDragMoves.getList() ) {
                     if ( int uid = it->getShotPathUID() ) {
-                        for( auto fsit : mFutureShots.getPaths() ) {
+                        for( const auto& fsit : mFutureShots.getPaths() ) {
                             if ( fsit.getUID() >= uid ) {
                                 mFutureShots.invalidate( fsit );
                             }
@@ -278,7 +278,7 @@ void MoveDragController::onTestResult( bool reachable, PathSearchCriteria* crite
  * @param square The model square to check against
  * @return The angle (0,90,180 or 270) the point is leaning toward or -1 if no angle is favored
  */
-static int coordLeaning( QPoint coord, ModelPoint square )
+static int coordLeaning( QPoint coord, const ModelPoint& square )
 {
     int rotation = -1;
     QPoint relative( coord );
@@ -320,7 +320,7 @@ void MoveDragController::onDragTo( QPoint coord )
         } else if ( GameRegistry* registry = getRegistry(this) ) {
             for( int angle = 0; angle < 360; angle += 90 ) {
                 ModelPoint toPoint( focusVector );
-                Piece* pushPiece = 0;
+                Piece* pushPiece = nullptr;
                 if ( registry->getGame().canMoveFrom( TANK, angle, &toPoint, true, &pushPiece ) ) {
                     if ( toPoint == p ) {
                         Piece* lastMove = mDragMoves.getBack();

@@ -28,8 +28,8 @@ class BoardWidget : public QWidget
     const int TILE_SIZE = 24;
 
 public:
-    BoardWidget( QWidget* parent = 0 );
-    ~BoardWidget();
+    BoardWidget( QWidget* parent = nullptr );
+    ~BoardWidget() override;
     void init( GameRegistry* registry );
 
     void paintEvent( QPaintEvent* e ) override;
@@ -75,8 +75,8 @@ class BoardWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit BoardWindow(QWidget *parent = 0);
-    ~BoardWindow();
+    explicit BoardWindow(QWidget *parent = nullptr);
+    ~BoardWindow() override;
     void init( GameRegistry* registry );
 
     /**
@@ -86,7 +86,7 @@ public:
      * @param widgetSearchActions Any widgetActions that are search terms
      * @return The action activated or 0
      */
-    QAction* showMenu( QPoint* globalPos = 0, const QList<QAction*> widgetActions = QList<QAction*>(), const QList<PathSearchAction*> widgetSearchActions = QList<PathSearchAction*>() );
+    QAction* showMenu(QPoint* globalPos = nullptr, const QList<QAction*> widgetActions = QList<QAction*>(), const QList<PathSearchAction *>& widgetSearchActions = QList<PathSearchAction*>() );
 
     /**
      * @brief Access the window's popup menu

@@ -14,7 +14,7 @@ class AnimationStateAggregator : public QObject
     Q_OBJECT
 
 public:
-    explicit AnimationStateAggregator(QObject *parent = 0);
+    explicit AnimationStateAggregator( QObject *parent = nullptr );
 
     /**
      * @brief active

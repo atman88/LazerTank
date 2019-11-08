@@ -34,7 +34,7 @@ void TestMain::testGameMove()
 class TestTank : public Tank
 {
 public:
-    void gotoVector( ModelVector v )
+    void gotoVector( const ModelVector& v )
     {
         mVector = v;
         TankView::reset( v );
@@ -54,14 +54,14 @@ void testCannon( GameRegistry& registry )
     for( int currentTime = 0; currentTime <= 60*5 && !killedReceptor.mReceived; currentTime += 60 ) {
         shot.onTimeChanged( currentTime );
     }
-    QObject::disconnect( &shot, 0, &killedReceptor, 0 );
+    QObject::disconnect( &shot, nullptr, &killedReceptor, nullptr );
 
     QCOMPARE( killedReceptor.mReceived, true );
 }
 
 void TestMain::testGameCannon()
 {
-    TestTank* tank = new TestTank();
+    auto tank = new TestTank();
     mRegistry.injectTank( tank );
     initGame(
       "v...<\n"
@@ -87,7 +87,7 @@ void testFuturePushToward( int direction, GameRegistry& registry )
     moveController.move( direction );
     moveController.move( direction );
     Game& game = registry.getGame();
-    QVERIFY( game.getDeltaPieces()->size() > 0 );
+    QVERIFY( !game.getDeltaPieces()->empty() );
     moveController.undoLastMove();
     QCOMPARE( (int) game.getDeltaPieces()->size(), 0 );
 }
@@ -127,7 +127,7 @@ void TestMain::testIsMasterBoard()
         }
     };
 
-    MyTestGame* game = new MyTestGame();
+    auto game = new MyTestGame();
     mRegistry.injectGame( game );
     initGame( "T\n" );
     QVERIFY( game->isMasterBoard( game->getBoard()) );

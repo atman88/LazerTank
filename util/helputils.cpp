@@ -47,7 +47,7 @@ public:
             if ( localName == "td" ) {
                 ++mCurrentColumn;
             } else {
-                QString* p = 0;
+                QString* p = nullptr;
                 switch( mCurrentColumn ) {
                 case 1: p = &mDisplayName; break;
                 case 3: p = &mText; break;
@@ -68,7 +68,7 @@ public:
         return true;
     }
 
-    bool endElement( const QString /*&namespaceURI*/, const QString &localName, const QString /*&qName*/ )
+    bool endElement( const QString& /*&namespaceURI*/, const QString& localName, const QString& /*&qName*/ ) override
     {
         if ( localName == "table" ) {
             mState = Idle;
@@ -76,7 +76,7 @@ public:
         return true;
     }
 
-    bool characters( const QString &ch )
+    bool characters( const QString &ch ) override
     {
         if ( mState == ReadingRow ) {
             switch( mCurrentColumn ) {
@@ -91,7 +91,7 @@ public:
         return true;
     }
 
-    bool isDone()
+    bool isDone() override
     {
         return mState == Done;
     }
@@ -122,7 +122,7 @@ private:
 class HelpLoadRunnable : public BasicRunnable
 {
 public:
-    HelpLoadRunnable( QString name, QPoint* forPos, QObject* receiver ) : mName(name), mPos(*forPos), mReceiver(receiver)
+    HelpLoadRunnable( const QString& name, QPoint* forPos, QObject* receiver ) : mName(name), mPos(*forPos), mReceiver(receiver)
     {
     }
 
@@ -156,7 +156,7 @@ public:
         }
     }
 
-    bool deleteWhenDone()
+    bool deleteWhenDone() override
     {
         return true;
     }
@@ -181,7 +181,7 @@ void whatsthis( QPoint* pos, unsigned what, GameRegistry* registry, QObject* rec
 
 QEvent::Type QltWhatsThisEvent::getEventType()
 {
-    static const QEvent::Type eventType = (QEvent::Type) QEvent::registerEventType();
+    static const auto eventType = static_cast<QEvent::Type>( QEvent::registerEventType() );
     return eventType;
 }
 

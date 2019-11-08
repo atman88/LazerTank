@@ -12,7 +12,7 @@ class TankView : public Shooter
     Q_OBJECT
 
 public:
-    explicit TankView(QObject *parent = 0);
+    explicit TankView( QObject *parent = nullptr );
     void init( GameRegistry* registry );
     void render( const QRect* rect, QPainter* painter );
     void pause();

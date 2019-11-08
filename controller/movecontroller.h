@@ -27,7 +27,7 @@ class MoveBaseController : public QObject, public RecorderPlayer
 {
     Q_OBJECT
 public:
-    explicit MoveBaseController( QObject* parent = 0 );
+    explicit MoveBaseController( QObject* parent = nullptr );
 
     virtual void init( GameRegistry* registry );
     virtual void onBoardLoaded( Board& board );
@@ -36,7 +36,7 @@ public:
      * @brief move the tank one square
      * @param direction A rotation angle (one of 0, 90, 180, 270) or -1 to advance in the current direction
      */
-    virtual void move(int direction );
+    virtual void move(int direction ) override;
 
     /**
      * @brief Query a focus vector
@@ -115,7 +115,7 @@ protected:
      * @param vector The column, row and direction for the new move
      * @param pushPiece The piece that this move pushes or 0 if it doesn't cause a push
      */
-    void appendMove( MoveListManager& moves, ModelVector vector, Piece* pushPiece = 0 );
+    void appendMove(MoveListManager& moves, const ModelVector& vector, Piece* pushPiece = nullptr );
 
     /**
      * @brief Extend or replace our path with the given path
@@ -189,7 +189,7 @@ class MoveDragController : public MoveBaseController
 {
     Q_OBJECT
 public:
-    explicit MoveDragController( QObject* parent = 0 );
+    explicit MoveDragController( QObject* parent = nullptr );
 
     void init( GameRegistry* registry ) override;
     void onBoardLoaded( Board& board ) override;
@@ -216,7 +216,7 @@ public:
      * @brief Begin a drag activity
      * @param startPoint The initial point of the drag
      */
-    void dragStart( ModelPoint startPoint );
+    void dragStart( const ModelPoint& startPoint );
 
     /**
      * @brief Get the possible approach angles to the tile selected for dragging, as a bit mask
@@ -335,8 +335,8 @@ class MoveController : public MoveDragController
 {
     Q_OBJECT
 public:
-    explicit MoveController( QObject* parent = 0 );
-    ~MoveController();
+    explicit MoveController( QObject* parent = nullptr );
+    ~MoveController() override;
 
     /**
      * @brief Returns whether movement should occur
@@ -380,7 +380,7 @@ private:
     RecorderReader* mReplayReader;
 
 protected:
-    void onIdle();
+    void onIdle() override;
 };
 
 #endif // MOVECONTROLLER_H

@@ -21,7 +21,7 @@ public:
     {
     }
 
-    bool condition()
+    bool condition() override
     {
         return mShot.getMeasurement() > 0;
     }

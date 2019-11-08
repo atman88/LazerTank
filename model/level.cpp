@@ -14,10 +14,6 @@ Level::Level( int number, int width, int height ) : mNumber(number), mSize(QSize
 {
 }
 
-Level::Level( const Level& other) : mNumber(other.mNumber), mSize(other.mSize), mCompletedCount(other.mCompletedCount)
-{
-}
-
 bool Level::operator==( const Level& other ) const
 {
     return mNumber == other.mNumber;
@@ -159,7 +155,7 @@ const Level* LevelList::at( int index ) const
     if ( 0 <= index && index < mLevels.size() ) {
         return &mLevels.at( index );
     }
-    return 0;
+    return nullptr;
 }
 
 int LevelList::numberAt( int index ) const
@@ -190,7 +186,7 @@ const Level* LevelList::find( int number ) const
     if ( index >= 0 ) {
         return &mLevels.at(index);
     }
-    return 0;
+    return nullptr;
 }
 
 int LevelList::nextLevel( int curLevel ) const
@@ -232,7 +228,7 @@ bool LevelList::isLevelCompleted( int number ) const
 int LevelList::getCompletedCount() const
 {
     int count = 0;
-    for( auto it : mLevels ) {
+    for( const auto& it : mLevels ) {
         if ( it.getCompletedCount() > 0 ) {
             ++count;
         }

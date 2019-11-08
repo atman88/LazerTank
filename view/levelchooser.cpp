@@ -17,11 +17,11 @@
 class LevelPainter : public QStyledItemDelegate
 {
 public:
-    explicit LevelPainter( BoardPool& pool, QObject* parent = 0 ) : QStyledItemDelegate(parent), mPool(pool)
+    explicit LevelPainter( BoardPool& pool, QObject* parent = nullptr ) : QStyledItemDelegate(parent), mPool(pool)
     {
     }
 
-    void paint( QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index ) const
+    void paint( QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index ) const override
     {
         painter->save();
 
@@ -56,7 +56,7 @@ public:
         painter->restore();
     }
 
-    QSize sizeHint( const QStyleOptionViewItem& /*option*/, const QModelIndex& index ) const
+    QSize sizeHint( const QStyleOptionViewItem& /*option*/, const QModelIndex& index ) const override
     {
         return qvariant_cast<Level>( index.model()->data( index ) ).getSize()*TILE_SIZE + QSize(PADDING_WIDTH*2,PADDING_HEIGHT*2);
     }

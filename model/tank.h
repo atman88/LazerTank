@@ -11,7 +11,7 @@ class Tank : public TankView
     Q_OBJECT
 
 public:
-    Tank(QObject *parent = 0);
+    Tank( QObject *parent = nullptr );
     virtual ~Tank() {}
     void init( GameRegistry* registry );
 

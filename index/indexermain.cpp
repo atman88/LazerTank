@@ -16,7 +16,7 @@ int main( int argc, char** argv )
 
     std::map<int,int> numbers;
     int index = 0;
-    for( QString mapFile : mapFiles ) {
+    for( const QString& mapFile : mapFiles ) {
         bool ok;
         int number = mapFile.mid( numberStartOffset, mapFile.length()-numberStartOffset-4 ).toInt( &ok );
         if ( ok ) {

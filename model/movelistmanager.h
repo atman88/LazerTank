@@ -7,7 +7,7 @@
 class MoveListManager : public PieceListManager
 {
 public:
-    MoveListManager( PieceType initialFocus = TANK, QObject* parent = 0 );
+    MoveListManager( PieceType initialFocus = TANK, QObject* parent = nullptr );
 
     /**
      * @brief Set the initial focus to be used by this list
@@ -17,8 +17,8 @@ public:
     /**
      * @brief Adds a new move piece to the end of this list from the given values
      */
-    MovePiece* append( PieceType type, ModelPoint point, int angle, int shotCount, const Piece* pushPiece = 0 );
-    MovePiece* append( PieceType type, ModelVector vector, int shotCount, const Piece* pushPiece = 0 );
+    MovePiece* append(PieceType type, const ModelPoint& point, int angle, int shotCount, const Piece* pushPiece = nullptr );
+    MovePiece* append(PieceType type, const ModelVector& vector, int shotCount, const Piece* pushPiece = nullptr );
 
     /**
      * @brief Set the number of future shots on the last element

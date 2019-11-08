@@ -16,7 +16,7 @@ class TileDragTestResult : public QObject
     Q_OBJECT
 
 public:
-    TileDragTestResult() : QObject(0)
+    TileDragTestResult() : QObject(nullptr)
     {
     }
 
@@ -30,7 +30,7 @@ class PathFinderController : public QObject
 {
     Q_OBJECT
 public:
-    explicit PathFinderController( QObject *parent = 0 );
+    explicit PathFinderController( QObject *parent = nullptr );
     void init();
 
     /**
@@ -63,7 +63,7 @@ public:
      * @return true if successful. To succeed, the preceeding execCriteria call must have been a TileDragTestCriteria
      * which included the given target.
      */
-    bool buildTilePushPath( ModelVector target );
+    bool buildTilePushPath( const ModelVector& target );
 
 signals:
     /**

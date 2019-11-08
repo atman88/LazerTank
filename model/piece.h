@@ -55,10 +55,7 @@ public:
      * @brief Retrieve the search term for this piece
      * @return The encoded position value
      */
-    int encodedPos() const
-    {
-        return encodePos( mCol, mRow );
-    }
+    int encodedPos() const;
 
     virtual bool hasPush() const override = 0;
     virtual int getShotCount() const override = 0;
@@ -97,10 +94,7 @@ public:
     {
     }
 
-    bool hasPush() const override
-    {
-        return false;
-    }
+    bool hasPush() const override;
 
     int getShotCount() const override
     {
@@ -150,7 +144,7 @@ private:
 class MovePiece : public SimplePiece
 {
 public:
-    MovePiece( PieceType type = MOVE, int col = 0, int row = 0, int angle = 0, int shotCount = 0, const Piece* pushPiece = 0 )
+    MovePiece( PieceType type = MOVE, int col = 0, int row = 0, int angle = 0, int shotCount = 0, const Piece* pushPiece = nullptr )
         : SimplePiece(type,col,row,angle),
           mPushPieceType( pushPiece ? pushPiece->mType  : NONE),
           mPushPieceAngle(pushPiece ? pushPiece->mAngle : 0),
@@ -159,7 +153,7 @@ public:
     {
     }
 
-    MovePiece( PieceType type, ModelPoint point, int angle = 0,  int shotCount = 0, const Piece* pushPiece = 0 )
+    MovePiece( PieceType type, ModelPoint point, int angle = 0,  int shotCount = 0, const Piece* pushPiece = nullptr )
       : SimplePiece( type, point, angle ),
         mPushPieceType( pushPiece ? pushPiece->mType  : NONE),
         mPushPieceAngle(pushPiece ? pushPiece->mAngle : 0),
@@ -168,7 +162,7 @@ public:
     {
     }
 
-    MovePiece( PieceType type, ModelVector vector, int shotCount = 0, const Piece* pushPiece = 0 )
+    MovePiece( PieceType type, ModelVector vector, int shotCount = 0, const Piece* pushPiece = nullptr )
       : SimplePiece( type, vector ),
         mPushPieceType( pushPiece ? pushPiece->mType  : NONE),
         mPushPieceAngle(pushPiece ? pushPiece->mAngle : 0),
@@ -245,7 +239,7 @@ class PieceManager : public QObject
     Q_OBJECT
 
 public:
-    PieceManager( QObject* parent = 0 ) : QObject(parent)
+    PieceManager( QObject* parent = nullptr ) : QObject(parent)
     {
     }
 

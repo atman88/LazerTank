@@ -23,7 +23,7 @@ class PathFinder : public QObject
     Q_OBJECT
 
 public:
-    PathFinder( QObject* parent = 0 );
+    PathFinder( QObject* parent = nullptr );
 
     /**
      * @brief Initiate a search or test
@@ -40,7 +40,7 @@ public:
      * @return true if successful. To succeed, the preceeding execCriteria call must have been a TileDragTestCriteria
      * which included the given target.
      */
-    bool buildTilePushPath( ModelVector target );
+    bool buildTilePushPath( const ModelVector& target );
 
 signals:
     /**
@@ -59,7 +59,7 @@ signals:
 
 private:
     void doSearchInternal();
-    void buildTilePushPathInternal( ModelVector target );
+    void buildTilePushPathInternal( const ModelVector& target );
     void addPush( Push& push );
     bool tryAt( int col, int row );
     void pass1();
@@ -89,10 +89,7 @@ private:
     public:
         PathSearchRunnable( PathFinder& pathFinder ) : mPathFinder(pathFinder) {}
 
-        void run() override
-        {
-            mPathFinder.doSearchInternal();
-        }
+        void run() override;
 
         PathFinder& mPathFinder;
     } mPathSearchRunnable;

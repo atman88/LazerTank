@@ -7,7 +7,7 @@
 class Push : public PushView
 {
 public:
-    Push( QObject* parent = 0 );
+    Push( QObject* parent = nullptr );
 
     /**
      * @brief start a push sequence between two squares

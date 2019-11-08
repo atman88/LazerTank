@@ -24,10 +24,6 @@ Game::Game() : mDesiredLevel(0)
 {
 }
 
-Game::~Game()
-{
-}
-
 void Game::init( GameRegistry* registry )
 {
     registry->getTank().init( registry );
@@ -233,7 +229,7 @@ void Game::sightCannons()
     }
 }
 
-void Game::onPushed(PieceType type, ModelPoint point, int pieceAngle )
+void Game::onPushed(PieceType type, const ModelPoint& point, int pieceAngle )
 {
     mBoard.applyPushResult( type, point, pieceAngle );
 }
@@ -285,14 +281,14 @@ void Game::onMoveAggregatorFinished()
     }
 }
 
-void Game::onBoardTileChanged( ModelPoint point )
+void Game::onBoardTileChanged( const ModelPoint& point )
 {
     if ( mBoard.tileAt( point ) == DIRT ) {
         sightCannons();
     }
 }
 
-bool Game::canPlaceAt(PieceType what, ModelPoint point, int fromAngle, bool futuristic, Piece **pushPiece )
+bool Game::canPlaceAt(PieceType what, const ModelPoint& point, int fromAngle, bool futuristic, Piece **pushPiece )
 {
     return canPlaceAt( what, point, fromAngle, getBoard(futuristic), pushPiece );
 }
@@ -419,10 +415,10 @@ bool canShootThruPush( QPoint& centerOfSquare, int angle, Push& push, QPoint *hi
     return true;
 }
 
-bool Game::canShootThru( ModelPoint point, int *angle, FutureChange *change, bool apply, Shooter* source,
+bool Game::canShootThru( const ModelPoint& point, int *angle, FutureChange *change, bool apply, Shooter* source,
                          QPoint *hitPoint )
 {
-    bool futuristic = (change != 0);
+    bool futuristic = (change != nullptr);
     Board* board = getBoard(futuristic);
 
     switch( board->tileAt( point ) ) {
@@ -584,7 +580,7 @@ bool Game::canShootThru( ModelPoint point, int *angle, FutureChange *change, boo
     return false;
 }
 
-void Game::onTankPushingInto( ModelPoint point, int fromAngle )
+void Game::onTankPushingInto( const ModelPoint& point, int fromAngle )
 {
     PieceSetManager& pm = mBoard.getPieceManager();
     Piece* what = pm.pieceAt( point );
@@ -624,7 +620,7 @@ const PieceSet* Game::getDeltaPieces()
     if ( mFutureDelta.enabled() ) {
         return &mFutureDelta.getPieceManager().getPieces();
     }
-    return 0;
+    return nullptr;
 }
 
 void Game::loadMasterBoard( int level )

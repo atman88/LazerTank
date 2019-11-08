@@ -8,7 +8,7 @@ MovePiece::MovePiece( const Piece* source ) : SimplePiece(source)
     mPreviousPushedId = source->getPreviousPushedId();
 
     if ( source->hasPush() || mShotCount )
-        if ( const MovePiece* pusherSource = dynamic_cast<const MovePiece*>(source) ) {
+        if ( auto pusherSource = dynamic_cast<const MovePiece*>(source) ) {
             mPushPieceType    = pusherSource->mPushPieceType;
             mPushPieceAngle   = pusherSource->mPushPieceAngle;
             mShotPathUID      = pusherSource->mShotPathUID;
@@ -71,4 +71,14 @@ int MovePiece::getShotPathUID() const
 void MovePiece::setShotPathUID(int shotPathUID)
 {
     mShotPathUID = shotPathUID;
+}
+
+bool SimplePiece::hasPush() const
+{
+    return false;
+}
+
+int Piece::encodedPos() const
+{
+    return encodePos( mCol, mRow );
 }

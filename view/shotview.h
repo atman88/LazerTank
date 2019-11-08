@@ -20,14 +20,14 @@ class ShotView : public QObject
     Q_OBJECT
 
 public:
-    explicit ShotView(QObject *parent = 0);
+    explicit ShotView( QObject *parent = nullptr );
     void reset();
     void render( QPainter* painter );
 
     /**
      * @brief set this shot's color
      */
-    void setColor( QColor color );
+    void setColor(const QColor& color );
 
     /**
      * @brief Get the pen used to render this shot

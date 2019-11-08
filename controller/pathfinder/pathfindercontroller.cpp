@@ -5,7 +5,7 @@
 #include "game.h"
 
 
-PathFinderController::PathFinderController(QObject *parent) : QObject(parent), mCurCriteria(0), mCurAction(0)
+PathFinderController::PathFinderController(QObject *parent) : QObject(parent), mCurCriteria(nullptr), mCurAction(nullptr)
 {
 }
 
@@ -28,13 +28,13 @@ bool PathFinderController::doAction( PathSearchAction* action, bool testOnly )
 
 void PathFinderController::testNextAction()
 {
-    if ( mTestActions.size() > 0 ) {
+    if ( !mTestActions.empty() ) {
         mCurAction = mTestActions.front();
         mCurCriteria = &mCurAction->getCriteria();
         mTestActions.pop_front();
         doAction( mCurAction, true );
     } else {
-        mCurAction = 0;
+        mCurAction = nullptr;
 //        mCurCriteria = 0;
     }
 }
@@ -57,7 +57,7 @@ bool PathFinderController::testCriteria( PathSearchCriteria* criteria )
     return mPathFinder.execCriteria( mCurCriteria );
 }
 
-bool PathFinderController::buildTilePushPath( ModelVector target )
+bool PathFinderController::buildTilePushPath( const ModelVector& target )
 {
     return mPathFinder.buildTilePushPath( target );
 }

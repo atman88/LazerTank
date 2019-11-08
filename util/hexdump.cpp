@@ -1,12 +1,12 @@
-#include <stdio.h>
+#include <cstdio>
 
 void hexDump( const char* desc, void* addr, int len ) {
     int i;
     unsigned char buff[17];
-    unsigned char *pc = (unsigned char*) addr;
+    auto pc = static_cast<unsigned char*>( addr );
 
     // Output description if given.
-    if (desc != NULL)
+    if ( desc != nullptr )
         printf ("%s:\n", desc);
 
     if (len == 0) {

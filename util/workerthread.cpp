@@ -8,12 +8,12 @@ public:
     {
     }
 
-    void run()
+    void run() override
     {
         mSharedRunnable.get()->runInternal();
     }
 
-    bool deleteWhenDone()
+    bool deleteWhenDone() override
     {
         return true;
     }
@@ -22,7 +22,7 @@ private:
     std::shared_ptr<Runnable> mSharedRunnable;
 };
 
-WorkerThread::WorkerThread() : mThread(0), mShuttingDown(false)
+WorkerThread::WorkerThread() : mThread(nullptr), mShuttingDown(false)
 {
 }
 
@@ -31,9 +31,9 @@ void WorkerThread::doWork( Runnable* runnable )
     if ( !mShuttingDown ) {
         mPendingMutex.lock();
 
-        if ( !mPending.size() && mThread && mThread->joinable() ) {
+        if ( mPending.empty() && mThread && mThread->joinable() ) {
             std::thread* t = mThread;
-            mThread = 0;
+            mThread = nullptr;
 
             mPendingMutex.unlock();
             t->join();
@@ -50,7 +50,7 @@ void WorkerThread::doWork( Runnable* runnable )
     }
 }
 
-void WorkerThread::doWork(std::shared_ptr<Runnable> sharedRunnable)
+void WorkerThread::doWork(const std::shared_ptr<Runnable>& sharedRunnable)
 {
     doWork( new SharedRunnableWrapper(sharedRunnable) );
 }
@@ -66,7 +66,7 @@ void WorkerThread::shutdown()
                 mThread->join();
             }
             delete mThread;
-            mThread = 0;
+            mThread = nullptr;
         }
     }
 }
@@ -81,10 +81,10 @@ Runnable* WorkerThread::getCurrentRunnable()
 {
     std::lock_guard<std::mutex> guard(mPendingMutex);
 
-    if ( mPending.size() > 0 ) {
+    if ( !mPending.empty() ) {
         return mPending.front();
     }
-    return 0;
+    return nullptr;
 }
 
 void WorkerThread::dequeueCurrentRunnable()

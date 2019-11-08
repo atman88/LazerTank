@@ -10,6 +10,8 @@
 #include "controller/gameregistry.h"
 #include "controller/movecontroller.h"
 
+#define ISIZEOF(m) static_cast<int>(sizeof(m))
+
 static const char PersistentIndexFooterMagicValue[] = PERSISTED_INDEX_FOOTER_MAGIC_VALUE;
 static const char PersistentLevelRecordMagicValue[] = PERSISTED_LEVEL_RECORD_MAGIC_VALUE;
 
@@ -60,12 +62,12 @@ public:
     const int SilenceErrorFlag = 0x1000;
 
     static const int SaneMaxFileSize = 100 *
-      (sizeof(PersistedLevelRecord)+Recorder::SaneMaxCapacity + sizeof(PersistedLevelIndex)) + sizeof(PersistedLevelIndexFooter);
+      (ISIZEOF(PersistedLevelRecord)+Recorder::SaneMaxCapacity + ISIZEOF(PersistedLevelIndex)) + ISIZEOF(PersistedLevelIndexFooter);
 
     PersistentRunnable( Persist& persist ) : mPersist(persist), mFile( persist.mPath )
     {
     }
-    virtual ~PersistentRunnable() {}
+    ~PersistentRunnable() override = default;
 
     void runInternal() override
     {
@@ -73,7 +75,7 @@ public:
         mFile.close(); // ensure closed without delay
     }
 
-    void warn( QString msg )
+    void warn( const QString& msg )
     {
         std::cout << qPrintable(mFile.fileName()) << ": " << qPrintable(msg);
         if ( mFile.error() != QFileDevice::NoError ) {
@@ -82,7 +84,7 @@ public:
         std::cout << std::endl;
     }
 
-    virtual void onError( int errorCode ) override
+    void onError( int errorCode ) override
     {
         QString msg;
         switch( errorCode ) {
@@ -167,20 +169,20 @@ public:
             if ( fileSize > SaneMaxFileSize ) {
                 warn( QString("insane size %1").arg( fileSize ) );
                 mPersist.mFileUnusable = true;
-            } else if ( ((unsigned) fileSize) < sizeof(PersistedLevelIndexFooter) ) {
+            } else if ( fileSize < ISIZEOF(PersistedLevelIndexFooter) ) {
                 warn( QString("size %1 too small to read").arg( fileSize ) );
             } else {
-                int fileSize = (int) mFile.size();
-                eSeek( fileSize-sizeof(PersistedLevelIndexFooter), SeekFooterCode );
-                eRead( (char*) &mPersist.mFooter, sizeof mPersist.mFooter, ReadFooterCode );
-                if ( std::memcmp( mPersist.mFooter.magic, PersistentIndexFooterMagicValue, sizeof mPersist.mFooter.magic ) ) {
+                auto fileSize = static_cast<int>( mFile.size() );
+                eSeek( fileSize-ISIZEOF(PersistedLevelIndexFooter), SeekFooterCode );
+                eRead( (char*) &mPersist.mFooter, ISIZEOF(mPersist.mFooter), ReadFooterCode );
+                if ( std::memcmp( mPersist.mFooter.magic, PersistentIndexFooterMagicValue, sizeof mPersist.mFooter.magic ) != 0 ) {
                     error( FooterMagicCode );
                 }
                 if ( mPersist.mFooter.majorVersion != PersistedLevelIndexFooter::MajorVersionValue ) {
                     error( FooterMajorCode );
                 }
 
-                eSeek( fileSize - (sizeof mPersist.mFooter) - mPersist.mFooter.count * sizeof(PersistedLevelIndex), SeekIndexCode );
+                eSeek( fileSize - ISIZEOF(mPersist.mFooter) - mPersist.mFooter.count * ISIZEOF(PersistedLevelIndex), SeekIndexCode );
                 for( int i = 0; i < mPersist.mFooter.count; ++i ) {
                     RunnableIndex index;
                     eRead( (char*) &index, sizeof index, ReadIndexCode );
@@ -195,23 +197,21 @@ class UpdateRunnable : public PersistentUpdateRunnable
 {
 public:
     UpdateRunnable( int level, Persist& persist, Recorder& sourceRecorder )
-      : PersistentUpdateRunnable(persist), mLevel(level), mSourceRecorder(sourceRecorder), mSource(0)
+      : PersistentUpdateRunnable(persist), mLevel(level), mSourceRecorder(sourceRecorder), mSource(nullptr)
     {
     }
 
-    ~UpdateRunnable()
+    ~UpdateRunnable() override
     {
-        if ( mSource ) {
-            delete mSource;
-        }
+        delete mSource;
     }
 
     void run() override
     {
         RunnableIndex newIndex;
-        newIndex.rec.level = mLevel;
+        newIndex.rec.level = static_cast<short>( mLevel );
         newIndex.rec.offset = -1; // mark not set
-        newIndex.rec.size = sizeof(PersistedLevelRecord) + mSourceRecorder.getAvailableCount();
+        newIndex.rec.size = static_cast<short>( ISIZEOF(PersistedLevelRecord) + mSourceRecorder.getAvailableCount() );
 
         mSource = mSourceRecorder.source();
         if ( !mSource ) {
@@ -357,13 +357,9 @@ private:
 };
 
 Persist::Persist( const char* path, QObject* parent ) : QObject(parent),
-  mPath(path ? path : QDir::home().absoluteFilePath("qlt.sav")), mFileUnusable(false), mUpdateRunnable(0)
+  mPath(path ? path : QDir::home().absoluteFilePath("qlt.sav")), mFileUnusable(false), mUpdateRunnable(nullptr)
 {
     memset( &mFooter, 0, sizeof mFooter );
-}
-
-Persist::~Persist()
-{
 }
 
 void Persist::init( GameRegistry* registry )
@@ -413,9 +409,9 @@ void Persist::onPersistentUpdateResult()
 void Persist::onIndexReadyQueued()
 {
     if ( mUpdateRunnable ) {
-        // mark existing records as unitialized
-        for( auto old = mRecords.begin(); old != mRecords.end(); ++old ) {
-            old->second.offset = -1;
+        // mark existing records as uninitialized
+        for( auto& old : mRecords ) {
+            old.second.offset = -1;
         }
 
         // update the list
@@ -425,11 +421,11 @@ void Persist::onIndexReadyQueued()
                 old->second.offset = it.rec.offset;
                 if ( old->second.size != it.rec.size ) {
                     old->second.size   = it.rec.size;
-                    emit levelSetComplete( it.rec.level, it.rec.size-sizeof(PersistedLevelRecord) );
+                    emit levelSetComplete( it.rec.level, it.rec.size-ISIZEOF(PersistedLevelRecord) );
                 }
             } else {
                 mRecords.insert( { it.rec.level, it.rec } );
-                emit levelSetComplete( it.rec.level, it.rec.size-sizeof(PersistedLevelRecord) );
+                emit levelSetComplete( it.rec.level, it.rec.size-ISIZEOF(PersistedLevelRecord) );
             }
         }
 
@@ -443,7 +439,7 @@ void Persist::onIndexReadyQueued()
             }
         }
 
-        mUpdateRunnable = 0;
+        mUpdateRunnable = nullptr;
         mSharedRunnable.reset();
     } else {
         std::cout << "** Persist: indexReadyQeued received without UpdateRunnable" << std::endl;
@@ -488,7 +484,7 @@ PersistLevelLoader* Persist::getLevelLoader( int level )
     if ( it != mRecords.end() ) {
         return new PersistLevelLoader( *this, it->second );
     }
-    return 0;
+    return nullptr;
 }
 
 bool Persist::isUnusable() const
@@ -498,7 +494,7 @@ bool Persist::isUnusable() const
 
 bool Persist::updateInProgress() const
 {
-    return mUpdateRunnable != 0;
+    return mUpdateRunnable != nullptr;
 }
 
 class LoadLevelRunnable : public PersistentRunnable
@@ -532,7 +528,7 @@ public:
 
         PersistedLevelRecord record;
         eRead( (char*) &record, sizeof record, ReadRecordCode );
-        if ( std::memcmp( record.magic, PersistentLevelRecordMagicValue, sizeof record.magic ) ) {
+        if ( std::memcmp( record.magic, PersistentLevelRecordMagicValue, sizeof record.magic ) != 0 ) {
             error( RecordMagicCode );
         }
         if ( record.majorVersion != PersistedLevelRecord::MajorVersionValue ) {
@@ -562,7 +558,7 @@ public:
         mLoader.onLoaded();
     }
 
-    bool deleteWhenDone()
+    bool deleteWhenDone() override
     {
         return true;
     }
@@ -590,7 +586,7 @@ bool PersistLevelLoader::load( Loadable& loadable )
 {
     if ( !mStarted ) {
         mStarted = true;
-        LoadLevelRunnable* runnable = new LoadLevelRunnable( *this, loadable );
+        auto runnable = new LoadLevelRunnable( *this, loadable );
         if ( runnable->doLoad() ) {
             return true;
         }

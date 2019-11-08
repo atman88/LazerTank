@@ -21,7 +21,7 @@ class Game : public QObject
 
 public:
     Game();
-    ~Game();
+    ~Game() = default;
     void init( GameRegistry* registry );
 
     /**
@@ -45,7 +45,7 @@ public:
      * @param pushPiece if non-null, returns a reference to any piece that this move would push
      * @return true if the move is allowed, otherwise false
      */
-    bool canMoveFrom( PieceType what, int angle, ModelPoint *point, bool futuristic, Piece **pushPiece = 0 );
+    bool canMoveFrom( PieceType what, int angle, ModelPoint *point, bool futuristic, Piece **pushPiece = nullptr );
 
     /**
      * @brief Determines the outcome of a laser shot through the given square
@@ -57,8 +57,8 @@ public:
      * @param hitPoint If non-zero, input as the square's center view coordinate, outputs the hit coordinate (if any)
      * @return true if the the shot is continuing to advance past the square or false if the shot hit something
      */
-    bool canShootThru( ModelPoint point, int *angle, FutureChange *change = 0, bool apply = false, Shooter* source = 0,
-                       QPoint *hitPoint = 0 );
+    bool canShootThru( const ModelPoint& point, int *angle, FutureChange *change = nullptr, bool apply = false, Shooter* source = nullptr,
+                       QPoint *hitPoint = nullptr );
 
     /**
      * @brief Determines whether the given piece can move to the given square. Pending moves are not considered.
@@ -69,7 +69,7 @@ public:
      * @param futuristic If true, all outstanding moves are considered, otherwise only the current board state is considered
      * @return true if the placement is a legal move
      */
-    bool canPlaceAt( PieceType what, ModelPoint point, int fromAngle, bool futuristic = false, Piece **pushPiece = 0 );
+    bool canPlaceAt(PieceType what, const ModelPoint& point, int fromAngle, bool futuristic = false, Piece **pushPiece = nullptr );
 
     /**
      * @brief Records a push of piece that will be pushed as a result of some future change
@@ -113,7 +113,7 @@ public slots:
      * @param point The target square
      * @param fromAngle The direction the tank will move in
      */
-    void onTankPushingInto( ModelPoint point, int fromAngle );
+    void onTankPushingInto( const ModelPoint& point, int fromAngle );
 
     /**
      * @brief Notifies the game that the board is being loaded
@@ -134,7 +134,7 @@ public slots:
      * @brief Receives notification that a tile on the board changed.
      * @param point The square where the change occurred
      */
-    void onBoardTileChanged( ModelPoint point );
+    void onBoardTileChanged( const ModelPoint& point );
 
     /**
      * @brief Recieves notification that a push has completed
@@ -142,7 +142,7 @@ public slots:
      * @param point The square pushed into
      * @param pieceAngle The orientation of the piece
      */
-    void onPushed(PieceType type, ModelPoint point, int pieceAngle );
+    void onPushed(PieceType type, const ModelPoint& point, int pieceAngle );
 
     /**
      * @brief Internal slot for disabling future deltas

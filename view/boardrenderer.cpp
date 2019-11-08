@@ -72,7 +72,7 @@ void BoardRenderer::render( const QRect& rect, Board* board, QPainter* painter )
 
     const PieceSet& pieces = board->getPieceManager().getPieces();
     SimplePiece pos(MOVE, minCol, minRow);
-    for( PieceSet::iterator iterator = pieces.lower_bound( &pos ); iterator != pieces.end(); ++iterator ) {
+    for( auto iterator = pieces.lower_bound( &pos ); iterator != pieces.end(); ++iterator ) {
         if ( !(*iterator)->render( &rect, *this, painter ) ) {
             break;
         }

@@ -30,8 +30,8 @@ class Board : public QObject
     Q_OBJECT
 
 public:
-    Board( QObject* parent = 0 );
-    ~Board();
+    Board( QObject* parent = nullptr );
+    ~Board() = default;
 
     /**
      * @brief Get the current level number. A level number corresponds to a /map/level%1.txt file.
@@ -61,7 +61,7 @@ public:
      * @param point The square of interest
      * @return The type of square
      */
-    TileType tileAt( ModelPoint point ) const;
+    TileType tileAt( const ModelPoint& point ) const;
 
     /**
      * @brief Change the type for a given square
@@ -81,7 +81,7 @@ public:
      * @param point The square that the piece is being pushed to
      * @param pieceAngle The piece's current rotation
      */
-    void applyPushResult( PieceType mType, ModelPoint point, int pieceAngle );
+    void applyPushResult( PieceType mType, const ModelPoint& point, int pieceAngle );
 
     void revertPush( MovePiece* pusher );
 

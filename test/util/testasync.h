@@ -9,7 +9,7 @@
 class TestAsync
 {
 public:
-    TestAsync();
+    TestAsync() = default;
 
     /**
      * @brief The test expression which can be invoked repeatedly until met.

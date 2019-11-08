@@ -20,7 +20,7 @@ class PersistLevelLoader : public QObject
     Q_OBJECT
 
 public:
-    PersistLevelLoader( Persist& persist, PersistedLevelIndex index, QObject* parent = 0 );
+    PersistLevelLoader( Persist& persist, PersistedLevelIndex index, QObject* parent = nullptr );
 
     /**
      * @brief Query the size of the persisted recording data for the level associated with this loader
@@ -64,8 +64,8 @@ class Persist : public QObject
     Q_OBJECT
 
 public:
-    Persist( const char* path = 0, QObject* parent = 0 );
-    ~Persist();
+    Persist( const char* path = nullptr, QObject* parent = nullptr );
+    ~Persist() = default;
     void init( GameRegistry* registry );
 
     /**
@@ -143,7 +143,7 @@ private:
      * @param runnable The runnable to run
      * @param registry The registry if known (optimizes case where already known)
      */
-    void doUpdate( PersistentUpdateRunnable* runnable, GameRegistry* registry = 0 );
+    void doUpdate( PersistentUpdateRunnable* runnable, GameRegistry* registry = nullptr );
 
     /**
      * @brief Called by the background to notify that an update is completed

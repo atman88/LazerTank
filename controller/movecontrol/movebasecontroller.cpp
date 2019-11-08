@@ -53,7 +53,7 @@ void MoveBaseController::moveInternal( MoveListManager& moves, int direction )
             moves.replaceBack( MOVE_HIGHLIGHT, direction );
         }
     } else if ( GameRegistry* registry = getRegistry(this) ) {
-        Piece* pushPiece = 0;
+        Piece* pushPiece = nullptr;
         if ( registry->getGame().canMoveFrom( TANK, vector.mAngle, &vector, true, &pushPiece ) ) {
             appendMove( moves, vector, pushPiece );
             if ( pushPiece ) {
@@ -111,7 +111,7 @@ void MoveBaseController::undoLastMoveInternal( PieceListManager& moves )
         mFutureShots.removePath( piece, true );
         if ( piece->hasPush() ) {
             if ( GameRegistry* registry = getRegistry(this) ) {
-                if ( MovePiece* movePiece = dynamic_cast<MovePiece*>(piece) ) {
+                if ( auto movePiece = dynamic_cast<MovePiece*>(piece) ) {
                     registry->getGame().undoFuturePush( movePiece );
                 }
             }
@@ -220,7 +220,7 @@ void MoveBaseController::wakeup()
                         return; // waiting for existing shot to complete
                     }
                     if ( tank.fire() ) {
-                        if ( MovePiece* movePiece = dynamic_cast<MovePiece*>(move) ) {
+                        if ( auto movePiece = dynamic_cast<MovePiece*>(move) ) {
                             movePiece->decrementShots();
                         }
                     }
@@ -288,7 +288,7 @@ bool MoveBaseController::applyPathUsingCriteria( PieceListManager* path, PathSea
     return true;
 }
 
-void MoveBaseController::appendMove( MoveListManager& moves, ModelVector vector, Piece* pushPiece )
+void MoveBaseController::appendMove( MoveListManager& moves, const ModelVector& vector, Piece* pushPiece )
 {
     moves.replaceBack( MOVE ); // erase highlight
     moves.append( MOVE_HIGHLIGHT, vector, 0, pushPiece );

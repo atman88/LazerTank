@@ -101,7 +101,7 @@ public:
     /**
      * @brief Cause a repaint of this path
      */
-    void invalidate( FutureShotPath path );
+    void invalidate( const FutureShotPath& path );
 
 signals:
     void dirtyRect( const QRect& rect );

@@ -40,7 +40,7 @@ public:
         cout << endl;
     }
 
-    void verifyContents( std::set<int> levels )
+    void verifyContents( const std::set<int>& levels )
     {
         int i, max;
         auto it = levels.cbegin();
@@ -71,7 +71,7 @@ public:
 
 void TestMain::testBoardPool()
 {
-    TestPool* testPool = new TestPool( 2, 3 );
+    auto testPool = new TestPool( 2, 3 );
     mRegistry.injectBoardPool( testPool );
 
     QVERIFY( !testPool->find(10) );

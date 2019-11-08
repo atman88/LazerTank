@@ -8,13 +8,9 @@
 #include "controller/gameregistry.h"
 #include "util/workerthread.h"
 
-Board::Board( QObject* parent ) : QObject(parent), mLevel(0), mLastPushId(0), mStream(0)
+Board::Board( QObject* parent ) : QObject(parent), mLevel(0), mLastPushId(0), mStream(nullptr)
 {
     memset( mTiles, EMPTY, sizeof mTiles );
-}
-
-Board::~Board()
-{
 }
 
 void Board::load( int level ) {
@@ -135,7 +131,7 @@ void Board::load( QTextStream& stream, int level )
             case 'T':
                 mTankWayPoint = ModelVector( col, row );
 
-                // fall through
+                /* falls through */
 
             default:  rowp[col++] = DIRT;  break;
             }
@@ -152,7 +148,7 @@ void Board::load( QTextStream& stream, int level )
     mLowerRight.mRow = row-1;
     mLevel = level;
     mLastPushId = 0;
-    mStream = ( level < 0 ) ? &stream : 0;
+    mStream = ( level < 0 ) ? &stream : nullptr;
 
     emit boardLoaded( level );
 }
@@ -166,7 +162,7 @@ void Board::load( const Board* source )
     mTankWayPoint = source->mTankWayPoint;
     memcpy( mTiles, source->mTiles, sizeof mTiles );
     mPieceManager.reset( &source->mPieceManager );
-    mStream = 0;
+    mStream = nullptr;
     emit boardLoaded( mLevel );
 }
 
@@ -190,10 +186,10 @@ int Board::getLevel()
     return mLevel;
 }
 
-TileType Board::tileAt( ModelPoint point ) const {
+TileType Board::tileAt( const ModelPoint& point ) const {
     return (point.mCol >= 0 && point.mRow >= 0
          && point.mCol <= mLowerRight.mCol && point.mRow <= mLowerRight.mRow)
-      ? ((TileType) mTiles[point.mRow*BOARD_MAX_WIDTH+point.mCol]) : EMPTY;
+      ? static_cast<TileType>(mTiles[point.mRow*BOARD_MAX_WIDTH+point.mCol]) : EMPTY;
 }
 
 void Board::setTileAt( TileType id, ModelPoint point )
@@ -204,7 +200,7 @@ void Board::setTileAt( TileType id, ModelPoint point )
     }
 }
 
-void Board::applyPushResult( PieceType mType, ModelPoint point, int pieceAngle )
+void Board::applyPushResult( PieceType mType, const ModelPoint& point, int pieceAngle )
 {
     ++mLastPushId;
     if ( tileAt( point ) != WATER ) {

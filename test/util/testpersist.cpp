@@ -35,20 +35,20 @@ void TestMain::testPersistSizes()
 
 Persist* TestMain::setupTestPersist()
 {
-    Persist* persist = new Persist( "qlttest.sav" );
+    auto persist = new Persist( "qlttest.sav" );
     mRegistry.injectPersist(persist);
 
     // start each test with the file non-existant:
     QFile file( persist->getPath() );
     if ( file.exists() && !file.remove() ) {
         std::cout << "remove \"" << qPrintable(file.fileName()) << "\" failed. " << qPrintable(file.errorString()) << std::endl;
-        return 0;
+        return nullptr;
     }
 
     TestPersistUpdate testPersistAsync( *persist );
     persist->init( &mRegistry );
     if ( !testPersistAsync.test() ) {
-        return 0;
+        return nullptr;
     }
 
     return persist;
@@ -92,7 +92,7 @@ void persistLevel( Recorder& recorder, int level, int count, Persist& persist )
 void TestMain::testPersistReplace()
 {
     if ( Persist* persist = setupTestPersist() ) {
-        RecorderPrivate* recorder_p = new RecorderPrivate( 2 );
+        auto recorder_p = new RecorderPrivate( 2 );
         mRegistry.injectRecorder( new Recorder(recorder_p) );
         Recorder& recorder = mRegistry.getRecorder();
         persistLevel( recorder, 3, 3, *persist );

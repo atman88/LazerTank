@@ -3,11 +3,11 @@
 #include "persist.h"
 #include "controller/gameregistry.h"
 
-Recorder::Recorder( int capacity ) : QObject(0), mPrivate(new RecorderPrivate( capacity ))
+Recorder::Recorder( int capacity ) : QObject(nullptr), mPrivate(new RecorderPrivate( capacity ))
 {
 }
 
-Recorder::Recorder( RecorderPrivate* p ) : QObject(0), mPrivate(p)
+Recorder::Recorder( RecorderPrivate* p ) : QObject(nullptr), mPrivate(p)
 {
 }
 
@@ -62,7 +62,7 @@ RecorderSource* Recorder::source()
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 void Recorder::dump()
@@ -81,7 +81,7 @@ void Recorder::recordShot()
     mPrivate->recordShot();
 }
 
-RecorderSource::RecorderSource( RecorderPrivate& recorder ) : QObject(0), mRecorder(recorder), mOffset(0)
+RecorderSource::RecorderSource( RecorderPrivate& recorder ) : QObject(nullptr), mRecorder(recorder), mOffset(0)
 {
 }
 

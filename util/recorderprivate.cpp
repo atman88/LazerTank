@@ -14,15 +14,13 @@ RecorderActiveSource::RecorderActiveSource( RecorderPrivate& recorder ) : Record
 }
 
 RecorderPersistedSource::RecorderPersistedSource( RecorderPrivate& recorder, Persist& persist ) : RecorderSource(recorder), mPersist(persist),
-  mLoader(0), mLoadSequence(0)
+  mLoader(nullptr), mLoadSequence(0)
 {
 }
 
 RecorderPersistedSource::~RecorderPersistedSource()
 {
-    if ( mLoader ) {
-        delete mLoader;
-    }
+    delete mLoader;
 }
 
 RecorderSource::ReadState RecorderActiveSource::getReadState() const
@@ -79,7 +77,7 @@ unsigned char RecorderPersistedSource::get()
         return mRecorder.mRecorded[mOffset++].u.value;
     }
 
-    if ( mLoadSequence == 0 && mLoader == 0 ) {
+    if ( mLoadSequence == 0 && mLoader == nullptr ) {
         if ( (mLoader = mPersist.getLevelLoader( mRecorder.getLevel()) ) ) {
             if ( mRecorder.setData( *mLoader ) ) {
                 connectDataReady( mLoader, SIGNAL(dataReady()) );
@@ -90,7 +88,7 @@ unsigned char RecorderPersistedSource::get()
         mLoadSequence = -1;
         if ( mLoader ) {
             delete mLoader;
-            mLoader = 0;
+            mLoader = nullptr;
         }
     }
 
@@ -107,7 +105,7 @@ void RecorderPersistedSource::doDataReady()
     mLoadSequence = 2;
     if ( mLoader ) {
         delete mLoader;
-        mLoader = 0;
+        mLoader = nullptr;
     }
 }
 
@@ -341,7 +339,7 @@ char* RecorderPrivate::getLoadableDestination( int forLevel, int count )
             return (char*) mRecorded;
         }
     }
-    return 0;
+    return nullptr;
 }
 
 void RecorderPrivate::releaseLoadableDestination( int forLevel, int actualCount )

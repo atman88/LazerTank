@@ -12,7 +12,7 @@ class LevelChooser : public QListView
     Q_OBJECT
 
 public:
-    explicit LevelChooser( LevelList& levels, BoardPool& pool, QWidget* parent = 0 );
+    explicit LevelChooser( LevelList& levels, BoardPool& pool, QWidget* parent = nullptr );
 
     /**
      * @brief Query the display size of the list contents

@@ -9,7 +9,7 @@ QT_FORWARD_DECLARE_CLASS(QMouseEvent)
 class WhatsThisAwareLabel : public QLabel
 {
 public:
-    WhatsThisAwareLabel( QWidget* parent = 0 );
+    WhatsThisAwareLabel( QWidget* parent = nullptr );
 
 protected:
     void mousePressEvent( QMouseEvent* event ) override;
