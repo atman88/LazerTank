@@ -2,6 +2,7 @@
 #define GAMEUTILS_H
 
 #include <QObject>
+#include "util/encodedmove.h"
 
 class GameRegistry;
 
@@ -54,5 +55,7 @@ extern int checkForReplay( GameRegistry* registry );
  * @param len Buffer size
  */
 extern void hexDump( const char* desc, void* addr, int len );
+
+extern void dumpMoves( const char* name, EncodedMove* moves, int count, int chevronPos = -1 );
 
 #endif // GAMEUTILS_H

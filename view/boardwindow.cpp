@@ -29,7 +29,7 @@
  */
 int checkForReplay( GameRegistry* registry );
 
-BoardWidget::BoardWidget(QWidget* parent) : QWidget(parent), mForbiddenCursor(nullptr)
+BoardWidget::BoardWidget(QWidget* parent) : QWidget(parent), mForbiddenCursor{nullptr}
 {
     setAttribute( Qt::WA_OpaquePaintEvent );
     setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
@@ -145,7 +145,7 @@ void BoardWidget::renderSquareLater( ModelPoint point )
 
 BoardWindow::BoardWindow(QWidget* parent) : QMainWindow(parent), mMoveCounter(new WhatsThisAwareLabel(this)),
   mSavedMoveCount(new WhatsThisAwareLabel(this)), mCompletedIndicator(new WhatsThisAwareLabel(this)),
-  mGameInitialized(false), mHelpWidget(nullptr), mReplayText(nullptr)
+  mGameInitialized{false}, mHelpWidget{nullptr}, mReplayText{nullptr}, mBackdoorCode{0}
 {
     setCentralWidget( new BoardWidget(this) );
     layout()->setSizeConstraint(QLayout::SetFixedSize);
@@ -448,6 +448,10 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
                 }
                 break;
 
+            case Qt::Key_Shift: // start of a new code
+                mBackdoorCode = 0;
+                break;
+
             default:
                 int rotation = keyToAngle(ev->key());
                 if ( rotation >= 0 ) {
@@ -462,6 +466,16 @@ void BoardWindow::keyPressEvent(QKeyEvent *ev)
 
 void BoardWindow::keyReleaseEvent( QKeyEvent* ev )
 {
+    // handle backdoor
+    if ( ev->modifiers() & Qt::ShiftModifier ) {
+        int key = ev->key();
+        if ( Qt::Key_A <= key && key <= Qt::Key_Z )
+            mBackdoorCode = (mBackdoorCode << 8 ) | key;
+        else
+            mBackdoorCode = 0;
+        return;
+    }
+
     if ( !ev->isAutoRepeat() ) {
         if ( GameRegistry* registry = getRegistry(this) ) {
             switch( ev->key() ) {
@@ -526,6 +540,11 @@ void BoardWindow::keyReleaseEvent( QKeyEvent* ev )
                 if ( ev->modifiers() == Qt::AltModifier ) {
                     registry->getRecorder().dump();
                 }
+                break;
+
+            case Qt::Key_Shift:
+                if ( mBackdoorCode > 0xff )
+                    emit backdoor( mBackdoorCode );
                 break;
 
             default:

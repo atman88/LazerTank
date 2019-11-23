@@ -5,7 +5,7 @@
 #include "game.h"
 
 
-PathFinderController::PathFinderController(QObject *parent) : QObject(parent), mCurCriteria(nullptr), mCurAction(nullptr)
+PathFinderController::PathFinderController(QObject *parent) : QObject(parent), mCurCriteria{nullptr}, mCurAction{nullptr}
 {
 }
 
@@ -62,14 +62,14 @@ bool PathFinderController::buildTilePushPath( const ModelVector& target )
     return mPathFinder.buildTilePushPath( target );
 }
 
-void PathFinderController::onResult( bool ok, PathSearchCriteria criteria )
+void PathFinderController::onResult( bool reachable, PathSearchCriteria criteria )
 {
     // filter any stale results
     if ( mCurCriteria && criteria == *mCurCriteria ) {
         if ( mCurAction ) {
-            mCurAction->setEnabled( ok );
+            mCurAction->setEnabled( reachable );
         }
-        emit testResult( ok, &criteria );
+        emit testResult( reachable, &criteria );
 
         // only test next if this result is unchanged given any remaining ones won't be valid if this one isn't
         testNextAction();

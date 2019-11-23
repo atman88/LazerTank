@@ -65,7 +65,7 @@ class Persist : public QObject
 
 public:
     Persist( const char* path = nullptr, QObject* parent = nullptr );
-    ~Persist() = default;
+    ~Persist() override = default;
     void init( GameRegistry* registry );
 
     /**
@@ -127,13 +127,13 @@ signals:
     void levelSetComplete( int level, int count );
 
     /**
-     * @brief Internal signal from background to foreground when the indices have been read or changed
+     * @brief Internal signal from background to foreground fired when the indices have been read or changed
      */
     void indexReadyQueued();
 
 private slots:
     /**
-     * @brief Recieves new indexes from its current runnable
+     * @brief Receives new indexes from its current runnable
      */
     void onIndexReadyQueued();
 

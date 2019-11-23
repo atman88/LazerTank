@@ -20,7 +20,7 @@
 #include "util/persist.h"
 #include "util/imageutils.h"
 
-Game::Game() : mDesiredLevel(0)
+Game::Game() : mDesiredLevel{0}
 {
 }
 

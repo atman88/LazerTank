@@ -121,7 +121,7 @@ private:
 };
 
 
-LevelList::LevelList() : mInitialized(false)
+LevelList::LevelList() : mInitialized{false}
 {
 }
 

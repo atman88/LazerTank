@@ -14,6 +14,7 @@ HEADERS += \
     model/piecesetmanager.h \
     model/piecelistmanager.h \
     model/modelpoint.h \
+    util/encodedmove.h \
     view/pieceview.h \
     util/gameutils.h \
     util/imageutils.h \
@@ -30,6 +31,7 @@ SOURCES += \
     model/piecesetmanager.cpp \
     model/piecelistmanager.cpp \
     model/modelpoint.cpp \
+    util/dumpmoves.cpp \
     view/pieceview.cpp \
     util/gameutils.cpp \
     util/imageutils.cpp \

@@ -111,6 +111,8 @@ private slots:
     void testRecorderBitFields();
     void testRecorderRecordSize();
     void testRecorderOverflow();
+    void testRecorderAvailable();
+    void testRecorderContinuation();
 
     void testFocus();
     void testMultiShotQueued();

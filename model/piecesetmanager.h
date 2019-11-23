@@ -14,7 +14,7 @@ class PieceSetManager : public PieceManager
 
 public:
     explicit PieceSetManager( QObject* parent = nullptr );
-    ~PieceSetManager();
+    ~PieceSetManager() override;
 
     /**
      * @brief Get the underlying set being managed

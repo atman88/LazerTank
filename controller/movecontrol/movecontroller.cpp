@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdint>
+#include <limits>
 #include <QPainter>
 #include "movecontroller.h"
 #include "gameregistry.h"
@@ -10,7 +11,7 @@
 #include "util/recorder.h"
 #include "util/gameutils.h"
 
-MoveController::MoveController(QObject *parent) : MoveDragController(parent), mReplayReader(nullptr)
+MoveController::MoveController(QObject *parent) : MoveDragController(parent), mReplayReader{nullptr}
 {
 }
 
@@ -45,6 +46,7 @@ bool MoveController::setReplay( bool on )
             emit replayChanged( true );
         }
     } else if ( mReplayReader ) {
+        mMoves.reset();
         disconnect( this, SLOT(replayPlayback()) );
         delete mReplayReader;
         mReplayReader = nullptr;
@@ -52,6 +54,15 @@ bool MoveController::setReplay( bool on )
     }
 
     return wasOn;
+}
+
+bool MoveController::readerFinished()
+{
+    if ( mMoves.getList().empty() ) {
+        setReplay( false );
+        return true;
+    }
+    return false;
 }
 
 bool MoveController::replaying() const
@@ -71,7 +82,7 @@ void MoveController::render( Piece* pos, const QRect* rect, BoardRenderer& rende
 {
     if ( !replaying() ) {
         // find the minimum shot path uid in the drag list:
-        int minDragUID = 0x7fffffff;
+        auto minDragUID = std::numeric_limits<int>::max();
         if ( getDragState() != Inactive ) {
             for( auto it : mDragMoves.getList() ) {
                 if ( int uid = it->getShotPathUID() ) {

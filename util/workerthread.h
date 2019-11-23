@@ -61,9 +61,8 @@ protected:
 class ErrorableRunnable : public BasicRunnable
 {
 public:
-    ErrorableRunnable() : mLastError(-1)
+    ErrorableRunnable() : mJmpBuf{}, mLastError(-1)
     {
-        std::memset( &mJmpBuf, 0, sizeof mJmpBuf );
     }
     virtual ~ErrorableRunnable() override {}
 

@@ -10,7 +10,6 @@
 #include "model/boardpool.h"
 #include "util/imageutils.h"
 
-#define TILE_SIZE 12
 #define PADDING_WIDTH  3
 #define PADDING_HEIGHT 3
 
@@ -37,9 +36,9 @@ public:
 
         Level level = qvariant_cast<Level>( index.model()->data( index ) );
         if ( Board* board = mPool.getBoard( level.getNumber() ) ) {
-            BoardRenderer renderer( TILE_SIZE );
-            QPoint offset( std::max( (rect.width()  - board->getWidth() *TILE_SIZE)/2, PADDING_WIDTH  ),
-                           std::max( (rect.height() - board->getHeight()*TILE_SIZE)/2, PADDING_HEIGHT ) );
+            BoardRenderer renderer( ChooserTileSize );
+            QPoint offset( std::max( (rect.width()  - board->getWidth() *ChooserTileSize)/2, PADDING_WIDTH  ),
+                           std::max( (rect.height() - board->getHeight()*ChooserTileSize)/2, PADDING_HEIGHT ) );
             painter->translate( offset );
             renderer.render( rect, board, painter );
             renderer.renderInitialTank( board, painter );
@@ -58,7 +57,7 @@ public:
 
     QSize sizeHint( const QStyleOptionViewItem& /*option*/, const QModelIndex& index ) const override
     {
-        return qvariant_cast<Level>( index.model()->data( index ) ).getSize()*TILE_SIZE + QSize(PADDING_WIDTH*2,PADDING_HEIGHT*2);
+        return qvariant_cast<Level>( index.model()->data( index ) ).getSize()*ChooserTileSize + QSize(PADDING_WIDTH*2,PADDING_HEIGHT*2);
     }
 
 private:
@@ -109,7 +108,7 @@ void LevelChooser::onBoardLoaded( int number )
 QSize LevelChooser::preferredSize() const
 {
     if ( const LevelList* list = dynamic_cast<LevelList*>( model() ) ) {
-        return list->visualSizeHint() * TILE_SIZE
+        return list->visualSizeHint() * ChooserTileSize
           + QSize(PADDING_WIDTH*2 + style()->pixelMetric(QStyle::PM_SliderThickness), list->size()*PADDING_HEIGHT*2 );
     }
     return QListView::viewportSizeHint();

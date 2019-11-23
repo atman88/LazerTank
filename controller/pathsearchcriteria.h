@@ -19,7 +19,7 @@ public:
 
     PathSearchCriteria();
     PathSearchCriteria( const PathSearchCriteria& source ) = default;
-    ~PathSearchCriteria() {}
+    ~PathSearchCriteria() = default;
 
     /**
      * @brief Initialize search criteria

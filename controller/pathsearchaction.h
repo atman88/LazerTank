@@ -16,9 +16,7 @@ class PathSearchAction : public QAction
     Q_OBJECT
 public:
     explicit PathSearchAction(QObject *parent = nullptr);
-    ~PathSearchAction()
-    {
-    }
+    ~PathSearchAction() override = default;
 
     /**
      * @brief Set criteria for this search

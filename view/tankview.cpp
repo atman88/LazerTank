@@ -7,7 +7,7 @@
 #include "model/piece.h"
 #include "util/imageutils.h"
 
-TankView::TankView(QObject *parent) : Shooter(parent), mPixmapType(TANK)
+TankView::TankView(QObject *parent) : Shooter(parent), mPixmapType{TANK}
 {
 }
 
@@ -123,7 +123,7 @@ void TankView::setViewRotation( const QVariant& angle )
 
 void TankView::onHighSpeedChanged( int speed )
 {
-    unsigned type = (speed == SpeedController::HIGH_SPEED) ? (unsigned) TANK_FAST : (unsigned) TANK;
+    unsigned type = (speed == SpeedController::HighSpeed) ? (unsigned) TANK_FAST : (unsigned) TANK;
     if ( type != mPixmapType ) {
         mPixmapType = type;
         emit changed( mBoundingRect );

@@ -3,7 +3,7 @@
 #include "boarddelta.h"
 #include "board.h"
 
-BoardDelta::BoardDelta(QObject *parent) : QObject(parent), mMasterBoard(nullptr), mFutureBoard(nullptr), mEnabled(false)
+BoardDelta::BoardDelta(QObject *parent) : QObject(parent), mMasterBoard{nullptr}, mFutureBoard{nullptr}, mEnabled{false}
 {
 }
 

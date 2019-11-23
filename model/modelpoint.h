@@ -9,7 +9,7 @@ public:
     /**
      * @brief Consruct a null model point
      */
-    ModelPoint() : mCol(-1), mRow(-1)
+    ModelPoint() : mCol{-1}, mRow{-1}
     {
     }
 
@@ -23,9 +23,7 @@ public:
     /**
      * @brief Construct a copy of a model point
      */
-    ModelPoint( const ModelPoint& source ) : mCol(source.mCol), mRow(source.mRow)
-    {
-    }
+    ModelPoint( const ModelPoint& source ) = default;
 
     /**
      * @brief Construct a model point for the given square coordinates
@@ -83,7 +81,7 @@ public:
 class ModelVector : public ModelPoint
 {
 public:
-    ModelVector() : ModelPoint(-1,-1), mAngle(-1)
+    ModelVector() : ModelPoint(-1,-1), mAngle{-1}
     {
     }
 
@@ -95,11 +93,9 @@ public:
     {
     }
 
-    ModelVector( const ModelVector& source ) : ModelPoint(source), mAngle(source.mAngle)
-    {
-    }
+    ModelVector( const ModelVector& source ) = default;
 
-    void setPoint( ModelPoint p )
+    void setPoint( const ModelPoint& p )
     {
         *dynamic_cast<ModelPoint*>(this) = p;
     }

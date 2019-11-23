@@ -7,7 +7,7 @@
 class PoolLoadRunnable : BasicRunnable
 {
 public:
-    PoolLoadRunnable() : mBoard(nullptr), mLevel(0)
+    PoolLoadRunnable() : mBoard{nullptr}, mLevel{0}
     {
     }
 
@@ -36,8 +36,8 @@ private:
     int mLevel;
 };
 
-BoardPool::BoardPool( int visibleCount, int size ) : QObject(nullptr), mFirstVisible(0), mVisibleCount(visibleCount),
-  mTotalSize(visibleCount + (visibleCount>>1)), mSize(size), mRunnable(nullptr)
+BoardPool::BoardPool( int visibleCount, int size ) : QObject(nullptr), mFirstVisible{0}, mVisibleCount(visibleCount),
+  mTotalSize(visibleCount + (visibleCount>>1)), mSize(size), mRunnable{nullptr}
 {
 }
 

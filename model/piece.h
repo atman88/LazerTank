@@ -8,7 +8,7 @@
 
 #include "pieceview.h"
 
-#define PIECE_MAX_ROWCOUNT 256
+constexpr int PieceMaxRowCount = 256;
 
 /**
  * @brief The Piece interface
@@ -48,7 +48,7 @@ public:
      */
     static int encodePos( int col, int row )
     {
-        return row * PIECE_MAX_ROWCOUNT + col;
+        return row * PieceMaxRowCount + col;
     }
 
     /**

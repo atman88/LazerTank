@@ -26,8 +26,8 @@ class GameRegistry : public QObject
 {
     Q_OBJECT
 public:
-    explicit GameRegistry( BoardWindow* window = 0 );
-    ~GameRegistry();
+    explicit GameRegistry( BoardWindow* window = nullptr );
+    ~GameRegistry() override;
     GameHandle getHandle();
 
     /**

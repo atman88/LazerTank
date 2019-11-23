@@ -66,8 +66,8 @@ private:
     int mResult;
 };
 
-ShotModel::ShotModel( QObject* parent ) : ShotView(parent), mLeadingDirection(0), mDistance(0), mShedding(false),
-  mKillSequence(0), mLastStepNo(-1), mDuration(-1), mRunnable(new MeasureRunnable(*this))
+ShotModel::ShotModel( QObject* parent ) : ShotView(parent), mLeadingDirection{0}, mDistance{0}, mShedding{false},
+  mKillSequence{0}, mLastStepNo{-1}, mDuration{-1}, mRunnable(new MeasureRunnable(*this))
 {
     QObject::connect( &mAnimation, &ShotAnimation::currentTimeChanged, this, &ShotModel::onTimeChanged, Qt::DirectConnection );
 }
@@ -111,7 +111,7 @@ bool ShotModel::fire( Shooter* shooter )
         if ( GameRegistry* registry = getRegistry(this) ) {
             mDuration = registry->getSpeedController().getSpeed() - 30;
         } else {
-            mDuration = SpeedController::NORMAL_SPEED - 30;
+            mDuration = SpeedController::NormalSpeed - 30;
         }
         commenceFire( shooter );
         mAnimation.start();
@@ -172,7 +172,7 @@ void ShotModel::onTimeChanged( int currentTime )
                 // check if at max time before shedding (i.e. 3/4 of the anticipated steps)
               && ((mLastStepNo >= anticipatedSteps - anticipatedLength)
                 // start shedding if terminated and sufficient time has elapsed
-               || (hasTermination && currentTime >= SpeedController::HIGH_SPEED - 30)) ) {
+               || (hasTermination && currentTime >= SpeedController::HighSpeed - 30)) ) {
                 mShedding = true;
             }
 

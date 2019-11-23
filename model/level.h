@@ -17,9 +17,9 @@ class Level
 {
 public:
     explicit Level( int number, int width, int height );
-    explicit Level() : mNumber(0), mCompletedCount(0) {}
+    explicit Level() : mNumber{0}, mCompletedCount{0} {}
     Level( const Level& other ) = default;
-    ~Level() {}
+    ~Level() = default;
 
     bool operator==( const Level& other ) const;
     bool operator<( const Level& other ) const;

@@ -10,8 +10,8 @@ QT_FORWARD_DECLARE_CLASS(QTextStream)
 #include "controller/futurechange.h"
 
 // The largest board dimensions we care to support
-#define BOARD_MAX_WIDTH  PIECE_MAX_ROWCOUNT
-#define BOARD_MAX_HEIGHT PIECE_MAX_ROWCOUNT
+constexpr int BoardMaxWidth  = PieceMaxRowCount;
+constexpr int BoardMaxHeight = PieceMaxRowCount;
 
 /**
  * @brief Helper method to determine the neighbor square for the given direction
@@ -31,7 +31,7 @@ class Board : public QObject
 
 public:
     Board( QObject* parent = nullptr );
-    ~Board() = default;
+    ~Board() override = default;
 
     /**
      * @brief Get the current level number. A level number corresponds to a /map/level%1.txt file.
@@ -161,7 +161,7 @@ private:
     ModelVector mTankWayPoint;
     int mLastPushId;
 
-    unsigned char mTiles[BOARD_MAX_WIDTH*BOARD_MAX_HEIGHT];
+    unsigned char mTiles[BoardMaxWidth*BoardMaxHeight];
     PieceSetManager mPieceManager;
 
     QTextStream* mStream;

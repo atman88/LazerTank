@@ -12,10 +12,9 @@
 #define BLOCKED     4
 #define TARGET      5
 
-PathFinder::PathFinder( QObject* parent ) : QObject(parent), mStopping(false), mNPoints(0), mPassValue(0), mPushIndex(0),
-  mPushDirection(0), mTestOnly(false), mPathSearchRunnable(*this), mTileDragBuildRunnable(*this)
+PathFinder::PathFinder( QObject* parent ) : QObject(parent), mStopping{false}, mNPoints{}, mPassValue{}, mPushIndex{},
+    mPushDirection{}, mTestOnly{false}, mJmpBuf{}, mPathSearchRunnable(*this), mTileDragBuildRunnable(*this)
 {
-    memset( mJmpBuf, 0, sizeof mJmpBuf );
 }
 
 bool PathFinder::execCriteria( PathSearchCriteria* criteria, bool testOnly )
@@ -32,7 +31,7 @@ bool PathFinder::execCriteria( PathSearchCriteria* criteria, bool testOnly )
         ModelPoint point;
         for( point.mRow = mMaxPoint.mRow; point.mRow >= 0; --point.mRow ) {
             for( point.mCol = mMaxPoint.mCol; point.mCol >= 0; --point.mCol ) {
-                mSearchMap[point.mRow*BOARD_MAX_WIDTH+point.mCol] =
+                mSearchMap[point.mRow*BoardMaxWidth+point.mCol] =
                   game.canPlaceAt( TANK, point, -1, true ) ? TRAVERSIBLE : BLOCKED;
             }
         }
@@ -54,7 +53,7 @@ bool PathFinder::execCriteria( PathSearchCriteria* criteria, bool testOnly )
 void PathFinder::addPush( Push& push )
 {
     if ( push.getType() != NONE ) {
-        mSearchMap[ push.getTargetPoint().mRow*BOARD_MAX_WIDTH + push.getTargetPoint().mCol ] = BLOCKED;
+        mSearchMap[ push.getTargetPoint().mRow*BoardMaxWidth + push.getTargetPoint().mCol ] = BLOCKED;
     }
 }
 
@@ -78,7 +77,7 @@ void PathFinder::printSearchMap()
 }
 */
 
-#define CANBUILD() mSearchMap[row*BOARD_MAX_WIDTH+col]==mPassValue
+#define CANBUILD() mSearchMap[row*BoardMaxWidth+col]==mPassValue
 
 bool PathFinder::buildPath()
 {
@@ -144,7 +143,7 @@ void PathFinder::buildTilePushPathInternal( const ModelVector& target )
 
         int col = curVector.mCol;
         int row = curVector.mRow;
-        mPassValue = mSearchMap[curVector.mRow*BOARD_MAX_WIDTH + curVector.mCol];
+        mPassValue = mSearchMap[curVector.mRow*BoardMaxWidth + curVector.mCol];
 
         while( !endPoint.equals( curVector ) ) {
             if ( --mPassValue < 0 ) {
@@ -178,7 +177,7 @@ bool PathFinder::tryAt( int col, int row )
 {
     if ( col >= 0 && col <= mMaxPoint.mCol
       && row >= 0 && row <= mMaxPoint.mRow ) {
-        switch( mSearchMap[row*BOARD_MAX_WIDTH + col] ) {
+        switch( mSearchMap[row*BoardMaxWidth + col] ) {
         case TARGET:
         {   ModelPoint point( col, row );
             auto it = mTargets.find( point );
@@ -188,7 +187,7 @@ bool PathFinder::tryAt( int col, int row )
                     result->mPossibleApproaches.insert( point );
                 }
                 if ( mTargets.empty() ) {
-                    mSearchMap[row*BOARD_MAX_WIDTH + col] = mPassValue;
+                    mSearchMap[row*BoardMaxWidth + col] = mPassValue;
                     return true;
                 }
             }
@@ -197,7 +196,7 @@ bool PathFinder::tryAt( int col, int row )
             // fall through
 
         case TRAVERSIBLE:
-            mSearchMap[row*BOARD_MAX_WIDTH + col] = mPassValue;
+            mSearchMap[row*BoardMaxWidth + col] = mPassValue;
             if ( mPushIndex >= 0 && mPushIndex < (int) ((sizeof mSearchCol)/(sizeof *mSearchCol)) ) {
                 mSearchCol[mPushIndex] = col;
                 mSearchRow[mPushIndex] = row;
@@ -269,7 +268,7 @@ void PathFinder::doSearchInternal()
         switch( mRunCriteria.getCriteriaType() ) {
         case PathSearchCriteria::PathCriteria:
             // For path search the starting point is targetted
-            mSearchMap[mRunCriteria.getStartRow() *BOARD_MAX_WIDTH+mRunCriteria.getStartCol() ] = TARGET;
+            mSearchMap[mRunCriteria.getStartRow() *BoardMaxWidth+mRunCriteria.getStartCol() ] = TARGET;
             mTargets.insert( mRunCriteria.getStartVector() );
             tryAt( mRunCriteria.getTargetCol(), mRunCriteria.getTargetRow() );
             // Note we are not interested in 0-length paths in this case so we don't set found here
@@ -280,7 +279,7 @@ void PathFinder::doSearchInternal()
             if ( TileDragTestResult* result = mRunCriteria.getTileDragTestResult() ) {
                 for( auto it : result->mPossibleApproaches ) {
                     if ( it.mCol <= mMaxPoint.mCol && it.mRow <= mMaxPoint.mRow ) {
-                        char* p = &mSearchMap[it.mRow*BOARD_MAX_WIDTH+it.mCol];
+                        char* p = &mSearchMap[it.mRow*BoardMaxWidth+it.mCol];
                         if ( *p == TRAVERSIBLE ) {
                             *p = TARGET;
                             mTargets.insert( it );

@@ -19,7 +19,7 @@ class ShotAnimation : public QAbstractAnimation
     Q_OBJECT
 
 public:
-    int duration() const
+    int duration() const override
     {
         return -1; // run until stopped
     }
@@ -28,7 +28,7 @@ signals:
     void currentTimeChanged( int currentTime );
 
 protected:
-    void updateCurrentTime( int currentTime )
+    void updateCurrentTime( int currentTime ) override
     {
         emit currentTimeChanged( currentTime );
     }
@@ -40,7 +40,7 @@ class ShotModel : public ShotView
 
 public:
     explicit ShotModel( QObject *parent = nullptr );
-    ~ShotModel();
+    ~ShotModel() override;
 
     /**
      * @brief Initialization method

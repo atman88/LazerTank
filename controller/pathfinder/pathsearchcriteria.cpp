@@ -6,7 +6,7 @@
 #include "model/tank.h"
 #include "model/piece.h"
 
-PathSearchCriteria::PathSearchCriteria() : mCriteriaType(NullCriteria), mFocus(MOVE), mAction(nullptr), mTileDragTestResult(nullptr)
+PathSearchCriteria::PathSearchCriteria() : mCriteriaType{NullCriteria}, mFocus{MOVE}, mAction{nullptr}, mTileDragTestResult{nullptr}
 {
 }
 

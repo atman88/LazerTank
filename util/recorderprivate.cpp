@@ -7,7 +7,7 @@
 #include "util/gameutils.h"
 
 // In a spirit of friendly memory consumption stewardship, this class grows its recording buffer as needed in chunks of size:
-#define ALLOCATION_CHUNK_SIZE 1000
+constexpr int AllocationChunkSize = 1000;
 
 RecorderActiveSource::RecorderActiveSource( RecorderPrivate& recorder ) : RecorderSource(recorder)
 {
@@ -109,16 +109,14 @@ void RecorderPersistedSource::doDataReady()
     }
 }
 
-RecorderPrivate::RecorderPrivate( int capacity ) : mLevel(0), mWritePos(0), mPreRecordedCount(0),
-  mCapacity(capacity)
+RecorderPrivate::RecorderPrivate( int capacity ) : mCapacity(capacity), mLevel{0}, mCurMove{}, mCurContinuation{}, mWritePos(0),
+  mPreRecordedCount{0}
 {
-    mCurMove.clear();
-
     // Allocate the initial chunk of the recording buffer
     //
-    mRecordedAllocationWaterMark = std::min( capacity, ALLOCATION_CHUNK_SIZE ) ;
+    mRecordedAllocationWaterMark = std::min( capacity, AllocationChunkSize ) ;
     // Note +3 is to allow for lazy overflow detection; +3 handles worst case where last and previous both have continuations
-    mRecorded = (EncodedMove*) std::malloc( (mRecordedAllocationWaterMark+3) * sizeof(EncodedMove) );
+    mRecorded = static_cast<EncodedMove*>( std::malloc( static_cast<size_t>(mRecordedAllocationWaterMark+3) * (sizeof *mRecorded) ) );
     if ( !mRecorded ) {
         std::cout << "** failed to allocate Recorder buffer!" << std::endl;
         // inhibit recording functionality by:
@@ -148,13 +146,22 @@ void RecorderPrivate::onBoardLoaded( int level )
 
 bool RecorderPrivate::isEmpty() const
 {
-    return mCurMove.isEmpty() && !mWritePos && !mPreRecordedCount;
+    return mCurMove.isEmpty() && !mWritePos && !getPreRecordedCount();
 }
 
 int RecorderPrivate::getAvailableCount() const
 {
-    if ( mPreRecordedCount ) {
-        return mPreRecordedCount;
+    if ( int count = getPreRecordedCount() ) {
+        if ( !mCurMove.isEmpty() ) {
+            if ( count <= mWritePos || !mCurMove.equals(mRecorded[mWritePos])  )
+                return mWritePos+1;
+            if ( !mCurContinuation.isEmpty() && mCurMove.u.move.shotCount == MAX_MOVE_SHOT_COUNT ) {
+                if ( count <= mWritePos+1 || !mCurContinuation.equals(mRecorded[mWritePos+1]) )
+                    return mWritePos+2;
+            }
+        }
+
+        return count;
     }
 
     return getRecordedCount();
@@ -172,13 +179,20 @@ int RecorderPrivate::getRecordedCount() const
     return count;
 }
 
+constexpr int PrintCount = 8;
+
 int RecorderPrivate::storeInternal( EncodedMove move, int pos )
 {
     if ( mPreRecordedCount ) {
         if ( pos < mPreRecordedCount && mRecorded[pos].u.value == move.u.value ) {
             return pos+1;
         }
+        int start = std::max(pos-(PrintCount/2),0);
+        dumpMoves( "original", &mRecorded[start], std::min(PrintCount, mPreRecordedCount-start), PrintCount/2 );
         mPreRecordedCount = 0;
+
+        mRecorded[pos] = move;
+        dumpMoves( "diverged", &mRecorded[start], std::min(PrintCount+1,pos-start+1) );
     }
 
     mRecorded[pos] = move;
@@ -220,6 +234,7 @@ void RecorderPrivate::recordMove( bool adjacent, int rotation )
         // caller isn't respecting our interface?
         std::cout << "** RecordRotation: direction not in -1,0,90,180,270: " << rotation << std::endl;
         // fall through
+        [[clang::fallthrough]];
     case -1:
         mCurMove.u.move.rotate = 0;
     }
@@ -308,7 +323,7 @@ bool RecorderPrivate::commitCurMove()
             //
             // attempt to grow the buffer
             //
-            int newWaterMark = std::min( mRecordedAllocationWaterMark + ALLOCATION_CHUNK_SIZE, mCapacity );
+            int newWaterMark = std::min( mRecordedAllocationWaterMark + AllocationChunkSize, mCapacity );
             if ( newWaterMark > mRecordedAllocationWaterMark ) {
                 if ( void* p = std::realloc( mRecorded, (newWaterMark+3) * sizeof(EncodedMove) ) ) {
                     mRecorded = (EncodedMove*) p;
@@ -324,6 +339,7 @@ bool RecorderPrivate::commitCurMove()
         }
     }
     mWritePos = count;
+    mCurMove.clear();
     return true;
 }
 
@@ -346,6 +362,35 @@ void RecorderPrivate::releaseLoadableDestination( int forLevel, int actualCount 
 {
     if ( forLevel == mLevel && !getRecordedCount() ) {
         mPreRecordedCount = std::max( actualCount, 0 );
-        hexDump( "loaded", mRecorded, mPreRecordedCount );
+        if ( mPreRecordedCount ) {
+            mWritePos = 0;
+            mCurMove.clear();
+        }
+    }
+}
+
+void RecorderPrivate::backdoor( int code )
+{
+    switch( code ) {
+    case ('Q'<<8)|'M': // query moves
+        std::cout << mWritePos << " written\n"
+                  << mPreRecordedCount << " prerecorded\n";
+        break;
+
+    case ('D'<<8)|'M':
+        if ( mPreRecordedCount != 0 ) {
+            hexDump( "prerecorded", mRecorded, mPreRecordedCount );
+        } else {
+            hexDump( "written", mRecorded, mWritePos );
+        }
+        break;
+
+    case ('L'<<8)|'M':
+        if ( mPreRecordedCount != 0 ) {
+            dumpMoves( "prerecorded", mRecorded, mPreRecordedCount, mWritePos );
+        } else {
+            dumpMoves( "written", mRecorded, mWritePos );
+        }
+        break;
     }
 }

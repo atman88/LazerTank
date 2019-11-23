@@ -12,7 +12,7 @@
 #include "../model/board.h"
 
 
-MoveBaseController::MoveBaseController( QObject* parent ) : QObject(parent), mState(Idle), mFocus(MOVE)
+MoveBaseController::MoveBaseController( QObject* parent ) : QObject(parent), mState{Idle}, mFocus{MOVE}
 {
 }
 

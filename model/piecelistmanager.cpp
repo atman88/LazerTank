@@ -1,6 +1,6 @@
 #include "piecelistmanager.h"
 
-PieceListManager::PieceListManager( QObject *parent ) : PieceManager(parent), mSet(nullptr), mMultiSet(nullptr)
+PieceListManager::PieceListManager( QObject *parent ) : PieceManager(parent), mSet{nullptr}, mMultiSet{nullptr}
 {
 }
 

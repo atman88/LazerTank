@@ -87,9 +87,7 @@ class FutureShotPathManager : public QObject
     Q_OBJECT
 
 public:
-    FutureShotPathManager()
-    {
-    }
+    FutureShotPathManager() = default;
 
     void reset();
 

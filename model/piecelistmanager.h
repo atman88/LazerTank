@@ -14,7 +14,7 @@ class PieceListManager : public PieceManager
 
 public:
     PieceListManager( QObject *parent = nullptr );
-    ~PieceListManager();
+    ~PieceListManager() override;
 
     /**
      * @brief Get the underlying list being managed

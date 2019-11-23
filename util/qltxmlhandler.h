@@ -17,10 +17,10 @@ public:
      */
     virtual bool isDone() = 0;
 
-    bool fatalError(const QXmlParseException &exception);
-    bool error(     const QXmlParseException &exception);
-    bool warning(   const QXmlParseException &exception);
-    QString errorString() const;
+    bool fatalError(const QXmlParseException &exception) override;
+    bool error(     const QXmlParseException &exception) override;
+    bool warning(   const QXmlParseException &exception) override;
+    QString errorString() const override;
 
 private:
     void printException( const char* prefix, const QXmlParseException &exception );

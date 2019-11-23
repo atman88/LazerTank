@@ -21,7 +21,7 @@ class Game : public QObject
 
 public:
     Game();
-    ~Game() = default;
+    ~Game() override = default;
     void init( GameRegistry* registry );
 
     /**
@@ -191,7 +191,7 @@ private:
      * @param pushResult Set to true if a piece would get pushed by the move
      * @return true if allowed, otherwise false
      */
-    bool canMoveFrom( PieceType what, int angle, ModelPoint *point, Board* board, Piece **pushPiece = 0 );
+    bool canMoveFrom( PieceType what, int angle, ModelPoint *point, Board* board, Piece **pushPiece = nullptr );
 
     /**
      * @brief Determines whether the given piece can enter the given square.
@@ -202,7 +202,7 @@ private:
      * @param pushPiece if non-null, returns a reference to any piece that that this placement would result in pushing
      * @return true if the entry is legal
      */
-    bool canPlaceAt( PieceType what, ModelPoint point, int fromAngle, Board* board, Piece **pushPiece = 0 );
+    bool canPlaceAt( PieceType what, ModelPoint point, int fromAngle, Board* board, Piece **pushPiece = nullptr );
 
     /**
      * @brief determine whether the given square is suitable for a cannon to "see through"

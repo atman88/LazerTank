@@ -3,7 +3,7 @@
 #include "push.h"
 #include "controller/gameregistry.h"
 
-PushView::PushView( QObject* parent ) : QObject(parent), mType(NONE), mPieceAngle(0)
+PushView::PushView( QObject* parent ) : QObject(parent), mType{NONE}, mPieceAngle{0}
 {
     mHorizontalAnimation.setTargetObject(this);
     mHorizontalAnimation.setPropertyName("pieceX");

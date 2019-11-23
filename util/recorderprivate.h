@@ -5,49 +5,8 @@ class PersistLevelLoader;
 
 #include "recorder.h"
 #include "loadable.h"
-
-#define MAX_BITFIELD_VALUE(nbits) ((1<<nbits)-1)
-
-//
-// The purpose of the recorder is to save tank actions and to provide a reader for supporting autoreplay.
-//
-// A primary goal of the Recorder is to minimize memory requirements, so by design this recorder
-// encodes the actions into a compressed format where each move begins with a move record which can be optionally
-// followed by a continuation record if/when needed:
-//
-typedef struct EncodedMove {
-    void clear()
-    {
-        u.value = 0;
-    }
-
-    bool isEmpty() const
-    {
-        return u.value == 0;
-    }
-
-    union {
-        struct {
-            // either of these first two bits being set identifies this move record
-            unsigned char adjacent    :1; // 1 indicates moving to an new square identified by the prior recorded angle
-            unsigned char rotate      :1; // 1 indicates rotating to the encoded angle
-
-            unsigned char encodedAngle:2; // A value between 0-3 which corresponds to an angle of 0/90/180/270 respectively
-            unsigned char shotCount   :4; // A number of times to fire at this move point
-        } move;
-// this macro needs to be defined using the above shotCount field's bit count:
-#define MAX_MOVE_SHOT_COUNT MAX_BITFIELD_VALUE(4)
-
-        struct {
-            unsigned char header   :2; // 0 identifies this continuation record
-            unsigned char shotCount:6; // Additional shot count to accumulate with its preceeding move record
-        } continuation;
-// this macro needs to be defined using the above shotCount field's bit count:
-#define MAX_CONTINUATION_SHOT_COUNT MAX_BITFIELD_VALUE(6)
-
-        unsigned char value;
-    } u;
-} EncodedMove;
+#include "encodedmove.h"
+#include "gameregistry.h"
 
 class RecorderPrivate : public Loadable
 {
@@ -59,7 +18,8 @@ public:
      * available packaged levels.
      */
     RecorderPrivate( int capacity );
-    ~RecorderPrivate();
+    ~RecorderPrivate() override;
+
 
     /**
      * @brief Associates subsequent recording with the given level number
@@ -123,10 +83,15 @@ public:
     void dump();
 
     // Loadable interface
-    char*getLoadableDestination(int forLevel, int count);
-    void releaseLoadableDestination(int forLevel, int actualCount);
+    char*getLoadableDestination(int forLevel, int count) override;
+    void releaseLoadableDestination(int forLevel, int actualCount) override;
 
     int getPreRecordedCount() const;
+
+    void backdoor( int code );
+
+protected:
+    int mCapacity;                    // Configured recording limit
 
 private:
     /**
@@ -156,7 +121,6 @@ private:
     int mWritePos;                    // offset into mRecorded where moves are being saved
     int mPreRecordedCount;            // if nonzero, holds the number moves preserved (in mRecorded). (Moves are preserved during playback.)
     EncodedMove* mRecorded;           // the recording buffer
-    int mCapacity;                    // Configured recording limit
     int mRecordedAllocationWaterMark; // tracks allocations
 
     friend class Recorder;

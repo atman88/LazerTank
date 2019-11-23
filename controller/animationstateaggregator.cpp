@@ -2,7 +2,7 @@
 #include <QVariant>
 #include "animationstateaggregator.h"
 
-AnimationStateAggregator::AnimationStateAggregator(QObject *parent) : QObject(parent), mActiveCount(0)
+AnimationStateAggregator::AnimationStateAggregator(QObject *parent) : QObject(parent), mActiveCount{0}
 {
 }
 

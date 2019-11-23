@@ -6,7 +6,7 @@
 #define MARKER_HEIGHT (mTileSize/2-2)
 #define MARKER_WIDTH  (mTileSize-4)
 
-TileDragMarker::TileDragMarker( QObject* parent ) : QObject(parent), mAngleMask(0), mFocusAngle(-1), mTileSize(0)
+TileDragMarker::TileDragMarker( QObject* parent ) : QObject(parent), mAngleMask{0}, mFocusAngle{-1}, mTileSize{0}
 {
 }
 

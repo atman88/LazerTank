@@ -5,9 +5,9 @@
 #include "gameregistry.h"
 #include "movecontroller.h"
 
-const int NSPEED_STEPS  = (SpeedController::NORMAL_SPEED - SpeedController::HIGH_SPEED)/100;
+constexpr int NSpeedSteps  = (SpeedController::NormalSpeed - SpeedController::HighSpeed)/100;
 
-SpeedController::SpeedController(QObject* parent) : QObject(parent), mHighSpeed(false), mStepPending(false), mSpeed(NORMAL_SPEED)
+SpeedController::SpeedController(QObject* parent) : QObject(parent), mHighSpeed{false}, mStepPending{false}, mSpeed{NormalSpeed}
 {
 }
 
@@ -19,15 +19,15 @@ void SpeedController::stepSpeed()
 int SpeedController::desiredSpeed()
 {
     if ( mHighSpeed ) {
-        return HIGH_SPEED;
+        return HighSpeed;
     }
 
     if ( GameRegistry* registry = getRegistry(this) ) {
         int distance = registry->getMoveController().getMoves().getList().size();
-        return (distance < 3) ? NORMAL_SPEED : NORMAL_SPEED - std::min( distance-3, NSPEED_STEPS ) * 100;
+        return (distance < 3) ? NormalSpeed : NormalSpeed - std::min( distance-3, NSpeedSteps ) * 100;
     }
 
-    return NORMAL_SPEED;
+    return NormalSpeed;
 }
 
 int SpeedController::getSpeed()
@@ -50,7 +50,7 @@ void SpeedController::setHighSpeed( bool on )
 {
     if ( on != mHighSpeed ) {
         mHighSpeed = on;
-        mSpeed = on ? HIGH_SPEED : NORMAL_SPEED;
+        mSpeed = on ? HighSpeed : NormalSpeed;
 
         emit highSpeedChanged( getSpeed() );
     }

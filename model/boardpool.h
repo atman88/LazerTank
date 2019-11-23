@@ -16,7 +16,7 @@ class BoardPool : public QObject
 
 public:
     BoardPool( int visibleCount = 0, int size = 0 );
-    ~BoardPool();
+    ~BoardPool() override;
     void init( LevelList& levelList, int maxHeight );
 
     /**
@@ -34,7 +34,7 @@ public:
     Board* find( int level );
 
 private slots:
-    void onBoardLoaded( int number );
+    void onBoardLoaded( int level );
 
 signals:
     /**
@@ -49,7 +49,7 @@ protected:
     int mVisibleCount;
 
 private:
-    int ensureWithinVisible( int number );
+    int ensureWithinVisible( int level );
     Board* getRecyclableBoard();
 
     unsigned mTotalSize;

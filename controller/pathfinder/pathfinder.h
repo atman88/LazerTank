@@ -13,7 +13,7 @@ class PathFinder;
 #include "util/workerthread.h"
 
 // The maximum number of points to track for a given search pass. (A pass can consider nearly two rows worth)
-#define MAX_POINTS (((BOARD_MAX_HEIGHT>BOARD_MAX_WIDTH) ? BOARD_MAX_HEIGHT : BOARD_MAX_WIDTH) * 2)
+constexpr int PathfinderMaxPoints = ((BoardMaxHeight>BoardMaxWidth) ? BoardMaxHeight : BoardMaxWidth) * 2;
 
 /**
  * @brief Computes a list of moves between two points for the current board.
@@ -69,10 +69,10 @@ private:
     PathSearchCriteria mCriteria;
     PathSearchCriteria mRunCriteria; // copy used by the background which won't be impacted by a parallel call to findPath
     bool mStopping;
-    char mSearchMap[BOARD_MAX_HEIGHT*BOARD_MAX_WIDTH];
+    char mSearchMap[BoardMaxHeight*BoardMaxWidth];
     ModelPoint mMaxPoint;
-    int mSearchCol[MAX_POINTS];
-    int mSearchRow[MAX_POINTS];
+    int mSearchCol[PathfinderMaxPoints];
+    int mSearchRow[PathfinderMaxPoints];
     unsigned mNPoints;
     int mPassValue;
     int mPushIndex;

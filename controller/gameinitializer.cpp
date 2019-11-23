@@ -5,6 +5,7 @@
 #include "model/level.h"
 #include "model/boardpool.h"
 #include "util/persist.h"
+#include "view/levelchooser.h"
 
 GameInitializer::GameInitializer() : QObject(nullptr), mInitPhase(PendingPhase)
 {
@@ -42,7 +43,7 @@ void GameInitializer::resume()
 //                    QObject::connect( window, &BoardWindow::paintable, this, &GameInitializer::resume, Qt::QueuedConnection );
                     window->setVisible(true);
 
-                    registry->getBoardPool().init( registry->getLevelList(), myScreenHeight() / 12 ); // chooser's TILE_SIZE
+                    registry->getBoardPool().init( registry->getLevelList(), myScreenHeight() / ChooserTileSize );
                 }
 
                 mInitPhase = WindowPhase;
@@ -64,6 +65,7 @@ void GameInitializer::resume()
 
                     game.init( registry );
                     window->init( registry );
+                    QObject::connect( window, &BoardWindow::backdoor, &registry->getRecorder(), &Recorder::backdoor, Qt::QueuedConnection );
                     QObject::connect( &game, &Game::boardLoaded, this, &GameInitializer::resume, Qt::QueuedConnection );
                     game.loadMasterBoard( registry->getLevelList().nextLevel(0) );
 //                }

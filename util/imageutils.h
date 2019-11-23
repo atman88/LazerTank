@@ -19,7 +19,7 @@ class ResourcePixmap : public QPixmap
 {
 public:
     ResourcePixmap( const char* name );
-    ~ResourcePixmap();
+    ~ResourcePixmap() override;
 
     /**
      * @brief Retrieve the image for the given piece or tile type

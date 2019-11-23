@@ -12,7 +12,7 @@ class Tank : public TankView
 
 public:
     Tank( QObject *parent = nullptr );
-    virtual ~Tank() {}
+    virtual ~Tank() override = default;
     void init( GameRegistry* registry );
 
     /**

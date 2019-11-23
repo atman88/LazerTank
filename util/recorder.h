@@ -28,6 +28,8 @@ public:
      */
     virtual bool setReplay( bool on ) = 0;
 
+    virtual bool readerFinished() = 0;
+
     /**
      * @brief Serves a shot to the consumer
      * @param count The number of times to shoot
@@ -150,7 +152,7 @@ public:
      */
     Recorder( int capacity = SaneMaxCapacity );
     Recorder( RecorderPrivate* recorder_p );
-    ~Recorder();
+    ~Recorder() override;
 
     /**
      * @brief React as appropriate on a board change
@@ -213,6 +215,9 @@ signals:
      * @brief Notifies the recorded count has changed
      */
     void recordedCountChanged();
+
+public slots:
+    void backdoor( int code );
 
 protected:
     RecorderPrivate* mPrivate;

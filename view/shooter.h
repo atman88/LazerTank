@@ -24,7 +24,7 @@ class Shooter : public QObject
 
 public:
     Shooter( QObject *parent = nullptr );
-    virtual ~Shooter() {}
+    ~Shooter() override = default;
     void init( GameRegistry* registry, PieceType type, const QColor& color );
 
     void reset( ModelVector v );

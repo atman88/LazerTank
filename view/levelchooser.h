@@ -5,6 +5,8 @@
 #include <QListView>
 #include "model/level.h"
 
+constexpr int ChooserTileSize = 12;
+
 class BoardPool;
 
 class LevelChooser : public QListView

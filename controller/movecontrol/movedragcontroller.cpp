@@ -7,8 +7,8 @@
 #include "model/piecelistmanager.h"
 #include "model/tank.h"
 
-MoveDragController::MoveDragController( QObject *parent ) : MoveBaseController(parent), mDragState(Inactive),
-  mTileDragFocusAngle(-1), mTileDragAngleMask(0), mMinPushedId(-1), mChanged(false)
+MoveDragController::MoveDragController( QObject *parent ) : MoveBaseController(parent), mDragState{Inactive},
+  mTileDragFocusAngle{-1}, mTileDragAngleMask{0}, mMinPushedId{-1}, mChanged{false}
 {
 }
 
@@ -29,17 +29,17 @@ void MoveDragController::onBoardLoaded( Board& board )
     setDragState( Inactive );
 }
 
-void MoveDragController::dragStart( const ModelPoint& selectedPoint )
+void MoveDragController::dragStart( const ModelPoint& startPoint )
 {
     if ( GameRegistry* registry = getRegistry(this) ) {
         mChanged = false;
         mPreviousCoord = QPoint();
 
-        if ( selectedPoint.equals( getBaseFocusVector() ) ) {
+        if ( startPoint.equals( getBaseFocusVector() ) ) {
             setDragState( DraggingTank );
         } else {
             Board* board = registry->getGame().getBoard(true);
-            if ( Piece* piece = board->getPieceManager().pieceAt( selectedPoint ) ) {
+            if ( Piece* piece = board->getPieceManager().pieceAt( startPoint ) ) {
                 if ( mTileDragTestCriteria.setTileDragCriteria( mFocus, piece, &mTileDragTestResult ) ) {
 #ifndef QT_NO_DEBUG
                     if ( mDragState == Searching ) {
@@ -51,12 +51,12 @@ void MoveDragController::dragStart( const ModelPoint& selectedPoint )
                 } else {
                     setDragState( Forbidden );
                 }
-            } else switch( board->tileAt( selectedPoint ) ) {
+            } else switch( board->tileAt( startPoint ) ) {
             case DIRT:
             case TILE_SUNK:
             case FLAG:
             {   PathSearchAction& pathToAction = registry->getPathToAction();
-                pathToAction.setCriteria( mFocus, selectedPoint );
+                pathToAction.setCriteria( mFocus, startPoint );
                 registry->getPathFinderController().doAction( &pathToAction );
                 setDragState( Searching );
             }

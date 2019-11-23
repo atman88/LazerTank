@@ -7,7 +7,7 @@
 class Loadable
 {
 public:
-    virtual ~Loadable() {}
+    virtual ~Loadable() = default;
 
     virtual char* getLoadableDestination( int forLevel, int count ) = 0;
     virtual void releaseLoadableDestination( int forLevel, int actualCount ) = 0;

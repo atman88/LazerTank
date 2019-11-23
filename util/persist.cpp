@@ -186,7 +186,15 @@ public:
                 for( int i = 0; i < mPersist.mFooter.count; ++i ) {
                     RunnableIndex index;
                     eRead( (char*) &index, sizeof index, ReadIndexCode );
-                    mIndexes.insert( index );
+                    for( const auto& it : mIndexes ) {
+                        if ( index.rec.offset < it.rec.offset + it.rec.size
+                          && index.rec.offset + index.rec.size > it.rec.offset ) {
+                            std::cerr << "* level " << index.rec.level << " overlaps " << it.rec.level << "\n";
+                        }
+                    }
+                    if ( !mIndexes.insert( index ).second ) {
+                        std::cerr << "* duplicate level " << index.rec.level << "\n";
+                    }
                 }
             }
         }
@@ -211,7 +219,7 @@ public:
         RunnableIndex newIndex;
         newIndex.rec.level = static_cast<short>( mLevel );
         newIndex.rec.offset = -1; // mark not set
-        newIndex.rec.size = static_cast<short>( ISIZEOF(PersistedLevelRecord) + mSourceRecorder.getAvailableCount() );
+        newIndex.rec.size = static_cast<short>( ISIZEOF(PersistedLevelRecord) + mSourceRecorder.getRecordedCount() );
 
         mSource = mSourceRecorder.source();
         if ( !mSource ) {
@@ -259,7 +267,7 @@ public:
             writeOffset += newIndex.rec.size;
 
             // ensure the index list lands at the very end of the file
-            int listSize = mIndexes.size() * sizeof(PersistedLevelIndex) + (sizeof mPersist.mFooter);
+            int listSize = mIndexes.size() * ISIZEOF(PersistedLevelIndex) + ISIZEOF(mPersist.mFooter);
             if ( (mFile.size() - writeOffset) > listSize ) {
                 writeOffset = (int) (mFile.size() - listSize);
             }
@@ -357,7 +365,7 @@ private:
 };
 
 Persist::Persist( const char* path, QObject* parent ) : QObject(parent),
-  mPath(path ? path : QDir::home().absoluteFilePath("qlt.sav")), mFileUnusable(false), mUpdateRunnable(nullptr)
+  mPath(path ? path : QDir::home().absoluteFilePath("qlt.sav")), mFileUnusable{false}, mUpdateRunnable{nullptr}
 {
     memset( &mFooter, 0, sizeof mFooter );
 }
@@ -415,7 +423,7 @@ void Persist::onIndexReadyQueued()
         }
 
         // update the list
-        for( auto it : mUpdateRunnable->mIndexes ) {
+        for( const auto& it : mUpdateRunnable->mIndexes ) {
             auto old = mRecords.find( it.rec.level );
             if ( old != mRecords.end() ) {
                 old->second.offset = it.rec.offset;
@@ -537,8 +545,10 @@ public:
         if ( record.level != mLoader.mIndex.level ) {
             error( RecordLevelCode );
         }
-        if ( record.count != mLoader.mIndex.size - (int) sizeof(PersistedLevelRecord) ) {
-            error( RecordSizeCode );
+        if ( record.count != mLoader.mIndex.size - ISIZEOF(PersistedLevelRecord) ) {
+            std::cerr << "record count " << record.count << " != " << (mLoader.mIndex.size - ISIZEOF(PersistedLevelRecord)) << "\n";
+            if ( record.count < 8 || record.count >  mLoader.mIndex.size - ISIZEOF(PersistedLevelRecord) )
+                error( RecordSizeCode );
         }
         if ( char* data = mLoadable.getLoadableDestination( record.level, record.count ) ) {
             int nRead = mFile.read( data, record.count );

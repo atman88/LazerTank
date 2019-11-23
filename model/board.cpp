@@ -8,7 +8,7 @@
 #include "controller/gameregistry.h"
 #include "util/workerthread.h"
 
-Board::Board( QObject* parent ) : QObject(parent), mLevel(0), mLastPushId(0), mStream(nullptr)
+Board::Board( QObject* parent ) : QObject(parent), mLevel{0}, mLastPushId{0}, mStream{nullptr}
 {
     memset( mTiles, EMPTY, sizeof mTiles );
 }
@@ -35,7 +35,7 @@ PieceSetManager& Board::getPieceManager()
 void Board::initPiece( PieceType type, int col, int row, int angle )
 {
     mPieceManager.insert( type, ModelPoint(col,row), angle );
-    mTiles[row*BOARD_MAX_HEIGHT + col] = DIRT;
+    mTiles[row*BoardMaxHeight + col] = DIRT;
 }
 
 int Board::getLastPushId() const
@@ -75,10 +75,10 @@ void Board::load( QTextStream& stream, int level )
     mPieceManager.reset();
 
     do {
-        QString line = stream.readLine(BOARD_MAX_WIDTH);
+        QString line = stream.readLine(BoardMaxWidth);
 
         // we don't know the board width yet, so initialize the max:
-        memset( rowp, EMPTY, BOARD_MAX_WIDTH * (sizeof *rowp) );
+        memset( rowp, EMPTY, BoardMaxWidth * (sizeof *rowp) );
 
         int i = 0, col = 0;
         while( i < line.size() ) {
@@ -142,8 +142,8 @@ void Board::load( QTextStream& stream, int level )
         if ( col > mLowerRight.mCol ) {
             mLowerRight.mCol = col-1;
         }
-        rowp += BOARD_MAX_WIDTH;
-    } while( ++row < BOARD_MAX_HEIGHT );
+        rowp += BoardMaxWidth;
+    } while( ++row < BoardMaxHeight );
 
     mLowerRight.mRow = row-1;
     mLevel = level;
@@ -189,13 +189,13 @@ int Board::getLevel()
 TileType Board::tileAt( const ModelPoint& point ) const {
     return (point.mCol >= 0 && point.mRow >= 0
          && point.mCol <= mLowerRight.mCol && point.mRow <= mLowerRight.mRow)
-      ? static_cast<TileType>(mTiles[point.mRow*BOARD_MAX_WIDTH+point.mCol]) : EMPTY;
+      ? static_cast<TileType>(mTiles[point.mRow*BoardMaxWidth+point.mCol]) : EMPTY;
 }
 
 void Board::setTileAt( TileType id, ModelPoint point )
 {
     if ( point.mCol >= 0 && point.mRow >= 0 && point.mCol <= mLowerRight.mCol && point.mRow <= mLowerRight.mRow ) {
-        mTiles[point.mRow*BOARD_MAX_WIDTH+point.mCol] = id;
+        mTiles[point.mRow*BoardMaxWidth+point.mCol] = id;
         emit tileChangedAt( point );
     }
 }

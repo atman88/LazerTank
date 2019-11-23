@@ -36,7 +36,7 @@ public:
      * @brief move the tank one square
      * @param direction A rotation angle (one of 0, 90, 180, 270) or -1 to advance in the current direction
      */
-    virtual void move(int direction ) override;
+    void move(int direction ) override;
 
     /**
      * @brief Query a focus vector
@@ -372,6 +372,12 @@ public slots:
      * @return previous on/off replay setting
      */
     bool setReplay( bool on ) override;
+
+    /**
+     * @brief receives notification that the replay reader has reached the end of the replay
+     * @return if replay is finished, otherwise false
+     */
+    bool readerFinished() override;
 
 private slots:
     void replayPlayback();

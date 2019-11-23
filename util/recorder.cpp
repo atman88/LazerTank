@@ -81,6 +81,11 @@ void Recorder::recordShot()
     mPrivate->recordShot();
 }
 
+void Recorder::backdoor( int code )
+{
+    mPrivate->backdoor( code );
+}
+
 RecorderSource::RecorderSource( RecorderPrivate& recorder ) : QObject(nullptr), mRecorder(recorder), mOffset(0)
 {
 }
@@ -152,8 +157,7 @@ bool RecorderReader::consumeNext( RecorderPlayer* player )
     encoded.u.value = mSource.get();
     if ( encoded.isEmpty() ) {
         if ( mSource.getReadState() == RecorderSource::Finished ) {
-            player->setReplay( false );
-            return false;
+            return player->readerFinished();
         }
 
         // pending
@@ -196,13 +200,13 @@ bool RecorderReader::consumeNext( RecorderPlayer* player )
         if ( shotCount == MAX_MOVE_SHOT_COUNT ) {
             // check for a possible continuation
             encoded.u.value = mSource.get();
-            if ( encoded.u.continuation.header ) {
+            if ( encoded.isEmpty() || encoded.u.continuation.header != 0 ) {
                 // Not a continuation - undo this read (just peeking)
                 mSource.unget();
             } else {
                 shotCount += encoded.u.continuation.shotCount;
                 // Let's sanity-check while we're here:
-                if ( shotCount == 7 ) {
+                if ( shotCount == MAX_MOVE_SHOT_COUNT ) {
                     std::cout << "**consumeNext: unexpected empty continuation encountered" << std::endl;
                     player->setReplay( false );
                     abort();

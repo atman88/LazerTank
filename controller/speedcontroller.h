@@ -15,8 +15,8 @@ class SpeedController : public QObject
 
 public:
     // movement speed in milliseconds per square
-    static const int NORMAL_SPEED = 800;
-    static const int HIGH_SPEED   = 300;
+    static const int NormalSpeed = 800;
+    static const int HighSpeed   = 300;
 
     explicit SpeedController(QObject *parent = nullptr);
 
@@ -109,7 +109,7 @@ public:
     {
     }
 
-    virtual int getDivisor();
+    int getDivisor() override;
 };
 
 class RotateSpeedControlledAnimation : public SpeedControlledAnimation
@@ -120,7 +120,7 @@ public:
     {
     }
 
-    virtual int getDivisor();
+    int getDivisor() override;
     bool animateBetween( int fromAngle, int toAngle );
 };
 
